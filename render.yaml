@@ -3,24 +3,16 @@ services:
     name: patofoot-2026
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
-      - key: NODE_ENV
-        value: production
+      - key: NODE_VERSION
+        value: 22.14.0
       - key: SESSION_SECRET
         generateValue: true
-      - key: APP_URL
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false
       - key: ANDROID_APP_PACKAGE
         value: com.patofoot.manager2026
-      - key: ANDROID_SHA256_FINGERPRINTS
-        sync: false
-      - key: APPLE_TEAM_ID
-        sync: false
       - key: IOS_BUNDLE_ID
         value: com.patofoot.manager2026

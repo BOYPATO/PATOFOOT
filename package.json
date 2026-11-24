@@ -3,10 +3,13 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "predev": "npm run prebuild",
     "dev": "tsx server.ts",
-    "prebuild": "node scripts/generateEuropeTop5.cjs && node scripts/generateAllContinentalLeagues.cjs && node scripts/generateTurkey2026.cjs && node scripts/generateGreece2026.cjs && node scripts/generateScotland2026.cjs && node scripts/generateNorway2026.cjs && node scripts/generateSwitzerland2026.cjs && node scripts/generateDenmark2026.cjs && node scripts/generateSweden2026.cjs && node scripts/generateSpecialLeagues2026.cjs && node scripts/generateChampionship2026.cjs && node scripts/generateLeagueOne2026.cjs && node scripts/generateLeagueTwo2026.cjs",
+    "prebuild": "node scripts/safePrebuild.cjs",
     "build": "vite build && esbuild server.ts --bundle --platform=node --packages=external --format=esm --outfile=server.js",
     "start": "NODE_ENV=production node server.js",
     "preview": "vite preview",
