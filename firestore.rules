@@ -1,0 +1,366 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null
+        && (
+          request.auth.token.email_verified == true
+          || request.auth.token.firebase.sign_in_provider == 'password'
+        );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidSlotId(slotId) {
+      return slotId is string && slotId in ['autosave', 'slot_1', 'slot_2', 'slot_3', 'slot_4', 'slot_5'];
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function ownsParentUser(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId))
+        && get(/databases/$(database)/documents/users/$(userId)).data.uid == request.auth.uid;
+    }
+
+    function ownsSaveHeaderAfter(userId, slotId) {
+      return existsAfter(/databases/$(database)/documents/users/$(userId)/cloudSaves/$(slotId))
+        && getAfter(/databases/$(database)/documents/users/$(userId)/cloudSaves/$(slotId)).data.uid == request.auth.uid;
+    }
+
+    function ownsSaveHeaderBefore(userId, slotId) {
+      return exists(/databases/$(database)/documents/users/$(userId)/cloudSaves/$(slotId))
+        && get(/databases/$(database)/documents/users/$(userId)/cloudSaves/$(slotId)).data.uid == request.auth.uid;
+    }
+
+    function isValidTrainerProfile(data) {
+      return data.keys().hasAll([
+          'uid',
+          'displayName',
+          'usernameKey',
+          'favoriteClubId',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid',
+          'displayName',
+          'usernameKey',
+          'favoriteClubId',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.uid is string
+        && data.uid.size() >= 1
+        && data.uid.size() <= 128
+        && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.uid == request.auth.uid
+        && data.displayName is string
+        && data.displayName.size() >= 2
+        && data.displayName.size() <= 60
+        && data.usernameKey is string
+        && data.usernameKey.size() >= 2
+        && data.usernameKey.size() <= 60
+        && data.usernameKey.matches('^[a-z0-9._\\-]+$')
+        && data.favoriteClubId is string
+        && data.favoriteClubId.size() >= 2
+        && data.favoriteClubId.size() <= 32
+        && data.favoriteClubId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCloudSaveHeader(data) {
+      return data.keys().hasAll([
+          'uid',
+          'slotId',
+          'clubId',
+          'clubName',
+          'clubShortName',
+          'clubPrimaryColor',
+          'clubSecondaryColor',
+          'division',
+          'managerName',
+          'seasonYear',
+          'round',
+          'currentDate',
+          'clubBalance',
+          'partCount',
+          'segmentIds',
+          'formatVersion',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid',
+          'slotId',
+          'clubId',
+          'clubName',
+          'clubShortName',
+          'clubPrimaryColor',
+          'clubSecondaryColor',
+          'division',
+          'managerName',
+          'seasonYear',
+          'round',
+          'currentDate',
+          'clubBalance',
+          'partCount',
+          'segmentIds',
+          'formatVersion',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.uid is string
+        && data.uid.size() >= 1
+        && data.uid.size() <= 128
+        && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.uid == request.auth.uid
+        && isValidSlotId(data.slotId)
+        && data.clubId is string
+        && data.clubId.size() >= 2
+        && data.clubId.size() <= 40
+        && data.clubId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.clubName is string
+        && data.clubName.size() >= 2
+        && data.clubName.size() <= 80
+        && data.clubShortName is string
+        && data.clubShortName.size() >= 1
+        && data.clubShortName.size() <= 32
+        && data.clubPrimaryColor is string
+        && data.clubPrimaryColor.size() >= 4
+        && data.clubPrimaryColor.size() <= 16
+        && data.clubSecondaryColor is string
+        && data.clubSecondaryColor.size() >= 4
+        && data.clubSecondaryColor.size() <= 16
+        && data.division is string
+        && data.division.size() >= 1
+        && data.division.size() <= 16
+        && data.managerName is string
+        && data.managerName.size() >= 1
+        && data.managerName.size() <= 80
+        && (data.seasonYear is int || data.seasonYear is float)
+        && data.seasonYear >= 2025
+        && data.seasonYear <= 2150
+        && (data.round is int || data.round is float)
+        && data.round >= 1
+        && data.round <= 120
+        && data.currentDate is string
+        && data.currentDate.size() >= 8
+        && data.currentDate.size() <= 20
+        && (data.clubBalance is int || data.clubBalance is float)
+        && (data.partCount is int || data.partCount is float)
+        && data.partCount >= 1
+        && data.partCount <= 200
+        && data.segmentIds is list
+        && data.segmentIds.size() >= 1
+        && data.segmentIds.size() <= 200
+        && data.segmentIds.size() == data.partCount
+        && data.segmentIds[0] is string
+        && data.segmentIds[0].size() >= 2
+        && data.segmentIds[0].size() <= 48
+        && (data.formatVersion is int || data.formatVersion is float)
+        && data.formatVersion >= 1
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCloudSaveSegment(data) {
+      return data.keys().hasAll([
+          'uid',
+          'slotId',
+          'segmentId',
+          'orderIndex',
+          'section',
+          'payload',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid',
+          'slotId',
+          'segmentId',
+          'orderIndex',
+          'section',
+          'payload',
+          'updatedAt'
+        ])
+        && data.uid is string
+        && data.uid.size() >= 1
+        && data.uid.size() <= 128
+        && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.uid == request.auth.uid
+        && isValidSlotId(data.slotId)
+        && data.segmentId is string
+        && data.segmentId.size() >= 2
+        && data.segmentId.size() <= 48
+        && data.segmentId.matches('^[a-zA-Z0-9_\\-]+$')
+        && (data.orderIndex is int || data.orderIndex is float)
+        && data.orderIndex >= 0
+        && data.orderIndex <= 200
+        && data.section is string
+        && data.section.size() >= 2
+        && data.section.size() <= 40
+        && data.section.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.payload is map
+        && data.payload.keys().size() >= 1
+        && data.payload.keys().size() <= 64
+        && data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn()
+        && isValidId(userId)
+        && request.auth.uid == userId;
+
+      allow list: if false;
+
+      allow create: if isSignedIn()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && isValidTrainerProfile(incoming())
+        && incoming().uid == userId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSignedIn()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && isValidTrainerProfile(incoming())
+        && incoming().uid == existing().uid
+        && incoming().usernameKey == existing().usernameKey
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName',
+          'favoriteClubId',
+          'updatedAt'
+        ]);
+
+      allow delete: if false;
+
+      match /cloudSaves/{slotId} {
+        allow get: if isSignedIn()
+          && isValidId(userId)
+          && isValidSlotId(slotId)
+          && request.auth.uid == userId
+          && ownsParentUser(userId);
+
+        allow list: if isSignedIn()
+          && isValidId(userId)
+          && request.auth.uid == userId
+          && resource.data.uid == request.auth.uid;
+
+        allow create: if isSignedIn()
+          && isValidId(userId)
+          && isValidSlotId(slotId)
+          && request.auth.uid == userId
+          && isValidCloudSaveHeader(incoming())
+          && incoming().uid == userId
+          && incoming().slotId == slotId
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && ownsParentUser(userId);
+
+        allow update: if isSignedIn()
+          && isValidId(userId)
+          && isValidSlotId(slotId)
+          && request.auth.uid == userId
+          && isValidCloudSaveHeader(incoming())
+          && incoming().uid == existing().uid
+          && incoming().slotId == existing().slotId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && ownsParentUser(userId)
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'clubId',
+            'clubName',
+            'clubShortName',
+            'clubPrimaryColor',
+            'clubSecondaryColor',
+            'division',
+            'managerName',
+            'seasonYear',
+            'round',
+            'currentDate',
+            'clubBalance',
+            'partCount',
+            'segmentIds',
+            'formatVersion',
+            'updatedAt'
+          ]);
+
+        allow delete: if isSignedIn()
+          && isValidId(userId)
+          && isValidSlotId(slotId)
+          && request.auth.uid == userId
+          && resource.data.uid == request.auth.uid
+          && ownsParentUser(userId);
+
+        match /segments/{segmentId} {
+          allow get: if isSignedIn()
+            && isValidId(userId)
+            && isValidSlotId(slotId)
+            && isValidId(segmentId)
+            && request.auth.uid == userId
+            && ownsSaveHeaderBefore(userId, slotId);
+
+          allow list: if isSignedIn()
+            && isValidId(userId)
+            && isValidSlotId(slotId)
+            && request.auth.uid == userId
+            && resource.data.uid == request.auth.uid
+            && resource.data.slotId == slotId;
+
+          allow create: if isSignedIn()
+            && isValidId(userId)
+            && isValidSlotId(slotId)
+            && isValidId(segmentId)
+            && request.auth.uid == userId
+            && isValidCloudSaveSegment(incoming())
+            && incoming().uid == userId
+            && incoming().slotId == slotId
+            && incoming().segmentId == segmentId
+            && incoming().updatedAt == request.time
+            && ownsSaveHeaderAfter(userId, slotId);
+
+          allow update: if isSignedIn()
+            && isValidId(userId)
+            && isValidSlotId(slotId)
+            && isValidId(segmentId)
+            && request.auth.uid == userId
+            && isValidCloudSaveSegment(incoming())
+            && incoming().uid == existing().uid
+            && incoming().slotId == existing().slotId
+            && incoming().segmentId == existing().segmentId
+            && incoming().updatedAt == request.time
+            && ownsSaveHeaderAfter(userId, slotId)
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'orderIndex',
+              'section',
+              'payload',
+              'updatedAt'
+            ]);
+
+          allow delete: if isSignedIn()
+            && isValidId(userId)
+            && isValidSlotId(slotId)
+            && isValidId(segmentId)
+            && request.auth.uid == userId
+            && resource.data.uid == request.auth.uid
+            && ownsSaveHeaderBefore(userId, slotId);
+        }
+      }
+    }
+  }
+}

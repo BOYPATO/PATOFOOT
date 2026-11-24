@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <path d="M256 64 L408 118 V246 C408 346 342 418 256 448 C170 418 104 346 104 246 V118 Z" fill="url(#shield)" stroke="#38bdf8" stroke-width="14" stroke-linejoin="round"/>
+  <path d="M256 90 L384 136 V244 C384 330 328 392 256 420 C184 392 128 330 128 244 V136 Z" fill="#090f1d" fill-opacity="0.72"/>
+  <polygon points="256,112 269,144 304,146 277,168 286,202 256,184 226,202 235,168 208,146 243,144" fill="url(#gold)"/>
+  <text x="256" y="302" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="112" fill="#ffffff" letter-spacing="-4">PF</text>
+  <text x="256" y="356" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="40" fill="#38bdf8" letter-spacing="6">2026</text>
+</svg>

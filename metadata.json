@@ -1,0 +1,6 @@
+{
+  "name": "PATOFOOT 2026",
+  "description": "Jogo completo de futebol manager estilo PATOFOOT com escalação tática, simulação de partidas com radar 2D, mercado de transferências, finanças, expansão de estádio e campeonatos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

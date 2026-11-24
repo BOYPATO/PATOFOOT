@@ -1,0 +1,2510 @@
+FIGUEIRENSE
+12	
+Fabrício	Fabrício
+Goleiro
+07/01/1986 (40)	Brasil	-
+52	
+Igo Gabriel	Igo Gabriel
+Goleiro
+13/10/2001 (25)	Brasil	-
+-	Camboriú FC
+Vavá	Vavá
+Goleiro
+10/10/1999 (27)	Brasil	-
+-	
+Júnior	Júnior
+Goleiro
+15/10/2003 (23)	Brasil	-
+-	
+Jonathan	Jonathan
+Zagueiro
+04/03/2001 (25)	Brasil	-
+3	Capivariano FC
+Leonan Santos	Leonan Santos
+Zagueiro
+05/08/2000 (26)	Brasil	-
+4	
+Anderson Conceição	Anderson Conceição
+Zagueiro
+24/10/1989 (37)	Brasil	-
+-	EC Água Santa
+Roger Fellipo	Roger Fellipo
+Zagueiro
+18/02/2004 (22)	Brasil	-
+-	
+Jonathan Reis	Jonathan Reis
+Zagueiro
+31/01/2006 (20)	Brasil	-
+27	
+Felipe Santiago	Felipe Santiago
+Zagueiro
+16/10/2002 (24)	Brasil	-
+6	
+Arthur Henrique	Arthur Henrique
+Esq. Lateral
+17/05/1994 (32)	Brasil	-
+-	
+Vitor Ricardo	Vitor Ricardo
+Diretor Lateral
+14/04/2000 (26)	Brasil	-
+2	
+Leão Maia	Leão Maia
+Diretor Lateral
+13/06/2003 (23)	Brasil	-
+22	
+Ezequiel	Ezequiel
+Diretor Lateral
+22/02/1993 (33)	Brasil	-
+5	
+Renan Areias	Renan Areias
+Volante
+18/01/1998 (28)	Brasil	-
+5	
+Breno	Breno
+Volante
+01/09/2000 (26)	Brasil	-
+8	
+Flávio	Flávio
+Volante
+15/06/2000 (26)	Brasil	-
+18	
+Raynan	Raynan
+Volante
+12/06/2001 (25)	Brasil	-
+28	
+Rafinha Potiguar	Rafinha Potiguar
+Volante
+09/08/1999 (27)	Brasil	-
+-	Coritiba FC
+Jean Gabriel	Jean Gabriel
+Meia Ofensivo
+15/02/2003 (23)	Brasil	200 milhões
+10	
+Jorginho	Jorginho
+Meia Ofensivo
+05/01/1991 (35)	Brasil	-
+98	
+Dudu Sampaio	Dudu Sampaio
+Meia Ofensivo
+14/12/1998 (27)	Brasil	-
+-	Camboriú FC
+Chocolate	Chocolate
+Meia Ofensivo
+10/05/2001 (25)	Brasil	-
+-	Chapecoense
+Mailson	Mailson
+Ponta-Esquerda
+11/05/2003 (23)	Brasil	200 milhões
+17	
+Pablo	Pablo
+Ponta-Esquerda
+18/12/1992 (33)	Brasil	-
+11	
+Arthur Martins	Arthur Martins
+Ponta-Esquerda
+03/01/2000 (26)	Brasil	-
+20	Rio Branco EC
+Guilherme Vieira	Guilherme Vieira
+Ponta-Esquerda
+01/06/2000 (26)	Brasil	-
+-	CE
+Emerson Galego	Emerson Galego
+Ponta Direita
+10/08/1999 (27)	Brasil	150 milhões
+70	EC XV de Piracicaba
+Igor Bolt	Igor Bolt
+Ponta Direita
+30/09/2000 (26)	Brasil	-
+88	
+Silvinho	Silvinho
+Ponta Direita
+01/07/1990 (36)	Brasil	-
+-	
+Zé Carlos	Zé Carlos
+Ponta Direita
+19/08/2003 (23)	Brasil	-
+91	
+Hyuri	Hyuri
+Centroavante
+26/09/1991 (35)	Brasil	-
+-	
+João Marcos	João Marcos
+Centroavante
+14/03/1997 (29)	Brasil	-
+-	
+Maiky	Maiky
+Atacante
+31/03/2005 (21)	Brasil	
+BRUSQUE
+-	Sem mais
+Lucas Moura	Lucas Moura 
+Goleiro
+10/03/2004 (22)	Brasil	-
+1	
+Matheus Nogueira	Matheus Nogueira
+Goleiro
+08/08/1986 (40)	Brasil	-
+12	
+Paulo Gianezini	Paulo Gianezini
+Goleiro
+11/04/1991 (35)	Brasil	-
+23	
+José Vinicius	José Vinicius
+Goleiro
+24/02/2006 (20)	Brasil	-
+-	Atlético Goianiense
+João Maistro	João Maistro
+Zagueiro
+04/08/2000 (26)	Brasil	-
+3	
+Alisson Cassiano	Alisson Cassiano
+Zagueiro
+28/05/1994 (32)	Brasil	-
+4	
+Rafael Milhorim	Rafael Milhorim
+Zagueiro
+17/03/1999 (27)	Brasil	-
+14	
+Ryan Santos	Ryan Santos
+Zagueiro
+25/08/2004 (22)	Brasil	-
+6	
+Raimar	Raimar
+Esq. Lateral
+27/05/2002 (24)	Brasil	-
+-	
+David Gabriel	David Gabriel
+Esq. Lateral
+12/11/1997 (28)	Brasil	-
+-	
+Jefferson	Jefferson
+Diretor Lateral
+22/06/1996 (30)	Brasil	-
+2	Cuiabá EC
+Leo Ataide	Leo Ataide
+Diretor Lateral
+19/01/2004 (22)	Brasil	-
+22	Esporte Recife Sub-20
+Italo Lucas	Italo Lucas
+Diretor Lateral
+11/08/2005 (21)	Brasil	-
+-	Esporte Recife
+Pedro Martins	Pedro Martins
+Volante
+28/06/2000 (26)	Brasil	400 milhões
+5	
+Bernardo	Bernardo
+Volante
+08/01/2002 (24)	Brasil	-
+7	
+Gazão	Gazão
+Volante
+26/12/2001 (24)	Brasil	-
+-	
+Pedro Medeiros	Pedro Medeiros
+Volante
+13/03/2002 (24)	Brasil	-
+15	
+Alex Paulino	Alex Paulino
+Volante
+21/02/2002 (24)	Brasil	-
+-	
+Jonathan Lucca	Jonathan Lucca
+Meia Central
+02/06/1994 (32)	Brasil
+Itália	-
+24	
+Leonardo	Leonardo
+Meia Central
+14/07/2005 (21)	Brasil	-
+-	Atlético Goianiense
+Ariel	Ariel
+Meia Ofensivo
+04/07/1998 (28)	Brasil	-
+-	
+Rafa Fonseca	Rafa Fonseca
+Meia Ofensivo
+03/06/2005 (21)	Brasil	-
+-	Decisão da FC
+Coxa	Coxa
+Meia Ofensivo
+19/02/2005 (21)	Brasil	-
+-	
+Adriano Filho	Adriano Filho
+Ponta-Esquerda
+14/06/2004 (22)	Brasil	-
+18	
+João Pedro	João Pedro
+Ponta-Esquerda
+20/04/2000 (26)	Brasil	-
+19	
+Petterson	Petterson
+Ponta-Esquerda
+04/01/2004 (22)	Brasil	-
+11	Cianorte FC
+Udeh Clinton	Udeh Clinton
+Ponta Direita
+15/01/2002 (24)	Nigéria	-
+-	
+Héber	Héber
+Centroavante
+10/08/1991 (35)	Brasil	-
+-	EC Noroeste
+Marlyson	Marlyson
+Centroavante
+17/12/1997 (28)	Brasil	-
+-	Cianorte FC
+Robinho	Robinho
+Centroavante
+10/03/2004 (22)	Brasil	-
+9	
+Álvaro	Álvaro
+Centroavante
+09/09/1997 (29)	Brasil	-
+-	
+Macário	Macário
+Centroavante
+17/03/2001 (25)	Brasil	
+PAYSANDU
+1	
+Jean Drosny	Jean Drosny
+Goleiro
+30/01/1994 (32)	Brasil	-
+12	
+Gabriel Mesquita	Gabriel Mesquita
+Goleiro
+14/09/1998 (28)	Brasil	-
+-	
+Levi	Levi
+Goleiro
+23/04/2006 (20)	Brasil	-
+41	
+Marcão	Marcão
+Goleiro
+18/02/2003 (23)	Brasil	-
+-	Portuguesa
+Gustavo Henrique	Gustavo Henrique
+Zagueiro
+07/10/1999 (27)	Brasil	-
+-	EC Noroeste
+Pedro Carrerete	Pedro Carrerete
+Zagueiro
+30/10/1998 (28)	Brasil	-
+14	
+Bruno Bispo	Bruno Bispo
+Zagueiro
+06/06/1996 (30)	Brasil	-
+15	
+Castro	Castro
+Zagueiro
+13/02/1995 (31)	Brasil	-
+-	Santa Cruz FC
+Lucas Rodrigues	Lucas Rodrigues
+Zagueiro
+25/02/2002 (24)	Brasil	-
+4	
+Iarley	Iarley
+Zagueiro
+06/04/2005 (21)	Brasil	-
+26	
+Libonati	Libonati
+Zagueiro
+01/03/2005 (21)	Brasil	-
+8	Guarani FC
+Renan Castro	Renan Castro
+Lateral Esq.
+08/09/1995 (31)	Brasil	-
+31	
+Facundo Bonifazi	Facundo Bonifazi
+Lateral Esq.
+29/09/1995 (31)	Uruguai
+Itália	-
+29	
+Cauã Dias	Cauã Dias
+Lateral Esq.
+01/04/2006 (20)	Brasil	-
+77	
+Luciano Taboca	Luciano Taboca
+Lateral Esq.
+17/01/1994 (32)	Brasil	-
+2	
+Edílson	Edílson
+Lateral Dir.
+13/04/1995 (31)	Brasil	-
+-	AA Maguary
+Eduardo	Eduardo
+Lateral Dir.
+05/08/2001 (25)	Brasil	-
+20	
+Matheus Capixaba	Matheus Capixaba
+Lateral Dir.
+06/03/2006 (20)	Brasil	-
+8	
+Caio Mello	Caio Mello
+Volante
+18/12/1999 (26)	Brasil	-
+-	
+Henrico	Henrico
+Volante
+13/01/2005 (21)	Brasil	-
+23	
+Brian Macapá	Brian Macapá
+Volante
+03/03/2008 (18)	Brasil	-
+25	
+Tiago Índio	Tiago Índio
+Volante
+20/04/2002 (24)	Brasil	-
+96	
+Matheus Vargas	Matheus Vargas
+Meia Central
+18/06/1996 (30)	Brasil	-
+17	
+Henrique Salomoni	Henrique Salomoni
+Meia Central
+05/05/2005 (21)	Brasil	-
+-	EC Vitória
+Pablo	Pablo
+Meia Ofensivo
+03/08/2003 (23)	Brasil	€200mil
+-	Retrô FC Brasil
+Radsley	Radsley
+Meia Ofensivo
+03/03/1995 (31)	Brasil	-
+10	
+Marcinho	Marcinho 
+Meia Ofensivo
+28/07/1995 (31)	Brasil	-
+99	
+Lucas Cardoso	Lucas Cardoso
+Meia Ofensivo
+03/08/2000 (26)	Brasil	-
+-	Amazonas FC
+Nicolás Schiappacasse	Nicolás Schiappacasse
+Ponta-Esquerda
+12/01/1999 (27)	Uruguai
+Itália	-
+94	
+Kauã Hinkel	Kauã Hinkel
+Ponta-Esquerda
+24/08/2006 (20)	Brasil	-
+19	Atlético Goianiense
+Thayllon	Thayllon
+Ponta-Direita
+15/11/2001 (24)	Brasil	-
+75	Tombense FC
+Kleiton Pego	Kleiton Pego
+Ponta-Direita
+23/04/1999 (27)	Brasil	-
+30	
+Thalyson	Thalyson
+Ponta-Direita
+30/03/2006 (20)	Brasil	-
+36	
+Klayvert	Klayvert
+Ponta-Direita
+24/09/2005 (21)	Brasil	-
+9	Volta Redonda FC
+Ítalo Carvalho	Ítalo Carvalho
+Centroavante
+07/11/1996 (29)	Brasil
+Portugal	-
+21	
+Angelo	Angelo
+Atacante
+27/01/2006 (20)	Brasil	
+BARRA FC
+-	Brasiliense FC
+Matheus Kayser	Matheus Kayser
+Goleiro
+29/12/1994 (31)	Brasil	-
+-	
+Fabiano Volpi	Fabiano Volpi
+Goleiro
+11/07/1997 (29)	Brasil	-
+-	Cianorte FC
+Luiz Fabiano	Luiz Fabiano
+Goleiro
+06/08/2005 (21)	Brasil	-
+-	
+Jean Pierre	Jean Pierre
+Zagueiro
+30/09/1993 (33)	Brasil	-
+-	
+Everton Alemão	Everton Alemão
+Zagueiro
+01/06/1993 (33)	Brasil	-
+-	
+Vitão	Vitão
+Zagueiro
+08/04/1995 (31)	Brasil	-
+-	
+Vavá	Vavá
+Zagueiro
+01/08/1993 (33)	Brasil	-
+-	
+Gabriel Jesus	Gabriel Jesus
+Zagueiro
+29/04/2006 (20)	Brasil	-
+-	
+Guilherme Lazaroni	Guilherme Lazaroni
+Esq. Lateral
+18/11/1992 (33)	Brasil	-
+-	
+Da Rocha	Da Rocha
+Esq. Lateral
+13/12/2004 (21)	Brasil
+Itália	-
+-	EC Novo Hamburgo
+João Vinícius	João Vinícius
+Esq. Lateral
+20/08/2004 (22)	Brasil	-
+-	
+Léo Duarte	Léo Duarte
+Diretor Lateral
+23/03/1999 (27)	Brasil	-
+-	
+Kayque	Kayque
+Diretor Lateral
+20/04/2004 (22)	Brasil	-
+-	Central SC
+Augusto Potiguar	Augusto Potiguar
+Diretor Lateral
+23/09/1995 (31)	Brasil	-
+-	
+Matheus Barbosa	Matheus Barbosa
+Volante
+18/08/1994 (32)	Brasil	-
+-	Cianorte FC
+Caike	Caike
+Volante
+10/01/2005 (21)	Brasil	-
+-	Retro FC Brasil
+Esquerdinha	Esquerdinha
+Volante
+08/04/2003 (23)	Brasil	-
+-	EC Jaccuipense U20
+Gustavo Pereira	Gustavo Pereira
+Volante
+04/07/2005 (21)	Brasil	-
+-	
+Barba	Barba
+Meia Central
+29/01/1999 (27)	Brasil	-
+-	Concordia AC
+Gaudencio	Gaudencio
+Meia Central
+10/02/2003 (23)	Brasil	-
+-	
+Warley	Warley
+Meia Ofensivo
+27/12/1999 (26)	Brasil	-
+-	Acadêmico de Viseu FC
+Marquinho	Marquinho
+Meia Ofensivo
+05/04/2002 (24)	Brasil	-
+-	
+Elvinho	Elvinho
+Meia Ofensivo
+29/01/1992 (34)	Brasil	-
+-	Paraná Clube
+Lucas Nunes	Lucas Nunes
+Meia Ofensivo
+03/10/2005 (21)	Brasil	-
+-	
+Rick	Rick
+Meia Ofensivo
+29/06/2005 (21)	Brasil	-
+-	Bocas FC
+Ryan Gómez	Ryan Gómez
+Ponta-Esquerda
+04/01/2006 (20)	Panamá	150 milhões
+-	
+Cléo Silva	Cléo Silva
+Ponta-Esquerda
+21/11/1989 (36)	Brasil	-
+-	
+Gabriel Silva	Gabriel Silva
+Ponta-Esquerda
+08/03/1999 (27)	Brasil	-
+-	Tombense FC
+Marcelinho	Marcelinho
+Ponta-Esquerda
+13/01/1999 (27)	Brasil	-
+-	Horizonte FC
+Betinho	Betinho
+Ponta Direita
+05/12/2002 (23)	Brasil	-
+-	
+Saymon	Saymon
+Ponta Direita
+22/06/2004 (22)	Brasil	-
+-	Camboriú FC
+Matheuzinho	Matheuzinho
+Ponta Direita
+18/12/2006 (19)	Brasil	-
+-	
+Nicolau	Nicolau
+Centroavante
+04/06/2001 (25)	Brasil	-
+-	Futebol de Betim
+Giovanni Albuquerque	Giovanni Albuquerque
+Centroavante
+19/02/2001 (25)	Brasil
+Itália	-
+-	EC São José
+Felipe Rodrigues	Felipe Rodrigues
+Centroavante
+15/10/2004 (22)	Brasil	-
+-	
+Renan Bernabé	Renan Bernabé
+Centroavante
+01/11/2003 (23)	Brasil	-
+-	
+Lucas Vargas	Lucas Vargas
+Centroavante
+04/01/2005 (21)	Brasil	-
+CAXIAS DO SUL
+-	
+Marcelo Dal Soler	Marcelo Dal Soler
+Goleiro
+19/09/2000 (26)	Brasil	-
+-	
+Gabriel Toebe	Gabriel Toebe
+Goleiro
+18/10/2002 (24)	Brasil	-
+-	Operário FEC
+André	André
+Zagueiro
+26/05/1999 (27)	Brasil	€150mil
+-	
+Maurício	Maurício
+Zagueiro
+04/05/1991 (35)	Brasil	-
+-	
+Ianson	Ianson
+Zagueiro
+15/07/1995 (31)	Brasil	-
+-	
+Michel Custódio	Michel Custódio
+Zagueiro
+06/01/2001 (25)	Brasil	-
+-	
+Windson	Windson
+Zagueiro
+15/04/1995 (31)	Brasil	-
+-	
+Roberto	Roberto
+Lateral Esq.
+04/12/1990 (35)	Brasil	-
+-	
+Vitinho	Vitinho
+Lateral Esq.
+15/09/2001 (25)	Brasil	-
+-	
+Felipe Albuquerque	Felipe Albuquerque
+Lateral Dir.
+27/09/1999 (27)	Brasil	-
+-	
+Matheus Nunes	Matheus Nunes
+Volante
+05/05/2003 (23)	Brasil	-
+-	
+Calyson	Calyson
+Ponta-Esquerda
+25/02/1993 (33)	Brasil	-
+-	
+Vitor Feijão	Vitor Feijão
+Ponta-Esquerda
+01/08/1996 (30)	Brasil	-
+-	Guarani FC
+Dentinho	Dentinho
+Ponta-Esquerda
+07/05/1997 (29)	Brasil	-
+-	
+Salatiel	Salatiel
+Centroavante
+20/09/1992 (34)	Brasil	-
+-	Santa Cruz FC
+Quirino	Quirino
+Centroavante
+14/10/1993 (33)	Brasil	-
+-	
+Jhonatan Ribeiro	Jhonatan Ribeiro
+Centroavante
+05/06/1993 (33)	Brasil	-
+-	
+Kaio Chrystian Portela Torres	Kaio Chrystian Portela Torres
+Atacante
+20/12/2006 (19)	Brasil
+FLORESTA FC
+-	
+Tiepo	Tiepo
+Goleiro
+08/02/1998 (28)	Brasil
+Itália	-
+-	
+Jeferson Souza	Jeferson Souza
+Goleiro
+04/02/1994 (32)	Brasil	-
+12	
+Dheimison	Dheimison
+Goleiro
+01/08/1989 (37)	Brasil	-
+30	
+Eduardo	Eduardo
+Zagueiro
+19/07/2002 (24)	Brasil	€75mil
+-	
+Afonso	Afonso
+Zagueiro
+01/12/1993 (32)	Brasil	-
+-	
+Valdo	Valdo
+Zagueiro
+10/02/1992 (34)	Brasil	-
+-	
+Marco Antônio	Marco Antônio
+Zagueiro
+24/09/2000 (26)	Brasil	-
+-	SE Gama
+Zulu	Zulu
+Zagueiro
+16/02/1998 (28)	Brasil	-
+4	
+João Victor	João Victor
+Zagueiro
+18/03/2002 (24)	Brasil	-
+23	
+Islan	Islan
+Zagueiro
+22/10/1996 (30)	Brasil	-
+-	
+Diego Matos	Diego Matos
+Lateral Esq.
+08/01/1997 (29)	Brasil	-
+29	
+Caíque	Caíque
+Lateral Esq.
+14/06/1998 (28)	Brasil	-
+-	
+Cedric	Cedric
+Lateral Dir.
+14/02/1998 (28)	Brasil	-
+15	
+Eliandro Carvalho	Eliandro Carvalho
+Lateral Dir.
+02/12/1998 (27)	Brasil	-
+-	
+Nonato	Nonato
+Volante
+22/01/1996 (30)	Brasil	-
+5	
+Jhony Douglas	Jhony Douglas
+Volante
+19/02/1997 (29)	Brasil	-
+8	Volta Redonda FC
+Danrley	Danrley
+Volante
+22/03/2001 (25)	Brasil	-
+-	Barra FC
+Natan Costa	Natan Costa
+Volante
+06/05/1995 (31)	Brasil	-
+-	
+Arilson	Arilson
+Volante
+29/06/2003 (23)	Brasil	-
+-	
+Guilherme Borges	Guilherme Borges
+Meia Central
+27/11/1999 (26)	Brasil	-
+-	
+Bismark	Bismark
+Meia Ofensivo
+12/07/1993 (33)	Brasil	-
+13	
+Garraty	Garraty
+Meia Ofensivo
+04/06/1998 (28)	Brasil	-
+-	Ferroviário AC
+Thálisson	Thálisson
+Meia Ofensivo
+17/11/2002 (23)	Brasil	-
+-	
+Diogo Mourão	Diogo Mourão
+Ponta-Esquerda
+20/01/2004 (22)	Brasil	-
+-	
+Rafinha	Rafinha
+Ponta-Direita
+21/06/1992 (34)	Brasil	-
+-	EC Água Santa
+Gustavinho	Gustavinho
+Ponta-Direita
+31/08/1993 (33)	Brasil	-
+-	
+Matheusinho	Matheusinho
+Ponta-Direita
+29/07/1998 (28)	Brasil	-
+-	Nacional FC
+Rafa Marcos	Rafa Marcos
+Ponta-Direita
+09/05/1999 (27)	Brasil	-
+-	AD Iguatu
+Matheus Lima	Matheus Lima
+Centroavante
+08/10/2002 (24)	Brasil	-
+BOTAFOGO PB
+-	
+Luiz Daniel	Luiz Daniel
+Goleiro
+29/03/1993 (33)	Brasil	-
+-	Futebol de Betim
+Michael	Michael
+Goleiro
+08/04/1995 (31)	Brasil	-
+-	
+Max Walef	Max Walef
+Goleiro
+23/10/1993 (33)	Brasil	-
+-	
+Leandro Mathias	Leandro Mathias
+Goleiro
+14/11/2004 (21)	Brasil	-
+-	
+Edilson	Edilson
+Goleiro
+20/02/2003 (23)	Brasil	-
+-	Retro FC Brasil Sub-20
+David Andrade	David Andrade
+Goleiro
+01/06/2005 (21)	Brasil	-
+-	
+Saimon	Saimon
+Zagueiro
+03/03/1991 (35)	Brasil	-
+-	
+Igor Morais	Igor Morais
+Zagueiro
+28/04/1998 (28)	Brasil	-
+-	
+Yan Souto	Yan Souto
+Zagueiro
+05/10/2001 (25)	Brasil	-
+-	
+Júlio Vaz	Júlio Vaz
+Zagueiro
+28/07/1997 (29)	Brasil	-
+-	
+Conferência de imprensa	Conferência de imprensa
+Esq. Lateral
+05/07/1994 (32)	Brasil	-
+-	
+Touro	Touro
+Esq. Lateral
+10/11/2000 (25)	Brasil	-
+-	
+Dhonata	Dhonata
+Esq. Lateral
+06/04/2004 (22)	Brasil	-
+-	AA Ponte Preta
+Diego Tavares	Diego Tavares
+Diretor Lateral
+06/07/1991 (35)	Brasil	75 milhões
+-	
+Diogo Mateus	Diogo Mateus
+Diretor Lateral
+13/02/1993 (33)	Brasil	-
+-	
+Lucas Sena	Lucas Sena
+Diretor Lateral
+19/03/2001 (25)	Brasil	-
+-	EC Água Santa
+Léo Pereira	Léo Pereira
+Diretor Lateral
+20/01/1998 (28)	Brasil	-
+-	
+Erick	Erick
+Diretor Lateral
+29/09/2003 (23)	Brasil	-
+-	
+Tallyson	Tallyson
+Volante
+24/03/1996 (30)	Brasil	-
+-	
+Caio Garcia	Caio Garcia
+Volante
+03/04/2004 (22)	Brasil	-
+-	SER Caxias do Sul
+Lucas Cândido	Lucas Cândido
+Meia Central
+25/12/1993 (32)	Brasil	-
+-	
+Jhonata Varela	Jhonata Varela
+Meia Central
+04/07/2000 (26)	Brasil	-
+-	
+Ed Carlos	Ed Carlos
+Meia Central
+19/03/2001 (25)	Brasil	-
+-	
+Gustavo	Gustavo
+Meia Central
+03/01/2002 (24)	Brasil	-
+-	
+Igor Maduro	Igor Maduro
+Meia Central
+03/03/2001 (25)	Brasil	-
+-	
+Nenê	Nenê
+Meia Ofensivo
+19/07/1981 (45)	Brasil
+Espanha	-
+-	
+Giovanni	Giovanni
+Meia Ofensivo
+04/04/1994 (32)	Brasil
+Itália	-
+-	
+Riquelmo	Riquelmo
+Meia Ofensivo
+19/03/2002 (24)	Brasil	-
+-	
+Romário	Romário
+Meia Ofensivo
+28/05/2002 (24)	Brasil	-
+-	
+Felipe Azevedo	Felipe Azevedo
+Ponta-Esquerda
+10/01/1987 (39)	Brasil
+Itália	-
+-	
+Dudu Hatamoto	Dudu Hatamoto
+Ponta-Esquerda
+06/08/2003 (23)	Brasil	-
+-	Santa Cruz Acre EC
+Mosquito	Mosquito
+Ponta-Esquerda
+22/09/2002 (24)	Brasil	-
+-	AD Confiança
+Breiner Camilo	Breiner Camilo
+Ponta Direita
+14/11/2000 (25)	Colômbia	-
+-	Náutico
+Kayon	Kayon
+Ponta Direita
+07/06/2004 (22)	Brasil	-
+-	
+Henrique Dourado	Henrique Dourado
+Centroavante
+15/09/1989 (37)	Brasil	-
+-	
+Rodolfo	Rodolfo
+Centroavante
+21/05/1992 (34)	Brasil	-
+-	EC Vitória Sub-20
+Grama	Grama
+Centroavante
+CONFIANÇA
+-	
+Matheus Emiliano	Matheus Emiliano
+Goleiro
+06/12/2000 (25)	Brasil	-
+-	
+Cadu	Cadu
+Goleiro
+11/01/2005 (21)	Brasil	-
+-	
+Marcos Paulo	Marcos Paulo
+Goleiro
+28/06/2003 (23)	Brasil	-
+-	
+Ícaro	Ícaro
+Zagueiro
+05/08/1993 (33)	Brasil	-
+-	EC Noroeste
+Lucas Cunha	Lucas Cunha
+Zagueiro
+24/06/1994 (32)	Brasil	-
+-	
+Eduardo Moura	Eduardo Moura
+Zagueiro
+05/04/1993 (33)	Brasil	-
+-	Coimbra Sports
+Adryan	Adryan
+Zagueiro
+06/07/2000 (26)	Brasil	-
+-	EC Água Santa
+Alisson	Alisson
+Zagueiro
+09/05/1995 (31)	Brasil	-
+-	Desportiva Aracaju 
+Renilson	Renilson
+Zagueiro
+31/05/1999 (27)	Brasil	-
+-	Tombense FC
+João Mandovani	João Mandovani
+Zagueiro
+15/11/2004 (21)	Brasil	-
+-	
+Kelvyn	Kelvyn
+Lateral Esq.
+07/05/1999 (27)	Brasil	-
+-	
+Marcelo	Marcelo
+Lateral Esq.
+22/12/1998 (27)	Brasil	-
+-	
+Weriton	Weriton
+Lateral Dir.
+28/02/1992 (34)	Brasil	-
+-	
+Valdir	Valdir
+Lateral Dir.
+22/05/2000 (26)	Brasil	-
+-	
+Mateus Ludke	Mateus Ludke
+Lateral Dir.
+11/12/2000 (25)	Brasil	-
+-	
+Guilherme Nunes	Guilherme Nunes
+Volante
+12/07/1998 (28)	Brasil	-
+-	CA Juventus
+Madison	Madison
+Volante
+08/07/1998 (28)	Brasil	-
+-	
+Lorran	Lorran
+Volante
+03/05/1996 (30)	Brasil	-
+-	
+Paulo Henrique	Paulo Henrique
+Volante
+13/10/2004 (22)	Brasil	-
+-	Azuriz FC
+Gabriel Zeca	Gabriel Zeca
+Volante
+19/02/2002 (24)	Brasil	-
+-	
+Moisés	Moisés
+Volante
+24/03/2005 (21)	Brasil	-
+-	
+Fabrício Oya	Fabrício Oya
+Meia Ofensivo
+23/07/1999 (27)	Brasil
+Japão	-
+-	Hong Linh Ha Tinh FC
+Welder	Welder
+Ponta-Esquerda
+26/12/1994 (31)	Brasil	€50mil
+-	
+Danielzinho	Danielzinho
+Ponta-Esquerda
+29/10/1999 (27)	Brasil	-
+-	
+Iago	Iago
+Ponta-Direita
+11/03/1996 (30)	Brasil	-
+-	
+Maikon Aquino	Maikon Aquino
+Ponta-Direita
+14/05/1993 (33)	Brasil	-
+-	América FC
+Luiz Thiago	Luiz Thiago
+Ponta-Direita
+09/05/1995 (31)	Brasil	-
+-	Nacional FC
+Sassá	Sassá
+Centroavante
+11/01/1994 (32)	Brasil	-
+AMAZONAS
+1	
+João Lopes	João Lopes
+Goleiro
+16/01/1996 (30)	Brasil	-
+33	
+Renan	Renan
+Goleiro
+18/05/1989 (37)	Brasil
+Bulgária	-
+-	Trem DC
+Victor Lube	Victor Lube
+Goleiro
+05/02/1994 (32)	Brasil	-
+-	
+Abdul Mendy	Abdul Mendy
+Goleiro
+08/12/2002 (23)	Senegal
+Espanha	-
+12	
+Axel Lopes	Axel Lopes
+Goleiro
+03/08/1992 (34)	Brasil	-
+-	SER Caxias do Sul
+Joilson	Joilson
+Zagueiro
+25/05/1991 (35)	Brasil	-
+-	Sem mais
+Bruno Ramires	Bruno Ramires
+Zagueiro
+18/03/1994 (32)	Brasil	-
+-	
+Iverton	Iverton
+Zagueiro
+30/03/2001 (25)	Brasil	-
+3	
+Marcondes	Marcondes
+Zagueiro
+03/03/1993 (33)	Brasil	-
+30	
+Diego Ivo	Diego Ivo
+Zagueiro
+06/04/1989 (37)	Brasil	-
+-	Desportivo Brasil
+Bryan	Bryan
+Zagueiro
+21/08/2002 (24)	Brasil	-
+6	
+Rafael Furlan	Rafael Furlan
+Esq. Lateral
+20/09/1994 (32)	Brasil	-
+20	
+Ítalo Silva	Ítalo Silva
+Esq. Lateral
+25/01/1991 (35)	Brasil	-
+23	
+Alyson	Alyson
+Esq. Lateral
+05/04/1996 (30)	Brasil	-
+-	
+Kaio Luciano	Kaio Luciano
+Esq. Lateral
+10/02/2005 (21)	Brasil	-
+-	EC Vitória Sub-20
+Kauan Vitor	Kauan Vitor
+Esq. Lateral
+15/06/2006 (20)	Brasil	-
+-	Sem mais
+Cidinho	Cidinho
+Diretor Lateral
+26/12/1988 (37)	Bulgária
+Brasil	-
+4	
+Iury	Iury
+Diretor Lateral
+20/08/1992 (34)	Brasil	-
+23	
+Raylison	Raylison
+Diretor Lateral
+05/08/2006 (20)	Brasil	-
+-	Nacional FC
+PH Guimarães	PH Guimarães
+Volante
+18/03/1991 (35)	Brasil	-
+-	Sertãozinho FC
+Riquelme	Riquelme
+Volante
+02/10/2002 (24)	Brasil	-
+-	AD São Caetano
+Felipe Pelles	Felipe Pelles
+Volante
+18/10/1991 (35)	Brasil	-
+-	Operatório FC
+Tonhão	Tonhão
+Volante
+05/03/2001 (25)	Brasil	-
+-	GE Brasil
+Júlio Simas	Júlio Simas
+Volante
+13/09/2001 (25)	Brasil	-
+-	Osasco Sporting
+Pablo	Pablo
+Volante
+23/02/2004 (22)	Brasil	-
+-	
+Guga	Guga
+Meio-Campo
+17/03/2006 (20)	Brasil	-
+-	
+Ricardo	Ricardo
+Meio-Campo
+14/09/2003 (23)	Brasil	-
+15	
+Yaider Mena	Yaider Mena
+Volante
+24/11/2004 (21)	Colômbia	-
+7	
+Johnny Lucas	Johnny Lucas
+Meia Central
+21/02/2000 (26)	Brasil	-
+20	
+Fabinho	Fabinho
+Meia Central
+07/07/1996 (30)	Brasil	-
+-	Real Noroeste CFC
+Guilherme Brito	Guilherme Brito
+Meia Direita
+23/11/2003 (22)	Brasil	-
+-	Ferroviária
+Cauê Araújo	Cauê Araújo
+Meia Ofensivo
+21/01/2005 (21)	Brasil	-
+-	Feira FC
+Ronan	Ronan
+Ponta-Esquerda
+14/01/1995 (31)	Brasil	-
+-	CE Operário Várzea-Grandense
+Kauê Fernandes	Kauê Fernandes
+Ponta-Esquerda
+06/08/2004 (22)	Brasil	-
+-	Votoracy FC
+Geuvânio	Geuvânio
+Ponta Direita
+05/04/1992 (34)	Brasil	-
+16	
+Vinícius Leite	Vinícius Leite
+Ponta Direita
+25/10/1993 (33)	Brasil	-
+9	
+Ronaldo	Ronaldo
+Centroavante
+10/04/1991 (35)	Brasil	-
+16	
+Ezequiel	Ezequiel
+Centroavante
+26/02/2003 (23)	Brasil	-
+21	
+Adrien Graffin	Adrien Graffin
+Centroavante
+02/01/2004 (22)	Estados Unidos
+Brasil	-
+22	
+Alison Matheus	Alison Matheus
+Centroavante
+02/02/2004 (22)	Brasil	
+INTER DE LIMEIRA
+-	
+Saulo	Saulo
+Goleiro
+10/08/1985 (41)	Brasil
+Itália	-
+-	América FC
+Renan Bragança	Renan Bragança
+Goleiro
+14/11/1997 (28)	Brasil	-
+-	Guarani FC
+Emerson Junior	Emerson Junior
+Goleiro
+07/02/2000 (26)	Brasil	-
+-	
+Pedro Nagel	Pedro Nagel
+Goleiro
+14/10/2002 (24)	Brasil	-
+-	
+Jonathan	Jonathan
+Goleiro
+16/03/2003 (23)	Brasil	-
+-	Náutico
+Alemão	Alemão 
+Zagueiro
+18/10/1990 (36)	Brasil	-
+-	
+Robson	Robson
+Zagueiro
+06/04/1993 (33)	Brasil
+Portugal	-
+-	
+Lucas Santos	Lucas Santos
+Zagueiro
+21/06/1993 (33)	Brasil	-
+-	
+Léo Paraíso	Léo Paraíso
+Zagueiro
+28/02/2000 (26)	Brasil	-
+-	Criciúma EC
+Heitor Roca	Heitor Roca
+Lateral Esq.
+19/02/1998 (28)	Brasil
+Espanha	-
+-	
+Juan Tavares	Juan Tavares
+Lateral Esq.
+25/04/2002 (24)	Brasil	-
+-	Osasco Sporting
+César Morais	César Morais
+Lateral Esq.
+06/05/1997 (29)	Brasil	-
+-	
+Nassom	Nassom
+Lateral Esq.
+10/02/2003 (23)	Brasil	-
+-	
+Gabriel Dias	Gabriel Dias
+Lateral Dir.
+10/05/1994 (32)	Brasil	-
+-	
+Vidal	Vidal
+Lateral Dir.
+23/08/1996 (30)	Brasil	-
+-	
+Yan Silva	Yan Silva
+Lateral Dir.
+19/11/1996 (29)	Brasil	-
+-	
+Emerson Santos	Emerson Santos
+Volante
+27/02/1992 (34)	Brasil	-
+-	
+Alef	Alef
+Volante
+28/01/1995 (31)	Brasil	-
+-	
+Ronaldo Henrique	Ronaldo Henrique
+Volante
+27/06/1994 (32)	Brasil	-
+-	
+Gustavo Bochecha	Gustavo Bochecha
+Volante
+08/06/1996 (30)	Brasil	-
+-	
+Lucas Buchecha	Lucas Buchecha
+Volante
+05/09/2000 (26)	Brasil	-
+-	Guarani FC
+Fabricio Dias	Fabricio Dias
+Volante
+26/08/2004 (22)	Brasil	-
+-	
+Romarinho	Romarinho
+Meia Direita
+20/06/1994 (32)	Brasil	-
+-	
+Marco Antônio	Marco Antônio
+Meia Ofensivo
+01/10/1997 (29)	Brasil	-
+-	SSA FC
+Gabriel Santiago	Gabriel Santiago
+Meia Ofensivo
+05/02/2000 (26)	Brasil	-
+-	
+Claudinho	Claudinho
+Meia Ofensivo
+18/11/2000 (25)	Brasil	-
+-	
+Luiz Guilherme	Luiz Guilherme
+Meia Ofensivo
+19/03/2004 (22)	Brasil	-
+-	
+Vitor Leque	Vitor Leque
+Ponta-Esquerda
+19/01/2001 (25)	Brasil	-
+-	
+Rafael Oller	Rafael Oller
+Ponta-Esquerda
+24/02/1995 (31)	Brasil	-
+-	Ansan Greeners
+Felipe Saraiva	Felipe Saraiva
+Ponta-Direita
+09/03/1998 (28)	Brasil	-
+-	
+Robinho	Robinho
+Ponta-Direita
+20/10/1998 (28)	Brasil	-
+-	
+Richard	Richard
+Ponta-Direita
+20/12/2001 (24)	Brasil	-
+-	
+Miguel Bianconi	Miguel Bianconi
+Centroavante
+14/05/1992 (34)	Brasil
+Itália	-
+-	Tombense FC
+Getulio	Getulio
+Centroavante
+10/06/1997 (29)	Brasil	
+MARANHÃO AC
+1	
+Jean	Jean
+Goleiro
+28/04/1992 (34)	Brasil	-
+-	
+Victor Guilherme	Victor Guilherme
+Goleiro
+02/05/2000 (26)	Brasil	-
+-	
+Cauê	Cauê
+Goleiro
+01/02/2004 (22)	Brasil	-
+-	SD Juazeirense
+Irã	Irã
+Zagueiro
+29/11/1995 (30)	Brasil	-
+-	
+Edson	Edson
+Zagueiro
+25/11/2000 (25)	Brasil	-
+-	
+Almeida	Almeida
+Zagueiro
+20/08/2006 (20)	Brasil	-
+4	
+Lucão	Lucão
+Zagueiro
+24/07/2000 (26)	Brasil	-
+-	
+Lucas Santos	Lucas Santos
+Esq. Lateral
+20/08/1997 (29)	Brasil	-
+16	
+André Radija	André Radija
+Esq. Lateral
+18/01/1995 (31)	Brasil	-
+25	
+Maurício Maranhão	Maurício Maranhão
+Diretor Lateral
+14/12/1998 (27)	Brasil	-
+-	
+Rodrigo Negueba	Rodrigo Negueba
+Diretor Lateral
+20/05/1999 (27)	Brasil	-
+2	
+Bal	Bal
+Diretor Lateral
+03/05/1998 (28)	Brasil	-
+-	
+Rodrigo	Rodrigo
+Volante
+11/02/1994 (32)	Brasil	-
+-	Santa Cruz FC
+Peu	Peu
+Volante
+20/03/2004 (22)	Brasil	-
+-	
+Pedro Lucas	Pedro Lucas
+Volante
+29/05/2007 (19)	Brasil	-
+-	
+Pedro Henrique	Pedro Henrique
+Volante
+02/05/2005 (21)	Brasil	-
+5	
+Railson	Railson
+Volante
+23/12/1999 (26)	Brasil	-
+-	
+Jorge Rocha	Jorge Rocha
+Meia Ofensivo
+09/12/1997 (28)	Brasil	-
+20	
+Vagalume	Vagalume
+Meia Ofensivo
+10/05/1999 (27)	Brasil	-
+26	EC Novo Hamburgo
+Luís Gustavo	Luís Gustavo
+Meia Ofensivo
+15/09/2000 (26)	Brasil	-
+-	
+Pimentèce de ...	Pimentèce de ...
+Ponta-Esquerda
+13/09/1987 (39)	Brasil	-
+-	Parnahyba SC
+Kessinho	Kessinho
+Ponta-Esquerda
+22/01/2003 (23)	Brasil	-
+-	IAPE FC
+Ronald Makalysten	Ronald Makalysten
+Seg. Atacante
+02/08/2000 (26)	Brasil	-
+-	Joinville EC
+Everson	Everson
+Centroavante
+18/01/1998 (28)	Brasil	-
+-	
+Rafael Teixeira	Rafael Teixeira
+Centroavante
+24/03/2001 (25)	Brasil
+MARINGA FC
+23	
+Neto	Neto
+Goleiro
+25/04/1995 (31)	Brasil	-
+-	São José EC
+Gabriel Afonso	Gabriel Afonso
+Goleiro
+15/11/1998 (27)	Brasil	-
+12	
+Romário	Romário
+Goleiro
+18/12/2000 (25)	Brasil	-
+-	Sem mais
+Jesiel	Jesiel
+Zagueiro
+05/03/1994 (32)	Brasil	-
+-	Capivariano FC
+Wendel Lomar	Wendel Lomar
+Zagueiro
+27/05/1996 (30)	Brasil	-
+-	Ceará SC
+Ronald Carvalho	Ronald Carvalho
+Zagueiro
+01/05/2000 (26)	Brasil	-
+-	
+Gabriel Santos	Gabriel Santos
+Zagueiro
+28/01/2001 (25)	Brasil	-
+4	
+Jonathan	Jonathan
+Zagueiro
+12/02/2003 (23)	Brasil	-
+13	
+Kevin	Kevin
+Zagueiro
+08/09/2002 (24)	Brasil	-
+14	
+Felipe	Felipe
+Zagueiro
+11/08/2004 (22)	Brasil	-
+6	
+Thiago Rosa	Thiago Rosa
+Esq. Lateral
+18/03/2002 (24)	Brasil	-
+2	Cianorte FC
+Gabriel Souza	Gabriel Souza
+Diretor Lateral
+25/12/2002 (23)	Brasil	-
+15	
+Kelvi Gomes	Kelvi Gomes
+Volante
+17/10/2002 (24)	Brasil	-
+23	
+Paulinho	Paulinho
+Volante
+22/07/1998 (28)	Brasil	-
+28	
+Lucas Bonifácio	Lucas Bonifácio
+Volante
+29/05/2001 (25)	Brasil	-
+-	Floresta EC
+Buga	Buga
+Meia Central
+21/06/2001 (25)	Brasil	-
+8	
+Adelson Maranhão	Adelson Maranhão
+Meia Central
+07/04/1998 (28)	Brasil	-
+-	Brasiliense FC
+Serginho	Serginho
+Meia Ofensivo
+03/12/1990 (35)	Brasil	-
+-	
+Danielzinho	Danielzinho
+Meia Ofensivo
+28/06/2002 (24)	Brasil	-
+17	
+Iago Santana	Iago Santana
+Meia Ofensivo
+04/10/1999 (27)	Brasil	-
+20	
+Bruno Cheron	Bruno Cheron
+Meia Ofensivo
+17/01/2004 (22)	Brasil	-
+-	Uberlândia EC
+Júlio Rodrigues	Júlio Rodrigues
+Ponta-Esquerda
+02/03/2001 (25)	Brasil	-
+-	Tombense FC
+Rafina	Rafina
+Ponta-Esquerda
+14/02/2000 (26)	Brasil	-
+7	
+Edison Negueba	Edison Negueba
+Ponta-Esquerda
+24/10/2000 (26)	Brasil	-
+10	
+Guilherme Pira	Guilherme Pira
+Ponta-Esquerda
+07/07/2000 (26)	Brasil	-
+21	
+Ronald Camarão	Ronald Camarão
+Ponta-Esquerda
+06/07/2000 (26)	Brasil	-
+19	
+Pedrinho	Pedrinho
+Ponta-Esquerda
+09/03/2003 (23)	Brasil	-
+9	
+Giovanni Gomez	Giovanni Gomez
+Centroavante
+20/03/1995 (31)	Brasil	-
+29	
+Raí	Raí
+Atacante
+25/12/2004 (21)	Brasil	-
+99	Tombense FC
+Caíque Calito	Caíque Calito
+Centroavante
+03/07/2000 (26)	Brasil	-
+-	
+Rian Patric	Rian Patric
+Atacante
+08/02/2006 (20)	Brasil	
+ANAPOLIS FC
+-	
+Ravel Pelegrini	Ravel Pelegrini
+Goleiro
+02/08/1995 (31)	Brasil	-
+-	
+Victor Hugo	Victor Hugo
+Goleiro
+11/11/2000 (25)	Brasil	-
+-	
+Márcio Defendi	Márcio Defendi
+Goleiro
+13/01/2004 (22)	Brasil	-
+-	Grêmio FBPA Sub-20
+Ygor	Ygor
+Goleiro
+04/03/2005 (21)	Brasil	-
+-	
+Gabriel Ribeiro	Gabriel Ribeiro
+Goleiro
+22/05/2005 (21)	Brasil	-
+-	
+Rafael Costa	Rafael Costa
+Zagueiro
+15/11/2000 (25)	Brasil	-
+-	CS Sergipe
+Carioca	Carioca
+Zagueiro
+05/06/2000 (26)	Brasil	-
+-	
+Helder	Helder
+Zagueiro
+08/12/2000 (25)	Brasil	-
+-	
+Igor Souza	Igor Souza
+Zagueiro
+29/10/1996 (30)	Brasil	-
+-	AD Manthiqueira Ltda.
+Danilo	Danilo
+Zagueiro
+09/10/2003 (23)	Brasil	-
+-	
+Leonan	Leonan
+Esq. Lateral
+28/10/1995 (31)	Brasil	-
+-	Manauara EC
+Vitinho	Vitinho
+Diretor Lateral
+11/08/1997 (29)	Brasil	-
+-	Lengentus FC
+Marcos Marciliel	Marcos Marciliel
+Diretor Lateral
+19/04/2000 (26)	Brasil	-
+-	
+Rubinho	Rubinho
+Diretor Lateral
+09/01/2003 (23)	Brasil	-
+-	
+Giva Santos	Giva Santos
+Volante
+22/02/1999 (27)	Brasil	-
+-	
+Samuel	Samuel
+Volante
+06/06/1999 (27)	Brasil	-
+-	
+Lucas Mila	Lucas Mila
+Volante
+28/01/2003 (23)	Brasil	-
+-	
+Gharib	Gharib
+Volante
+10/05/1999 (27)	Brasil	-
+-	Atlético Mineiro B
+Kauan Guilherme	Kauan Guilherme
+Volante
+05/01/2005 (21)	Brasil	-
+-	
+João Borim	João Borim
+Volante
+25/02/2002 (24)	Brasil	-
+-	
+Patrick	Patrick
+Meio-Campo
+01/04/2005 (21)	Brasil	-
+-	
+Cássio Gabriel	Cássio Gabriel
+Meia Ofensivo
+23/08/1992 (34)	Brasil	-
+-	
+Gabriel Batista	Gabriel Batista
+Meia Ofensivo
+09/03/2004 (22)	Brasil	-
+-	
+Fernandinho	Fernandinho
+Ponta-Esquerda
+20/03/2003 (23)	Brasil	-
+27	
+Gustavo Henrique	Gustavo Henrique
+Ponta-Esquerda
+24/05/1999 (27)	Brasil	-
+-	
+Fernando Viana	Fernando Viana
+Centroavante
+20/02/1992 (34)	Brasil	-
+-	Fluminense EC
+João Vítor	João Vítor
+Centroavante
+19/05/1998 (28)	Brasil	-
+-	José Bonifácio EC
+Kauã Caveirão	Kauã Caveirão
+Centroavante
+26/05/2005 (21)	Brasil	
+YPIRANGA FC
+85	
+Zé Carlos	Zé Carlos
+Goleiro
+09/09/1985 (41)	Brasil	-
+-	
+Lucas Maticoli	Lucas Maticoli
+Goleiro
+17/01/1997 (29)	Brasil	-
+-	
+Edu Araújo	Edu Araújo
+Goleiro
+09/02/2002 (24)	Brasil	-
+-	
+Reinaldo	Reinaldo
+Zagueiro
+18/03/1989 (37)	Brasil	-
+22	
+Walce	Walce
+Zagueiro
+02/02/1999 (27)	Brasil	-
+-	
+Adilson Júnior	Adilson Júnior
+Zagueiro
+10/02/2004 (22)	Brasil	-
+3	
+William Gomes	William Gomes
+Zagueiro
+08/07/1989 (37)	Brasil	-
+21	
+Leo Gobo	Leo Gobo
+Zagueiro
+09/11/1996 (29)	Brasil	-
+-	
+Cleiton	Cleiton
+Diretor Lateral
+29/08/1993 (33)	Brasil	-
+43	
+Ramon Vinicius	Ramon Vinicius
+Volante
+13/05/2000 (26)	Brasil	-
+-	Mixto EC
+Robson Lopes	Robson Lopes
+Volante
+26/02/1992 (34)	Brasil	-
+-	
+Kauan Bruno	Kauan Bruno
+Volante
+09/03/2005 (21)	Brasil	-
+16	
+Lucas Ramos	Lucas Ramos
+Meia Central
+03/01/2001 (25)	Brasil	-
+27	
+Dionísio	Dionísio
+Meia Central
+17/04/1994 (32)	Brasil	-
+79	Nova Iguaçu FC
+Leão Rafael	Leão Rafael
+Meia Central
+25/04/2001 (25)	Brasil	-
+-	Ferroviária
+Allison	Allison
+Meia Ofensivo
+07/02/2002 (24)	Brasil	-
+-	EC São Luiz
+Nathan Zamith	Nathan Zamith
+Meia Ofensivo
+15/08/2005 (21)	Brasil	-
+-	Clube Esportivo Bento Gonçalves
+Dudu	Dudu
+Meia Ofensivo
+27/07/2003 (23)	Brasil
+Itália	-
+-	
+Henrique	Henrique
+Ponta-Esquerda
+23/08/1993 (33)	Brasil
+Bulgária	-
+-	
+Marcelinho	Marcelinho
+Ponta-Esquerda
+17/07/1996 (30)	Brasil	-
+-	
+Felipe Ferreira	Felipe Ferreira
+Ponta Direita
+25/04/1994 (32)	Brasil	-
+-	
+Vinicius Charopem	Vinicius Charopem
+Ponta Direita
+26/06/1998 (28)	Brasil	-
+-	
+Pedro Lucas	Pedro Lucas
+Ponta Direita
+05/05/2003 (23)	Brasil	-
+28	
+Gustavo Simões	Gustavo Simões
+Centroavante
+23/04/2002 (24)	Brasil	
+FERROVIARIA SP
+-	
+Denis Júnior	Denis Júnior
+Goleiro
+10/08/1998 (28)	Brasil	-
+-	EC São José
+Fábio Rampi	Fábio Rampi
+Goleiro
+23/01/1989 (37)	Brasil	-
+-	
+Gustavo Jundi	Gustavo Jundi
+Goleiro
+05/04/2004 (22)	Brasil
+Síria	-
+-	UD Leiria
+Zé Vítor	Zé Vítor
+Zagueiro
+10/06/2002 (24)	Brasil	-
+13	
+Gustavo Medina	Gustavo Medina
+Zagueiro
+09/07/2001 (25)	Brasil	-
+83	
+Erik Nascimento	Erik Nascimento
+Zagueiro
+18/04/2005 (21)	Brasil	-
+-	Ituano FC
+Carlão	Carlão
+Zagueiro
+24/07/2000 (26)	Brasil	-
+-	Londrina EC
+Guilherme Ferreira	Guilherme Ferreira
+Zagueiro
+13/03/2000 (26)	Brasil	-
+-	
+Gadu	Gadu
+Zagueiro
+06/01/2005 (21)	Brasil	-
+-	
+Rhuan	Rhuan
+Esq. Lateral
+18/09/2000 (26)	Brasil	-
+-	Sem mais
+Vinicius Kauê	Vinicius Kauê
+Esq. Lateral
+01/03/2003 (23)	Brasil	-
+-	
+Eduardo Oliveira	Eduardo Oliveira
+Esq. Lateral
+01/04/2007 (19)	Brasil	-
+-	
+Felipe Rodrigues	Felipe Rodrigues
+Diretor Lateral
+31/10/1995 (31)	Brasil	-
+2	
+Lucas Rodrigues	Lucas Rodrigues
+Diretor Lateral
+04/07/1999 (27)	Brasil	-
+-	
+Rafael Carrilho	Rafael Carrilho
+Volante
+08/01/1995 (31)	Brasil	-
+-	Atlético Goianiense
+Igor Henrique	Igor Henrique
+Meia Central
+20/12/1991 (34)	Brasil	-
+5	
+Ricardinho	Ricardinho
+Meia Central
+27/03/1989 (37)	Brasil	-
+8	
+Alencar	Alencar
+Meia Central
+07/08/2002 (24)	Brasil	-
+-	
+Raoni	Raoni
+Meia Central
+03/06/2005 (21)	Brasil	-
+-	Náutico
+Juninho	Juninho
+Meia Ofensivo
+03/09/1995 (31)	Brasil	-
+-	
+Albano	Albano
+Meia Ofensivo
+09/06/1997 (29)	Brasil	-
+-	
+David	David
+Meia Ofensivo
+08/02/2004 (22)	Brasil	-
+-	Goiás EC
+Alan Stence	Alan Stence
+Meia Ofensivo
+03/07/2002 (24)	Brasil
+Alemanha	-
+-	
+Jhonatan Garcia	Jhonatan Garcia
+Meia Ofensivo
+14/02/2004 (22)	Brasil	-
+-	
+Denilson	Denilson
+Ponta-Esquerda
+26/07/2003 (23)	Brasil	-
+11	
+Vitor Barreto	Vitor Barreto
+Ponta-Esquerda
+01/04/2000 (26)	Brasil	-
+80	
+Fábio Soares	Fábio Soares
+Ponta-Esquerda
+03/12/2004 (21)	Brasil	-
+-	
+Douglas Skilo	Douglas Skilo
+Ponta Direita
+13/11/1994 (31)	Brasil	-
+-	Rio Claro FC
+Denilson	Denilson
+Centroavante
+07/03/1998 (28)	Brasil	-
+-	
+Vinni Faria	Vinni Faria
+Centroavante
+15/11/1999 (26)	Brasil	-
+-	Guarani FC
+Maranhão	Maranhão
+Centroavante
+01/04/1996 (30)	Brasil	-
+-	Nacional AC
+Pedro Lucas	Pedro Lucas
+Atacante
+19/11/2005 (20)	Brasil	-
+-	
+Pedro Estevam	Pedro Estevam
+Centroavante
+02/01/2005 (21)	Brasil	-
+-	
+Thiago Montelo	Thiago Montelo
+Centroavante
+29/01/2005 (21)	Brasil
+ITABAIANA
+1	
+Jefferson	Jefferson
+Goleiro
+02/05/1993 (33)	Brasil	-
+-	
+Leo Souza	Leo Souza
+Goleiro
+15/06/1989 (37)	Brasil	-
+-	
+Geaze	Geaze
+Goleiro
+28/07/1994 (32)	Brasil	-
+-	
+William	William
+Goleiro
+03/04/2006 (20)	Brasil	-
+-	
+Ligger	Ligger
+Zagueiro
+18/05/1988 (38)	Brasil	-
+-	Sem mais
+Yann Motta	Yann Motta
+Zagueiro
+24/11/1999 (26)	Brasil	-
+3	Guarani FC
+Lucão	Lucão
+Zagueiro
+25/03/1998 (28)	Brasil	-
+-	
+Betão	Betão
+Zagueiro
+14/10/1991 (35)	Brasil	-
+4	
+Gustavo Fagundes	Gustavo Fagundes
+Zagueiro
+30/08/2001 (25)	Brasil	-
+-	
+Manoel	Manoel
+Esq. Lateral
+06/05/1996 (30)	Brasil	-
+-	
+Caio Felipe	Caio Felipe
+Diretor Lateral
+02/02/1999 (27)	Brasil	-
+-	Tombense FC
+Júlio Henrique	Júlio Henrique
+Diretor Lateral
+01/08/2002 (24)	Brasil	-
+-	
+Isaac	Isaac
+Diretor Lateral
+14/09/2001 (25)	Brasil	-
+-	Tombense FC
+Dyego	Dyego
+Volante
+02/01/2003 (23)	Brasil	-
+-	
+Fabrício Moura	Fabrício Moura
+Volante
+26/06/2004 (22)	Brasil	-
+-	
+Vítor Luís	Vítor Luís
+Volante
+23/02/2006 (20)	Brasil	-
+5	
+Gustavo Crecci	Gustavo Crecci
+Volante
+06/01/1995 (31)	Brasil	-
+-	
+Renatinho	Renatinho
+Meia Ofensivo
+31/01/1992 (34)	Brasil	-
+-	Tombense FC
+Cleiton	Cleiton
+Meia Ofensivo
+22/04/1998 (28)	Brasil	-
+-	
+Leilson	Leilson
+Ponta-Esquerda
+27/09/1992 (34)	Brasil	-
+-	
+Tarcísio	Tarcísio
+Ponta-Esquerda
+07/11/1992 (33)	Brasil	-
+-	Maricá FC
+Denilson	Denilson
+Ponta Direita
+20/03/2000 (26)	Brasil	-
+-	
+Elimar	Elimar
+Ponta Direita
+17/06/1998 (28)	Brasil	-
+-	
+Luan Silva	Luan Silva
+Centroavante
+19/07/1992 (34)	Brasil	-
+-	
+Everton Kanela	Everton Kanela
+Centroavante
+12/01/1996 (30)	Brasil	-
+-	
+Brandon Mondaca	Brandon Mondaca
+Atacante
+23/02/2005 (21)	Chile	
+ITUANO FC
+-	
+Saulo	Saulo
+Goleiro
+20/04/1995 (31)	Brasil	-
+-	
+Lucas Wingert	Lucas Wingert
+Goleiro
+04/05/1999 (27)	Brasil	-
+-	
+Wesley Borges	Wesley Borges
+Goleiro
+15/04/2002 (24)	Brasil	-
+-	
+Matheus Mancini	Matheus Mancini
+Zagueiro
+14/09/1994 (32)	Brasil
+Itália	-
+-	Porto Vitória FC
+Leo Coltro	Leo Coltro
+Zagueiro
+12/04/1999 (27)	Brasil
+Itália	-
+-	
+Leandro Sergipe	Leandro Sergipe
+Zagueiro
+28/04/1999 (27)	Brasil	-
+-	
+Ricardo	Ricardo
+Esq. Lateral
+18/01/2005 (21)	Brasil	-
+-	
+Guilherme Dal Pian	Guilherme Dal Pian
+Esq. Lateral
+16/03/1999 (27)	Brasil
+Itália	-
+-	
+Lucas Mota	Lucas Mota
+Diretor Lateral
+09/07/1995 (31)	Brasil	-
+-	
+Thassio	Thassio
+Diretor Lateral
+10/10/2000 (26)	Brasil	-
+-	
+Lucas Dias	Lucas Dias
+Diretor Lateral
+10/03/2005 (21)	Brasil	-
+-	
+Guilherme Xavier	Guilherme Xavier
+Volante
+13/12/1994 (31)	Brasil	-
+-	
+Marta	Marta
+Volante
+20/06/1997 (29)	Brasil	-
+-	
+Lipe	Lipe
+Meia Central
+20/03/2004 (22)	Brasil	-
+-	
+Nelsinho	Nelsinho
+Meia Central
+24/06/1994 (32)	Brasil	-
+-	
+Fernando Canesin	Fernando Canesin
+Meia Ofensivo
+27/02/1992 (34)	Brasil
+Bélgica	-
+-	
+Lucas Stefanello	Lucas Stefanello
+Meia Ofensivo
+16/02/2005 (21)	Brasil	-
+-	
+Victor Silva	Victor Silva
+Meia Ofensivo
+06/04/2004 (22)	Brasil	-
+-	
+Felipe Muranga	Felipe Muranga
+Meia Ofensivo
+02/04/2001 (25)	Brasil	-
+-	
+Bruno Alves	Bruno Alves
+Ponta-Esquerda
+13/09/1992 (34)	Brasil	-
+-	
+Marlinho	Marlinho
+Ponta Direita
+19/06/2005 (21)	Brasil	-
+-	
+Alason Carioca	Alason Carioca
+Seg. Atacante
+15/01/1999 (27)	Brasil	-
+-	
+Bruno Mezenga	Bruno Mezenga
+Centroavante
+08/08/1988 (38)	Brasil	-
+-	FC Cascavel
+Zé Carlos	Zé Carlos
+Centroavante
+09/01/2004 (22)	Brasil	-
+-	
+Gabriel Razera	Gabriel Razera
+Centroavante
+18/02/2004 (22)	Brasil	-
+-	Rio Claro FC
+Luan	Luan
+Atacante
+05/01/2003 (23)	Brasil	-
+
+VOLTA REDONDA
+45	
+Deidade	Deidade
+Goleiro
+26/03/1991 (35)	Brasil	-
+-	
+Guilherme Nunes	Guilherme Nunes
+Goleiro
+03/06/2004 (22)	Brasil	-
+-	Fluminense FC Sub-20
+Antônio Carlos	Antônio Carlos
+Goleiro
+15/06/2006 (20)	Brasil	-
+1	
+Felipe Avelino	Felipe Avelino
+Goleiro
+11/11/1998 (27)	Brasil	-
+12	
+Heitor Silva	Heitor Silva
+Goleiro
+02/09/1999 (27)	Brasil	-
+3	
+Lucas Adel	Lucas Adel
+Zagueiro
+15/07/2000 (26)	Brasil	-
+4	
+Fabrício	Fabrício
+Zagueiro
+20/02/1990 (36)	Brasil	-
+15	
+Lucas Rocha	Lucas Rocha
+Zagueiro
+19/06/1995 (31)	Brasil	-
+13	
+Alan Ferreira	Alan Ferreira
+Zagueiro
+12/02/2001 (25)	Brasil	-
+6	
+Jean Victor	Jean Victor
+Esq. Lateral
+01/07/1994 (32)	Brasil	-
+22	
+Juninho Monteiro	Juninho Monteiro
+Esq. Lateral
+28/07/1999 (27)	Brasil	-
+2	
+Wellington Silva	Wellington Silva
+Diretor Lateral
+06/03/1988 (38)	Brasil	-
+-	AD Jaguar
+Fabricio Aguiar	Fabricio Aguiar
+Diretor Lateral
+31/05/2000 (26)	Brasil	-
+-	
+Henrique Silva	Henrique Silva
+Volante
+13/08/1994 (32)	Brasil	-
+5	
+Bruno Barra	Bruno Barra 
+Volante
+11/04/1986 (40)	Brasil	-
+17	
+Wagninho	Wagninho
+Volante
+27/04/2000 (26)	Brasil	-
+21	
+Você Fernandes	Você Fernandes
+Volante
+11/06/2001 (25)	Brasil	-
+-	Fluminense FC Sub-20
+Maxsuel	Maxsuel
+Meio-Campo
+02/04/2006 (20)	Brasil	-
+-	
+Caetano	Caetano
+Volante
+14/06/2005 (21)	Brasil	-
+25	
+Juliano Fabro	Juliano Fabro
+Volante
+08/01/1999 (27)	Brasil	-
+30	
+Juninho	Juninho
+Volante
+29/08/2002 (24)	Brasil	-
+8	
+Dener	Dener
+Meia Central
+13/03/1992 (34)	Brasil	-
+-	AD Confiança
+Conferência de imprensa	Conferência de imprensa
+Meia Ofensivo
+23/11/1998 (27)	Brasil	-
+10	
+Luciano Nanho	Luciano Nanho
+Meia Ofensivo
+03/07/1992 (34)	Brasil	-
+-	Fluminense FC Sub-20
+Matheus Pedro	Matheus Pedro
+Meia Ofensivo
+17/03/2006 (20)	Brasil	-
+-	América FC
+Matheus Régis	Matheus Régis
+Ponta-Esquerda
+11/08/1999 (27)	Brasil	-
+7	
+Marquinhos	Marquinhos
+Ponta-Esquerda
+01/06/1998 (28)	Brasil	-
+-	Nova Iguaçu FC
+André Dias	André Dias
+Ponta-Esquerda
+26/10/2001 (25)	Brasil	-
+-	
+Zuniga	Zuniga
+Ponta-Esquerda
+26/03/2006 (20)	Colômbia	-
+-	Rio Branco AC
+Levi	Levi
+Ponta-Esquerda
+07/09/2006 (20)	Brasil	-
+-	Ivinhema FC
+Wendel	Wendel
+Seg. Atacante
+10/07/2003 (23)	Brasil	-
+-	
+Heliardo	Heliardo
+Centroavante
+14/12/1991 (34)	Brasil	-
+28	
+Rafael Furtado	Rafael Furtado
+Centroavante
+09/12/1999 (26)	Brasil	-
+SANTA CRUZ PE
+-	
+Felipe Alves	Felipe Alves
+Goleiro
+21/05/1988 (38)	Brasil	-
+-	
+Thiago Coelho	Thiago Coelho
+Goleiro
+26/05/1995 (31)	Brasil	-
+25	
+Gabriel Souza	Gabriel Souza
+Goleiro
+03/08/2004 (22)	Brasil
+Itália	-
+-	
+Rokenedy	Rokenedy
+Goleiro
+16/08/2002 (24)	Brasil	-
+-	
+Thiago Henrique	Thiago Henrique
+Goleiro
+11/07/2003 (23)	Brasil	-
+-	
+William Alves	William Alves 
+Zagueiro
+29/04/1987 (39)	Brasil	-
+-	
+Eurico	Eurico
+Zagueiro
+16/04/1994 (32)	Brasil	-
+-	
+Jeferson Bahia	Jeferson Bahia
+Zagueiro
+28/05/1992 (34)	Brasil	-
+-	
+Matheus Vinícius	Matheus Vinícius
+Zagueiro
+08/03/1999 (27)	Brasil	-
+-	
+Edson Miranda	Edson Miranda
+Zagueiro
+18/04/1999 (27)	Brasil	-
+-	
+Ruan Robert	Ruan Robert
+Zagueiro
+02/01/2003 (23)	Brasil	-
+-	
+Zé Mário	Zé Mário
+Lateral Esq.
+20/02/1992 (34)	Brasil	-
+-	
+Alex Ruan	Alex Ruan
+Lateral Esq.
+05/02/1993 (33)	Brasil	-
+-	
+Rodrigues	Rodrigues
+Lateral Esq.
+27/12/1999 (26)	Brasil	-
+-	
+Thiago Ennes	Thiago Ennes
+Lateral Dir.
+05/03/1996 (30)	Brasil	-
+-	Volta Redonda FC
+Pedro Costa	Pedro Costa
+Lateral Dir.
+17/08/1993 (33)	Brasil	-
+-	
+Fabinho	Fabinho
+Volante
+19/11/1986 (39)	Brasil	-
+-	
+Andrey	Andrey
+Volante
+15/02/1998 (28)	Brasil	-
+-	
+Silva	Silva
+Volante
+07/09/1995 (31)	Brasil	-
+-	Betim Futebol
+Arilson	Arilson
+Volante
+30/11/1993 (32)	Brasil	-
+-	
+Léo Costa	Léo Costa
+Volante
+12/11/1995 (30)	Brasil	-
+-	
+Pedro Favela	Pedro Favela
+Volante
+10/07/1999 (27)	Brasil	-
+-	
+Régis	Régis
+Meia Ofensivo
+30/11/1992 (33)	Brasil	-
+-	
+Patrick Allan	Patrick Allan
+Meia Ofensivo
+24/12/1994 (31)	Brasil	-
+-	ABC FC
+João Pedro	João Pedro
+Meia Ofensivo
+02/10/1998 (28)	Brasil	-
+-	SE Gama
+Willian Júnior	Willian Júnior
+Meia Ofensivo
+28/11/1998 (27)	Brasil	-
+-	CSA
+Matheus Melo	Matheus Melo
+Meia Ofensivo
+11/03/1999 (27)	Brasil	-
+-	
+Renato	Renato
+Ponta-Esquerda
+19/01/1990 (36)	Brasil	-
+-	
+Everaldo	Everaldo
+Ponta-Esquerda
+28/05/1994 (32)	Brasil	-
+-	EC Jacuipense
+Thiaguinho	Thiaguinho
+Ponta-Esquerda
+03/04/1998 (28)	Brasil	-
+-	Goiatuba EC
+Vini Hora	Vini Hora
+Ponta-Esquerda
+22/07/2005 (21)	Brasil	-
+-	
+Robinho	Robinho
+Ponta-Direita
+19/01/1995 (31)	Brasil	-
+-	
+Ronald	Ronald
+Ponta-Direita
+05/02/1997 (29)	Brasil	-
+-	América FC
+Cassiano Bouzon	Cassiano Bouzon
+Ponta-Direita
+16/05/2001 (25)	Brasil
+Espanha	-
+-	AE Velo Clube Rioclarense
+Jhoninha	Jhoninha
+Ponta-Direita
+29/12/2001 (24)	Brasil	-
+-	
+Ariel Nahuelpán	Ariel Nahuelpán
+Centroavante
+15/10/1987 (39)	Argentina
+Chile	-
+-	
+Eron	Eron
+Centroavante
+16/07/1998 (28)	Brasil	-
+-	
+Tiago Marques	Tiago Marques
+Centroavante
+03/03/1988 (38)	Brasil	-
+-	Dong Nai City FC
+Alex Sandro	Alex Sandro
+Centroavante
+20/08/1995 (31)	Brasil	-
+-	Portuguesa
+Matheus Cadorini	Matheus Cadorini
+Centroavante
+01/09/2002 (24)	Brasil
+Itália
+GUARANI
+-	Rio Branco AC
+André Ventura	André Ventura
+Goleiro
+17/07/1993 (33)	Brasil	-
+-	Sem mais
+Mateus Claus	Mateus Claus
+Goleiro
+03/08/1994 (32)	Brasil	-
+-	
+Fred Conte	Fred Conte
+Goleiro
+23/04/2003 (23)	Brasil
+Itália	-
+-	
+Rafael Donato	Rafael Donato
+Zagueiro
+17/03/1989 (37)	Brasil	-
+-	
+Maurício Antônio	Maurício Antônio
+Zagueiro
+06/02/1992 (34)	Brasil
+Portugal	-
+-	
+Rafael	Rafael
+Zagueiro
+19/01/1999 (27)	Brasil	-
+-	
+Edson	Edson
+Zagueiro
+23/08/2002 (24)	Brasil	-
+-	
+Yanaiã	Yanaiã
+Diretor Lateral
+21/06/1999 (27)	Brasil	-
+-	
+Yan	Yan
+Diretor Lateral
+04/11/2005 (20)	Brasil	-
+-	Vila Nova FC
+Rian	Rian
+Diretor Lateral
+12/01/2004 (22)	Brasil	-
+-	
+William Farias	William Farias
+Volante
+06/06/1989 (37)	Brasil
+Itália	-
+-	
+Nathan Melo	Nathan Melo
+Volante
+20/03/2001 (25)	Brasil	-
+-	
+Igor Pereira	Igor Pereira
+Meia Central
+12/05/2001 (25)	Brasil	-
+-	
+Diego Torres	Diego Torres
+Meia Ofensivo
+06/11/1990 (35)	Argentina	-
+-	
+João Paulo	João Paulo
+Meia Ofensivo
+04/05/1990 (36)	Brasil	-
+-	
+Isaac	Isaac
+Meia Ofensivo
+22/04/1997 (29)	Brasil	-
+-	São Bernardo FC
+Kauã Jesus	Kauã Jesus
+Meia Ofensivo
+02/09/2003 (23)	Brasil	-
+-	
+Lucca	Lucca
+Ponta-Esquerda
+14/02/1990 (36)	Brasil	-
+-	América Mineiro
+Everton Brito	Everton Brito
+Ponta-Esquerda
+20/03/1995 (31)	Brasil	-
+-	Capivariano FC
+Matheus Guilherme	Matheus Guilherme
+Ponta Direita
+06/03/2000 (26)	Brasil	-
+-	Capivariano FC
+Neto Costa	Neto Costa
+Centroavante
+12/01/1997 (29)	Brasil	-
+-	
+Kewen	Kewen
+Centroavante
+07/01/2005 (21)	Brasil

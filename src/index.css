@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Outfit", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  html,
+  body {
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply text-slate-100 antialiased;
+    background-color: #070c16;
+    font-family: var(--font-sans);
+    letter-spacing: 0.005em;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+  }
+
+  /* Eliminate 300ms mobile double-tap zoom delay on interactive controls */
+  button,
+  a,
+  select,
+  input,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #070c16;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #0284c7;
+  }
+}
+
+.no-native-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-native-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.horizontal-league-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #0284c7 #0f172a;
+}
+.horizontal-league-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.horizontal-league-scroll::-webkit-scrollbar-track {
+  background: #0f172a;
+  border-radius: 9999px;
+}
+.horizontal-league-scroll::-webkit-scrollbar-thumb {
+  background: #0369a1;
+  border-radius: 9999px;
+  border: 1px solid #0f172a;
+}
+.horizontal-league-scroll::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
+}
+
+/* Performance / Lite Mode (auto-enabled on mobile/low-spec devices or manually in Settings):
+   Removes costly GPU backdrop-filter passes and heavy blur shadows for silky-smooth scrolling & battery life */
+html[data-perf="lite"] [class*="backdrop-blur"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+html[data-perf="lite"] .shadow-2xl,
+html[data-perf="lite"] .shadow-xl {
+  box-shadow: 0 4px 12px rgba(2, 6, 23, 0.38) !important;
+}
+
+html[data-perf="lite"] .animate-pulse,
+html[data-perf="lite"] .animate-bounce {
+  animation-duration: 2.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

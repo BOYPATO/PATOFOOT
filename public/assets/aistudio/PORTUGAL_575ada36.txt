@@ -1,0 +1,2227 @@
+PORTO
+99	
+Diogo Costa	Diogo Costa 
+Goleiro
+19/09/1999 (27)	Portugal
+Suíça	€40,00mi
+14	
+Cláudio Ramos	Cláudio Ramos
+Goleiro
+16/11/1991 (34)	Portugal	500 milhões
+24	
+João Costa	João Costa
+Goleiro
+02/02/1996 (30)	Portugal	500 milhões
+4	Arsenal FC
+Jakub Kiwior	Jakub Kiwior
+Zagueiro
+15/02/2000 (26)	Polônia	€40,00mi
+5	
+Jan Bednarek	Jan Bednarek
+Zagueiro
+12/04/1996 (30)	Polônia	€11,00mi
+18	
+Nehuén Pérez	Nehuén Pérez
+Zagueiro
+24/06/2000 (26)	Argentina	€10,00mi
+21	
+Dominik Prpić	Dominik Prpić
+Zagueiro
+19/05/2004 (22)	Croácia	€4,00mi
+6	Sem mais
+Chris Smalling	Chris Smalling
+Zagueiro
+22/11/1989 (36)	Inglaterra
+Jamaica	€ 1,00 mil
+33	Tottenham Hotspur
+Souza	Souza
+Esq. Lateral
+16/06/2006 (20)	Brasil	€12,00mi
+74	
+Francisco Moura	Francisco Moura
+Esq. Lateral
+16/08/1999 (27)	Portugal	€7,00mi
+12	
+Zaidu Sanusi	Zaidu Sanusi
+Esq. Lateral
+13/06/1997 (29)	Nigéria	€3,00mi
+20	
+Alberto Costa	Alberto Costa
+Diretor Lateral
+29/09/2003 (23)	Portugal	€18,00mi
+52	
+Martin Fernandes	Martin Fernandes
+Diretor Lateral
+18/01/2006 (20)	Portugal	€12,00mi
+22	
+Alan Varela	Alan Varela
+Volante
+04/07/2001 (25)	Argentina	€ 28,00 milhões
+13	
+Pablo Rosario	Pablo Rosario
+Volante
+07/01/1997 (29)	República Dominicana
+Holanda	€10,00mi
+8	
+Victor Froholdt	Victor Froholdt
+Meia Central
+25/02/2006 (20)	Dinamarca	€50,00mi
+42	Estádio Rennais FC
+Seko Fofana	Seko Fofana
+Meia Central
+07/05/1995 (31)	Costa do Marfim
+França	€8,00mi
+16	Feyenoord
+In-beom Hwang	In-beom Hwang
+Meia Central
+20/09/1996 (30)	Coréia do Sul	€7,00mi
+15	Moreirense FC
+Vasco Sousa	Vasco Sousa 
+Meia Central
+03/04/2003 (23)	Portugal	€ 2,00 milhões
+10	
+Gabri Veiga	Gabri Veiga
+Meia Ofensivo
+27/05/2002 (24)	Espanha	€35,00mi
+77	
+Oskar Pietuszewski	Oskar Pietuszewski
+Ponta-Esquerda
+20/05/2008 (18)	Polônia	€25,00mi
+17	
+Borja Sainz	Borja Sainz
+Ponta-Esquerda
+21/02/2001 (25)	Espanha	€20,00mi
+7	
+William Gomes	William Gomes 
+Ponta Direita
+15/03/2006 (20)	Brasil	€30,00mi
+11	
+Pepê	Pepê
+Ponta Direita
+24/02/1997 (29)	Brasil
+Itália	€17,00mi
+37	FBPA Grêmio
+Gabriel Mec	Gabriel Mec
+Ponta Direita
+11/04/2008 (18)	Brasil	€16,00mi
+57	
+Duarte Cunha	Duarte Cunha
+Ponta Direita
+25/01/2008 (18)	Portugal	€ 1,50 mil
+9	
+Samu Aghehowa	Samu Aghehowa
+Centroavante
+05/05/2004 (22)	Espanha
+Nigéria	€40,00mi
+29	AC Milan
+Santiago Giménez	Santiago Giménez
+Centroavante
+18/04/2001 (25)	México
+Itália	€18,00mi
+19	Elche CF
+André Silva	André Silva
+Centroavante
+06/11/1995 (30)	Portugal	€5,00mi
+BENFICA
+1	
+Anatoliy Trubin	Anatoliy Trubin
+Goleiro
+01/08/2001 (25)	Ucrânia	€20.00mi
+24	
+Samuel Soares	Samuel Soares
+Goleiro
+15/06/2002 (24)	Portugal
+Guiné Bissau	€10.00mi
+44	
+Tomás Araújo	Tomás Araújo
+Zagueiro
+16/05/2002 (24)	Portugal	€35.00mi
+3	Parma Calcio 1913
+Alessandro Circati	Alessandro Circati
+Zagueiro
+10/10/2003 (23)	Austrália
+Itália	€18.00mi
+2	Atlético de Madrid
+Clément Lenglet	Clément Lenglet
+Zagueiro
+17/06/1995 (31)	França	€4.00mi
+33	Athletic Club
+Gabriel Índio	Gabriel Índio
+Zagueiro
+26/07/2008 (18)	Brasil	€4.00mi
+34	Al-Qadsiah FC
+Souffian El Karouani	Souffian El Karouani
+Lateral Esq.
+19/10/2000 (26)	Marrocos
+Holanda	€15.00mi
+26	
+Samuel Dahl	Samuel Dahl
+Lateral Esq.
+04/03/2003 (23)	Suécia	€13.00mi
+62	
+José Neto	José Neto
+Lateral Esq.
+19/04/2008 (18)	Portugal	€3.00mi
+6	
+Alexander Bah	Alexander Bah
+Lateral Dir.
+09/12/1997 (28)	Dinamarca
+Gâmbia	€10.00mi
+58	SL Benfica B
+Daniel Banjaqui	Daniel Banjaqui
+Lateral Dir.
+24/03/2008 (18)	Portugal
+Guiné Bissau	€10.00mi
+36	FC Bayern Munique
+João Palhinha	João Palhinha
+Volante
+09/07/1995 (31)	Portugal	€15.00mi
+5	Aston Villa FC
+Enzo Barrenechea	Enzo Barrenechea
+Volante
+22/05/2001 (25)	Argentina	€14.00mi
+16	
+Manu Silva	Manu Silva
+Volante
+12/06/2001 (25)	Portugal	€6.00mi
+18	
+Leandro Barreiro	Leandro Barreiro
+Meia Central
+03/01/2000 (26)	Luxemburgo	€20.00mi
+8	
+Fredrik Aursnes	Fredrik Aursnes 
+Meia Central
+10/12/1995 (30)	Noruega	€15.00mi
+10	Shakhtar Donetsk
+Georgiy Sudakov	Georgiy Sudakov
+Meia Ofensivo
+01/09/2002 (24)	Ucrânia	€25.00mi
+30	Manchester City FC
+Claudio Echeverri	Claudio Echeverri
+Meia Ofensivo
+02/01/2006 (20)	Argentina	€15.00mi
+21	
+Andreas Schjelderup	Andreas Schjelderup
+Ponta-Esquerda
+01/06/2004 (22)	Noruega	€40.00mi
+13	1.FC Colônia
+Jakub Kamiński	Jakub Kamiński 
+Ponta-Esquerda
+05/06/2002 (24)	Polónia	€17.00mi
+25	
+Gianluca Prestianni	Gianluca Prestianni
+Ponta-Direita
+31/01/2006 (20)	Argentina
+Itália	€40.00mi
+11	
+Dodi Lukébakio	Dodi Lukébakio
+Ponta-Direita
+24/09/1997 (29)	Bélgica
+RD do Congo	€15.00mi
+27	
+Rafa Silva	Rafa Silva
+Ponta-Direita
+17/05/1993 (33)	Portugal	€3.00mi
+14	
+Vangelis Pavlidis	Vangelis Pavlidis
+Centroavante
+21/11/1998 (27)	Grécia	€35.00mi
+22	Al-Nassr FC
+Jhon Durán	Jhon Durán
+Centroavante
+13/12/2003 (22)	Colômbia	€15.00mi
+72	
+Anísio Cabral	Anísio Cabral
+Centroavante
+15/02/2008 (18)	Portugal
+Guiné Bissau	€5.00mi
+SPORTING
+1	
+Rui Silva	Rui Silva
+Goleiro
+07/02/1994 (32)	Portugal	€5,00mi
+30	SE Palmeiras
+Kaique Pereira	Kaique Pereira
+Goleiro
+16/04/2003 (23)	Brasil	€4,00mi
+41	CP B Esportivo
+Diego Callai	Diego Callai
+Goleiro
+18/07/2004 (22)	Brasil
+Portugal	€ 1,50 mil
+25	
+Gonçalo Inácio	Gonçalo Inácio 
+Zagueiro
+25/08/2001 (25)	Portugal	€35,00mi
+6	
+Zeno Debast	Zeno Debast
+Zagueiro
+24/10/2003 (23)	Bélgica	€25,00mi
+55	FC Famalicão
+Ibrahima Ba	Ibrahima Ba
+Zagueiro
+26/05/2005 (21)	Senegal	€20,00mi
+72	
+Eduardo Quaresma	Eduardo Quaresma
+Zagueiro
+02/03/2002 (24)	Portugal	€17,00mi
+20	
+Maxi Araújo	Maxi Araújo
+Esq. Lateral
+15/02/2000 (26)	Uruguai	€40,00mi
+18	KV Mechelen
+Moncef Zekri	Moncef Zekri
+Esq. Lateral
+20/09/2008 (18)	Marrocos
+Bélgica	€4,00mi
+11	
+Nuno Santos	Nuno Santos 
+Esq. Lateral
+13/02/1995 (31)	Portugal	€ 2,00 milhões
+50	CP B Esportivo
+Rodrigo Dias	Rodrigo Dias
+Esq. Lateral
+12/07/2005 (21)	Portugal	€ 1,50 mil
+22	
+Iván Fresneda	Iván Fresneda
+Diretor Lateral
+28/09/2004 (22)	Espanha	€20,00mi
+13	
+Georgios Vagiannidis	Georgios Vagiannidis
+Diretor Lateral
+12/09/2001 (25)	Grécia	€6,00mi
+70	
+Salvador Blopa	Salvador Blopa
+Diretor Lateral
+13/06/2007 (19)	Portugal	€ 2,50 milhões
+5	Real Betis Balompié
+Sérgio Altimira	Sérgio Altimira
+Volante
+25/08/2001 (25)	Espanha	€25,00mi
+4	BK Hacken
+Silas Andersen	Silas Andersen
+Volante
+13/06/2004 (22)	Dinamarca	€7,00mi
+77	Venezia FC
+Issa Doumbia	Issa Doumbia
+Meia Central
+16/10/2003 (23)	Itália
+Costa do Marfim	€20,00mi
+8	
+João Simões	João Simões
+Meia Central
+06/01/2007 (19)	Portugal	€15,00mi
+21	Futebol americano do Avs
+Pedro Lima	Pedro Lima
+Meia Central
+27/03/2003 (23)	Brasil	€3,00mi
+52	Fortuna Düsseldorf 95
+Sótiris Alexandropoulos	Sótiris Alexandropoulos
+Meia Central
+26/11/2001 (24)	Grécia	€ 1,20 mil
+17	SC Braga
+Rodrigo Zalazar	Rodrigo Zalazar
+Meia Ofensivo
+12/08/1999 (27)	Uruguai
+Espanha	€30,00mi
+19	Watford FC
+Nestory Irankunda	Nestory Irankunda
+Ponta-Esquerda
+09/02/2006 (20)	Austrália
+Tanzânia	€15,00mi
+58	CP B Esportivo
+Flávio Gonçalves	Flávio Gonçalves
+Ponta-Esquerda
+30/05/2007 (19)	Portugal
+França	€15,00mi
+28	Chelsea FC Sub-21
+Jesse Derry	Jesse Derry
+Ponta-Esquerda
+30/06/2007 (19)	Inglaterra	€ 2,00 milhões
+10	
+Geny Catamo	Geny Catamo
+Ponta Direita
+26/01/2001 (25)	Moçambique	€35,00mi
+31	
+Luís Guilherme	Luís Guilherme
+Ponta Direita
+09/02/2006 (20)	Brasil	€12,00mi
+97	
+Luís Suárez	Luís Suárez
+Centroavante
+02/12/1997 (28)	Colômbia
+Espanha	€30,00mi
+7	
+Fotis Ioannidis	Fotis Ioannidis
+Centroavante
+10/01/2000 (26)	Grécia	€16,00mi
+9	
+Rafael Nel	Rafael Nel
+Centroavante
+03/04/2005 (21)	Portugal	€4,00mi
+
+BRAGA
+31	Clube Desportivo Tondela
+Bernardo	Bernardo
+Goleiro
+23/07/2002 (24)	Brasil
+Itália	€5,00mi
+78	SC Braga B
+João Carvalho	João Carvalho
+Goleiro
+09/04/2004 (22)	Portugal	€ 1,50 mil
+12	
+Tiago Sá	Tiago Sá
+Goleiro
+11/01/1995 (31)	Portugal	300 milhões
+14	
+Gustavo Lagerbielke	Gustavo Lagerbielke
+Zagueiro
+10/04/2000 (26)	Suécia	€10,00mi
+26	
+Bright Area Mbi	Bright Area Mbi 
+Zagueiro
+26/03/2003 (23)	Alemanha
+Inglaterra	€9,00mi
+4	
+Sikou Niakaté	Sikou Niakaté 
+Zagueiro
+10/07/1999 (27)	Mali
+França	€5,00mi
+6	
+Vítor Carvalho	Vítor Carvalho
+Zagueiro
+27/05/1997 (29)	Brasil	€4,00mi
+37	FC Basel
+Adrian Barisic	Adrian Barisic
+Zagueiro
+19/07/2001 (25)	Bósnia e Herzegovina
+Croácia	€4,00mi
+44	FC Luzern
+Adrian Bajrami	Adrian Bajrami
+Zagueiro
+05/04/2002 (24)	Suíça
+Albânia	€3,00mi
+22	Legião da Irlanda
+Sérgio Barcia	Sérgio Barcia
+Zagueiro
+31/12/2000 (25)	Espanha	€ 1,50 mil
+2	
+Víctor Gómez	Víctor Gómez
+Diretor Lateral
+01/04/2000 (26)	Espanha	€10,00mi
+7	CP Esportivo
+Diogo Travassos	Diogo Travassos
+Diretor Lateral
+31/03/2004 (22)	Portugal	€6,00mi
+16	FC Barcelona
+Tommy Marqués	Tommy Marqués
+Volante
+30/10/2006 (20)	Espanha	€10,00mi
+34	
+Demir Ege Tıknaz	Demir Ege Tıknaz
+Volante
+17/08/2004 (22)	Peru	€10,00mi
+29	
+Gorby	Gorby
+Meia Central
+25/07/2002 (24)	França
+Haiti	€9,00mi
+50	
+Diego Rodrigues	Diego Rodrigues
+Meia Central
+24/05/2005 (21)	Portugal
+Bélgica	€5,00mi
+23	1.FC Colônia
+Denis Huseinbasic	Denis Huseinbasic
+Meia Central
+03/07/2001 (25)	Bósnia e Herzegovina
+Alemanha	€ 2,00 milhões
+8	
+João Moutinho	João Moutinho
+Meia Central
+08/09/1986 (40)	Portugal	300 milhões
+20	
+Mario Dorgeles	Mario Dorgeles
+Meia Direita
+07/08/2004 (22)	Costa do Marfim	€10,00mi
+21	
+Ricardo Horta	Ricardo Horta 
+Meia Ofensivo
+15/09/1994 (32)	Portugal	€9,00mi
+87	
+João Trovisco	João Trovisco
+Meia Ofensivo
+23/10/2007 (19)	Portugal	-
+11	CD Santa Clara
+Gabriel Silva	Gabriel Silva
+Ponta-Esquerda
+22/03/2002 (24)	Brasil	€7,00mi
+77	
+Gabri Martínez	Gabri Martínez
+Ponta-Esquerda
+22/01/2003 (23)	Espanha	€7,00mi
+10	
+Pau Víctor	Pau Víctor
+Centroavante
+26/11/2001 (24)	Espanha	€15,00mi
+17	VfB Stuttgart
+Jovan Milosevic	Jovan Milosevic
+Centroavante
+31/07/2005 (21)	Servia	€7,00mi
+9	
+Fran Navarro	Fran Navarro
+Centroavante
+03/02/1998 (28)	Espanha	€4,00mi
+19	VfL Wolfsburg
+Jonas Vento	Jonas Vento
+Centroavante
+07/02/1999 (27)	Dinamarca	€4,00mi
+FAMALICAO
+25	
+Lazar Carević	Lazar Carević
+Goleiro
+16/03/1999 (27)	Montenegro	€5,00mi
+1	
+Ivan Zlobin	Ivan Zlobin 
+Goleiro
+07/03/1997 (29)	Rússia
+Portugal	€ 1,00 mil
+22	FC Famalicão Sub-23
+Gabriel Cabral	Gabriel Cabral
+Goleiro
+19/04/2003 (23)	Brasil	-
+3	
+Leo Realpe	Leo Realpe
+Zagueiro
+26/02/2001 (25)	Equador	€5,00mi
+4	FC Basel
+Finn van Breemen	Finn van Breemen
+Zagueiro
+25/02/2003 (23)	Holanda	€ 2,00 milhões
+15	UD Leiria
+Víctor Rofino	Víctor Rofino
+Zagueiro
+28/07/2002 (24)	Guiné-Bissau
+Espanha	€ 1,50 mil
+30	FK Cukaricki
+Vojin Serafimovic	Vojin Serafimovic
+Zagueiro
+14/10/2005 (21)	Servia	400 milhões
+36	
+Matheus Mattara	Matheus Mattara
+Zagueiro
+01/09/2006 (20)	Brasil
+Itália	-
+28	
+Pedro Bondo	Pedro Bondo
+Esq. Lateral
+16/11/2004 (21)	Angola	€ 2,00 milhões
+5	VfB Stuttgart II
+Leny Meyer	Leny Meyer
+Esq. Lateral
+01/07/2004 (22)	Suíça	600 milhões
+17	
+Rodrigo Pinheiro	Rodrigo Pinheiro
+Diretor Lateral
+28/08/2002 (24)	Portugal	€5,00mi
+2	
+García	García
+Diretor Lateral
+04/01/2002 (24)	Brasil	€ 1,50 mil
+6	
+Tom van de Looi	Tom van de Looi
+Volante
+02/07/1999 (27)	Holanda	€4,00mi
+14	
+Matias de Amorim	Matias de Amorim
+Meia Central
+10/12/2004 (21)	Portugal
+França	€12,00mi
+21	Debreceni VSC
+Tamás Szűcs	Tamás Szűcs
+Meia Central
+16/01/2005 (21)	Hungria	€ 2,50 milhões
+8	
+Marcos Peña	Marcos Peña
+Meia Central
+22/01/2005 (21)	Espanha	€ 1,50 mil
+19	CF Estrela Amadora
+Paulo Moreira	Paulo Moreira
+Meia Central
+17/02/2000 (26)	Portugal	€ 1,50 mil
+24	Paris Saint-Germain Sub-19
+Mathis Jangéal	Mathis Jangéal
+Meia Ofensivo
+24/06/2008 (18)	França
+Martinica	€ 1,00 mil
+7	
+Sorriso	Sorriso
+Ponta-Esquerda
+23/02/2001 (25)	Brasil	€6,00mi
+11	
+Óscar Aranda	Óscar Aranda
+Ponta-Esquerda
+29/04/2002 (24)	Espanha	€3,00mi
+18	
+Romeu Beney	Romeu Beney
+Ponta-Esquerda
+19/01/2005 (21)	Suíça
+Brasil	€ 1,50 mil
+23	
+Gil Dias	Gil Dias
+Ponta Direita
+28/09/1996 (30)	Portugal	€ 2,00 milhões
+10	
+Pedro Santos	Pedro Santos
+Ponta Direita
+10/02/2003 (23)	Portugal	600 milhões
+70	FC Lugano
+Georgios Koutsias	Georgios Koutsias
+Centroavante
+08/02/2004 (22)	Grécia	€5,00mi
+33	CF América
+Pato	Pato
+Centroavante
+17/02/2004 (22)	México	€4,00mi
+9	
+Umar Abubakar	Umar Abubakar
+Centroavante
+15/02/2006 (20)	Nigéria	€ 1,00 mil
+VITORIA SC
+48	Aston Villa FC
+Oliwier Zych	Oliwier Zych
+Goleiro
+28/06/2004 (22)	Polónia	€2.00mi
+22	
+Juan Castillo	Juan Castillo
+Goleiro
+13/01/2003 (23)	Colômbia	€500mil
+98	Vitória Guimarães SC B
+Lucas Furtado	Lucas Furtado
+Goleiro
+09/03/2005 (21)	Brasil	€100mil
+21	Samsunspor
+Toni Borevković	Toni Borevković
+Zagueiro
+18/06/1997 (29)	Croácia	€3.00mi
+28	
+Thiago Balieiro	Thiago Balieiro
+Zagueiro
+23/02/2003 (23)	Brasil	€2.00mi
+4	
+Óscar Rivas	Óscar Rivas
+Zagueiro
+27/03/2000 (26)	Espanha	€1.00mi
+5	Venezia FC
+Ahmed Sidibé	Ahmed Sidibé
+Zagueiro
+10/02/2002 (24)	França
+Costa do Marfim	€600mil
+15	Aston Villa U21
+Yeimar Mosquera	Yeimar Mosquera
+Zagueiro
+06/02/2005 (21)	Colômbia	€400mil
+13	
+João Mendes	João Mendes
+Lateral Esq.
+13/04/2000 (26)	Portugal	€2.50mi
+82	
+Francisco Dias	Francisco Dias
+Lateral Esq.
+23/10/2002 (24)	Portugal	€200mil
+23	
+Tony Strata	Tony Strata
+Lateral Dir.
+07/09/2004 (22)	Roménia
+França	€4.00mi
+2	
+Maga	Maga
+Lateral Dir.
+16/11/2002 (23)	Portugal	€1.50mi
+44	Paris FC
+Lohann Doucet	Lohann Doucet
+Volante
+14/09/2002 (24)	Burkina Faso
+França	€1.00mi
+80	
+Rica Rocha	Rica Rocha
+Volante
+07/09/2003 (23)	Portugal	€200mil
+8	
+Gonçalo Nogueira	Gonçalo Nogueira
+Meia Central
+28/12/2003 (22)	Portugal	€5.00mi
+16	
+Beni Mukendi	Beni Mukendi
+Meia Central
+21/05/2002 (24)	Angola	€4.00mi
+6	
+Matija Mitrović	Matija Mitrović
+Meia Central
+12/12/2004 (21)	Sérvia
+Estados Unidos	€2.00mi
+-	CS Marítimo
+Marco Cruz	Marco Cruz
+Meia Central
+23/02/2004 (22)	Portugal	€400mil
+56	Vitória Guimarães SC B
+Santi Verdi	Santi Verdi
+Meia Central
+05/05/2008 (18)	Portugal	€300mil
+10	Moreirense FC
+Alan	Alan
+Meia Ofensivo
+08/03/2000 (26)	Brasil	€5.00mi
+20	
+Samu	Samu 
+Meia Ofensivo
+21/04/1996 (30)	Portugal	€2.50mi
+7	
+Oumar Camara	Oumar Camara
+Ponta-Esquerda
+11/05/2007 (19)	França
+Mali	€8.00mi
+-	
+Fabio Blanco	Fabio Blanco
+Ponta-Esquerda
+18/02/2004 (22)	Espanha	€800mil
+19	AIK
+Victor Andersson	Victor Andersson
+Ponta-Esquerda
+22/10/2004 (22)	Suécia
+Guatemala	€800mil
+11	
+Gustavo Silva	Gustavo Silva
+Ponta-Direita
+01/06/1999 (27)	Brasil	€4.00mi
+18	
+Telmo Arcanjo	Telmo Arcanjo
+Ponta-Direita
+21/06/2001 (25)	Cabo Verde
+Portugal	€3.00mi
+17	
+Miguel Nogueira	Miguel Nogueira
+Ponta-Direita
+27/02/2005 (21)	Portugal	€2.50mi
+24	
+Alioune Ndoye	Alioune Ndoye
+Centroavante
+05/10/2001 (25)	Senegal	€1.00mi
+9	NK Osijek
+Arnel Jakupovic	Arnel Jakupovic
+Centroavante
+29/05/1998 (28)	Áustria
+Bósnia-Herzegovina	€800mil
+29	AS Nancy-Lorraine
+Patrick Ouotro	Patrick Ouotro
+Centroavante
+13/09/2005 (21)	Costa do Marfim	€300mil
+ALVERCA
+1	Pau FC
+Noah Raveyre	Noah Raveyre
+Goleiro
+22/06/2005 (21)	França	€ 1,50 mil
+31	
+Matheus Mendes	Matheus Mendes
+Goleiro
+10/03/1999 (27)	Brasil	600 milhões
+91	Clube Atlético
+Jhonatan	Jhonatan
+Goleiro
+08/05/1991 (35)	Brasil	100 milhões
+33	
+Bastien Meupiyou	Bastien Meupiyou
+Zagueiro
+19/03/2006 (20)	França
+Camarões	€7,00mi
+4	Odense Boldklub
+Yaya Bojang	Yaya Bojang
+Zagueiro
+10/09/2004 (22)	Gâmbia	€ 1,50 mil
+14	
+Steven Baseya	Steven Baseya
+Zagueiro
+14/01/2005 (21)	França
+RD do Congo	700 milhões
+3	
+Julián Martínez	Julián Martínez 
+Zagueiro
+01/12/2003 (22)	Honduras	500 milhões
+21	
+Sergi Gómez	Sergi Gómez 
+Zagueiro
+28/03/1992 (34)	Espanha	200 milhões
+24	Crystal Palace Sub-21
+Mofe Jemide	Mofe Jemide
+Zagueiro
+08/11/2006 (19)	Inglaterra
+Nigéria	-
+55	SC Braga
+Chissumba	Chissumba
+Esq. Lateral
+29/05/2005 (21)	Portugal
+Moçambique	€5,00mi
+12	
+Isaac James	Isaac James
+Esq. Lateral
+28/08/2004 (22)	Nigéria	€ 1,00 mil
+20	
+Diogo Spencer	Diogo Spencer
+Diretor Lateral
+17/04/2004 (22)	Portugal	€ 2,00 milhões
+27	Villarreal CF B
+Toni Tamarit	Toni Tamarit
+Diretor Lateral
+22/11/2005 (20)	Espanha	500 milhões
+8	
+Vasco Moreira	Vasco Moreira
+Volante
+07/05/2001 (25)	Portugal	€ 1,00 mil
+25	Cruzeiro EC
+Ian Luccas	Ian Luccas
+Volante
+11/02/2003 (23)	Brasil	€ 1,00 mil
+35	CR Flamengo Sub-20
+Rayan Lucas	Rayan Lucas
+Volante
+03/01/2005 (21)	Brasil	900 milhões de euros
+5	
+Sabit Abdulai	Sabit Abdulai 
+Volante
+11/05/1999 (27)	Gana	500 milhões
+6	
+Davy Gui	Davy Gui
+Meia Central
+15/06/2006 (20)	Costa do Marfim
+França	800 milhões
+93	Santos FC
+Zé Rafael	Zé Rafael
+Meia Central
+16/06/1993 (33)	Brasil
+Itália	800 milhões
+18	União Toura Sportif
+Zakaria Kessary	Zakaria Kessary
+Meia Central
+25/01/2006 (20)	Marrocos	150 milhões
+90	
+Tiago Octavia	Tiago Octavia
+Meia Central
+08/07/2004 (22)	Portugal	-
+2	
+Nabil Touaizi	Nabil Touaizi
+Meia Direita
+01/02/2001 (25)	Marrocos
+Espanha	800 milhões
+15	FC Alverca B
+Ikker Julian	Ikker Julian
+Meia Esquerda
+07/07/2005 (21)	Bélgica
+Brasil	-
+81	
+Lucca Giuntini	Lucca Giuntini
+Meia Ofensivo
+07/12/2005 (20)	Itália
+Brasil	-
+10	
+Chiquinho	Chiquinho
+Ponta-Esquerda
+05/02/2000 (26)	Portugal
+Cabo Verde	€5,00mi
+22	
+Figueiredo	Figueiredo
+Ponta-Esquerda
+14/08/2001 (25)	Brasil	€5,00mi
+7	Wycombe Wanderers
+André Vidigal	André Vidigal
+Ponta-Esquerda
+17/08/1998 (28)	Angola
+Portugal	800 milhões
+11	
+Cédric Nuozzi	Cédric Nuozzi
+Ponta-Esquerda
+30/01/2006 (20)	Bélgica	800 milhões
+87	
+Rodrigo Catraio	Rodrigo Catraio
+Ponta Direita
+04/06/2005 (21)	Portugal	-
+26	Crystal Palace FC
+Matheus França	Matheus França
+Seg. Atacante
+01/04/2004 (22)	Brasil	€6,00mi
+9	Watford FC
+Vivaldo Semedo	Vivaldo Semedo
+Centroavante
+28/01/2005 (21)	Portugal
+Angola	€ 2,00 milhões
+19	Girona FC
+Dawda Camara	Dawda Camara
+Centroavante
+04/11/2002 (24)	Mauritânia
+Espanha	€ 2,00 milhões
+17	SC Braga B
+Samy Merheg	Samy Merheg
+Centroavante
+06/12/2006 (19)	Líbano
+Colômbia	€ 1,00 mil
+ESTRELA AMADORA
+24	Botafogo FR
+Léo Linck	Léo Linck
+Goleiro
+03/03/2001 (25)	Brasil	€ 2,50 milhões
+51	
+Diogo Pinto	Diogo Pinto
+Goleiro
+18/06/2004 (22)	Portugal	300 milhões
+22	
+David Grilo	David Grilo
+Goleiro
+13/08/1996 (30)	Portugal	100 milhões
+5	Estrela Vermelha de Belgrado
+Stefan Lekovic	Stefan Lekovic 
+Zagueiro
+09/01/2004 (22)	Servia	€ 2,50 milhões
+30	
+Luan Patrick	Luan Patrick
+Zagueiro
+20/01/2002 (24)	Brasil	€ 2,00 milhões
+4	
+Bernardo Schappo	Bernardo Schappo
+Zagueiro
+22/03/1999 (27)	Brasil
+Luxemburgo	600 milhões
+79	1. FC Kaiserslautern
+Atanas Chernev	Atanas Chernev
+Zagueiro
+25/03/2002 (24)	Bulgária	600 milhões
+55	FC Famalicão
+Rafa Soares	Rafa Soares
+Esq. Lateral
+09/05/1995 (31)	Portugal	€ 1,00 mil
+3	Montpellier HSC
+Lucas Mincarelli	Lucas Mincarelli
+Esq. Lateral
+05/01/2004 (22)	França	800 milhões
+21	
+Max Scholze	Max Scholze
+Diretor Lateral
+30/04/2005 (21)	Alemanha	€3,00mi
+17	
+Jefferson Encada	Jefferson Encada
+Diretor Lateral
+17/04/1998 (28)	Guiné-Bissau
+Portugal	400 milhões
+39	
+Eddy Doué	Eddy Doué
+Volante
+11/12/2005 (20)	Costa do Marfim
+França	€5,00mi
+78	CD Mafra
+Santiago Serra	Santiago Serra
+Volante
+23/01/2007 (19)	Portugal	€3,00mi
+6	
+Kevin Höög Jansson	Kevin Höög Jansson
+Volante
+29/09/2000 (26)	Suécia	400 milhões
+18	OFK Grbalj
+Vuk Pavicevic	Vuk Pavicevic
+Volante
+22/02/2008 (18)	Montenegro	-
+19	Sevilla FC
+Joana Jordán	Joana Jordán
+Meia Central
+06/07/1994 (32)	Espanha	800 milhões
+8	
+Robinho	Robinho
+Meia Central
+07/08/2002 (24)	Brasil	600 milhões
+28	
+Tom Moustier	Tom Moustier
+Meia Central
+02/05/2002 (24)	França
+Suécia	400 milhões
+14	FC Bayern de Munique
+Lovro Zvonarek	Lovro Zvonarek
+Meia Ofensivo
+08/05/2005 (21)	Croácia	€ 1,80 mil
+71	CF Estrela Amadora Sub-23
+Emerson Vanga	Emerson Vanga
+Meia Ofensivo
+11/02/2006 (20)	França
+Angola	100 milhões
+10	
+Ianis Stoica	Ianis Stoica
+Ponta-Esquerda
+08/12/2002 (23)	Romênia	€4,00mi
+93	SL Benfica B
+Benito	Benito
+Ponta-Esquerda
+21/08/2003 (23)	França
+Congo	300 milhões
+11	Racing Club de Montevideo
+Rodrigo Dudok	Rodrigo Dudok
+Ponta-Esquerda
+23/07/2007 (19)	Uruguai	100 milhões
+80	
+Alisson Souza	Alisson Souza
+Ponta-Esquerda
+11/04/2005 (21)	Brasil	100 milhões
+99	
+Abraão Marcos	Abraão Marcos
+Ponta Direita
+02/01/2000 (26)	Nigéria	€3,00mi
+29	VfB Stuttgart
+Jeremy Arévalo	Jeremy Arévalo 
+Centroavante
+19/03/2005 (21)	Equador
+Espanha	€7,00mi
+37	
+Leandro Antonetti	Leandro Antonetti
+Centroavante
+13/01/2003 (23)	Porto Rico
+Espanha	€4,00mi
+49	Trabzonspor
+René Mitongo	René Mitongo
+Centroavante
+18/01/2008 (18)	Bélgica	€ 1,00 mil
+72	
+Henrique Poniewas	Henrique Poniewas
+Centroavante
+25/09/2006 (20)	Brasil
+Alemanha	-
+
+ESTORIL PRAIA
+16	
+Martin Turk	Martin Turk
+Goleiro
+21/08/2003 (23)	Eslovênia	300 milhões
+1	
+Joel Robles	Joel Robles
+Goleiro
+17/06/1990 (36)	Espanha	200 milhões
+23	
+Diogo Dias	Diogo Dias
+Goleiro
+17/06/2003 (23)	Portugal	200 milhões
+25	Widzew Lodz
+Stelios Andreou	Stelios Andreou
+Zagueiro
+24/07/2002 (24)	Chipre
+Bélgica	€ 2,00 milhões
+4	
+Ferro	Ferro
+Zagueiro
+26/03/1997 (29)	Portugal	€ 1,00 mil
+15	Villarreal CF B
+Ismael Sierra	Ismael Sierra
+Zagueiro
+17/03/2003 (23)	Espanha	€ 1,00 mil
+6	Córdoba CF
+Xavi Sintes	Xavi Sintes
+Zagueiro
+05/08/2001 (25)	Espanha	400 milhões
+42	Estoril Praia Sub-23
+Jordan Arnolin	Jordan Arnolin
+Zagueiro
+29/04/2008 (18)	Portugal
+França	300 milhões
+35	FC Fulham Sub-21
+Sam Amissah	Sam Amissah
+Zagueiro
+07/03/2007 (19)	Inglaterra
+Gana	-
+21	NK Osijek
+Roko Jurisic	Roko Jurisic
+Esq. Lateral
+28/09/2001 (25)	Croácia	650 milhões
+3	CD Mirandés
+Fernando Medrano	Fernando Medrano
+Esq. Lateral
+26/03/2000 (26)	Espanha	500 milhões
+19	FC Felgueiras 1932
+Tiago Parente	Tiago Parente
+Esq. Lateral
+14/01/2004 (22)	Portugal	500 milhões
+2	
+Ricardo Sánchez	Ricardo Sánchez
+Diretor Lateral
+22/02/2000 (26)	Espanha	€3,00mi
+22	
+Pedro Carvalho	Pedro Carvalho
+Diretor Lateral
+14/02/2003 (23)	Portugal	800 milhões
+10	
+Jordan Holsgrove	Jordan Holsgrove
+Volante
+10/09/1999 (27)	Escócia
+Inglaterra	€5,00mi
+5	
+Antef Tsoungui	Antef Tsoungui
+Volante
+30/12/2002 (23)	Bélgica
+Inglaterra	€ 1,00 mil
+90	UD Oliveirense
+Tiago Brito	Tiago Brito
+Volante
+16/04/2004 (22)	Portugal	300 milhões
+44	Le Mans FC
+Milan Robin	Milan Robin
+Meia Central
+24/11/1999 (26)	França	€ 1,00 mil
+8	
+Xeka	Xeka
+Meia Central
+10/11/1994 (31)	Portugal	600 milhões
+12	
+João Carvalho	João Carvalho 
+Meia Ofensivo
+09/03/1997 (29)	Portugal	€5,00mi
+80	Estoril Praia Sub-23
+Luís Gomes	Luís Gomes
+Meia Ofensivo
+24/04/2004 (22)	Portugal	-
+11	NK Osijek
+Nail Omerovic	Nail Omerovic
+Ponta-Esquerda
+20/10/2002 (24)	Bósnia e Herzegovina	€ 2,00 milhões
+7	
+André Lacximicant	André Lacximicant
+Ponta-Esquerda
+19/05/2001 (25)	Portugal	800 milhões
+99	
+Rafik Guitarne	Rafik Guitarne
+Ponta Direita
+26/05/1999 (27)	Argélia
+França	€4,00mi
+9	Estádio Brestois 29
+Axel Camblan	Axel Camblan
+Ponta Direita
+30/08/2003 (23)	França	600 milhões
+98	FC Alverca
+Fabrício Garcia	Fabrício Garcia
+Ponta Direita
+04/05/2001 (25)	Cabo Verde	400 milhões
+17	
+Peixinho	Peixinho
+Ponta Direita
+23/05/2004 (22)	Portugal	200 milhões
+14	
+Yanis Begraoui	Yanis Begraoui
+Centroavante
+04/07/2001 (25)	Marrocos
+França	€12,00mi
+38	CD Eldense
+Israel Salazar	Israel Salazar 
+Centroavante
+10/05/2003 (23)	Espanha	100 milhões
+RIO AVE FC
+1	
+Cezary Miszta	Cezary Miszta 
+Goleiro
+30/10/2001 (25)	Polônia	€5,00mi
+32	Lusitânia de Lourosa FC
+Vitor Hugo	Vitor Hugo
+Goleiro
+27/07/2001 (25)	Brasil	800 milhões
+99	Zulte Waregem
+Ennio van der Gouw	Ennio van der Gouw
+Goleiro
+14/02/2000 (26)	Holanda	600 milhões
+22	
+Kevin Chamorro	Kevin Chamorro
+Goleiro
+08/04/2000 (26)	Costa Rica
+Nicarágua	300 milhões
+15	PAS Giannina
+Antzelo Sina	Antzelo Sina
+Goleiro
+07/01/2004 (22)	Albânia
+Grécia	150 milhões
+5	
+Andreas Ntoi	Andreas Ntoi
+Zagueiro
+02/02/2003 (23)	Grécia
+Albânia	€5,00mi
+3	Atlético Nacional
+Simón García	Simón García
+Zagueiro
+11/01/2005 (21)	Colômbia	€ 2,00 milhões
+6	
+Abadia de Nelson	Abadia de Nelson
+Zagueiro
+28/08/2003 (23)	Inglaterra
+Nigéria	€ 1,50 mil
+23	
+Francisco Petrasso	Francisco Petrasso
+Zagueiro
+28/01/2002 (24)	Argentina	€ 1,50 mil
+39	Olympiacos Pireu
+Gustavo Mancha	Gustavo Mancha
+Zagueiro
+25/07/2004 (22)	Brasil	€ 1,50 mil
+13	
+Julien Lomboto	Julien Lomboto
+Zagueiro
+13/05/2002 (24)	França
+RD do Congo	300 milhões
+14	
+Jakub Brabec	Jakub Brabec
+Zagueiro
+06/08/1992 (34)	República Checa	200 milhões
+60	Rio Ave FC Sub-23
+Caike	Caike
+Zagueiro
+14/05/2005 (21)	Brasil	100 milhões
+24	GD Estoril Praia
+Pedro Amaral	Pedro Amaral
+Esq. Lateral
+25/08/1997 (29)	Portugal	€ 1,50 mil
+17	
+Marios Vrousai	Marios Vrousai 
+Diretor Lateral
+02/07/1998 (28)	Grécia
+Albânia	€3,00mi
+2	Sem mais
+Zé Carlos	Zé Carlos
+Diretor Lateral
+31/07/1998 (28)	Portugal	€ 1,50 mil
+20	
+João Tomé	João Tomé
+Diretor Lateral
+12/02/2003 (23)	Portugal	600 milhões
+44	
+Tamás Nikitscher	Tamás Nikitscher
+Volante
+03/11/1999 (27)	Hungria	800 milhões
+54	
+Georgios Liavas	Georgios Liavas
+Volante
+12/02/2001 (25)	Grécia	700 milhões
+90	Olympiacos Pireu
+Diogo Nascimento	Diogo Nascimento
+Meia Central
+02/11/2002 (24)	Portugal	€3,00mi
+10	
+Brandon Aguilera	Brandon Aguilera 
+Meia Central
+28/06/2003 (23)	Costa Rica	€ 1,50 mil
+8	
+Ryan Guilherme	Ryan Guilherme
+Meia Central
+07/12/2002 (23)	Brasil	900 milhões de euros
+70	Rio Ave FC Sub-23
+Antoine Wenck	Antoine Wenck
+Meia Central
+30/06/2006 (20)	Senegal	100 milhões
+19	Estádio Lavallois
+Malik Selluki	Malik Selluki
+Meia Ofensivo
+21/03/2000 (26)	França
+Marrocos	900 milhões de euros
+79	Rio Ave FC Sub-19
+Miguel Patrício	Miguel Patrício
+Meia Ofensivo
+27/01/2007 (19)	Portugal	300 milhões
+27	
+Tobias Medina	Tobias Medina
+Ponta-Esquerda
+03/03/2004 (22)	Argentina	500 milhões
+7	
+Diogo Bezerra	Diogo Bezerra
+Ponta Direita
+16/07/2002 (24)	Brasil	€ 2,00 milhões
+77	
+Dario Špikić	Dario Špikić
+Ponta Direita
+22/03/1999 (27)	Croácia	€ 1,00 mil
+80	IFK Gotemburgo
+Sebastian Clemmensen	Sebastian Clemmensen
+Ponta Direita
+01/09/2003 (23)	Dinamarca
+Ir	€ 1,00 mil
+30	Zeleziarne Podbrezova
+Roland Galcik	Roland Galcik
+Ponta Direita
+30/07/2001 (25)	Eslováquia	500 milhões
+11	
+Jalen Blesa	Jalen Blesa
+Centroavante
+05/02/2001 (25)	Espanha
+Estados Unidos	€ 2,20 milhões
+21	Zeleziarne Podbrezova
+Radek Siler	Radek Siler
+Centroavante
+10/09/2004 (22)	República Checa	€ 1,20 mil
+9	
+Tamble	Tamble
+Centroavante
+15/11/2000 (25)	Guiné-Bissau
+Portugal	€ 1,00 mil
+67	Botafogo FR Sub-20
+Samuel Alves	Samuel Alves
+Centroavante
+30/03/2008 (18)	Brasil	400 milhões
+FC AROUCA
+12	
+Ignacio de Arruabarrena	Ignacio de Arruabarrena
+Goleiro
+16/01/1997 (29)	Uruguai
+Espanha	€1.50mi
+1	
+Jakub Vinarčík	Jakub Vinarčík
+Goleiro
+11/07/2005 (21)	Eslováquia	€300mil
+71	Amarante FC
+Martim Duarte	Martim Duarte
+Goleiro
+17/01/2003 (23)	Portugal	-
+3	
+José Fontán	José Fontán
+Zagueiro
+11/02/2000 (26)	Espanha	€2.50mi
+5	
+Boris Popović	Boris Popović
+Zagueiro
+26/02/2000 (26)	Sérvia
+França	€1.00mi
+15	
+Javi Sánchez	Javi Sánchez
+Zagueiro
+14/03/1997 (29)	Espanha	€1.00mi
+4	
+Diogo Monteiro	Diogo Monteiro
+Zagueiro
+28/01/2005 (21)	Portugal
+Suiça	€300mil
+18	Vitória SC
+Orest Lebedenko	Orest Lebedenko
+Lateral Esq.
+23/09/1998 (28)	Ucrânia	€500mil
+37	Cádiz CF
+Mario Climent	Mario Climent
+Lateral Esq.
+30/01/2002 (24)	Espanha	€500mil
+28	
+Tiago Esgaio	Tiago Esgaio 
+Lateral Dir.
+01/08/1995 (31)	Portugal	€1.00mi
+2	Newcastle United
+Leo Shahar	Leo Shahar
+Lateral Dir.
+18/03/2007 (19)	Inglaterra
+Israel	-
+8	
+Taichi Fukui	Taichi Fukui
+Meia Central
+15/07/2004 (22)	Japão	€6.00mi
+6	
+Espen van Ee	Espen van Ee
+Meia Central
+05/07/2003 (23)	Holanda	€1.50mi
+21	Real Betis Balompié
+Mateo Flores	Mateo Flores
+Meia Central
+07/04/2004 (22)	Espanha	€1.20mi
+89	
+Pedro Santos	Pedro Santos
+Meia Central
+12/10/2000 (26)	Portugal	€600mil
+14	
+Hyun-ju Lee	Hyun-ju Lee
+Meia Ofensivo
+07/02/2003 (23)	Coreia do Sul	€2.50mi
+10	
+Pablo Gozálbez	Pablo Gozálbez
+Meia Ofensivo
+30/04/2001 (25)	Espanha	€700mil
+7	
+Naïs Djouahra	Naïs Djouahra
+Ponta-Esquerda
+23/11/1999 (26)	França
+Argélia	€2.00mi
+24	
+Brian Mansilla	Brian Mansilla
+Ponta-Esquerda
+14/05/2002 (24)	Uruguai	€800mil
+20	HNK Rijeka
+Gabriel Rukavina	Gabriel Rukavina
+Ponta-Esquerda
+16/01/2004 (22)	Croácia	€500mil
+77	Chungnam Asan
+Si-hoo Park	Si-hoo Park
+Ponta-Esquerda
+18/08/2007 (19)	Coreia do Sul	€400mil
+11	
+Miguel Puche	Miguel Puche 
+Ponta-Esquerda
+30/04/2001 (25)	Espanha	€300mil
+19	
+Alfonso Trezza	Alfonso Trezza
+Ponta-Direita
+22/06/1999 (27)	Uruguai
+Itália	€1.50mi
+97	
+Costinha	Costinha
+Ponta-Direita
+04/08/2008 (18)	Portugal	-
+17	
+Iván Barbero	Iván Barbero
+Centroavante
+17/08/1998 (28)	Espanha	€2.50mi
+9	
+Fally Mayulu	Fally Mayulu
+Centroavante
+15/07/2002 (24)	França
+RD do Congo	€1.20mi
+23	
+Dylan Nandín	Dylan Nandín
+Centroavante
+28/02/2002 (24)	Uruguai	€1.00mi
+CASA PIA AC
+1	
+Patrick Sequieira	Patrick Sequieira
+Goleiro
+01/03/1999 (27)	Costa Rica
+Espanha	€3,00mi
+31	SL Benfica B
+André Gomes	André Gomes 
+Goleiro
+20/10/2004 (22)	Portugal	€ 2,50 milhões
+95	
+Ivan Mandić	Ivan Mandić
+Goleiro
+10/03/2003 (23)	Croácia	300 milhões
+22	Amora FC
+Daniel Azevedo	Daniel Azevedo
+Goleiro
+12/02/1998 (28)	Portugal	200 milhões
+4	
+João Goulart	João Goulart
+Zagueiro
+27/01/2000 (26)	Portugal	€ 1,50 mil
+43	
+David Sousa	David Sousa
+Zagueiro
+04/07/2001 (25)	Brasil	€ 1,50 mil
+27	
+Kaique Rocha	Kaique Rocha
+Zagueiro
+28/02/2001 (25)	Brasil	€ 1,00 mil
+44	FC Porto B
+Felipe Silva	Felipe Silva
+Zagueiro
+19/02/2002 (24)	Brasil	€ 1,00 mil
+3	
+Kaly	Kaly
+Zagueiro
+27/11/2003 (22)	Angola	400 milhões
+5	
+Abdu Conté	Abdu Conté
+Esq. Lateral
+24/03/1998 (28)	Portugal
+Guiné-Bissau	700 milhões
+75	
+Pedro Rosas	Pedro Rosas
+Esq. Lateral
+28/11/2000 (25)	Portugal	500 milhões
+18	
+André Geraldes	André Geraldes 
+Diretor Lateral
+02/05/1991 (35)	Portugal	100 milhões
+16	UD Almería
+Selvi Clua	Selvi Clua
+Volante
+29/01/2005 (21)	Espanha	500 milhões
+24	
+Seba Pérez	Seba Pérez
+Volante
+29/03/1993 (33)	Colômbia	300 milhões
+98	CR Vasco da Gama
+JP	JP
+Meia Central
+19/04/2005 (21)	Brasil	€ 2,00 milhões
+80	
+Lawrence Ofori	Lawrence Ofori
+Meia Central
+28/06/1998 (28)	Gana	€ 1,50 mil
+8	FC Felgueiras 1932
+Gabi	Gabi
+Meia Central
+18/04/2000 (26)	Portugal	550 milhões
+59	Casa Pia AC Sub-19
+Abdu Dafé	Abdu Dafé
+Meia Central
+10/06/2008 (18)	Portugal	200 milhões
+19	
+Kevin Prieto	Kevin Prieto
+Meia Direita
+27/06/2003 (23)	Uruguai	500 milhões
+70	SL Benfica
+João Rego	João Rego
+Meia Ofensivo
+20/06/2005 (21)	Portugal	€3,00mi
+77	CD Leganés
+Benjamin Pauwels	Benjamin Pauwels
+Ponta-Esquerda
+29/10/2004 (22)	Bélgica	800 milhões
+10	FC Famalicão
+Rochina	Rochina
+Ponta-Esquerda
+03/05/1995 (31)	Portugal	500 milhões
+21	Parma Calcio 1913
+Aymen Zouin	Aymen Zouin
+Ponta-Esquerda
+29/12/2006 (19)	Marrocos
+Itália	250 milhões
+29	
+Jérémy Livolant	Jérémy Livolant
+Ponta Direita
+09/01/1998 (28)	França	€ 2,50 milhões
+11	Lommel SK
+Mohamed Salah	Mohamed Salah
+Ponta Direita
+27/05/2004 (22)	Bélgica
+Marrocos	900 milhões de euros
+9	SL Benfica
+Henrique Araújo	Henrique Araújo
+Centroavante
+19/01/2002 (24)	Portugal	€ 1,00 mil
+20	Condado de Notts
+Alassana Jatta	Alassana Jatta
+Centroavante
+12/01/1999 (27)	Gâmbia	600 milhões
+17	Grenoble Foot 38
+Evans Maurin	Evans Maurin
+Centroavante
+30/03/2001 (25)	França
+Martinica	300 milhões
+90	
+Cassiano	Cassiano
+Centroavante
+16/06/1989 (37)	Brasil	100 milhões
+MOREIRENSE FC
+13	
+André Ferreira	André Ferreira
+Goleiro
+29/05/1996 (30)	Portugal	600 milhões
+1	SE Palmeiras
+Aranha	Aranha
+Goleiro
+07/02/2005 (21)	Brasil	-
+66	
+Gilberto Batista	Gilberto Batista
+Zagueiro
+29/12/2003 (22)	Guiné-Bissau
+Portugal	€ 2,00 milhões
+4	RB Bragantino
+Kevyn	Kevyn
+Zagueiro
+13/09/2005 (21)	Brasil	500 milhões
+26	
+Maracás	Maracás
+Zagueiro
+27/04/1994 (32)	Brasil	500 milhões
+32	Cruzeiro EC
+Janderson	Janderson
+Zagueiro
+31/08/2005 (21)	Brasil	-
+27	
+Kiko	Kiko 
+Esq. Lateral
+16/04/2002 (24)	Portugal	€ 2,50 milhões
+17	
+Álvaro Martínez	Álvaro Martínez
+Esq. Lateral
+04/05/2002 (24)	Espanha	400 milhões
+76	
+Dinis Pinto	Dinis Pinto 
+Diretor Lateral
+24/08/2000 (26)	Portugal	€ 3,50 milhões
+2	
+Leandro Santos	Leandro Santos
+Diretor Lateral
+28/09/2005 (21)	Portugal	€ 1,00 mil
+8	
+Mateja Stjepanović	Mateja Stjepanović
+Volante
+20/02/2004 (22)	Servia	€3,00mi
+65	SC União Torreense
+Guilherme Liberato	Guilherme Liberato
+Volante
+16/06/2001 (25)	Brasil	800 milhões
+25	
+Afonso Assis	Afonso Assis
+Volante
+15/07/2006 (20)	Portugal	500 milhões
+21	
+Rodri Alonso	Rodri Alonso
+Meia Central
+04/01/2003 (23)	Espanha	€ 2,00 milhões
+20	SL Benfica
+João Veloso	João Veloso
+Meia Central
+26/06/2005 (21)	Portugal	€ 1,50 mil
+23	
+João do Nilo	João do Nilo
+Meia Central
+06/03/2003 (23)	Inglaterra	700 milhões
+30	
+Jimi Gower	Jimi Gower
+Meia Central
+01/10/2004 (22)	Inglaterra	100 milhões
+7	CP B Esportivo
+Manuel Mendonça	Manuel Mendonça
+Meia Ofensivo
+24/03/2005 (21)	Portugal	€ 2,00 milhões
+28	Hapoel Petah Tikva
+Chipyoka Songa	Chipyoka Songa
+Meia Ofensivo
+28/09/2004 (22)	Zâmbia	800 milhões
+19	FC Porto B
+Tiago Andrade	Tiago Andrade
+Ponta-Esquerda
+21/10/2005 (21)	Portugal	€ 1,50 mil
+11	
+Landerson	Landerson
+Ponta-Esquerda
+12/12/2006 (19)	Brasil	€ 1,00 mil
+10	
+Kiko Bondoso	Kiko Bondoso
+Ponta-Esquerda
+17/11/1995 (30)	Portugal	800 milhões
+89	
+Afonso Vieira	Afonso Vieira
+Ponta-Esquerda
+12/01/2007 (19)	Portugal	100 milhões
+44	
+Michael Dacosta	Michael Dacosta
+Ponta Direita
+05/03/2005 (21)	Espanha
+Guiné Equatorial	150 milhões
+79	FC Porto B
+Leonardo Vonić	Leonardo Vonić
+Centroavante
+10/07/2003 (23)	Croácia
+Alemanha	900 milhões de euros
+9	FC Lugano
+Alexandre Parsemain	Alexandre Parsemain
+Centroavante
+27/05/2003 (23)	Martinica
+França	700 milhões
+99	
+Yan Maranhão	Yan Maranhão
+Centroavante
+13/09/2002 (24)	Brasil	600 milhões
+GIL VICENTE FC
+30	
+Lucão	Lucão
+Goleiro
+26/02/2001 (25)	Brasil	€ 1,50 mil
+94	FC Porto
+Samuel Portugal	Samuel Portugal
+Goleiro
+29/03/1994 (32)	Brasil	500 milhões
+1	Gil Vicente Sub-23
+André Picornell	André Picornell
+Goleiro
+03/04/2004 (22)	Suécia
+Espanha	-
+44	
+Tiago Ferreira	Tiago Ferreira
+Goleiro
+12/01/2009 (17)	Portugal	-
+4	
+Marvin Elimbi	Marvin Elimbi
+Zagueiro
+20/02/2003 (23)	França
+Camarões	€4,00mi
+39	
+Buatu	Buatu 
+Zagueiro
+27/09/1993 (33)	Angola
+Bélgica	600 milhões
+3	
+Antônio Espigares	Antônio Espigares
+Zagueiro
+05/09/2004 (22)	Espanha	500 milhões
+45	CP B Esportivo
+David Moreira	David Moreira
+Esq. Lateral
+18/04/2004 (22)	Cabo Verde
+Portugal	€ 1,70 mil
+26	
+Weverson	Weverson
+Esq. Lateral
+05/07/2000 (26)	Brasil	800 milhões
+2	CP B Esportivo
+José Silva	José Silva
+Diretor Lateral
+20/08/2005 (21)	Portugal	500 milhões
+47	Fatih Karagümrük
+Ricardo Esgaio	Ricardo Esgaio
+Diretor Lateral
+16/05/1993 (33)	Portugal	500 milhões
+8	
+Mohamed Bamba	Mohamed Bamba 
+Volante
+08/10/2004 (22)	Costa do Marfim	€ 1,50 mil
+86	SL Benfica B
+Diogo Prioste	Diogo Prioste
+Meia Central
+26/03/2004 (22)	Portugal	€ 2,00 milhões
+6	
+Zé Carlos	Zé Carlos
+Meia Central
+30/10/2001 (25)	Portugal	800 milhões
+12	Esbjerg fB
+Andreas Lausen	Andreas Lausen
+Meia Central
+15/10/2002 (24)	Dinamarca	700 milhões
+82	Gil Vicente Sub-23
+Gonçalo Maia	Gonçalo Maia
+Meia Central
+30/11/2005 (20)	Portugal	100 milhões
+10	
+Santi García	Santi García
+Meia Ofensivo
+29/08/2001 (25)	Espanha	€4,00mi
+20	
+Gil Martins	Gil Martins
+Meia Ofensivo
+12/05/2006 (20)	Portugal	€ 1,50 mil
+32	Rio Boston, Califórnia
+Martín Fernández	Martín Fernández
+Meia Ofensivo
+23/06/2003 (23)	Uruguai	450 milhões
+19	CR Flamengo Sub-20
+Guilherme Gomes	Guilherme Gomes
+Meia Ofensivo
+02/02/2006 (20)	Brasil	300 milhões
+11	
+Joelson Fernandes	Joelson Fernandes
+Ponta-Esquerda
+28/02/2003 (23)	Portugal
+Guiné-Bissau	€ 1,00 mil
+7	
+Tidjany Touré	Tidjany Touré
+Ponta-Esquerda
+15/07/2002 (24)	França
+Costa do Marfim	500 milhões
+27	CA Progresso
+Agustín Moreira	Agustín Moreira
+Ponta Direita
+28/05/2001 (25)	Uruguai	800 milhões
+77	
+Murilo	Murilo
+Ponta Direita
+31/10/1994 (32)	Brasil	800 milhões
+17	
+Sérgio Bermejo	Sérgio Bermejo
+Ponta Direita
+17/08/1997 (29)	Espanha	500 milhões
+23	
+Héctor Hernández	Héctor Hernández
+Centroavante
+14/09/1995 (31)	Espanha	800 milhões
+9	Atlético Paranaense Sub-20
+Walace França	Walace França
+Centroavante
+24/08/2005 (21)	Brasil	500 milhões
+99	Gil Vicente Sub-23
+Maomé Kaba	Maomé Kaba
+Centroavante
+07/09/2002 (24)	Mali	100 milhões
+CD SANTA CRLARA
+1	CD Nacional
+Lucas França	Lucas França
+Goleiro
+19/01/1996 (30)	Brasil	€800mil
+12	FC Cascavel
+Neneca	Neneca
+Goleiro
+27/08/2003 (23)	Brasil	€300mil
+-	
+MT	MT 
+Zagueiro
+01/03/2001 (25)	Brasil	€3.00mi
+21	CD Feirense
+Emanuel Moreira	Emanuel Moreira
+Zagueiro
+23/03/2003 (23)	Portugal	€800mil
+3	
+Henrique Silva	Henrique Silva
+Zagueiro
+17/10/2005 (21)	Brasil	€500mil
+4	
+Pedro Pacheco	Pedro Pacheco
+Zagueiro
+27/01/1997 (29)	Portugal
+Suiça	€500mil
+19	Botafogo FR
+Ythallo	Ythallo
+Zagueiro
+22/07/2004 (22)	Brasil	€300mil
+5	Atlético Goianiense
+Guilherme Romão	Guilherme Romão
+Lateral Esq.
+07/10/1997 (29)	Brasil	€600mil
+42	
+Lucas Soares	Lucas Soares
+Lateral Dir.
+04/05/1998 (28)	Brasil	€1.50mi
+6	
+Pedro Ferreira	Pedro Ferreira
+Volante
+05/01/1998 (28)	Portugal	€3.00mi
+41	UD Leiria
+Dani Borges	Dani Borges
+Volante
+06/04/2003 (23)	Brasil	€700mil
+8	
+Djé	Djé
+Meia Central
+02/06/2003 (23)	Cabo Verde	€1.00mi
+20	CD Feirense
+Tiago Ribeiro	Tiago Ribeiro
+Meia Central
+14/03/2002 (24)	Portugal	€600mil
+22	Cruzeiro EC
+Vitinho	Vitinho
+Meia Central
+18/02/2004 (22)	Brasil	€500mil
+85	
+Kamika	Kamika
+Meia Esquerda
+04/06/2004 (22)	Portugal	-
+17	SC Braga B
+Vasconcelos	Vasconcelos
+Meia Ofensivo
+26/02/2005 (21)	Portugal	€1.00mi
+25	SC Braga Sub-23
+Fredy	Fredy
+Meia Ofensivo
+25/05/2006 (20)	Portugal
+Guiné Bissau	€100mil
+99	Athletico Paranaense U20
+Sorriso	Sorriso
+Ponta-Esquerda
+15/04/2006 (20)	Brasil	€800mil
+18	SC Braga B
+Afonso Duarte	Afonso Duarte
+Ponta-Esquerda
+05/09/2005 (21)	Portugal	€100mil
+70	
+Vinícius Lopes	Vinícius Lopes
+Ponta-Direita
+07/05/1999 (27)	Brasil	€2.50mi
+10	
+Brenner	Brenner
+Ponta-Direita
+02/01/2002 (24)	Brasil	€1.50mi
+11	
+Welinton Torrão	Welinton Torrão
+Ponta-Direita
+30/06/1999 (27)	Brasil	€400mil
+9	
+Gonçalo Paciência	Gonçalo Paciência 
+Centroavante
+01/08/1994 (32)	Portugal	€700mil
+7	
+Fernando	Fernando
+Centroavante
+12/04/2005 (21)	Brasil	€400mil
+73	Atlético Goianiense
+Léo Jacó	Léo Jacó
+Centroavante
+06/04/2005 (21)	Brasil	€400mil
+CD NACIONAL
+1	Paris Saint-Germain
+Renato Marin	Renato Marin
+Goleiro
+10/07/2006 (20)	Itália
+Brasil	€ 1,50 mil
+13	CS Universitatea Craiova
+João Gonçalves	João Gonçalves
+Goleiro
+05/11/2000 (26)	Portugal	500 milhões
+50	
+Kevyn	Kevyn
+Goleiro
+01/07/2005 (21)	Brasil	200 milhões
+38	
+Zé Vítor	Zé Vítor
+Zagueiro
+09/02/2001 (25)	Brasil	€ 2,50 milhões
+34	
+Leo Santos	Leo Santos  
+Zagueiro
+09/12/1998 (27)	Brasil	€ 1,50 mil
+4	
+Ulisses	Ulisses 
+Zagueiro
+28/09/1999 (27)	Brasil	€ 1,00 mil
+14	
+Ivanildo Fernandes	Ivanildo Fernandes
+Zagueiro
+26/03/1996 (30)	Cabo Verde
+Portugal	200 milhões
+33	
+Chico Gonçalves	Chico Gonçalves
+Zagueiro
+05/03/2004 (22)	Portugal	200 milhões
+5	
+José Gomes	José Gomes
+Esq. Lateral
+20/07/1996 (30)	Portugal	600 milhões
+55	
+Matias Silva	Matias Silva
+Esq. Lateral
+21/11/2008 (17)	Portugal	-
+52	Avaí FC
+Wesley Gasolina	Wesley Gasolina
+Diretor Lateral
+13/03/2000 (26)	Brasil	700 milhões
+2	LDU Quito
+Daniel de la Cruz	Daniel de la Cruz
+Diretor Lateral
+06/03/2004 (22)	Equador	500 milhões
+6	
+Matheus Dias	Matheus Dias
+Volante
+09/05/2002 (24)	Brasil	€ 1,50 mil
+28	
+Lizieiro	Lizieiro
+Meia Central
+07/02/1998 (28)	Brasil
+Itália	€ 1,50 mil
+15	
+Chiheb Labidi	Chiheb Labidi
+Meia Central
+01/06/2001 (25)	Tunísia	500 milhões
+26	
+Joel Silva	Joel Silva
+Meia Central
+11/02/2003 (23)	Portugal	400 milhões
+31	Petrolul Ploiesti
+Danel Dongmo	Danel Dongmo
+Meia Central
+31/01/2001 (25)	Camarões	350 milhões
+88	
+Divisão	Divisão
+Meia Central
+04/05/2006 (20)	Brasil	200 milhões
+-	CE Democrata
+Josué Souza	Josué Souza
+Meia Central
+25/04/2005 (21)	Brasil	100 milhões
+21	Hannover 96
+William Kokolo	William Kokolo
+Meia Esquerda
+09/06/2000 (26)	França
+RD do Congo	500 milhões
+10	
+Daniel Jr	Daniel Jr
+Meia Ofensivo
+09/05/2002 (24)	Brasil	700 milhões
+20	Basaksehir FK
+Matchoi Djaló	Matchoi Djaló
+Meia Ofensivo
+10/04/2003 (23)	Portugal
+Guiné-Bissau	500 milhões
+22	
+Filipe Soares	Filipe Soares
+Meia Ofensivo
+20/05/1999 (27)	Portugal	500 milhões
+8	
+Miguel Baeza	Miguel Baeza
+Meia Ofensivo
+27/03/2000 (26)	Espanha	400 milhões
+23	Atlético Mineiro
+Mateus Iseppe	Mateus Iseppe
+Meia Ofensivo
+02/05/2006 (20)	Brasil	400 milhões
+12	FC Seul
+Canção Minkyu	Canção Minkyu
+Ponta-Esquerda
+12/09/1999 (27)	Coréia do Sul	€ 1,00 mil
+17	Clube Sempre Pronto
+Fernando Nava	Fernando Nava
+Ponta-Esquerda
+08/06/2004 (22)	Bolívia	500 milhões
+7	Odense Boldklub
+Markus Jensen	Markus Jensen
+Ponta-Esquerda
+15/07/2005 (21)	Dinamarca	400 milhões
+11	Zulte Waregem
+Stavros Gavriel	Stavros Gavriel
+Ponta Direita
+29/01/2002 (24)	Chipre
+Grécia	600 milhões
+99	
+Pablo Ruan	Pablo Ruan
+Ponta Direita
+01/02/2003 (23)	Brasil	500 milhões
+9	Deportivo Alavés
+Allen Obando	Allen Obando
+Centroavante
+13/06/2006 (20)	Equador	900 milhões de euros
+29	FC Hegelmann
+Njoya Abdel	Njoya Abdel
+Centroavante
+05/10/2003 (23)	Camarões	900 milhões de euros
+ACADEMICO DE VISEU FC
+12	CD Leganés
+Juan Soriano	Juan Soriano
+Goleiro
+23/08/1997 (29)	Espanha	600 milhões
+98	Barra FC
+Ewerton	Ewerton
+Goleiro
+07/05/1998 (28)	Brasil	500 milhões
+1	USL Dunkerque
+Marcos Lavín	Marcos Lavín
+Goleiro
+02/09/1996 (30)	Espanha	200 milhões
+58	
+Matheus Sampaio	Matheus Sampaio
+Goleiro
+01/09/2004 (22)	Brasil	100 milhões
+41	
+Antônio Correia	Antônio Correia
+Zagueiro
+06/09/1999 (27)	França
+Portugal	€ 1,50 mil
+2	
+Nikolaos Michelis	Nikolaos Michelis
+Zagueiro
+23/03/2001 (25)	Grécia	€ 1,20 mil
+82	KAA Gent
+Hugo Gambor	Hugo Gambor
+Zagueiro
+30/12/2002 (23)	República Centro-Africana
+França	€ 1,20 mil
+44	
+Rúben Pereira	Rúben Pereira
+Zagueiro
+19/04/1998 (28)	Portugal	300 milhões
+5	
+Pedro Barcelos	Pedro Barcelos
+Zagueiro
+19/01/1996 (30)	Brasil	200 milhões
+57	
+Gu Costa	Gu Costa
+Esq. Lateral
+15/09/2005 (21)	Portugal	€ 1,40 mil
+3	Cidade de Coventry
+Miguel Ángel Brau	Miguel Ángel Brau
+Esq. Lateral
+27/12/2001 (24)	Espanha	€ 1,00 mil
+66	
+Igor Milioransa	Igor Milioransa
+Esq. Lateral
+12/09/1996 (30)	Brasil	200 milhões
+75	
+Robinho	Robinho
+Diretor Lateral
+31/07/1997 (29)	Portugal	700 milhões
+21	
+Tomás Domingos	Tomás Domingos
+Diretor Lateral
+01/05/1999 (27)	Portugal	200 milhões
+29	FK Velez Mostar
+Andro Babic	Andro Babic
+Volante
+08/09/2004 (22)	Croácia	400 milhões
+6	
+André Ceitil	André Ceitil
+Volante
+11/03/1995 (31)	Portugal	150 milhões
+14	
+Soufiane Messeguem	Soufiane Messeguem
+Meia Central
+05/02/2001 (25)	Alemanha
+Argélia	€ 1,50 mil
+18	AA Argentinos Juniores
+Cristian Ferreira	Cristian Ferreira
+Meia Central
+12/09/1999 (27)	Argentina	200 milhões
+7	
+Luís Silva	Luís Silva 
+Meia Central
+29/09/1992 (34)	Portugal	75 milhões
+8	
+Cihan Kahraman	Cihan Kahraman
+Meia Ofensivo
+08/10/1998 (28)	Peru
+Alemanha	€ 1,00 mil
+45	Atlético Madrileño
+Alejandro Mestanza	Alejandro Mestanza
+Meia Ofensivo
+07/12/2004 (21)	Espanha	250 milhões
+10	Aris Tessalônica
+Álvaro Zamora	Álvaro Zamora
+Ponta-Esquerda
+09/03/2002 (24)	Costa Rica	€ 1,60 mil
+47	
+Lorougnon Gohi	Lorougnon Gohi
+Ponta-Esquerda
+10/08/2004 (22)	Costa do Marfim	350 milhões
+31	Revista AA
+João Guilherme	João Guilherme
+Ponta Direita
+30/10/2000 (26)	Brasil	700 milhões
+17	Real Zaragoza
+Valery Fernández	Valery Fernández
+Ponta Direita
+23/11/1999 (26)	Espanha	400 milhões
+22	
+Nils Mortimer	Nils Mortimer
+Ponta Direita
+11/06/2001 (25)	Espanha	250 milhões
+33	
+André Clóvis	André Clóvis
+Centroavante
+21/11/1997 (28)	Brasil	€ 3,50 milhões
+9	Deportivo A Coruña
+Mohamed Bouldini	Mohamed Bouldini
+Centroavante
+27/11/1995 (30)	Marrocos	300 milhões
+77	Wieczysta Cracóvia
+Paulinho	Paulinho
+Centroavante
+21/09/1999 (27)	Portugal	300 milhões
+CS MARITIMO
+30	Leicester City FC
+Fran Vieites	Fran Vieites
+Goleiro
+07/05/1999 (27)	Espanha	€ 1,20 mil
+99	Leixões SC
+Gonçalo Tabuaço	Gonçalo Tabuaço
+Goleiro
+11/03/2001 (25)	Portugal	250 milhões
+1	
+Afonso Pastor	Afonso Pastor
+Goleiro
+04/10/2000 (26)	Espanha	€ 125 milhões
+44	
+Romain Correia	Romain Correia 
+Zagueiro
+06/09/1999 (27)	Portugal
+França	€ 1,50 mil
+22	Ferencvárosi TC
+Gábor Szalai	Gábor Szalai
+Zagueiro
+09/06/2000 (26)	Hungria	€ 1,00 mil
+64	LOSC Lille
+Rafael Fernandes	Rafael Fernandes
+Zagueiro
+28/06/2002 (24)	Portugal	500 milhões
+5	Beerschot VA
+Nilton	Nilton
+Esq. Lateral
+25/05/2001 (25)	Portugal
+Cabo Verde	800 milhões
+23	
+Paulo Henrique	Paulo Henrique
+Esq. Lateral
+23/10/1996 (30)	Portugal	700 milhões
+3	Plymouth Argyle
+Nathanael Ogbeta	Nathanael Ogbeta
+Esq. Lateral
+28/04/2001 (25)	Inglaterra
+Nigéria	400 milhões
+15	Wisla Plock
+Tomás Tavares	Tomás Tavares
+Diretor Lateral
+07/03/2001 (25)	Portugal
+Cabo Verde	300 milhões
+2	
+Igor Julião	Igor Julião
+Diretor Lateral
+23/08/1994 (32)	Brasil	100 milhões
+18	
+Vladan Danilović	Vladan Danilović
+Volante
+27/07/1999 (27)	Bósnia e Herzegovina	800 milhões
+6	
+Rodri Andrade	Rodri Andrade
+Volante
+24/11/2001 (24)	Portugal	500 milhões
+16	
+Francisco Silva	Francisco Silva
+Volante
+08/02/2007 (19)	Portugal	-
+25	Grécia Verona
+Yellu Santiago	Yellu Santiago
+Meia Central
+25/05/2004 (22)	Espanha	700 milhões
+21	Real Valladolid CF
+Ibrahim Alani	Ibrahim Alani
+Meia Central
+29/07/2006 (20)	Nigéria	500 milhões
+14	
+Rafael Guzzo	Rafael Guzzo
+Meia Central
+06/01/1995 (31)	Portugal
+Brasil	300 milhões
+66	NK Istra 1961
+Israel Isaac Ayuma	Israel Isaac Ayuma
+Meia Central
+08/08/2005 (21)	Nigéria	300 milhões
+68	
+Nélio Batista	Nélio Batista
+Meia Central
+14/01/2009 (17)	Portugal	-
+8	Cracóvia
+Maxime Dominguez	Maxime Dominguez
+Meia Ofensivo
+01/02/1996 (30)	Suíça
+Espanha	400 milhões
+10	
+Martín Tejón	Martín Tejón
+Ponta-Esquerda
+12/04/2004 (22)	Espanha	€ 2,50 milhões
+11	
+Simo Bouzaidi	Simo Bouzaidi
+Ponta-Esquerda
+16/11/1999 (26)	Marrocos
+Espanha	€ 1,20 mil
+7	
+Enrique Peña Zauner	Enrique Peña Zauner
+Ponta-Esquerda
+04/03/2000 (26)	Venezuela
+Alemanha	250 milhões
+35	Hércules Almelo
+Bryan Limbombe	Bryan Limbombe
+Ponta Direita
+14/05/2001 (25)	Bélgica
+RD do Congo	400 milhões
+27	VfL Bochum
+Samuel Bamba	Samuel Bamba
+Ponta Direita
+13/02/2004 (22)	Alemanha
+RD do Congo	350 milhões
+20	
+Xiko Gomes	Xiko Gomes
+Ponta Direita
+14/04/2004 (22)	Portugal
+Venezuela	200 milhões
+3	
+Adrián Butzke	Adrián Butzke
+Centroavante
+30/03/1999 (27)	Espanha	800 milhões
+90	Hamburgo II
+Maurice Boakye	Maurice Boakye
+Centroavante
+01/09/2004 (22)	Alemanha
+Gana	400 milhões
+9	
+José Melro	José Melro
+Centroavante
+26/05/2004 (22)	Portugal	350 milhões
+12	Paphos FC
+Mons Bassouamina	Mons Bassouamina
+Centroavante
+28/05/1998 (28)	Congo
+França	300 milhões

@@ -1,0 +1,20 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID.com.patofoot.manager2026",
+        "paths": [
+          "/",
+          "/site",
+          "/site/*"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAMID.com.patofoot.manager2026"
+    ]
+  }
+}

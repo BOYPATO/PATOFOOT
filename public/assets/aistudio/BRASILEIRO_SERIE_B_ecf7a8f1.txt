@@ -1,0 +1,2591 @@
+FORTALEZA
+1	
+João Ricardo	João Ricardo
+Goleiro
+06/09/1988 (38)	Brasil	300 milhões
+15	
+Magrão	Magrão
+Goleiro
+15/05/2000 (26)	Brasil	250 milhões
+25	
+Vinícius	Vinícius
+Goleiro
+28/03/1994 (32)	Brasil	250 milhões
+3	
+Lucas Gazal	Lucas Gazal
+Zagueiro
+06/08/1999 (27)	Brasil	€ 1,20 mil
+6	
+Tomás Cardona	Tomás Cardona
+Zagueiro
+10/10/1995 (31)	Argentina
+Espanha	900 milhões de euros
+15	Botafogo FR
+Bastos	Bastos
+Zagueiro
+27/03/1991 (35)	Angola	600 milhões
+4	
+Luan Freitas	Luan Freitas
+Zagueiro
+20/01/2001 (25)	Brasil
+Portugal	500 milhões
+33	
+Kauã Rocha	Kauã Rocha
+Zagueiro
+13/03/2007 (19)	Brasil	500 milhões
+23	EC Vitória
+Neris	Neris
+Zagueiro
+17/06/1992 (34)	Brasil	200 milhões
+18	Fluminense FC
+Gabriel Fuentes	Gabriel Fuentes 
+Esq. Lateral
+09/02/1997 (29)	Colômbia	€ 1,70 mil
+12	FC Porto B
+Kaio Henrique	Kaio Henrique
+Esq. Lateral
+22/03/2006 (20)	Brasil	€ 1,30 mil
+13	Londrina EC
+Maurício Mucuri	Maurício Mucuri
+Esq. Lateral
+11/05/2001 (25)	Brasil	600 milhões
+22	São Paulo FC
+Mailton	Mailton
+Diretor Lateral
+31/05/1998 (28)	Brasil	€ 2,30 milhões
+28	
+Paulinho	Paulinho
+Diretor Lateral
+23/05/2005 (21)	Brasil	400 milhões
+37	Coríntios da SC
+Ryan	Ryan
+Volante
+15/07/2003 (23)	Brasil	€3,00mi
+8	FBPA Grêmio
+Ronald	Ronald
+Volante
+11/02/2003 (23)	Brasil
+Polônia	€ 2,50 milhões
+20	Sem mais
+Jailson	Jailson
+Volante
+07/09/1995 (31)	Brasil	700 milhões
+29	
+Rodrigo Santos	Rodrigo Santos
+Volante
+18/09/2000 (26)	Brasil	500 milhões
+88	
+Lucas Sasha	Lucas Sasha
+Volante
+01/03/1990 (36)	Brasil
+Itália	150 milhões
+5	
+Pierre	Pierre
+Meia Central
+12/03/2002 (24)	Brasil	€ 1,00 mil
+38	
+Lucca Prior	Lucca Prior
+Meia Ofensivo
+12/02/2004 (22)	Brasil	750 milhões
+10	
+Lucas Crispim	Lucas Crispim
+Meia Ofensivo
+19/06/1994 (32)	Brasil	700 milhões
+19	
+Lucas Emanuel	Lucas Emanuel
+Meia Ofensivo
+14/07/2006 (20)	Brasil	300 milhões
+32	
+Luiz Fernando	Luiz Fernando
+Ponta-Esquerda
+16/10/1996 (30)	Brasil	€ 1,80 mil
+75	Cruzeiro EC
+Rodriguinho	Rodriguinho
+Ponta-Esquerda
+05/06/2003 (23)	Brasil	900 milhões de euros
+77	EC Primavera
+Paulo Baya	Paulo Baya
+Ponta-Esquerda
+26/07/1999 (27)	Brasil	800 milhões
+11	Clube Tijuana
+Vitinho	Vitinho
+Ponta Direita
+23/04/2001 (25)	Brasil	€3,00mi
+31	EC Primavera
+Wellington	Wellington
+Ponta Direita
+14/07/2000 (26)	Brasil	900 milhões de euros
+16	Ceará SC
+Pedro Henrique	Pedro Henrique
+Ponta Direita
+16/06/1990 (36)	Brasil	400 milhões
+9	Defesa e Justiça
+Juan Miritello	Juan Miritello
+Centroavante
+08/02/1999 (27)	Argentina	€ 2,30 milhões
+17	Mirasol FC
+Nathan Fogaça	Nathan Fogaça
+Centroavante
+09/06/1999 (27)	Brasil	€ 1,50 mil
+91	Cruzeiro EC
+Chico da Costa	Chico da Costa
+Centroavante
+05/05/1995 (31)	Brasil	€ 1,00 mil
+21	Atenas Caliteia
+Juan Cantillo	Juan Cantillo
+Centroavante
+08/01/2003 (23)	Colômbia	200 milhões
+SPORT RECIFE
+26	
+Thiago Couto	Thiago Couto
+Goleiro
+26/03/1999 (27)	Brasil	€900mil
+21	Fortaleza EC
+Brenno	Brenno
+Goleiro
+01/04/1999 (27)	Brasil
+Itália	€500mil
+12	
+Denis	Denis
+Goleiro
+14/04/1987 (39)	Brasil	€25mil
+42	
+Adriano	Adriano
+Goleiro
+07/03/2003 (23)	Brasil	-
+5	
+Marcelo Benevenuto	Marcelo Benevenuto
+Zagueiro
+07/01/1996 (30)	Brasil	€900mil
+28	Athletico Paranaense
+Habraão	Habraão
+Zagueiro
+26/06/2001 (25)	Brasil	€800mil
+33	Fluminense FC
+Kayky Almeida	Kayky Almeida
+Zagueiro
+01/05/2005 (21)	Brasil	€800mil
+3	
+Marcelo Ajul	Marcelo Ajul
+Zagueiro
+26/08/2002 (24)	Brasil	€600mil
+40	
+Matheus Baraka	Matheus Baraka
+Zagueiro
+21/01/2003 (23)	Brasil	-
+63	
+Patrick	Patrick
+Zagueiro
+27/02/2005 (21)	Brasil	-
+60	EC Juventude
+Felipinho	Felipinho
+Lateral Esq.
+13/01/1997 (29)	Brasil	€900mil
+76	FC Sheriff Tiraspol
+Raí	Raí
+Lateral Esq.
+28/03/2000 (26)	Brasil	€350mil
+96	Ferroviária
+Edson Lucas	Edson Lucas
+Lateral Esq.
+30/07/2000 (26)	Brasil	€50mil
+27	EC Vitória
+Claudinho	Claudinho
+Lateral Dir.
+24/09/2000 (26)	Brasil	€1.70mi
+68	
+Augusto Pucci	Augusto Pucci
+Lateral Dir.
+03/11/2007 (19)	Brasil	€700mil
+7	Botafogo FR
+Patrick de Paula	Patrick de Paula
+Volante
+08/09/1999 (27)	Brasil	€2.50mi
+23	
+Zé Gabriel	Zé Gabriel
+Volante
+21/01/1999 (27)	Brasil	€550mil
+15	Cruzeiro EC
+Murilo Rhikman	Murilo Rhikman
+Volante
+13/03/2006 (20)	Brasil	€500mil
+29	Coritiba FC
+Willian Oliveira	Willian Oliveira
+Volante
+16/05/1993 (33)	Brasil	€300mil
+-	Cianorte FC
+Luciano	Luciano
+Volante
+26/02/2003 (23)	Brasil	-
+88	Cuiabá EC
+Fernando Sobral	Fernando Sobral
+Meia Central
+17/12/1994 (31)	Brasil	€1.50mi
+47	
+Fábio Matheus	Fábio Matheus
+Meia Central
+13/04/2003 (23)	Brasil	€500mil
+8	Ceará SC
+Juan Alano	Juan Alano
+Meia Direita
+02/09/1996 (30)	Brasil	€900mil
+80	Maccabi Tel Aviv
+Kervin Andrade	Kervin Andrade
+Meia Ofensivo
+13/04/2005 (21)	Venezuela	€1.30mi
+6	Brusque FC
+Biel Fonseca	Biel Fonseca
+Meia Ofensivo
+19/03/2002 (24)	Brasil	€500mil
+20	Botafogo FR
+Diego Hernández	Diego Hernández
+Ponta-Esquerda
+22/06/2000 (26)	Uruguai	€1.50mi
+10	
+Carlos de Pena	Carlos de Pena
+Ponta-Esquerda
+11/03/1992 (34)	Uruguai
+Itália	€750mil
+25	
+Clayson	Clayson
+Ponta-Esquerda
+19/03/1995 (31)	Brasil	€700mil
+31	
+Marlon	Marlon
+Ponta-Esquerda
+15/09/1997 (29)	Brasil	€400mil
+30	
+Chrystian Barletta	Chrystian Barletta
+Ponta-Direita
+05/07/2001 (25)	Brasil	€2.50mi
+77	Mazatlán FC
+Dudu Teodora	Dudu Teodora
+Centroavante
+10/08/1999 (27)	Brasil	€1.00mi
+9	Chapecoense
+Perotti	Perotti
+Centroavante
+22/11/1997 (28)	Brasil	€900mil
+19	Chapecoense
+Neto Pessoa	Neto Pessoa
+Centroavante
+16/05/1994 (32)	Brasil	€350mil
+JUVENTUDE
+93	São Paulo FC
+Jandrei	Jandrei
+Goleiro
+01/03/1993 (33)	Brasil
+Itália	200 milhões
+12	
+Pedro Rocha	Pedro Rocha
+Goleiro
+01/06/1998 (28)	Brasil	-
+21	
+Ruan Carneiro	Ruan Carneiro
+Goleiro
+28/03/1990 (36)	Brasil	-
+31	
+Zé Henrique	Zé Henrique
+Goleiro
+23/10/2004 (22)	Brasil	-
+4	
+messias	messias
+Zagueiro
+03/11/1994 (32)	Brasil	500 milhões
+34	
+Rodrigo Sam	Rodrigo Sam
+Zagueiro
+24/07/1995 (31)	Brasil	350 milhões
+47	
+Marcos Paulo	Marcos Paulo
+Zagueiro
+18/01/2003 (23)	Brasil	300 milhões
+97	Volta Redonda FC
+Gabriel Pinheiro	Gabriel Pinheiro
+Zagueiro
+19/04/1997 (29)	Brasil	250 milhões
+3	
+Titi	Titi
+Zagueiro
+12/03/1988 (38)	Brasil
+Itália	50 milhões
+30	São Paulo FC
+Patryck	Patryck
+Esq. Lateral
+18/01/2003 (23)	Brasil
+Itália	€ 1,20 mil
+6	AA Anapolina
+Wadson	Wadson
+Esq. Lateral
+02/09/2000 (26)	Brasil	200 milhões
+16	
+Diogo Barbosa	Diogo Barbosa
+Esq. Lateral
+17/08/1992 (34)	Brasil	200 milhões
+28	
+Alan Ruschel	Alan Ruschel 
+Esq. Lateral
+23/08/1989 (37)	Brasil	75 milhões
+22	Santos FC
+Nathan	Nathan
+Diretor Lateral
+05/09/2001 (25)	Brasil	€ 1,20 mil
+2	
+Raí Ramos	Raí Ramos
+Diretor Lateral
+06/05/1994 (32)	Brasil	300 milhões
+13	
+Aderlan	Aderlan
+Diretor Lateral
+18/08/1990 (36)	Brasil	100 milhões
+8	Cuiabá EC
+Lucas Mineiro	Lucas Mineiro
+Volante
+24/02/1996 (30)	Brasil	900 milhões de euros
+29	Mirasol FC
+Gabriel Pires	Gabriel Pires
+Volante
+18/09/1993 (33)	Brasil
+Portugal	400 milhões
+5	EC Primavera
+Luan Martins	Luan Martins
+Volante
+20/10/1998 (28)	Brasil	250 milhões
+26	São Paulo FC
+Iba Ly	Iba Ly
+Volante
+22/01/2003 (23)	Senegal	250 milhões
+88	
+David vai	David vai
+Volante
+22/06/2005 (21)	Brasil	250 milhões
+44	
+Mandaca	Mandaca
+Meia Central
+02/10/2001 (25)	Brasil	€ 2,20 milhões
+7	Fortaleza EC
+Pablo Roberto	Pablo Roberto
+Meia Central
+14/11/1999 (26)	Brasil	600 milhões
+75	
+Raí	Raí
+Meia Ofensivo
+21/04/2002 (24)	Brasil	700 milhões
+27	CR Vasco da Gama
+Ray Breno	Ray Breno
+Meia Ofensivo
+31/08/2004 (22)	Brasil	-
+10	
+Marcos Paulo	Marcos Paulo
+Ponta-Esquerda
+01/02/2001 (25)	Portugal
+Brasil	550 milhões
+20	Fortaleza EC
+Allanzinho	Allanzinho
+Ponta-Esquerda
+04/04/2000 (26)	Brasil	400 milhões
+11	
+Fábio Lima	Fábio Lima
+Ponta-Esquerda
+22/12/1996 (29)	Brasil	300 milhões
+17	
+Manuel Castro	Manuel Castro
+Ponta Direita
+27/09/1995 (31)	Uruguai	€ 1,00 mil
+70	Riga FC
+Juan Christian	Juan Christian
+Ponta Direita
+10/03/2001 (25)	Brasil	600 milhões
+72	Figueiresen FC
+Lucas Alves	Lucas Alves
+Seg. Atacante
+21/04/2002 (24)	Brasil	-
+25	
+Alisson Safira	Alisson Safira
+Centroavante
+17/03/1995 (31)	Brasil	750 milhões
+18	Clube Cerro Porteño
+Luís Amarilla	Luís Amarilla
+Centroavante
+25/08/1995 (31)	Paraguai	500 milhões
+9	
+Alan Kardec	Alan Kardec
+Centroavante
+12/01/1989 (37)	Brasil	100 milhões
+CEARA
+22	Paysandu SC
+Matheus Nogueira	Matheus Nogueira
+Goleiro
+20/09/1997 (29)	Brasil	300 milhões
+1	
+Ricardo Costa	Ricardo Costa
+Goleiro
+01/03/1991 (35)	Brasil	100 milhões
+23	Guarani FC
+Caíque França	Caíque França
+Goleiro
+03/06/1995 (31)	Brasil	-
+4	
+Luizão	Luizão
+Zagueiro
+09/10/1992 (34)	Brasil	550 milhões
+3	Coritiba FC
+Thalisson	Thalisson 
+Zagueiro
+20/01/2002 (24)	Brasil	400 milhões
+18	
+Júlio César	Júlio César
+Zagueiro
+28/09/2003 (23)	Brasil	400 milhões
+33	
+Éder	Éder
+Zagueiro
+05/04/1995 (31)	Brasil	250 milhões
+13	
+Luiz Otávio	Luiz Otávio 
+Zagueiro
+14/09/1988 (38)	Brasil	50 milhões
+19	
+Stanley Boateng	Stanley Boateng
+Zagueiro
+22/03/2005 (21)	Gana	-
+63	
+Pedro Gilmar	Pedro Gilmar 
+Zagueiro
+02/04/2006 (20)	Brasil	-
+6	Sem mais
+Sávio	Sávio
+Esq. Lateral
+26/05/1995 (31)	Brasil	350 milhões
+12	
+Sánchez	Sánchez
+Esq. Lateral
+28/09/1995 (31)	Brasil	25 milhões
+2	
+Rafael Ramos	Rafael Ramos
+Diretor Lateral
+09/01/1995 (31)	Portugal	400 milhões
+31	AA Ponte Preta
+Bryan Borges	Bryan Borges
+Diretor Lateral
+03/08/1996 (30)	Brasil	300 milhões
+60	
+Enzo Lodovico	Enzo Lodovico
+Diretor Lateral
+23/06/2006 (20)	Brasil	-
+25	
+Zanocelo	Zanocelo
+Volante
+30/01/2001 (25)	Brasil	€ 2,00 milhões
+26	
+Richardson	Richardson
+Volante
+17/08/1991 (35)	Brasil	100 milhões
+81	
+João Gabriel	João Gabriel
+Volante
+15/04/2006 (20)	Brasil	-
+7	Clube do Remo
+Giovanni Pavani	Giovanni Pavani
+Meia Central
+22/11/1996 (29)	Brasil	350 milhões
+8	
+Matheus Araújo	Matheus Araújo
+Meia Ofensivo
+22/05/2002 (24)	Brasil	€ 1,50 mil
+40	
+Melk	Melk
+Meia Ofensivo
+28/07/2006 (20)	Brasil	350 milhões
+29	
+Vina	Vina
+Meia Ofensivo
+15/04/1991 (35)	Brasil	250 milhões
+10	Mirasol FC
+Lucas Mugni	Lucas Mugni
+Meia Ofensivo
+12/01/1992 (34)	Argentina
+Itália	200 milhões
+77	Ácido panetolico
+Lenny Lobato	Lenny Lobato
+Ponta-Esquerda
+03/02/2001 (25)	Brasil
+Argentina	800 milhões
+11	Viajantes de Montevidéu
+Nicolás Ferreira	Nicolás Ferreira
+Ponta-Esquerda
+07/02/2002 (24)	Uruguai	600 milhões
+16	CSA
+Rian Santana	Rian Santana
+Ponta-Esquerda
+23/01/2001 (25)	Brasil	-
+90	
+Kauã	Kauã
+Ponta-Esquerda
+01/03/2006 (20)	Brasil	-
+9	CD Santa Clara
+Wendel	Wendel
+Centroavante
+02/08/2000 (26)	Brasil	€ 2,00 milhões
+73	Xangai Shenhua
+Saulo Mineiro	Saulo Mineiro
+Centroavante
+17/06/1997 (29)	Brasil	€ 1,00 mil
+94	EC Vitória
+Renzo López	Renzo López
+Centroavante
+16/04/1994 (32)	Uruguai	650 milhões
+99	
+Lucca	Lucca
+Centroavante
+02/04/2003 (23)	Brasil	600 milhões
+GREMIO NOVORIZONTINO
+93	
+Jordi	Jordi
+Goleiro
+03/09/1993 (33)	Brasil	350 milhões
+31	
+César	César
+Goleiro
+16/02/1995 (31)	Brasil	300 milhões
+1	
+Lucas	Lucas
+Goleiro
+21/06/1998 (28)	Brasil	-
+12	
+João Scapin	João Scapin
+Goleiro
+12/02/2004 (22)	Brasil	-
+29	Vitória FC
+Paulo Henrique	Paulo Henrique
+Goleiro
+14/04/1991 (35)	Brasil	-
+4	
+Patrick	Patrick
+Zagueiro
+09/04/1999 (27)	Brasil	500 milhões
+22	Clube do Remo
+Alexis Alvariño	Alexis Alvariño
+Zagueiro
+01/02/2001 (25)	Argentina	450 milhões
+3	EC Noroeste
+Carlinhos	Carlinhos
+Zagueiro
+16/06/1995 (31)	Brasil	200 milhões
+14	
+Eduardo Brock	Eduardo Brock
+Zagueiro
+06/05/1991 (35)	Brasil
+Itália	150 milhões
+26	Volta Redonda FC
+Gabriel Bahia	Gabriel Bahia
+Zagueiro
+24/11/1998 (27)	Brasil	50 milhões
+33	
+Renato Palm	Renato Palm
+Zagueiro
+14/10/1991 (35)	Brasil	50 milhões
+66	Atlético Mineiro
+Maykon Jesus	Maykon Jesus
+Esq. Lateral
+07/12/2005 (20)	Brasil	500 milhões
+5	
+Sander	Sander
+Esq. Lateral
+03/10/1990 (36)	Brasil	75 milhões
+24	
+Jhilmar Lora	Jhilmar Lora
+Diretor Lateral
+24/10/2000 (26)	Peru	600 milhões
+2	Esporte Recife
+Madson	Madson
+Diretor Lateral
+13/01/1992 (34)	Brasil	€ 175 milhões
+18	EC Vitória
+Leo Naldi	Leo Naldi
+Volante
+18/08/2001 (25)	Brasil	600 milhões
+6	
+Luís Oyama	Luís Oyama
+Volante
+30/01/1997 (29)	Brasil
+Japão	500 milhões
+28	
+Marlon	Marlon
+Volante
+26/02/1990 (36)	Brasil	100 milhões
+23	
+Luiz Gabriel	Luiz Gabriel
+Volante
+22/01/2005 (21)	Brasil	-
+17	Coritiba FC
+Matheus Bianqui	Matheus Bianqui
+Meia Central
+31/01/1998 (28)	Brasil	700 milhões
+15	
+Tavinho	Tavinho
+Meia Central
+19/07/2004 (22)	Brasil	500 milhões
+19	
+Diego Galo	Diego Galo
+Meia Central
+04/06/2005 (21)	Brasil	500 milhões
+10	SE Palmeiras
+Rômulo	Rômulo
+Meia Ofensivo
+07/10/2001 (25)	Brasil	€ 2,50 milhões
+50	
+Juninho	Juninho
+Meia Ofensivo
+23/01/2001 (25)	Brasil	€ 1,20 mil
+8	
+Christian Ortiz	Christian Ortiz
+Meia Ofensivo
+20/08/1992 (34)	Argentina	250 milhões
+16	
+Vinícius Paiva	Vinícius Paiva
+Ponta Direita
+01/03/2001 (25)	Brasil	450 milhões
+11	
+Robson	Robson
+Ponta Direita
+30/05/1991 (35)	Brasil	400 milhões
+7	Maringá FC
+Ronald Barcellos	Ronald Barcellos
+Ponta Direita
+02/03/2002 (24)	Brasil	-
+77	
+Hélio Borges	Hélio Borges
+Ponta Direita
+15/05/2000 (26)	Brasil	-
+35	
+Hector Bianchi	Hector Bianchi
+Ponta Direita
+21/06/2005 (21)	Brasil	-
+41	
+Reidiney	Reidiney
+Ponta Direita
+14/12/2006 (19)	Brasil	-
+40	Grêmio FBPA Sub-20
+Jardiel	Jardiel
+Centroavante
+21/03/2005 (21)	Brasil
+Bulgária	500 milhões
+9	
+Carlão	Carlão
+Centroavante
+03/07/1992 (34)	Brasil	250 milhões
+27	EC Noroeste
+Diego Mathias	Diego Mathias
+Centroavante
+12/06/1999 (27)	Brasil	150 milhões
+30	
+Nicolas Careca	Nicolas Careca
+Centroavante
+18/05/1997 (29)	Brasil	100 milhões
+ATHLETIC CLUBE
+-	
+Luan Polli	Luan Polli
+Goleiro
+06/04/1993 (33)	Brasil
+Itália	400 milhões
+-	
+Glauco	Glauco
+Goleiro
+11/02/1995 (31)	Brasil	100 milhões
+-	Maringá FC
+Tony Batista	Tony Batista
+Goleiro
+25/09/1992 (34)	Brasil	-
+-	
+Eduardo Freire	Eduardo Freire
+Goleiro
+25/05/2004 (22)	Brasil	-
+-	
+Lucas Belezi	Lucas Belezi
+Zagueiro
+08/05/2003 (23)	Brasil
+Itália	€ 1,50 mil
+-	
+Jonathan	Jonathan
+Zagueiro
+13/07/1999 (27)	Brasil	300 milhões
+-	
+Filipe Sampaio	Filipe Sampaio
+Zagueiro
+11/11/1994 (31)	Brasil	250 milhões
+-	Operador FEC
+Jhan Torres	Jhan Torres
+Zagueiro
+15/04/2001 (25)	Colômbia	150 milhões
+-	
+Sidimar	Sidimar
+Zagueiro
+09/07/1992 (34)	Brasil	100 milhões
+-	
+Felipe Vieira	Felipe Vieira
+Zagueiro
+09/02/2005 (21)	Brasil	-
+-	Cuiabá EC
+Marcelo Henrique	Marcelo Henrique
+Esq. Lateral
+01/03/2005 (21)	Brasil	250 milhões
+-	CSA
+Enzo	Enzo
+Esq. Lateral
+18/07/2002 (24)	Brasil	-
+-	
+Zeca	Zeca 
+Diretor Lateral
+16/05/1994 (32)	Brasil	500 milhões
+-	
+Diogo Batista	Diogo Batista
+Diretor Lateral
+29/08/2003 (23)	Brasil	400 milhões
+-	
+Douglas Pelé	Douglas Pelé
+Diretor Lateral
+25/08/1999 (27)	Brasil	250 milhões
+-	São Paulo FC
+Felipe Negrucci	Felipe Negrucci
+Volante
+14/05/2004 (22)	Brasil	€ 1,00 mil
+-	Barra FC
+João Miguel	João Miguel
+Volante
+26/02/2004 (22)	Brasil	50 milhões
+-	Fortaleza EC
+Kauan Rodrigues	Kauan Rodrigues
+Meia Central
+16/04/2005 (21)	Brasil	€ 1,00 mil
+-	América Mineiro
+Yago Santos	Yago Santos
+Meia Central
+03/04/2003 (23)	Brasil	400 milhões
+-	
+Jota	Jota
+Meia Central
+06/02/2004 (22)	Brasil	400 milhões
+-	FC Alverca
+Gian Cabezas	Gian Cabezas
+Meia Central
+01/01/2003 (23)	Colômbia	300 milhões
+-	
+Fabrício Isidoro	Fabrício Isidoro
+Meia Central
+28/01/1992 (34)	Brasil	50 milhões
+-	
+Gustavinho	Gustavinho
+Meia Ofensivo
+29/10/2001 (25)	Brasil	400 milhões
+-	Botafogo FR
+Kauan Lindes	Kauan Lindes
+Meia Ofensivo
+28/11/2003 (22)	Brasil	350 milhões
+-	Tombense FC
+Pedro Oliveira	Pedro Oliveira
+Meia Ofensivo
+11/07/1998 (28)	Brasil	-
+-	RB Bragantino Sub-20
+Alexandre Pena	Alexandre Pena
+Meia Ofensivo
+21/02/2005 (21)	Brasil	-
+-	Atlético Goianiense
+Assistentes	Assistentes
+Meia Ofensivo
+16/11/2001 (24)	Brasil	-
+-	
+Dixon Vera	Dixon Vera
+Ponta-Esquerda
+06/04/2003 (23)	Equador	750 milhões
+-	Botafogo FR
+Yarlen	Yarlen
+Ponta Direita
+20/02/2006 (20)	Brasil	€ 1,00 mil
+-	
+Máximo	Máximo
+Ponta Direita
+28/06/2002 (24)	Brasil	€ 175 milhões
+-	Clube de Santa Catarina
+Bruninho	Bruninho
+Ponta Direita
+24/02/2003 (23)	Brasil	-
+-	CR Flamengo
+Carlinhos	Carlinhos
+Centroavante
+12/02/1997 (29)	Brasil	900 milhões de euros
+-	
+Ronaldo Tavares	Ronaldo Tavares 
+Centroavante
+22/07/1997 (29)	Portugal
+São Tomé e Príncipe	800 milhões
+-	Maccabi Herzliya
+Wilinton Aponzá	Wilinton Aponzá
+Centroavante
+29/03/2000 (26)	Colômbia	200 milhões
+-	UD Oliveirense
+Gustavo	Gustavo
+Centroavante
+04/01/2005 (21)	Brasil	100 milhões
+CRICIUMA
+1	
+Alisson	Alisson
+Goleiro
+08/06/1995 (31)	Brasil	500 milhões
+32	
+Airton	Airton
+Goleiro
+29/05/1994 (32)	Brasil	500 milhões
+73	Caravaggio FC
+Kauã Moroso	Kauã Moroso
+Goleiro
+11/03/2004 (22)	Brasil	€ 225 milhões
+70	
+Pedro Santos	Pedro Santos
+Goleiro
+19/04/2005 (21)	Brasil	-
+47	Atlético Mineiro
+Rômulo	Rômulo
+Zagueiro
+31/01/2004 (22)	Brasil	450 milhões
+37	
+César Martins	César Martins
+Zagueiro
+28/12/1992 (33)	Brasil	400 milhões
+34	
+Bruno Alves	Bruno Alves
+Zagueiro
+16/04/1991 (35)	Brasil	200 milhões
+43	
+Ruan Carvalho	Ruan Carvalho
+Zagueiro
+21/10/2006 (20)	Brasil	200 milhões
+4	
+Luciano Castán	Luciano Castán
+Zagueiro
+13/09/1989 (37)	Brasil
+Itália	100 milhões
+3	
+Rodrigo	Rodrigo 
+Zagueiro
+10/03/1987 (39)	Brasil	25 milhões
+-	Caravaggio FC
+Erick	Erick
+Zagueiro
+04/06/2005 (21)	Brasil	-
+15	
+Octavian Henrique	Octavian Henrique 
+Zagueiro
+07/01/2005 (21)	Brasil	-
+22	
+Marcelo Hermes	Marcelo Hermes
+Esq. Lateral
+01/02/1995 (31)	Brasil	€ 1,00 mil
+31	
+Hiago Alves	Hiago Alves
+Esq. Lateral
+02/09/2005 (21)	Brasil	200 milhões
+97	EC Vitória
+Willean Lepo	Willean Lepo
+Diretor Lateral
+16/01/1997 (29)	Brasil	700 milhões
+6	
+Marcinho	Marcinho
+Diretor Lateral
+16/05/1996 (30)	Brasil	400 milhões
+-	Anápolis FC
+Kaik Viçoza	Kaik Viçoza
+Diretor Lateral
+02/04/2004 (22)	Brasil	-
+14	EC Vitória
+Ronald	Ronald
+Volante
+18/06/1997 (29)	Brasil	700 milhões
+5	
+Eduardo	Eduardo
+Volante
+09/01/1997 (29)	Brasil	375 milhões
+41	
+Jean Irmer	Jean Irmer
+Volante
+26/09/1994 (32)	Brasil	250 milhões
+50	
+Thiaguinho	Thiaguinho
+Volante
+01/02/2006 (20)	Brasil	200 milhões
+8	
+Guilherme Lobo	Guilherme Lobo
+Meia Central
+14/10/1999 (27)	Brasil	400 milhões
+91	Clube Nacional
+Rómulo Otero	Rómulo Otero
+Meia Ofensivo
+09/11/1992 (33)	Venezuela	200 milhões
+7	
+Fellipe Mateus	Fellipe Mateus
+Meia Ofensivo
+12/02/1991 (35)	Brasil	100 milhões
+77	
+Diego Gonçalves	Diego Gonçalves
+Ponta-Esquerda
+22/09/1994 (32)	Brasil	400 milhões
+13	
+Waguininho	Waguininho
+Ponta-Esquerda
+30/01/1990 (36)	Brasil	50 milhões
+10	
+Jhonata Robert	Jhonata Robert
+Ponta Direita
+26/10/1999 (27)	Brasil	€ 2,00 milhões
+11	
+Romano	Romano
+Ponta Direita
+01/03/1994 (32)	Brasil	550 milhões
+21	
+João Carlos	João Carlos
+Ponta Direita
+21/06/2001 (25)	Brasil	350 milhões
+88	
+Cauê	Cauê
+Centroavante
+16/11/2002 (23)	Brasil	700 milhões
+33	
+Yuri Tanque	Yuri Tanque
+Centroavante
+12/06/1998 (28)	Brasil	350 milhões
+19	
+Tales	Tales
+Centroavante
+04/11/2006 (19)	Brasil	250 milhões
+9	
+Nicolau	Nicolau
+Centroavante
+04/10/1989 (37)	Brasil	75 milhões
+CRB
+12	
+Matheus Albino	Matheus Albino
+Goleiro
+04/02/1995 (31)	Brasil	400 milhões
+1	
+Vitor Caetano	Vitor Caetano
+Goleiro
+01/07/1999 (27)	Brasil
+Itália	100 milhões
+23	
+Fábio Henrique	Fábio Henrique
+Goleiro
+20/10/2002 (24)	Brasil	50 milhões
+-	Sporting FC
+Pablo	Pablo
+Goleiro
+24/05/2004 (22)	Brasil	-
+44	
+Henrique	Henrique
+Zagueiro
+19/02/2002 (24)	Brasil	€ 1,00 mil
+27	
+Fábio Alemão	Fábio Alemão 
+Zagueiro
+08/10/1996 (30)	Brasil	300 milhões
+-	Anápolis FC
+Darlisson	Darlisson
+Zagueiro
+01/12/2003 (22)	Brasil	250 milhões
+22	
+Bressan	Bressan
+Zagueiro
+15/01/1993 (33)	Brasil
+Itália	200 milhões
+33	CR Vasco da Gama
+Lyncon	Lyncon
+Zagueiro
+07/05/2005 (21)	Brasil	100 milhões
+36	
+Lucas Lovat	Lucas Lovat
+Esq. Lateral
+15/01/1997 (29)	Brasil	600 milhões
+6	
+Reversão	Reversão
+Esq. Lateral
+02/02/1997 (29)	Brasil	300 milhões
+77	
+Leo Campos	Leo Campos
+Esq. Lateral
+03/07/1992 (34)	Brasil	50 milhões
+32	
+Hereda	Hereda
+Diretor Lateral
+20/09/1998 (28)	Brasil	800 milhões
+2	EC Primavera
+Kevin	Kevin
+Diretor Lateral
+07/09/1997 (29)	Brasil	150 milhões
+-	EC São José
+Mateus Pureza	Mateus Pureza
+Diretor Lateral
+03/03/2004 (22)	Brasil	-
+45	
+Patrick de Lucca	Patrick de Lucca
+Volante
+02/03/2000 (26)	Brasil	900 milhões de euros
+-	Anápolis FC
+Lucas Kallyel	Lucas Kallyel
+Volante
+01/03/2004 (22)	Brasil	350 milhões
+50	
+Luizão	Luizão
+Volante
+20/02/1998 (28)	Brasil	250 milhões
+8	Boavista SC
+Cristal	Cristal
+Meia Central
+07/06/1998 (28)	Brasil	400 milhões
+18	Epitsentr Kamyanets-Podilskyi
+Geovane	Geovane
+Meia Central
+02/03/1999 (27)	Brasil	400 milhões
+21	
+Pedro Castro	Pedro Castro
+Meia Central
+05/02/1993 (33)	Brasil	200 milhões
+-	EC São José
+Anderson Dias	Anderson Dias
+Meia Central
+29/04/2005 (21)	Brasil	-
+10	
+Danielzinho	Danielzinho
+Meia Ofensivo
+11/01/1996 (30)	Brasil	€ 1,20 mil
+26	SC Internacional
+Estêvão	Estêvão
+Meia Ofensivo
+03/02/2002 (24)	Brasil	-
+11	
+Guilherme Pato	Guilherme Pato
+Ponta-Esquerda
+17/02/2001 (25)	Brasil	250 milhões
+95	Volta Redonda FC
+Ygor Catatau	Ygor Catatau
+Ponta-Esquerda
+01/07/1995 (31)	Brasil	-
+17	
+Thiaguinho	Thiaguinho
+Ponta Direita
+13/03/2001 (25)	Brasil	800 milhões
+7	
+Douglas Baggio	Douglas Baggio
+Ponta Direita
+02/02/1995 (31)	Brasil	500 milhões
+97	
+Dadá Belmonte	Dadá Belmonte
+Ponta Direita
+08/02/1997 (29)	Brasil	300 milhões
+-	Anápolis FC
+Rodriguinho	Rodriguinho
+Ponta Direita
+22/12/2004 (21)	Brasil	200 milhões
+20	
+Vinícius Barata	Vinícius Barata
+Ponta Direita
+12/02/1999 (27)	Brasil	50 milhões
+28	
+Mikael	Mikael
+Centroavante
+28/05/1999 (27)	Brasil	800 milhões
+19	
+Luiz Phellipe	Luiz Phellipe
+Centroavante
+27/09/1993 (33)	Brasil	400 milhões
+9	Fluminense FC
+João Neto	João Neto
+Centroavante
+10/07/2003 (23)	Brasil	150 milhões
+VILA NOVA
+30	
+Gabriel Átila	Gabriel Átila
+Goleiro
+22/01/2003 (23)	Brasil	€300mil
+1	
+Helton Leite	Helton Leite
+Goleiro
+02/11/1990 (36)	Brasil
+Portugal	€200mil
+29	Guarani FC
+Dalberson	Dalberson
+Goleiro
+13/01/1997 (29)	Brasil	-
+4	Red Bull Salzburg
+Douglas Mendes	Douglas Mendes
+Zagueiro
+13/06/2004 (22)	Brasil	€800mil
+14	
+Anderson	Anderson
+Zagueiro
+02/03/1995 (31)	Brasil	€300mil
+3	
+Tiago Pagnussat	Tiago Pagnussat
+Zagueiro
+17/06/1990 (36)	Brasil
+Itália	€100mil
+4	Guarani FC
+Jonathan Costa	Jonathan Costa
+Zagueiro
+19/04/1995 (31)	Brasil	-
+23	Foz do Iguaçu FC
+Breno Bora	Breno Bora
+Zagueiro
+22/05/2002 (24)	Brasil	-
+6	
+Higor	Higor
+Lateral Esq.
+27/12/2004 (21)	Brasil	€400mil
+13	
+Willian Formiga	Willian Formiga
+Lateral Esq.
+22/01/1995 (31)	Brasil	€200mil
+16	Mirassol FC
+Igor Cariús	Igor Cariús
+Lateral Esq.
+01/05/1993 (33)	Brasil	€200mil
+22	Santos FC
+Hayner	Hayner
+Lateral Dir.
+02/10/1995 (31)	Brasil	€350mil
+21	Chapecoense
+Higor Meritão	Higor Meritão
+Volante
+23/06/1994 (32)	Brasil	€800mil
+8	
+Willian Maranhão	Willian Maranhão
+Volante
+14/12/1995 (30)	Brasil	€750mil
+5	
+João Vieira	João Vieira
+Volante
+08/11/1997 (28)	Brasil	€700mil
+15	AA Anapolina
+Dudu	Dudu
+Volante
+03/12/2001 (24)	Brasil	€400mil
+20	RB Bragantino U20
+Nathan Camargo	Nathan Camargo
+Volante
+25/07/2005 (21)	Brasil	€200mil
+18	
+Enzo	Enzo
+Volante
+30/04/2003 (23)	Brasil
+França	€150mil
+33	
+Bruno Xavier	Bruno Xavier
+Meia Ofensivo
+27/11/1996 (29)	Brasil	€250mil
+-	FK Csikszereda Miercurea Ciuc
+Gustavo Cabral	Gustavo Cabral
+Meia Ofensivo
+12/09/2001 (25)	Brasil	€150mil
+10	
+Marquinhos Gabriel	Marquinhos Gabriel 
+Meia Ofensivo
+21/07/1990 (36)	Brasil	€150mil
+11	
+Ryan	Ryan
+Ponta-Esquerda
+18/06/2001 (25)	Brasil	€800mil
+70	
+Emerson Urso	Emerson Urso
+Ponta-Esquerda
+13/05/2001 (25)	Brasil	€400mil
+31	Clube do Remo
+Dodô	Dodô
+Ponta-Esquerda
+05/09/1994 (32)	Brasil	€75mil
+17	FC Tokyo
+Everton Galdino	Everton Galdino
+Ponta-Direita
+17/03/1997 (29)	Brasil	€1.00mi
+99	
+Janderson	Janderson
+Ponta-Direita
+26/02/1999 (27)	Brasil	€900mil
+7	
+André Luis	André Luis
+Ponta-Direita
+21/04/1997 (29)	Brasil	€550mil
+-	SER Caxias do Sul
+João Lucas	João Lucas
+Ponta-Direita
+18/08/2000 (26)	Brasil	-
+9	Sem clube
+Lincoln	Lincoln
+Centroavante
+16/12/2000 (25)	Brasil	€400mil
+49	
+Dellatorre	Dellatorre
+Centroavante
+01/05/1992 (34)	Brasil
+Itália	€350mil
+9	
+Gustavo Puskas	Gustavo Puskas
+Centroavante
+26/02/2008 (18)	Brasil	€300mil
+9	
+Rafa Silva	Rafa Silva 
+Centroavante
+04/04/1992 (34)	Brasil	€225mil
+CUIABA
+31	
+Marcelo Carné	Marcelo Carné
+Goleiro
+06/02/1990 (36)	Brasil	€150mil
+1	
+João Carlos	João Carlos 
+Goleiro
+06/04/1988 (38)	Brasil	€25mil
+12	SER Caxias do Sul
+Gustavo Busatto	Gustavo Busatto
+Goleiro
+23/10/1990 (36)	Brasil
+Itália	-
+34	AA Anapolina
+Jean	Jean
+Goleiro
+24/07/2000 (26)	Brasil	-
+78	
+Pedro Mello	Pedro Mello
+Goleiro
+03/05/2006 (20)	Brasil	-
+13	
+João Basso	João Basso
+Zagueiro
+13/01/1997 (29)	Brasil
+Itália	€700mil
+33	
+Alan Empereur	Alan Empereur
+Zagueiro
+10/03/1994 (32)	Brasil
+Itália	€500mil
+-	Chadormalu SC
+Vitão	Vitão
+Zagueiro
+17/09/2000 (26)	Brasil	€400mil
+4	
+Vitor Mendes	Vitor Mendes
+Zagueiro
+13/02/1999 (27)	Brasil	€200mil
+91	
+Luis Soares	Luis Soares
+Zagueiro
+17/07/2005 (21)	Brasil	€200mil
+14	
+Eric	Eric
+Lateral Esq.
+07/08/2000 (26)	Brasil	€200mil
+36	
+Lorenzo	Lorenzo
+Lateral Esq.
+06/07/2007 (19)	Brasil	€150mil
+59	Capivariano FC
+Tarcísio	Tarcísio
+Lateral Esq.
+30/08/2003 (23)	Brasil	-
+2	Java United FC
+Igor Inocêncio	Igor Inocêncio
+Lateral Dir.
+20/04/1998 (28)	Brasil	€300mil
+37	
+Railan	Railan
+Lateral Dir.
+10/03/2000 (26)	Brasil	€300mil
+30	Athletico Paranaense
+Raul	Raul
+Volante
+11/07/1996 (30)	Brasil	€1.00mi
+5	
+Calebe Costa	Calebe Costa
+Volante
+07/06/2003 (23)	Brasil	€300mil
+97	
+Luiz Otávio	Luiz Otávio
+Volante
+18/03/1997 (29)	Brasil	€250mil
+53	
+Weverson	Weverson
+Volante
+11/08/2003 (23)	Brasil	€200mil
+70	EC Água Santa
+Wesley Dias	Wesley Dias
+Volante
+22/06/1995 (31)	Brasil	-
+8	EC Vitória
+Pepê	Pepê
+Meia Central
+06/01/1998 (28)	Brasil
+Itália	€1.20mi
+-	Anápolis FC
+Luiz Felipe	Luiz Felipe
+Meia Central
+07/08/2004 (22)	Brasil	-
+20	
+David Miguel	David Miguel
+Meia Ofensivo
+11/03/2007 (19)	Brasil	€400mil
+23	
+Marcos Júnior	Marcos Júnior
+Meia Ofensivo
+19/01/1993 (33)	Brasil	€300mil
+11	
+Eliel	Eliel
+Ponta-Esquerda
+26/01/2003 (23)	Brasil	€450mil
+41	
+Kauan Cristtyan	Kauan Cristtyan
+Ponta-Esquerda
+24/01/2006 (20)	Brasil	€250mil
+77	Atlético Goianiense
+Jean Dias	Jean Dias
+Ponta-Direita
+22/10/1990 (36)	Brasil	€75mil
+96	EC Vitória
+Pedro Henrique	Pedro Henrique
+Centroavante
+08/11/1996 (29)	Brasil	€1.50mi
+27	Mirassol FC
+Rodrigo Rodrigues	Rodrigo Rodrigues
+Centroavante
+21/04/2000 (26)	Brasil
+Espanha	€700mil
+90	Sem clube
+Fábio Gomes	Fábio Gomes
+Centroavante
+25/05/1997 (29)	Brasil	€700mil
+29	
+Vinicius Peixoto	Vinicius Peixoto
+Centroavante
+31/10/2003 (23)	Brasil	€250mil
+99	
+Nathan Cruz	Nathan Cruz
+Centroavante
+14/02/2007 (19)	Brasil	€150mil
+7	SE Gama
+Ramon	Ramon
+Centroavante
+12/07/2000 (26)	Brasil	-
+ATLETICO GOIANIENSE
+-	
+Paulo Vítor	Paulo Vítor
+Goleiro
+21/11/1988 (37)	Brasil	€100mil
+-	
+Vladimir	Vladimir
+Goleiro
+16/07/1989 (37)	Brasil	€50mil
+-	
+Paulo Henrique	Paulo Henrique
+Goleiro
+12/05/1994 (32)	Brasil	-
+-	
+Léo	Léo
+Goleiro
+05/05/2002 (24)	Brasil	-
+-	EC Juventude
+Natã	Natã
+Zagueiro
+05/06/2001 (25)	Brasil	€900mil
+-	
+Adriano Martins	Adriano Martins
+Zagueiro
+01/04/1997 (29)	Brasil	€600mil
+-	Club Olimpia
+Junior Barreto	Junior Barreto
+Zagueiro
+13/01/1998 (28)	Paraguai	€600mil
+-	
+Tito	Tito
+Zagueiro
+26/07/2000 (26)	Brasil	€200mil
+-	RB Bragantino
+Guilherme Lopes	Guilherme Lopes
+Lateral Esq.
+14/02/2002 (24)	Brasil	€800mil
+-	Náutico
+Yuri	Yuri
+Lateral Esq.
+08/01/1996 (30)	Brasil	€250mil
+-	
+Gustavo Daniel	Gustavo Daniel
+Lateral Esq.
+07/03/2005 (21)	Brasil	€50mil
+-	
+Ewerthon	Ewerthon
+Lateral Dir.
+10/11/2000 (25)	Brasil	€250mil
+-	Torpedo Kutaisi
+Warley	Warley
+Lateral Dir.
+17/09/1999 (27)	Brasil	€250mil
+-	Coritiba FC
+Felipe Guimarães	Felipe Guimarães
+Lateral Dir.
+08/04/2004 (22)	Brasil	-
+-	
+Leandro Vilela	Leandro Vilela
+Volante
+29/06/1995 (31)	Brasil	€200mil
+-	
+Geovane	Geovane
+Volante
+20/02/1989 (37)	Brasil	€100mil
+-	EC Noroeste
+Daniel Peixoto	Daniel Peixoto
+Volante
+30/06/1997 (29)	Brasil	-
+-	EC Água Santa
+Netinho	Netinho
+Volante
+18/12/1997 (28)	Brasil	-
+-	Barra FC
+Henrique Freitas	Henrique Freitas
+Volante
+06/05/1999 (27)	Brasil	-
+-	EC Noroeste
+Cristiano	Cristiano
+Meia Central
+22/02/2000 (26)	Brasil	€200mil
+-	CD Santa Clara
+Matheusinho	Matheusinho
+Meia Ofensivo
+11/02/1998 (28)	Brasil	€1.20mi
+-	Fluminense FC
+David Terans	David Terans
+Meia Ofensivo
+11/08/1994 (32)	Uruguai	€1.00mi
+-	
+Guilherme	Guilherme
+Meia Ofensivo
+21/05/1991 (35)	Brasil	€200mil
+-	Sport Recife
+Gustavo Maia	Gustavo Maia
+Ponta-Esquerda
+22/01/2001 (25)	Brasil	€500mil
+-	CA Tubarão
+Geovany Soares	Geovany Soares
+Ponta-Esquerda
+28/07/2000 (26)	Brasil	-
+-	Clube do Remo
+Marrony	Marrony
+Ponta-Direita
+05/02/1999 (27)	Brasil	€700mil
+-	
+Bruno José	Bruno José
+Ponta-Direita
+31/03/1998 (28)	Brasil	€400mil
+-	EC Noroeste
+Léo Tocantins	Léo Tocantins
+Ponta-Direita
+03/07/1999 (27)	Brasil	-
+-	Sport Recife
+Gustavo Coutinho	Gustavo Coutinho
+Centroavante
+19/01/1999 (27)	Brasil	€1.50mi
+-	Clube do Remo
+João Pedro	João Pedro
+Centroavante
+13/11/1996 (29)	Guiné Bissau
+Portugal	€800mil
+OPERARIO
+1	
+Elias Curzel	Elias Curzel
+Goleiro
+12/07/1995 (31)	Brasil	100 milhões
+12	
+Talles	Talles
+Goleiro
+12/02/1997 (29)	Brasil	100 milhões
+33	
+Vagner	Vagner
+Goleiro
+06/06/1986 (40)	Brasil	-
+41	SE São Joseense
+Diego Monteiro	Diego Monteiro
+Goleiro
+26/01/2000 (26)	Brasil	-
+16	
+Miranda	Miranda
+Zagueiro
+19/01/2000 (26)	Brasil	900 milhões de euros
+22	
+José Cuenú	José Cuenú
+Zagueiro
+17/02/1995 (31)	Colômbia	300 milhões
+4	
+William Klaus	William Klaus
+Zagueiro
+11/01/1994 (32)	Brasil	250 milhões
+43	Zakho SC
+José	José
+Zagueiro
+30/12/1994 (31)	Brasil	150 milhões
+34	Itabirito FC
+Renan Gustavo	Renan Gustavo
+Zagueiro
+16/02/2005 (21)	Brasil	-
+27	
+Gabriel Feliciano	Gabriel Feliciano
+Esq. Lateral
+26/07/2001 (25)	Brasil	500 milhões
+6	Goiás EC
+Moraes	Moraes
+Esq. Lateral
+03/10/1997 (29)	Brasil	250 milhões
+2	
+Mikael Doka	Mikael Doka
+Diretor Lateral
+24/01/2000 (26)	Brasil	750 milhões
+26	
+Maguinho	Maguinho
+Diretor Lateral
+06/01/1992 (34)	Brasil	50 milhões
+17	Ypiranga FC
+Nicolas Schulz	Nicolas Schulz
+Diretor Lateral
+15/07/2000 (26)	Brasil	-
+23	
+João Gabriel	João Gabriel
+Diretor Lateral
+25/05/2006 (20)	Brasil	-
+39	
+Matheus Trindade	Matheus Trindade
+Volante
+05/03/1996 (30)	Brasil	400 milhões
+5	
+indiano	indiano
+Volante
+30/10/1992 (34)	Brasil	100 milhões
+32	
+Carlos Rafael	Carlos Rafael
+Volante
+10/04/1995 (31)	Brasil	-
+30	
+Pedro Vilhena	Pedro Vilhena
+Meia Central
+18/02/2002 (24)	Brasil	500 milhões
+8	
+Juan Zuluaga	Juan Zuluaga
+Meia Central
+15/06/1993 (33)	Colômbia	400 milhões
+88	
+Neto Paraíba	Neto Paraíba
+Meia Central
+02/07/1992 (34)	Brasil	50 milhões
+10	
+Gabriel Boschília	Gabriel Boschília
+Meia Ofensivo
+05/03/1996 (30)	Brasil
+Itália	€ 1,50 mil
+20	
+Vinícius Diniz	Vinícius Diniz
+Meia Ofensivo
+25/07/1999 (27)	Brasil	600 milhões
+21	
+Brenno Pereira	Brenno Pereira
+Meia Ofensivo
+16/05/2005 (21)	Brasil	100 milhões
+77	Pérsia Jacarta
+Maxwell	Maxwell
+Ponta-Esquerda
+11/02/1995 (31)	Brasil	600 milhões
+7	Dínamo de Kiev
+Ángel Torres	Ángel Torres
+Ponta Direita
+06/04/2000 (26)	Colômbia	250 milhões
+14	
+Berto	Berto
+Ponta Direita
+02/03/1996 (30)	Cabo Verde
+Portugal	200 milhões
+28	
+Dudu Mosconi	Dudu Mosconi
+Ponta Direita
+19/06/2006 (20)	Brasil
+Itália	-
+9	
+Vinicius Mingotti	Vinicius Mingotti
+Centroavante
+07/01/2000 (26)	Brasil	500 milhões
+92	
+Pablo	Pablo
+Centroavante
+23/06/1992 (34)	Brasil	350 milhões
+99	
+Caio Dantas	Caio Dantas
+Centroavante
+19/02/1993 (33)	Brasil	250 milhões
+11	
+Aylon	Aylon
+Centroavante
+07/04/1992 (34)	Brasil	€ 225 milhões
+AVAI
+1	
+Igor Bohn	Igor Bohn
+Goleiro
+05/02/1996 (30)	Brasil	250 milhões
+94	Ceará SC
+Bruno Ferreira	Bruno Ferreira
+Goleiro
+16/03/1994 (32)	Brasil	250 milhões
+21	
+Otávio	Otávio
+Goleiro
+21/01/1993 (33)	Brasil	150 milhões
+15	Coritiba FC
+Guilherme Aquino	Guilherme Aquino
+Zagueiro
+13/01/2004 (22)	Brasil	400 milhões
+38	
+Jefferson	Jefferson
+Zagueiro
+28/05/2003 (23)	Brasil	300 milhões
+35	Cruzeiro EC
+Pedrão	Pedrão
+Zagueiro
+06/01/2004 (22)	Brasil	€ 125 milhões
+3	
+Allyson	Allyson
+Zagueiro
+23/10/1990 (36)	Brasil	-
+40	Al-Arabi SC (Kuwait)
+Reynaldo	Reynaldo
+Zagueiro
+03/01/1997 (29)	Brasil	-
+4	
+Gabriel Simples	Gabriel Simples
+Zagueiro
+18/01/2005 (21)	Brasil	-
+66	
+Quaresma	Quaresma
+Esq. Lateral
+22/08/1996 (30)	Brasil	300 milhões
+36	Barra FC
+Douglas Teixeira	Douglas Teixeira
+Esq. Lateral
+29/03/2001 (25)	Brasil	50 milhões
+2	
+Wallison	Wallison
+Diretor Lateral
+24/07/2001 (25)	Brasil	300 milhões
+22	Português
+João Vitor	João Vitor
+Diretor Lateral
+25/07/2002 (24)	Brasil	-
+25	Atlético Mineiro
+Paulo Vitor	Paulo Vitor
+Volante
+26/08/2004 (22)	Brasil	800 milhões
+77	
+Zé Ricardo	Zé Ricardo
+Volante
+09/03/1996 (30)	Brasil	650 milhões
+95	SE Elfsborg
+Wenderson	Wenderson
+Meia Central
+27/04/1999 (27)	Brasil	800 milhões
+5	
+Romildo Del Piage	Romildo Del Piage
+Meia Central
+12/04/2000 (26)	Brasil
+Itália	300 milhões
+18	Santos FC
+Hyan	Hyan
+Meia Central
+24/03/2004 (22)	Brasil	300 milhões
+27	
+Pedro Cuiabá	Pedro Cuiabá
+Meia Central
+04/03/2002 (24)	Brasil	-
+14	Atlético Mineiro B
+Daniel Penha	Daniel Penha
+Meia Ofensivo
+17/10/1998 (28)	Brasil	700 milhões
+37	CD Santa Clara
+Rildo	Rildo
+Meia Ofensivo
+21/01/2000 (26)	Brasil	500 milhões
+8	
+Luiz Henrique	Luiz Henrique
+Meia Ofensivo
+18/03/1999 (27)	Brasil	250 milhões
+10	
+Jean Lucas	Jean Lucas
+Meia Ofensivo
+21/03/1995 (31)	Brasil	200 milhões
+7	FC Alverca
+Leo Chu	Leo Chu
+Ponta-Esquerda
+06/04/2000 (26)	Brasil	€ 1,00 mil
+70	SER Caxias do Sul
+Gaspar	Gaspar
+Ponta-Esquerda
+31/07/2002 (24)	Brasil
+Itália	200 milhões
+17	Tombense FC
+Juan Rocha	Juan Rocha
+Ponta-Esquerda
+05/09/2004 (22)	Brasil	-
+20	
+Isaías	Isaías
+Ponta-Esquerda
+30/10/2004 (22)	Brasil	-
+23	Amazonas FC
+Gabriel Cipriano	Gabriel Cipriano
+Ponta-Esquerda
+01/01/2000 (26)	Brasil	-
+59	RB Bragantino Sub-20
+Filipino	Filipino
+Ponta-Esquerda
+13/02/2006 (20)	Brasil	-
+11	Clube Sporting Cristal
+Felipe Vizeu	Felipe Vizeu
+Centroavante
+12/03/1997 (29)	Brasil	300 milhões
+9	
+Leo Gamalho	Leo Gamalho
+Centroavante
+30/01/1986 (40)	Brasil	75 milhões
+19	EC Bahia U20
+Caio Suassuna	Caio Suassuna
+Centroavante
+23/03/2007 (19)	Brasil	
+SAO BERNARDO
+1	
+Alex Alves	Alex Alves
+Goleiro
+08/11/1986 (39)	Brasil	100 milhões
+12	
+Júnior Oliveira	Júnior Oliveira
+Goleiro
+02/01/1990 (36)	Brasil	-
+22	SER Caxias do Sul
+Leo Lang	Leo Lang
+Goleiro
+05/08/1998 (28)	Brasil	-
+35	
+Jemerson	Jemerson
+Zagueiro
+24/08/1992 (34)	Brasil
+Mônaco	500 milhões
+97	
+Augusto	Augusto
+Zagueiro
+16/04/1997 (29)	Brasil	500 milhões
+90	
+Luizão	Luizão
+Zagueiro
+08/03/2002 (24)	Brasil	400 milhões
+3	
+Helder Maciel	Helder Maciel
+Zagueiro
+24/05/1990 (36)	Brasil	75 milhões
+5	
+Matheus Salustiano	Matheus Salustiano
+Zagueiro
+19/04/1993 (33)	Brasil	75 milhões
+25	
+Wellington	Wellington
+Zagueiro
+05/06/2001 (25)	Brasil	-
+6	
+Pára	Pára
+Esq. Lateral
+23/08/1995 (31)	Brasil	300 milhões
+33	
+Mário Sérgio	Mário Sérgio
+Esq. Lateral
+26/04/1994 (32)	Brasil	150 milhões
+16	
+Jota	Jota
+Esq. Lateral
+27/04/2005 (21)	Brasil	-
+2	
+Rodrigo Ferreira	Rodrigo Ferreira
+Diretor Lateral
+29/03/1995 (31)	Brasil	400 milhões
+21	
+Hugo Sanches	Hugo Sanches
+Diretor Lateral
+09/07/1994 (32)	Brasil	-
+14	Ceará SC
+Lucas Lima	Lucas Lima
+Volante
+04/07/2000 (26)	Brasil	500 milhões
+17	
+Romisso	Romisso
+Volante
+09/09/1996 (30)	Brasil	500 milhões
+32	
+Rodrigo Andrade	Rodrigo Andrade
+Volante
+03/02/1997 (29)	Brasil	500 milhões
+8	
+Foguinho	Foguinho
+Volante
+15/06/1992 (34)	Brasil	200 milhões
+77	
+Marcão	Marcão
+Volante
+14/01/1991 (35)	Brasil	50 milhões
+36	Clube de Santa Catarina
+Galdino	Galdino
+Volante
+31/07/2005 (21)	Brasil	-
+26	EC Vitória
+Dudu Miraima	Dudu Miraima
+Meia Central
+15/06/2000 (26)	Brasil	300 milhões
+31	
+Lucas Fernandes	Lucas Fernandes
+Meia Ofensivo
+20/09/1997 (29)	Brasil	800 milhões
+42	
+Hyoran	Hyoran
+Meia Ofensivo
+25/05/1993 (33)	Brasil	500 milhões
+30	Rio Branco AC
+Breno Melo	Breno Melo
+Meia Ofensivo
+27/04/2005 (21)	Brasil	-
+29	
+Pedrinho	Pedrinho
+Ponta-Esquerda
+10/11/1999 (26)	Brasil
+Itália	600 milhões
+11	
+Pedro Vitor	Pedro Vitor
+Ponta-Esquerda
+20/03/1998 (28)	Brasil	500 milhões
+27	
+Echaporã	Echaporã
+Ponta-Esquerda
+17/02/2000 (26)	Brasil	100 milhões
+37	EC Santo André
+Daniel Davi	Daniel Davi
+Ponta-Esquerda
+15/06/2005 (21)	Brasil	-
+10	
+Fabrício Daniel	Fabrício Daniel
+Ponta Direita
+23/07/1997 (29)	Brasil	600 milhões
+9	
+Felipe Garcia	Felipe Garcia
+Ponta Direita
+06/11/1990 (35)	Brasil	75 milhões
+98	Suspensão
+Leo Jabá	Leo Jabá
+Ponta Direita
+02/08/1998 (28)	Brasil	-
+7	
+Lucas Rian	Lucas Rian
+Seg. Atacante
+03/06/2000 (26)	Brasil	200 milhões
+-	EC Noroeste
+Matheus Goiás	Matheus Goiás
+Centroavante
+08/10/2004 (22)	Brasil	-
+89	
+Daniel Amorim	Daniel Amorim
+Centroavante
+15/09/1989 (37)	Brasil	-
+70	
+Lucas Reis	Lucas Reis
+Centroavante
+14/06/2001 (25)	Brasil	
+BOTAFOGO SP
+1	
+Victor Souza	Victor Souza
+Goleiro
+31/08/1992 (34)	Brasil	€100mil
+12	
+Jordan	Jordan
+Goleiro
+06/02/1998 (28)	Brasil	-
+25	
+Brenno Klippel	Brenno Klippel
+Goleiro
+17/02/2003 (23)	Brasil	-
+13	
+Wallace	Wallace
+Zagueiro
+14/10/1994 (32)	Brasil	€350mil
+15	Cuiabá EC
+Guilherme Mariano	Guilherme Mariano
+Zagueiro
+12/12/1999 (26)	Brasil	€250mil
+4	
+Vilar	Vilar
+Zagueiro
+18/04/2000 (26)	Brasil	€150mil
+14	
+Carlão	Carlão
+Zagueiro
+12/03/2001 (25)	Brasil	€100mil
+27	
+Darlan	Darlan
+Zagueiro
+03/03/2004 (22)	Brasil	-
+34	
+Badaró	Badaró
+Zagueiro
+29/06/2005 (21)	Brasil	-
+6	
+Patrick Brey	Patrick Brey
+Lateral Esq.
+05/06/1997 (29)	Brasil
+Alemanha	€450mil
+26	
+Felipe Vieira	Felipe Vieira
+Lateral Esq.
+04/05/1999 (27)	Brasil	€250mil
+31	
+Pedrinho	Pedrinho
+Lateral Dir.
+23/10/2006 (20)	Brasil	€300mil
+22	
+Gabriel Inocêncio	Gabriel Inocêncio
+Lateral Dir.
+20/08/1994 (32)	Brasil	€250mil
+2	
+Jonathan	Jonathan
+Lateral Dir.
+25/08/1992 (34)	Brasil	€100mil
+3	
+Ericson	Ericson
+Lateral Dir.
+11/05/1999 (27)	Brasil	€50mil
+5	
+Leandro Maciel	Leandro Maciel
+Volante
+29/12/1995 (30)	Argentina	€600mil
+16	
+Matheus Sales	Matheus Sales
+Volante
+13/05/1995 (31)	Brasil	€550mil
+28	Vila Nova FC
+Marco Antônio	Marco Antônio
+Volante
+09/07/2000 (26)	Brasil	-
+29	
+Thiaguinho	Thiaguinho
+Volante
+09/06/1998 (28)	Brasil	-
+33	
+Erik Rebello	Erik Rebello
+Volante
+06/03/2005 (21)	Brasil	-
+8	Maringá FC
+Everton Morelli	Everton Morelli
+Meia Central
+04/11/1997 (28)	Brasil	€1.00mi
+20	
+Yuri Felipe	Yuri Felipe
+Meia Central
+14/06/2006 (20)	Brasil	-
+10	
+Rafael Gava	Rafael Gava
+Meia Ofensivo
+20/05/1993 (33)	Brasil	€350mil
+18	
+Arthur Caíke	Arthur Caíke
+Ponta-Esquerda
+15/06/1992 (34)	Brasil	€300mil
+30	Azuriz FC
+Zé Hugo	Zé Hugo
+Ponta-Esquerda
+17/10/1999 (27)	Brasil	€250mil
+11	
+Jefferson Nem	Jefferson Nem
+Ponta-Esquerda
+10/04/1996 (30)	Brasil	€200mil
+23	AA Anapolina
+Wesley Santos	Wesley Santos
+Ponta-Esquerda
+31/08/2000 (26)	Brasil	-
+7	
+Kelvin	Kelvin
+Ponta-Direita
+18/08/1997 (29)	Brasil	€500mil
+21	Cuiabá EC
+Jadson	Jadson
+Ponta-Direita
+10/08/2005 (21)	Brasil	€250mil
+9	
+Hygor	Hygor
+Centroavante
+13/08/1992 (34)	Brasil	€100mil
+17	
+Guilherme Queiróz	Guilherme Queiróz
+Centroavante
+23/05/1990 (36)	Brasil	
+AMERICA MINEIRO
+1	
+Gustavo	Gustavo
+Goleiro
+10/03/1993 (33)	Brasil	€200mil
+27	
+Cássio	Cássio
+Goleiro
+08/02/2002 (24)	Brasil	€75mil
+91	Académico de Viseu FC
+Bruno Brígido	Bruno Brígido
+Goleiro
+09/03/1991 (35)	Brasil	€50mil
+19	
+William	William
+Goleiro
+21/01/1998 (28)	Brasil	-
+52	
+Italo Brito	Italo Brito
+Goleiro
+29/05/2006 (20)	Brasil	-
+3	Barcelona SC Guayaquil
+Luca Sosa	Luca Sosa
+Zagueiro
+11/06/1994 (32)	Argentina
+Equador	€600mil
+45	
+Ricardo Silva	Ricardo Silva
+Zagueiro
+13/08/1992 (34)	Brasil	€200mil
+4	
+Rafa Barcelos	Rafa Barcelos
+Zagueiro
+25/01/2004 (22)	Brasil	€100mil
+26	
+Manoel	Manoel
+Zagueiro
+26/02/1990 (36)	Brasil	€100mil
+2	
+Emerson	Emerson
+Zagueiro
+05/04/1995 (31)	Brasil	€25mil
+44	
+Thallyson	Thallyson
+Zagueiro
+11/04/2006 (20)	Brasil	-
+25	AA Estudiantes (Río Cuarto)
+Tobias Ostchega	Tobias Ostchega
+Lateral Esq.
+26/08/1998 (28)	Argentina	€250mil
+15	Ceará SC
+Alex Silva	Alex Silva
+Lateral Dir.
+15/05/1994 (32)	Brasil	€250mil
+31	Anápolis FC
+Fábio	Fábio
+Lateral Dir.
+31/07/2001 (25)	Brasil	-
+13	
+Heitor	Heitor
+Lateral Dir.
+19/04/2004 (22)	Brasil	-
+97	
+Val Soares	Val Soares
+Volante
+12/03/1997 (29)	Brasil	€400mil
+88	Kyoto Sanga
+Gustavo Barreto	Gustavo Barreto
+Volante
+10/12/1995 (30)	Brasil
+Itália	€300mil
+16	
+Alê	Alê
+Volante
+06/06/1990 (36)	Brasil	€100mil
+93	
+Jorge Jiménez	Jorge Jiménez
+Volante
+27/02/1993 (33)	Paraguai	-
+8	
+Felipe Amaral	Felipe Amaral
+Meia Central
+08/07/2003 (23)	Brasil	€500mil
+21	
+Eduardo Person	Eduardo Person
+Meia Central
+24/01/1997 (29)	Brasil	€150mil
+6	Amazonas FC
+Gabriel Domingos	Gabriel Domingos
+Meia Central
+09/02/2001 (25)	Brasil	-
+55	
+Otávio Gonçalves	Otávio Gonçalves
+Meia Central
+22/03/2006 (20)	Brasil	-
+5	
+Fernando Elizari	Fernando Elizari
+Meia Ofensivo
+05/04/1991 (35)	Argentina	€250mil
+20	GD Chaves
+Paulo Victor	Paulo Victor
+Ponta-Esquerda
+21/03/2001 (25)	Brasil	€250mil
+77	Botafogo FR
+Matías Segovia	Matías Segovia
+Ponta-Direita
+04/01/2003 (23)	Paraguai	€700mil
+14	CA Vélez Sarsfield
+Rodrigo Piñeiro	Rodrigo Piñeiro
+Ponta-Direita
+05/05/1999 (27)	Uruguai	€275mil
+7	Guarani FC
+Guilherme Parede	Guilherme Parede
+Ponta-Direita
+19/09/1995 (31)	Brasil	-
+9	
+Willian Bigode	Willian Bigode
+Seg. Atacante
+19/11/1986 (39)	Brasil	€100mil
+17	Athletico Paranaense
+Gonzalo Mastriani	Gonzalo Mastriani 
+Centroavante
+28/04/1993 (33)	Uruguai
+Itália	€1.00mi
+99	Democrata FC
+Marcelo Maçola	Marcelo Maçola
+Centroavante
+23/10/2002 (24)	Brasil	
+LONDRINA
+30	
+Mauricio Kozlinski	Mauricio Kozlinski
+Goleiro
+18/06/1991 (35)	Brasil	100 milhões
+1	
+Luan Ribeiro	Luan Ribeiro
+Goleiro
+17/06/1997 (29)	Brasil	-
+12	
+Zanella	Zanella
+Goleiro
+12/05/2004 (22)	Brasil
+Itália	-
+34	
+Garça	Garça
+Zagueiro
+17/08/2000 (26)	Brasil	350 milhões
+15	
+Gabriel Lacerda	Gabriel Lacerda
+Zagueiro
+29/08/1999 (27)	Brasil	250 milhões
+4	
+Wallace	Wallace
+Zagueiro
+26/12/1987 (38)	Brasil	-
+44	
+Caio	Caio
+Zagueiro
+23/08/2004 (22)	Brasil	-
+33	
+Kevyn	Kevyn
+Esq. Lateral
+28/12/1997 (28)	Brasil	250 milhões
+6	
+Rafael Monteiro	Rafael Monteiro
+Esq. Lateral
+14/02/2004 (22)	Brasil	-
+22	América Mineiro
+Arthur	Arthur
+Esq. Lateral
+05/08/1994 (32)	Brasil	-
+-	
+Rafael Soares	Rafael Soares
+Esq. Lateral
+27/12/2004 (21)	Brasil	-
+13	
+André Dhominique	André Dhominique
+Diretor Lateral
+07/10/2003 (23)	Brasil	600 milhões
+2	
+Weverton	Weverton
+Diretor Lateral
+15/06/1999 (27)	Brasil	250 milhões
+2	Cuiabá EC
+Nino Paraíba	Nino Paraíba
+Diretor Lateral
+10/01/1986 (40)	Brasil	-
+75	
+Kauê Leonardo	Kauê Leonardo
+Diretor Lateral
+11/04/2005 (21)	Brasil	-
+55	
+Chumbino	Chumbino
+Volante
+22/09/2003 (23)	Brasil	200 milhões
+20	
+Fabiano	Fabiano
+Volante
+11/06/2005 (21)	Brasil	150 milhões
+5	AA Ponte Preta
+Tarik	Tarik
+Volante
+18/02/1993 (33)	Brasil
+Itália	25 milhões
+32	
+João Tavares	João Tavares
+Volante
+23/02/2004 (22)	Brasil	-
+3	Volta Redonda FC
+Victor Feitosa	Victor Feitosa
+Volante
+10/03/1996 (30)	Brasil	-
+17	RB Bragantino
+André Cardoso	André Cardoso
+Volante
+17/05/2003 (23)	Brasil	-
+27	
+Murilo Chico	Murilo Chico
+Volante
+24/01/2005 (21)	Brasil	-
+20	CSP
+João Vitor	João Vitor
+Meia Central
+31/03/1998 (28)	Brasil	900 milhões de euros
+38	Coritiba FC
+Geovane Meurer	Geovane Meurer
+Meia Central
+25/05/2002 (24)	Brasil	375 milhões
+8	
+Lucas Marques	Lucas Marques
+Meia Central
+24/05/1995 (31)	Brasil	250 milhões
+18	Anápolis FC
+Juninho	Juninho
+Meia Central
+02/02/1999 (27)	Brasil	-
+96	
+Thalis	Thalis
+Meia Ofensivo
+19/03/1996 (30)	Brasil	600 milhões
+77	Português
+Guilherme Português	Guilherme Português
+Meia Ofensivo
+16/07/1998 (28)	Brasil	-
+28	Atlético Mineiro Sub-20
+Caio Maia	Caio Maia
+Ponta-Esquerda
+01/04/2005 (21)	Brasil	100 milhões
+27	Guarani FC
+Guilherme Cachoeira	Guilherme Cachoeira
+Ponta-Esquerda
+25/04/2002 (24)	Brasil	-
+28	SC São João de Ver
+Raí Nascimento	Raí Nascimento
+Ponta-Esquerda
+18/05/1998 (28)	Brasil
+Espanha	-
+-	
+Athyrson	Athyrson
+Ponta-Esquerda
+06/01/2004 (22)	Brasil	-
+21	
+Fabricio	Fabricio
+Ponta-Esquerda
+19/01/2004 (22)	Brasil	-
+28	Guarani FC
+Herbert	Herbert
+Ponta-Esquerda
+10/11/1999 (26)	Brasil	-
+23	AA Ponte Preta
+William Pottker	William Pottker
+Ponta Direita
+22/12/1993 (32)	Brasil	400 milhões
+7	RB Bragantino
+Vitinho Mota	Vitinho Mota
+Ponta Direita
+27/07/2003 (23)	Brasil	250 milhões
+11	São Bernardo FC
+Pablo Dyego	Pablo Dyego
+Ponta Direita
+08/03/1994 (32)	Brasil	250 milhões
+21	Boavista SC
+Fellipinho	Fellipinho
+Ponta Direita
+13/05/2004 (22)	Brasil	-
+9	
+Gilberto	Gilberto
+Centroavante
+05/06/1989 (37)	Brasil	150 milhões
+17	Londrina EC U20
+João Andrade	João Andrade
+Centroavante
+15/06/2006 (20)	Brasil	-
+99	Internacional de Lages
+Igor Bahia	Igor Bahia
+Centroavante
+25/02/1993 (33)	Brasil	
+PONTE PRETA
+30	
+Vinicius Ferrari	Vinicius Ferrari
+Goleiro
+18/02/2003 (23)	Brasil	-
+-	AA Ponte Preta U20
+José Luiz	José Luiz
+Goleiro
+21/01/2008 (18)	Brasil	-
+1	
+Guilherme Viana	Guilherme Viana
+Goleiro
+25/08/2003 (23)	Brasil	-
+3	RB Bragantino
+Lucas Cunha	Lucas Cunha
+Zagueiro
+23/01/1997 (29)	Brasil
+Portugal	€ 1,20 mil
+23	RB Bragantino
+Sérgio Palacios	Sérgio Palacios
+Zagueiro
+14/02/2005 (21)	Colômbia	900 milhões de euros
+15	Boavista SC
+Gabriel Caran	Gabriel Caran
+Zagueiro
+28/09/1998 (28)	Brasil	-
+4	
+Diego Leão	Diego Leão
+Zagueiro
+11/02/2005 (21)	Brasil	-
+44	AA Ponte Preta U20
+Gustavo Almeida	Gustavo Almeida
+Zagueiro
+04/01/2006 (20)	Brasil	-
+32	Santos FC
+Kevyson	Kevyson 
+Esq. Lateral
+29/03/2004 (22)	Brasil	800 milhões
+14	
+Danilo Barcelos	Danilo Barcelos
+Esq. Lateral
+17/08/1991 (35)	Brasil	150 milhões
+13	Pouso Alegre FC
+Diego Porfírio	Diego Porfírio
+Esq. Lateral
+01/08/1999 (27)	Brasil	100 milhões
+6	Portuguesa Santista
+Jota	Jota
+Esq. Lateral
+26/10/2002 (24)	Brasil	-
+-	
+Guilherme Martins	Guilherme Martins
+Diretor Lateral
+05/03/2005 (21)	Brasil	-
+-	
+Kawann	Kawann
+Diretor Lateral
+18/01/2005 (21)	Brasil	-
+2	
+Júlio	Júlio
+Diretor Lateral
+25/06/2007 (19)	Brasil	-
+32	Boavista SC Sub-20
+Di Mauro	Di Mauro
+Diretor Lateral
+16/09/2006 (20)	Brasil
+Itália	-
+8	
+André Lima	André Lima
+Volante
+07/04/2000 (26)	Brasil	200 milhões
+20	
+Murilo	Murilo
+Volante
+15/03/1999 (27)	Brasil	200 milhões
+5	
+Rodrigo Souza	Rodrigo Souza
+Volante
+27/10/1987 (39)	Brasil	50 milhões
+35	
+Gustavo Telles	Gustavo Telles
+Volante
+28/04/2005 (21)	Brasil	-
+16	Boavista SC
+Karl	Karl
+Meia Central
+07/04/1993 (33)	Brasil	-
+22	Boavista SC
+Denis	Denis
+Meia Central
+08/01/2004 (22)	Brasil	-
+10	
+Elvis	Elvis 
+Meia Ofensivo
+09/09/1990 (36)	Brasil	75 milhões
+-	
+Diogo Mora	Diogo Mora
+Meia Ofensivo
+22/01/2002 (24)	Brasil	-
+7	Boavista SC
+Manu	Manu
+Meia Ofensivo
+03/04/2006 (20)	Brasil	-
+17	
+Miguel Morais	Miguel Morais
+Meia Ofensivo
+09/06/2005 (21)	Brasil	-
+18	Coritiba FC
+David da Hora	David da Hora
+Ponta-Esquerda
+09/01/2000 (26)	Brasil	400 milhões
+19	
+Jonathan Cafu	Jonathan Cafu
+Ponta Direita
+10/07/1991 (35)	Brasil
+Bulgária	50 milhões
+-	Cianorte FC
+Peu	Peu
+Ponta Direita
+22/03/2003 (23)	Brasil	-
+9	Coritiba FC
+Brandão	Brandão
+Centroavante
+25/06/2004 (22)	Brasil	200 milhões
+21	
+Vítor Ribeiro	Vítor Ribeiro
+Centroavante
+14/03/1999 (27)	Brasil
+NAUTICO
+55	
+Gastón Guruceaga	Gastón Guruceaga
+Goleiro
+15/03/1995 (31)	Uruguai
+Espanha	200 milhões
+1	
+Muriel	Muriel
+Goleiro
+14/02/1987 (39)	Brasil
+Alemanha	50 milhões
+-	Parnahyba SC
+Leão	Leão
+Goleiro
+05/03/2004 (22)	Brasil	-
+3	
+Betão	Betão
+Zagueiro
+21/06/1999 (27)	Brasil	200 milhões
+25	
+Mateus Silva	Mateus Silva
+Zagueiro
+03/07/1995 (31)	Brasil	150 milhões
+13	
+indiano	indiano
+Zagueiro
+08/03/2004 (22)	Brasil	-
+34	
+Wanderson	Wanderson
+Zagueiro
+24/10/1994 (32)	Brasil	-
+46	RB Bragantino Sub-20
+Gustavo Henrique	Gustavo Henrique
+Zagueiro
+18/10/2005 (21)	Brasil	-
+-	Treze FC
+Felipe Santana	Felipe Santana
+Zagueiro
+08/03/2005 (21)	Brasil	-
+23	
+Igor Fernandes	Igor Fernandes
+Esq. Lateral
+06/06/1992 (34)	Brasil	150 milhões
+6	Figueiresen FC
+Ryan Carlos	Ryan Carlos
+Esq. Lateral
+14/05/2002 (24)	Brasil	-
+60	
+Luiz Paulo	Luiz Paulo
+Esq. Lateral
+24/04/1993 (33)	Brasil	-
+14	
+Matheus Ribeiro	Matheus Ribeiro
+Diretor Lateral
+23/02/1993 (33)	Brasil
+Itália	200 milhões
+27	
+Luiz Felipe	Luiz Felipe
+Diretor Lateral
+27/01/1998 (28)	Brasil	150 milhões
+93	
+Reginaldo	Reginaldo
+Diretor Lateral
+22/02/1993 (33)	Brasil	100 milhões
+2	
+Arnaldo	Arnaldo
+Diretor Lateral
+15/04/1992 (34)	Brasil	-
+8	
+Wenderson	Wenderson
+Volante
+07/06/1998 (28)	Brasil	300 milhões
+41	
+Samuel	Samuel
+Volante
+02/01/2004 (22)	Brasil	150 milhões
+15	CE
+Leo Oliveira	Leo Oliveira
+Volante
+22/04/1996 (30)	Brasil	50 milhões
+5	
+Auremir	Auremir
+Volante
+10/09/1991 (35)	Brasil	-
+48	Azuriz FC
+Guilherme	Guilherme
+Volante
+28/09/2005 (21)	Brasil	-
+10	Chapecoense
+Jean Carlos	Jean Carlos
+Meia Ofensivo
+15/02/1992 (34)	Brasil	350 milhões
+22	Amazonas FC
+Patrício Núñez	Patrício Núñez
+Meia Ofensivo
+19/04/1999 (27)	Argentina	-
+21	
+Felipe Redaelli	Felipe Redaelli
+Meia Ofensivo
+10/07/2003 (23)	Brasil	-
+88	AD Iguatu
+Caio Soares	Caio Soares
+Meia Ofensivo
+22/07/2005 (21)	Brasil	-
+7	
+Vinícius	Vinícius
+Ponta-Esquerda
+03/08/1993 (33)	Brasil	200 milhões
+11	
+Victor Andrade	Victor Andrade
+Ponta-Esquerda
+30/09/1995 (31)	Brasil	200 milhões
+24	CA Sarmiento (Junín)
+Benjamin Borasi	Benjamin Borasi
+Ponta Direita
+11/11/1997 (28)	Argentina	250 milhões
+78	Ypiranga FC
+Danielzinho	Danielzinho
+Ponta Direita
+13/10/2000 (26)	Brasil	-
+72	Atlético Goianiense
+Derek	Derek
+Centroavante
+02/12/1997 (28)	Brasil	400 milhões
+29	
+Júnior Todinho	Júnior Todinho
+Centroavante
+13/12/1993 (32)	Brasil	200 milhões
+9	
+Paulo Sérgio	Paulo Sérgio
+Centroavante
+11/06/1989 (37)	Brasil	-
+16	
+Luiz Claudio	Luiz Claudio
+Centroavante
+14/05/2005 (21)	Brasil	-
+19	Piauí EC
+Kauã Maranhão	Kauã Maranhão
+Centroavante
+02/01/2004 (22)	Brasil	
