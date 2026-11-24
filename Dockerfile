@@ -1,15 +1,16 @@
 # Production multi-stage Dockerfile for PATOFOOT 2026 (Cloud Run / Render / Railway / VPS)
-FROM node:22-alpine AS builder
+# Uses Debian slim (glibc) so Vite 8 (Rolldown), Tailwind v4 (Oxide), and esbuild native binaries work reliably.
+FROM node:22-slim AS builder
 
 WORKDIR /app
 
 COPY .npmrc* package.json package-lock.json* ./
-RUN npm install --legacy-peer-deps --no-audit --no-fund
+RUN npm install --include=dev --legacy-peer-deps --no-audit --no-fund
 
 COPY . .
 RUN npm run build
 
-FROM node:22-alpine AS runner
+FROM node:22-slim AS runner
 
 WORKDIR /app
 
@@ -26,6 +27,6 @@ COPY --from=builder /app/firebase-applet-config.json ./firebase-applet-config.js
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD wget -qO- "http://127.0.0.1:${PORT}/api/health" || exit 1
+  CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 8080) + '/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 
 CMD ["node", "server.js"]
