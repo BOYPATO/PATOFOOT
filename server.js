@@ -1,3 +1,9 @@
+var __defProp = Object.defineProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+
 // server.ts
 import "dotenv/config";
 import crypto from "crypto";
@@ -11,6 +17,1470 @@ import {
   GoogleGenAI,
   Type
 } from "@google/genai";
+
+// src/lib/firebase-admin.ts
+import { initializeApp, getApps } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+
+// firebase-applet-config.json
+var firebase_applet_config_default = {
+  projectId: "flawless-amphora-t5v9p",
+  appId: "1:890017897560:web:76f271cf1197db17eb7e2d",
+  apiKey: "AIzaSyAeeBqZ9RpOrKQHP4XqbhMJUqPqKUBCrEA",
+  authDomain: "flawless-amphora-t5v9p.firebaseapp.com",
+  firestoreDatabaseId: "ai-studio-patofoot2026-f1983665-fd14-4c5b-9eaf-02a501f19017",
+  storageBucket: "flawless-amphora-t5v9p.firebasestorage.app",
+  messagingSenderId: "890017897560",
+  measurementId: "",
+  oAuthClientId: "890017897560-55f63juuo2k7cf9dpt4htbsfnoffofjh.apps.googleusercontent.com",
+  recaptchaSiteKey: ""
+};
+
+// src/lib/firebase-admin.ts
+if (!getApps().length) {
+  initializeApp({
+    projectId: firebase_applet_config_default.projectId
+  });
+}
+var adminAuth = getAuth();
+
+// src/middleware/auth.ts
+var requireAuth = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    res.status(401).json({ error: "Unauthorized: Missing token" });
+    return;
+  }
+  const token = authHeader.slice(7).trim();
+  if (!token) {
+    res.status(401).json({ error: "Unauthorized: Missing token" });
+    return;
+  }
+  try {
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    req.user = decodedToken;
+    next();
+  } catch (error) {
+    console.error("Error verifying Firebase ID token:", error);
+    res.status(401).json({ error: "Unauthorized: Invalid token" });
+  }
+};
+
+// src/db/users.ts
+import { eq } from "drizzle-orm";
+
+// src/db/index.ts
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+
+// src/db/schema.ts
+var schema_exports = {};
+__export(schema_exports, {
+  careerSaves: () => careerSaves,
+  careerSavesRelations: () => careerSavesRelations,
+  hallOfFameEntries: () => hallOfFameEntries,
+  hallOfFameEntriesRelations: () => hallOfFameEntriesRelations,
+  users: () => users,
+  usersRelations: () => usersRelations
+});
+import { relations } from "drizzle-orm";
+import {
+  doublePrecision,
+  integer,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  uniqueIndex
+} from "drizzle-orm/pg-core";
+var users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  uid: text("uid").notNull().unique(),
+  email: text("email").notNull(),
+  displayName: text("display_name").notNull(),
+  usernameKey: text("username_key").notNull(),
+  favoriteClubId: text("favorite_club_id").notNull().default("fla"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+var careerSaves = pgTable(
+  "career_saves",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+    slotId: text("slot_id").notNull(),
+    clubId: text("club_id").notNull(),
+    clubName: text("club_name").notNull(),
+    clubShortName: text("club_short_name").notNull(),
+    clubPrimaryColor: text("club_primary_color").notNull().default("#10b981"),
+    clubSecondaryColor: text("club_secondary_color").notNull().default("#0f172a"),
+    division: text("division").notNull().default("A"),
+    managerName: text("manager_name").notNull(),
+    seasonYear: integer("season_year").notNull().default(2026),
+    round: integer("round").notNull().default(1),
+    currentDate: text("current_date").notNull().default("2026-01-11"),
+    clubBalance: doublePrecision("club_balance").notNull().default(0),
+    payloadCompressed: text("payload_compressed").notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull()
+  },
+  (table) => [uniqueIndex("career_saves_user_slot_idx").on(table.userId, table.slotId)]
+);
+var hallOfFameEntries = pgTable(
+  "hall_of_fame_entries",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+    slotId: text("slot_id").notNull(),
+    managerName: text("manager_name").notNull(),
+    clubId: text("club_id").notNull(),
+    clubName: text("club_name").notNull(),
+    seasonYear: integer("season_year").notNull().default(2026),
+    trophiesCount: integer("trophies_count").notNull().default(0),
+    hallOfFamePoints: integer("hall_of_fame_points").notNull().default(0),
+    winRatePct: integer("win_rate_pct").notNull().default(0),
+    updatedAt: timestamp("updated_at").defaultNow().notNull()
+  },
+  (table) => [uniqueIndex("hall_of_fame_user_slot_idx").on(table.userId, table.slotId)]
+);
+var usersRelations = relations(users, ({ many }) => ({
+  careerSaves: many(careerSaves),
+  hallOfFameEntries: many(hallOfFameEntries)
+}));
+var careerSavesRelations = relations(careerSaves, ({ one }) => ({
+  owner: one(users, {
+    fields: [careerSaves.userId],
+    references: [users.id]
+  })
+}));
+var hallOfFameEntriesRelations = relations(hallOfFameEntries, ({ one }) => ({
+  owner: one(users, {
+    fields: [hallOfFameEntries.userId],
+    references: [users.id]
+  })
+}));
+
+// src/db/index.ts
+var createPool = () => {
+  if (!global._postgresPool) {
+    global._postgresPool = new Pool({
+      host: process.env.SQL_HOST,
+      user: process.env.SQL_USER,
+      password: process.env.SQL_PASSWORD,
+      database: process.env.SQL_DB_NAME,
+      max: 10,
+      connectionTimeoutMillis: 15e3
+    });
+    global._postgresPool.on("error", (err) => {
+      console.error("Unexpected error on idle SQL pool client:", err);
+    });
+  }
+  return global._postgresPool;
+};
+var pool = createPool();
+var db = drizzle(pool, { schema: schema_exports });
+
+// src/db/users.ts
+function sanitizeKey(raw, uid) {
+  const base = raw.trim().split("@")[0].normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9._\-]+/g, ".").replace(/\.{2,}/g, ".").replace(/^[._\-]+|[._\-]+$/g, "").slice(0, 60);
+  if (base.length >= 2) return base;
+  return `coach.${uid.slice(0, 8).toLowerCase()}`;
+}
+async function getOrCreateUser(input) {
+  const safeEmail = (input.email || `${input.uid}@acesso.patofoot.app`).trim().slice(0, 160);
+  const safeKey = sanitizeKey(input.usernameKey || input.displayName || safeEmail, input.uid);
+  const safeDisplayName = (input.displayName || safeEmail.split("@")[0] || "Treinador").trim().slice(0, 60) || "Treinador";
+  const safeClubId = input.favoriteClubId && /^[a-zA-Z0-9_\-]{2,32}$/.test(input.favoriteClubId) ? input.favoriteClubId : "fla";
+  try {
+    const result = await db.insert(users).values({
+      uid: input.uid,
+      email: safeEmail,
+      displayName: safeDisplayName,
+      usernameKey: safeKey,
+      favoriteClubId: safeClubId
+    }).onConflictDoUpdate({
+      target: users.uid,
+      set: {
+        email: safeEmail,
+        ...input.displayName ? { displayName: safeDisplayName } : {},
+        ...input.favoriteClubId ? { favoriteClubId: safeClubId } : {},
+        updatedAt: /* @__PURE__ */ new Date()
+      }
+    }).returning();
+    return result[0];
+  } catch (error) {
+    console.error("Database query failed in getOrCreateUser:", error);
+    throw new Error("Failed to synchronize trainer account. Please try again later.", {
+      cause: error
+    });
+  }
+}
+async function updateSqlUserProfile(uid, updates) {
+  const patch = {
+    updatedAt: /* @__PURE__ */ new Date()
+  };
+  if (updates.displayName && updates.displayName.trim().length >= 2) {
+    patch.displayName = updates.displayName.trim().slice(0, 60);
+  }
+  if (updates.favoriteClubId && /^[a-zA-Z0-9_\-]{2,32}$/.test(updates.favoriteClubId)) {
+    patch.favoriteClubId = updates.favoriteClubId;
+  }
+  try {
+    const result = await db.update(users).set(patch).where(eq(users.uid, uid)).returning();
+    return result[0] || null;
+  } catch (error) {
+    console.error("Database query failed in updateSqlUserProfile:", error);
+    throw new Error("Failed to update trainer profile. Please try again later.", {
+      cause: error
+    });
+  }
+}
+
+// src/db/careerSaves.ts
+import { and, desc, eq as eq2 } from "drizzle-orm";
+var ALLOWED_SQL_SLOT_IDS = [
+  "autosave",
+  "slot_1",
+  "slot_2",
+  "slot_3",
+  "slot_4",
+  "slot_5"
+];
+function isValidSqlSlotId(value) {
+  return ALLOWED_SQL_SLOT_IDS.includes(value);
+}
+async function listUserSqlCareerSaveSummaries(uid) {
+  try {
+    const rows = await db.select({
+      slotId: careerSaves.slotId,
+      clubId: careerSaves.clubId,
+      clubName: careerSaves.clubName,
+      clubShortName: careerSaves.clubShortName,
+      clubPrimaryColor: careerSaves.clubPrimaryColor,
+      clubSecondaryColor: careerSaves.clubSecondaryColor,
+      division: careerSaves.division,
+      managerName: careerSaves.managerName,
+      seasonYear: careerSaves.seasonYear,
+      round: careerSaves.round,
+      currentDate: careerSaves.currentDate,
+      clubBalance: careerSaves.clubBalance,
+      updatedAt: careerSaves.updatedAt
+    }).from(careerSaves).innerJoin(users, eq2(careerSaves.userId, users.id)).where(eq2(users.uid, uid)).orderBy(desc(careerSaves.updatedAt));
+    return rows;
+  } catch (error) {
+    console.error("Database query failed in listUserSqlCareerSaveSummaries:", error);
+    throw new Error("Failed to load career save summaries. Please try again later.", {
+      cause: error
+    });
+  }
+}
+async function getUserSqlCareerSave(uid, slotId) {
+  try {
+    const rows = await db.select({
+      slotId: careerSaves.slotId,
+      payloadCompressed: careerSaves.payloadCompressed,
+      updatedAt: careerSaves.updatedAt
+    }).from(careerSaves).innerJoin(users, eq2(careerSaves.userId, users.id)).where(and(eq2(users.uid, uid), eq2(careerSaves.slotId, slotId))).limit(1);
+    return rows[0] || null;
+  } catch (error) {
+    console.error("Database query failed in getUserSqlCareerSave:", error);
+    throw new Error("Failed to download career save. Please try again later.", {
+      cause: error
+    });
+  }
+}
+async function upsertUserSqlCareerSave(input) {
+  try {
+    const now = /* @__PURE__ */ new Date();
+    const saved = await db.insert(careerSaves).values({
+      userId: input.userId,
+      slotId: input.slotId,
+      clubId: input.clubId,
+      clubName: input.clubName,
+      clubShortName: input.clubShortName,
+      clubPrimaryColor: input.clubPrimaryColor,
+      clubSecondaryColor: input.clubSecondaryColor,
+      division: input.division,
+      managerName: input.managerName,
+      seasonYear: input.seasonYear,
+      round: input.round,
+      currentDate: input.currentDate,
+      clubBalance: input.clubBalance,
+      payloadCompressed: input.payloadCompressed,
+      updatedAt: now
+    }).onConflictDoUpdate({
+      target: [careerSaves.userId, careerSaves.slotId],
+      set: {
+        clubId: input.clubId,
+        clubName: input.clubName,
+        clubShortName: input.clubShortName,
+        clubPrimaryColor: input.clubPrimaryColor,
+        clubSecondaryColor: input.clubSecondaryColor,
+        division: input.division,
+        managerName: input.managerName,
+        seasonYear: input.seasonYear,
+        round: input.round,
+        currentDate: input.currentDate,
+        clubBalance: input.clubBalance,
+        payloadCompressed: input.payloadCompressed,
+        updatedAt: now
+      }
+    }).returning({
+      slotId: careerSaves.slotId,
+      clubId: careerSaves.clubId,
+      clubName: careerSaves.clubName,
+      clubShortName: careerSaves.clubShortName,
+      clubPrimaryColor: careerSaves.clubPrimaryColor,
+      clubSecondaryColor: careerSaves.clubSecondaryColor,
+      division: careerSaves.division,
+      managerName: careerSaves.managerName,
+      seasonYear: careerSaves.seasonYear,
+      round: careerSaves.round,
+      currentDate: careerSaves.currentDate,
+      clubBalance: careerSaves.clubBalance,
+      updatedAt: careerSaves.updatedAt
+    });
+    await db.insert(hallOfFameEntries).values({
+      userId: input.userId,
+      slotId: input.slotId,
+      managerName: input.managerName,
+      clubId: input.clubId,
+      clubName: input.clubName,
+      seasonYear: input.seasonYear,
+      trophiesCount: Math.max(0, Math.round(input.trophiesCount ?? 0)),
+      hallOfFamePoints: Math.max(0, Math.round(input.hallOfFamePoints ?? 0)),
+      winRatePct: Math.max(0, Math.min(100, Math.round(input.winRatePct ?? 0))),
+      updatedAt: now
+    }).onConflictDoUpdate({
+      target: [hallOfFameEntries.userId, hallOfFameEntries.slotId],
+      set: {
+        managerName: input.managerName,
+        clubId: input.clubId,
+        clubName: input.clubName,
+        seasonYear: input.seasonYear,
+        trophiesCount: Math.max(0, Math.round(input.trophiesCount ?? 0)),
+        hallOfFamePoints: Math.max(0, Math.round(input.hallOfFamePoints ?? 0)),
+        winRatePct: Math.max(0, Math.min(100, Math.round(input.winRatePct ?? 0))),
+        updatedAt: now
+      }
+    });
+    return saved[0];
+  } catch (error) {
+    console.error("Database query failed in upsertUserSqlCareerSave:", error);
+    throw new Error("Failed to save career data. Please try again later.", {
+      cause: error
+    });
+  }
+}
+async function deleteUserSqlCareerSave(uid, slotId) {
+  try {
+    const ownerRows = await db.select({ id: users.id }).from(users).where(eq2(users.uid, uid)).limit(1);
+    const owner = ownerRows[0];
+    if (!owner) return false;
+    await db.delete(careerSaves).where(and(eq2(careerSaves.userId, owner.id), eq2(careerSaves.slotId, slotId)));
+    await db.delete(hallOfFameEntries).where(and(eq2(hallOfFameEntries.userId, owner.id), eq2(hallOfFameEntries.slotId, slotId)));
+    return true;
+  } catch (error) {
+    console.error("Database query failed in deleteUserSqlCareerSave:", error);
+    throw new Error("Failed to delete career save. Please try again later.", {
+      cause: error
+    });
+  }
+}
+async function listHallOfFameLeaderboard(limitCount = 20) {
+  const safeLimit = Math.max(1, Math.min(50, Math.round(limitCount)));
+  try {
+    return await db.select({
+      id: hallOfFameEntries.id,
+      managerName: hallOfFameEntries.managerName,
+      clubId: hallOfFameEntries.clubId,
+      clubName: hallOfFameEntries.clubName,
+      seasonYear: hallOfFameEntries.seasonYear,
+      trophiesCount: hallOfFameEntries.trophiesCount,
+      hallOfFamePoints: hallOfFameEntries.hallOfFamePoints,
+      winRatePct: hallOfFameEntries.winRatePct,
+      updatedAt: hallOfFameEntries.updatedAt
+    }).from(hallOfFameEntries).orderBy(desc(hallOfFameEntries.hallOfFamePoints), desc(hallOfFameEntries.trophiesCount)).limit(safeLimit);
+  } catch (error) {
+    console.error("Database query failed in listHallOfFameLeaderboard:", error);
+    throw new Error("Failed to load Hall of Fame rankings. Please try again later.", {
+      cause: error
+    });
+  }
+}
+
+// src/server/footballRosterApi.ts
+var REQUEST_TIMEOUT_MS = 8e3;
+var USER_AGENT = "PatoFoot2026-MonthlyRosterSync/1.0";
+var WIKI_USER_AGENT = "PatoFoot2026/1.0 (https://patofoot.app)";
+var API_FOOTBALL_BASE = "https://v3.football.api-sports.io";
+var FOOTBALL_DATA_BASE = "https://api.football-data.org/v4";
+var ESPN_SOCCER_BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer";
+var THESPORTSDB_BASE = "https://www.thesportsdb.com/api/v1/json";
+var WIKIPEDIA_EN_API = "https://en.wikipedia.org/w/api.php";
+var WIKIPEDIA_PT_API = "https://pt.wikipedia.org/w/api.php";
+var CACHE_TTL_MS = 12 * 60 * 60 * 1e3;
+var footballDataCompetitionCache = /* @__PURE__ */ new Map();
+var espnLeagueTeamsCache = /* @__PURE__ */ new Map();
+var COUNTRY_TO_PT = {
+  bra: "Brasil",
+  brazil: "Brasil",
+  brasil: "Brasil",
+  arg: "Argentina",
+  argentina: "Argentina",
+  uru: "Uruguai",
+  uruguay: "Uruguai",
+  col: "Col\xF4mbia",
+  colombia: "Col\xF4mbia",
+  par: "Paraguai",
+  paraguay: "Paraguai",
+  chi: "Chile",
+  chile: "Chile",
+  ecu: "Equador",
+  ecuador: "Equador",
+  per: "Peru",
+  peru: "Peru",
+  bol: "Bol\xEDvia",
+  bolivia: "Bol\xEDvia",
+  ven: "Venezuela",
+  venezuela: "Venezuela",
+  eng: "Inglaterra",
+  england: "Inglaterra",
+  "united kingdom": "Inglaterra",
+  gbr: "Inglaterra",
+  sco: "Esc\xF3cia",
+  scotland: "Esc\xF3cia",
+  wal: "Pa\xEDs de Gales",
+  wales: "Pa\xEDs de Gales",
+  nir: "Irlanda do Norte",
+  "northern ireland": "Irlanda do Norte",
+  irl: "Irlanda",
+  ireland: "Irlanda",
+  esp: "Espanha",
+  spain: "Espanha",
+  por: "Portugal",
+  portugal: "Portugal",
+  fra: "Fran\xE7a",
+  france: "Fran\xE7a",
+  ger: "Alemanha",
+  germany: "Alemanha",
+  ita: "It\xE1lia",
+  italy: "It\xE1lia",
+  ned: "Holanda",
+  netherlands: "Holanda",
+  holland: "Holanda",
+  bel: "B\xE9lgica",
+  belgium: "B\xE9lgica",
+  sui: "Su\xED\xE7a",
+  switzerland: "Su\xED\xE7a",
+  aut: "\xC1ustria",
+  austria: "\xC1ustria",
+  cro: "Cro\xE1cia",
+  croatia: "Cro\xE1cia",
+  srb: "S\xE9rvia",
+  serbia: "S\xE9rvia",
+  pol: "Pol\xF4nia",
+  poland: "Pol\xF4nia",
+  den: "Dinamarca",
+  denmark: "Dinamarca",
+  swe: "Su\xE9cia",
+  sweden: "Su\xE9cia",
+  nor: "Noruega",
+  norway: "Noruega",
+  tur: "Turquia",
+  turkey: "Turquia",
+  gre: "Gr\xE9cia",
+  greece: "Gr\xE9cia",
+  ukr: "Ucr\xE2nia",
+  ukraine: "Ucr\xE2nia",
+  rus: "R\xFAssia",
+  russia: "R\xFAssia",
+  cze: "Rep\xFAblica Tcheca",
+  "czech republic": "Rep\xFAblica Tcheca",
+  czechia: "Rep\xFAblica Tcheca",
+  svk: "Eslov\xE1quia",
+  slovakia: "Eslov\xE1quia",
+  hun: "Hungria",
+  hungary: "Hungria",
+  rou: "Rom\xEAnia",
+  romania: "Rom\xEAnia",
+  mex: "M\xE9xico",
+  mexico: "M\xE9xico",
+  usa: "Estados Unidos",
+  "united states": "Estados Unidos",
+  can: "Canad\xE1",
+  canada: "Canad\xE1",
+  jpn: "Jap\xE3o",
+  japan: "Jap\xE3o",
+  kor: "Coreia do Sul",
+  "south korea": "Coreia do Sul",
+  "korea republic": "Coreia do Sul",
+  ksa: "Ar\xE1bia Saudita",
+  "saudi arabia": "Ar\xE1bia Saudita",
+  aus: "Austr\xE1lia",
+  australia: "Austr\xE1lia",
+  mar: "Marrocos",
+  morocco: "Marrocos",
+  egy: "Egito",
+  egypt: "Egito",
+  sen: "Senegal",
+  senegal: "Senegal",
+  nga: "Nig\xE9ria",
+  nigeria: "Nig\xE9ria",
+  cmr: "Camar\xF5es",
+  cameroon: "Camar\xF5es",
+  gha: "Gana",
+  ghana: "Gana",
+  civ: "Costa do Marfim",
+  "ivory coast": "Costa do Marfim",
+  "cote d'ivoire": "Costa do Marfim",
+  alg: "Arg\xE9lia",
+  algeria: "Arg\xE9lia",
+  tun: "Tun\xEDsia",
+  tunisia: "Tun\xEDsia",
+  rsa: "\xC1frica do Sul",
+  "south africa": "\xC1frica do Sul",
+  ang: "Angola",
+  angola: "Angola",
+  mli: "Mali",
+  mali: "Mali",
+  gui: "Guin\xE9",
+  guinea: "Guin\xE9",
+  cpv: "Cabo Verde",
+  "cape verde": "Cabo Verde"
+};
+function translateNationalityToPt(raw, fallbackCountry) {
+  const clean = String(raw || "").trim();
+  if (!clean) return fallbackCountry || "Brasil";
+  const key = clean.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return COUNTRY_TO_PT[key] || clean;
+}
+function normalizePersonKey(name) {
+  return String(name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+function normalizeTeamMatchKey(name) {
+  return String(name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(
+    /\b(fc|cf|sc|ec|ac|as|ss|afc|bfc|cfc|rc|cd|ca|ud|sd|se|cr|saf|club|clube|esporte|sport|futebol|football|de|do|da|dos|das|the)\b/g,
+    " "
+  ).replace(/[^a-z0-9]+/g, " ").trim();
+}
+function scoreTeamNameSimilarity(queryName, candidateName) {
+  const qRaw = String(queryName || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const cRaw = String(candidateName || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  if (!qRaw || !cRaw) return 0;
+  if (qRaw === cRaw) return 100;
+  const qNorm = normalizeTeamMatchKey(qRaw);
+  const cNorm = normalizeTeamMatchKey(cRaw);
+  if (qNorm && cNorm && qNorm === cNorm) return 96;
+  if (qNorm && cNorm && (cNorm.includes(qNorm) || qNorm.includes(cNorm))) return 84;
+  const qTokens = new Set(qNorm.split(" ").filter((t) => t.length >= 2));
+  const cTokens = new Set(cNorm.split(" ").filter((t) => t.length >= 2));
+  if (qTokens.size === 0 || cTokens.size === 0) return 0;
+  let overlap = 0;
+  for (const t of qTokens) {
+    if (cTokens.has(t)) overlap += 1;
+  }
+  const unionSize = (/* @__PURE__ */ new Set([...qTokens, ...cTokens])).size;
+  return Math.round(overlap / Math.max(1, unionSize) * 86);
+}
+function mapExternalPositionToRole(rawPosition, rawAbbr, playerIndex = 0) {
+  const pos = String(rawPosition || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const abbr = String(rawAbbr || "").toUpperCase().trim();
+  if (pos.includes("goal") || pos.includes("keeper") || abbr === "G" || abbr === "GK" || abbr === "GOL" || pos.includes("goleiro")) {
+    return { role: "GOL", granular: true };
+  }
+  if (pos.includes("left-back") || pos.includes("right-back") || pos.includes("left back") || pos.includes("right back") || pos.includes("wing-back") || pos.includes("wingback") || pos.includes("full-back") || pos.includes("fullback") || pos.includes("lateral") || abbr === "LB" || abbr === "RB" || abbr === "LWB" || abbr === "RWB" || abbr === "LD" || abbr === "LE" || abbr === "LAT") {
+    return { role: "LAT", granular: true };
+  }
+  if (pos.includes("centre-back") || pos.includes("center-back") || pos.includes("center back") || pos.includes("centre back") || pos.includes("zagueiro") || abbr === "CB" || abbr === "ZAG") {
+    return { role: "ZAG", granular: true };
+  }
+  if (pos.includes("defender") || pos.includes("defence") || abbr === "D" || abbr === "DF") {
+    return { role: playerIndex % 3 === 2 ? "LAT" : "ZAG", granular: false };
+  }
+  if (pos.includes("defensive mid") || pos.includes("holding mid") || pos.includes("volante") || abbr === "DM" || abbr === "CDM" || abbr === "VOL") {
+    return { role: "VOL", granular: true };
+  }
+  if (pos.includes("attacking mid") || pos.includes("central mid") || pos.includes("meia") || abbr === "AM" || abbr === "CAM" || abbr === "CM" || abbr === "MEI") {
+    return { role: "MEI", granular: true };
+  }
+  if (pos.includes("forward") || pos.includes("striker") || pos.includes("centre-forward") || pos.includes("center-forward") || pos.includes("winger") || pos.includes("attacker") || pos.includes("atacante") || pos.includes("offence") || abbr === "F" || abbr === "CF" || abbr === "ST" || abbr === "FW" || abbr === "LW" || abbr === "RW" || abbr === "ATA") {
+    return { role: "ATA", granular: true };
+  }
+  if (pos.includes("midfield") || abbr === "M" || abbr === "MF") {
+    return { role: playerIndex % 3 === 0 ? "VOL" : "MEI", granular: false };
+  }
+  return { role: "MEI", granular: false };
+}
+function computeAgeFromDateString(dateStr, referenceYear = (/* @__PURE__ */ new Date()).getFullYear()) {
+  if (!dateStr) return 25;
+  const match = String(dateStr).match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return 25;
+  const birthYear = Number(match[1]);
+  const birthMonth = Number(match[2]);
+  if (!Number.isFinite(birthYear) || birthYear < 1970 || birthYear > referenceYear - 15) {
+    return 25;
+  }
+  const now = /* @__PURE__ */ new Date();
+  const currentMonth = now.getMonth() + 1;
+  const age = referenceYear - birthYear - (birthMonth > currentMonth ? 1 : 0);
+  return Math.max(16, Math.min(45, age));
+}
+function deterministicHash(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h);
+}
+function estimateRealisticOverall(club, playerName, age, indexInSquad, activityScore = 0) {
+  const rep = Math.max(1, Math.min(5, Number(club.reputation) || 3));
+  let base = 68;
+  if (club.division === "EU") {
+    base = rep >= 5 ? 81 : rep === 4 ? 76 : rep === 3 ? 72 : 67;
+  } else if (club.division === "A") {
+    base = rep >= 5 ? 77 : rep === 4 ? 74 : 71;
+  } else if (club.division === "SA" || club.division === "WL") {
+    base = rep >= 5 ? 76 : rep === 4 ? 73 : 69;
+  } else if (club.division === "B") {
+    base = rep >= 4 ? 69 : 66;
+  } else if (club.division === "C") {
+    base = 63;
+  } else {
+    base = 59;
+  }
+  const hash = deterministicHash(`${club.id}:${playerName}`);
+  const spread = hash % 7 - 3;
+  const agePrimeBonus = age >= 23 && age <= 30 ? 2 : age <= 19 ? -3 : age >= 35 ? -2 : 0;
+  const activityBonus = activityScore >= 25 ? 4 : activityScore >= 14 ? 2 : activityScore >= 6 ? 1 : indexInSquad < 11 ? 2 : -1;
+  return Math.max(54, Math.min(91, Math.round(base + spread + agePrimeBonus + activityBonus)));
+}
+function finalizeNormalizedPlayers(rawPlayers, club) {
+  const sortedCandidates = [...rawPlayers].sort(
+    (a, b) => (b.activityScore || 0) - (a.activityScore || 0)
+  );
+  const gksPool = sortedCandidates.filter((p) => p.role === "GOL").slice(0, 3);
+  const outfieldPool = sortedCandidates.filter((p) => p.role !== "GOL").slice(0, 27);
+  const selectedPool = [...gksPool, ...outfieldPool];
+  const seen = /* @__PURE__ */ new Set();
+  const deduped = [];
+  const usedNumbers = /* @__PURE__ */ new Set();
+  for (let i = 0; i < selectedPool.length && deduped.length < 30; i++) {
+    const p = selectedPool[i];
+    const cleanName = String(p.name || "").trim();
+    if (cleanName.length < 2) continue;
+    const key = normalizePersonKey(cleanName);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    let jersey = Number(p.jerseyNumber) || i + 1;
+    if (!Number.isFinite(jersey) || jersey < 1 || jersey > 99) jersey = i + 1;
+    while (usedNumbers.has(jersey)) {
+      jersey = jersey >= 99 ? 1 : jersey + 1;
+    }
+    usedNumbers.add(jersey);
+    const fallbackAge = 21 + deterministicHash(`${club.id}:age:${cleanName}`) % 12;
+    const safeAge = typeof p.age === "number" && Number.isFinite(p.age) && p.age >= 16 && p.age <= 46 ? Math.round(p.age) : fallbackAge;
+    const overall = estimateRealisticOverall(
+      club,
+      cleanName,
+      safeAge,
+      deduped.length,
+      p.activityScore || 0
+    );
+    deduped.push({
+      name: cleanName,
+      role: p.role,
+      age: safeAge,
+      overall,
+      nationality: p.nationality || club.country || "Brasil",
+      jerseyNumber: jersey,
+      isStarter: false
+    });
+  }
+  const gks = deduped.filter((p) => p.role === "GOL").sort((a, b) => b.overall - a.overall);
+  const starterNames = /* @__PURE__ */ new Set();
+  if (gks[0]) starterNames.add(gks[0].name);
+  const outfield = deduped.filter((p) => p.role !== "GOL").sort((a, b) => b.overall - a.overall);
+  for (const p of outfield) {
+    if (starterNames.size >= 11) break;
+    starterNames.add(p.name);
+  }
+  for (const p of deduped) {
+    if (starterNames.size >= 11) break;
+    starterNames.add(p.name);
+  }
+  return deduped.map((p) => ({
+    ...p,
+    isStarter: starterNames.has(p.name)
+  }));
+}
+async function fetchJsonWithTimeout(url, headers = {}) {
+  try {
+    const resp = await fetch(url, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "User-Agent": USER_AGENT,
+        ...headers
+      },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+    });
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch {
+    return null;
+  }
+}
+async function fetchRawFromApiFootball(club) {
+  const apiKey = process.env.API_FOOTBALL_KEY?.trim();
+  if (!apiKey) return null;
+  const headers = { "x-apisports-key": apiKey };
+  const searchName = club.name.trim();
+  const teamUrl = `${API_FOOTBALL_BASE}/teams?search=${encodeURIComponent(searchName)}`;
+  const teamData = await fetchJsonWithTimeout(teamUrl, headers);
+  const candidates = Array.isArray(teamData?.response) ? teamData.response : [];
+  if (candidates.length === 0) return null;
+  let bestTeam = null;
+  for (const entry of candidates) {
+    const tId = entry?.team?.id;
+    const tName = entry?.team?.name;
+    if (!tId || !tName) continue;
+    let score = scoreTeamNameSimilarity(searchName, tName);
+    if (club.country && entry.team?.country && translateNationalityToPt(entry.team.country, "").toLowerCase() === club.country.toLowerCase()) {
+      score += 12;
+    }
+    if (!bestTeam || score > bestTeam.score) {
+      bestTeam = { id: tId, name: tName, score };
+    }
+  }
+  if (!bestTeam || bestTeam.score < 55) return null;
+  const squadUrl = `${API_FOOTBALL_BASE}/players/squads?team=${encodeURIComponent(String(bestTeam.id))}`;
+  const squadData = await fetchJsonWithTimeout(squadUrl, headers);
+  const apiPlayers = squadData?.response?.[0]?.players;
+  if (!Array.isArray(apiPlayers) || apiPlayers.length < 8) return null;
+  let managerName;
+  const coachUrl = `${API_FOOTBALL_BASE}/coachs?team=${encodeURIComponent(String(bestTeam.id))}`;
+  const coachData = await fetchJsonWithTimeout(coachUrl, headers);
+  const firstCoach = coachData?.response?.[0];
+  if (firstCoach?.name) {
+    managerName = firstCoach.name.trim();
+  } else if (firstCoach?.firstname || firstCoach?.lastname) {
+    managerName = `${firstCoach.firstname || ""} ${firstCoach.lastname || ""}`.trim();
+  }
+  return {
+    source: "API_FOOTBALL",
+    sourceName: "API-Football v3",
+    sourceUrl: "https://www.api-football.com/",
+    matchedTeamName: bestTeam.name,
+    managerName,
+    players: apiPlayers.map((p, idx) => {
+      const mapped = mapExternalPositionToRole(p.position, null, idx);
+      return {
+        name: String(p.name || "").trim(),
+        role: mapped.role,
+        roleIsGranular: mapped.granular,
+        age: typeof p.age === "number" ? p.age : void 0,
+        nationality: club.country || "Brasil",
+        jerseyNumber: p.number ?? void 0,
+        activityScore: Math.max(1, 25 - idx)
+      };
+    })
+  };
+}
+function resolveFootballDataCompetitionCode(club) {
+  const league = (club.leagueName || "").toLowerCase();
+  if (club.division === "A" || league.includes("s\xE9rie a") || league.includes("brasileir")) return "BSA";
+  if (league.includes("premier league") && club.country === "Inglaterra") return "PL";
+  if (league.includes("championship")) return "ELC";
+  if (league.includes("la liga") || club.country === "Espanha") return "PD";
+  if (league.includes("bundesliga") || club.country === "Alemanha") return "BL1";
+  if (league.includes("serie a") && club.country === "It\xE1lia") return "SA";
+  if (league.includes("ligue 1") || club.country === "Fran\xE7a") return "FL1";
+  if (league.includes("primeira liga") || club.country === "Portugal") return "PPL";
+  if (league.includes("eredivisie") || club.country === "Holanda") return "DED";
+  return null;
+}
+async function fetchRawFromFootballDataOrg(club) {
+  const apiKey = process.env.FOOTBALL_DATA_API_KEY?.trim();
+  if (!apiKey) return null;
+  const compCode = resolveFootballDataCompetitionCode(club);
+  if (!compCode) return null;
+  let cached = footballDataCompetitionCache.get(compCode);
+  if (!cached || Date.now() - cached.fetchedAt > CACHE_TTL_MS) {
+    const url = `${FOOTBALL_DATA_BASE}/competitions/${encodeURIComponent(compCode)}/teams`;
+    const data = await fetchJsonWithTimeout(url, {
+      "X-Auth-Token": apiKey
+    });
+    if (!Array.isArray(data?.teams) || data.teams.length === 0) return null;
+    cached = { fetchedAt: Date.now(), teams: data.teams };
+    footballDataCompetitionCache.set(compCode, cached);
+  }
+  let bestTeam = null;
+  for (const team of cached.teams) {
+    const score = Math.max(
+      scoreTeamNameSimilarity(club.name, team.name || ""),
+      scoreTeamNameSimilarity(club.name, team.shortName || "")
+    );
+    if (!bestTeam || score > bestTeam.score) {
+      bestTeam = { team, score };
+    }
+  }
+  if (!bestTeam || bestTeam.score < 58) return null;
+  const squad = bestTeam.team.squad;
+  if (!Array.isArray(squad) || squad.length < 8) return null;
+  const fallbackCountry = club.country || "Brasil";
+  return {
+    source: "FOOTBALL_DATA",
+    sourceName: "Football-Data.org v4",
+    sourceUrl: "https://www.football-data.org/",
+    matchedTeamName: bestTeam.team.name || club.name,
+    managerName: String(bestTeam.team.coach?.name || "").trim() || void 0,
+    players: squad.map((p, idx) => {
+      const mapped = mapExternalPositionToRole(p.position, null, idx);
+      return {
+        name: String(p.name || "").trim(),
+        role: mapped.role,
+        roleIsGranular: mapped.granular,
+        age: computeAgeFromDateString(p.dateOfBirth),
+        nationality: translateNationalityToPt(p.nationality, fallbackCountry),
+        jerseyNumber: p.shirtNumber ?? void 0,
+        activityScore: Math.max(1, 24 - idx)
+      };
+    })
+  };
+}
+function resolveEspnLeagueSlugs(club) {
+  const league = (club.leagueName || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const country = (club.country || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const slugs = [];
+  const add = (s) => {
+    if (!slugs.includes(s)) slugs.push(s);
+  };
+  if (club.division === "A" || league.includes("serie a") && country === "brasil") add("bra.1");
+  if (club.division === "B" || league.includes("serie b")) add("bra.2");
+  if (country === "brasil") {
+    add("bra.1");
+    add("bra.2");
+  }
+  if (league.includes("premier league") && country === "inglaterra") add("eng.1");
+  if (league.includes("championship")) add("eng.2");
+  if (league.includes("league one")) add("eng.3");
+  if (league.includes("league two")) add("eng.4");
+  if (country === "inglaterra") {
+    add("eng.1");
+    add("eng.2");
+    add("eng.3");
+    add("eng.4");
+  }
+  if (country === "espanha" || league.includes("la liga")) add("esp.1");
+  if (country === "italia" || league.includes("serie a") && country !== "brasil") add("ita.1");
+  if (country === "alemanha" || league.includes("bundesliga")) add("ger.1");
+  if (country === "franca" || league.includes("ligue 1")) add("fra.1");
+  if (country === "portugal" || league.includes("primeira liga")) add("por.1");
+  if (country === "holanda" || league.includes("eredivisie")) add("ned.1");
+  if (country === "belgica") add("bel.1");
+  if (country === "turquia") add("tur.1");
+  if (country === "escocia") add("sco.1");
+  if (country === "grecia") add("gre.1");
+  if (country === "suica") add("sui.1");
+  if (country === "dinamarca") add("den.1");
+  if (country === "suecia") add("swe.1");
+  if (country === "noruega") add("nor.1");
+  if (country === "argentina") add("arg.1");
+  if (country === "colombia") add("col.1");
+  if (country === "chile") add("chi.1");
+  if (country === "uruguai") add("uru.1");
+  if (country === "equador") add("ecu.1");
+  if (country === "paraguai") add("par.1");
+  if (country === "peru") add("per.1");
+  if (country === "bolivia") add("bol.1");
+  if (country === "venezuela") add("ven.1");
+  if (country === "estados unidos" || country === "canada" || league.includes("mls")) {
+    add("usa.1");
+    add("concacaf.champions");
+  }
+  if (country === "mexico" || league.includes("liga mx")) {
+    add("mex.1");
+    add("concacaf.champions");
+  }
+  if (country === "arabia saudita" || league.includes("saudi")) {
+    add("ksa.1");
+    add("afc.champions");
+  }
+  if (country === "japao" || league.includes("j1")) {
+    add("jpn.1");
+    add("afc.champions");
+  }
+  if (country === "russia") add("rus.1");
+  if (country === "egito" || country === "marrocos") add("caf.champions");
+  return slugs.slice(0, 3);
+}
+function extractEspnActivityScore(athlete) {
+  const categories = athlete.statistics?.splits?.categories;
+  if (!Array.isArray(categories)) return 0;
+  let appearances = 0;
+  let goals = 0;
+  let assists = 0;
+  let fouls = 0;
+  for (const cat of categories) {
+    if (!Array.isArray(cat.stats)) continue;
+    for (const st of cat.stats) {
+      const val = Number(st.value) || 0;
+      if (st.name === "appearances" || st.name === "gamesPlayed") {
+        appearances = Math.max(appearances, val);
+      } else if (st.name === "totalGoals" || st.name === "goals") {
+        goals = Math.max(goals, val);
+      } else if (st.name === "goalAssists" || st.name === "assists") {
+        assists = Math.max(assists, val);
+      } else if (st.name === "foulsCommitted" || st.name === "foulsSuffered") {
+        fouls += val;
+      }
+    }
+  }
+  return appearances * 3 + goals * 4 + assists * 3 + Math.min(20, Math.floor(fouls / 3));
+}
+async function fetchRawEspnRosterBySlugAndTeamId(leagueSlug, teamId, matchedTeamName, club) {
+  const rosterUrl = `${ESPN_SOCCER_BASE}/${encodeURIComponent(leagueSlug)}/teams/${encodeURIComponent(
+    teamId
+  )}/roster`;
+  const rosterData = await fetchJsonWithTimeout(rosterUrl);
+  const athletes = Array.isArray(rosterData?.athletes) ? rosterData.athletes : [];
+  if (athletes.length < 8) return null;
+  const fallbackCountry = club.country || "Brasil";
+  let managerName;
+  const coachObj = Array.isArray(rosterData?.coach) ? rosterData.coach[0] : void 0;
+  if (coachObj?.displayName) {
+    managerName = coachObj.displayName.trim();
+  } else if (coachObj?.firstName || coachObj?.lastName) {
+    managerName = `${coachObj.firstName || ""} ${coachObj.lastName || ""}`.trim();
+  }
+  return {
+    source: "ESPN_SOCCER",
+    sourceName: "ESPN Soccer",
+    sourceUrl: "https://www.espn.com/soccer/",
+    matchedTeamName,
+    managerName,
+    players: athletes.map((a, idx) => {
+      const mapped = mapExternalPositionToRole(
+        a.position?.name || a.position?.displayName,
+        a.position?.abbreviation,
+        idx
+      );
+      return {
+        name: String(a.displayName || a.fullName || "").trim(),
+        role: mapped.role,
+        roleIsGranular: mapped.granular,
+        age: typeof a.age === "number" && Number.isFinite(a.age) ? a.age : computeAgeFromDateString(a.dateOfBirth),
+        nationality: translateNationalityToPt(a.citizenship || a.flag?.alt, fallbackCountry),
+        jerseyNumber: a.jersey ? Number.parseInt(a.jersey, 10) || void 0 : void 0,
+        activityScore: extractEspnActivityScore(a)
+      };
+    })
+  };
+}
+async function fetchRawFromEspnSoccer(club) {
+  const slugs = resolveEspnLeagueSlugs(club);
+  if (slugs.length === 0) return null;
+  for (const slug of slugs) {
+    let cached = espnLeagueTeamsCache.get(slug);
+    if (!cached || Date.now() - cached.fetchedAt > CACHE_TTL_MS) {
+      const teamsUrl = `${ESPN_SOCCER_BASE}/${encodeURIComponent(slug)}/teams?limit=80`;
+      const data = await fetchJsonWithTimeout(teamsUrl);
+      const rawTeams = data?.sports?.[0]?.leagues?.[0]?.teams || [];
+      const extracted = rawTeams.map((t) => t.team).filter((t) => Boolean(t && t.id && t.displayName));
+      if (extracted.length > 0) {
+        cached = { fetchedAt: Date.now(), teams: extracted };
+        espnLeagueTeamsCache.set(slug, cached);
+      }
+    }
+    if (!cached || cached.teams.length === 0) continue;
+    let bestTeam = null;
+    for (const t of cached.teams) {
+      const score = Math.max(
+        scoreTeamNameSimilarity(club.name, t.displayName),
+        scoreTeamNameSimilarity(club.name, t.shortDisplayName || ""),
+        scoreTeamNameSimilarity(club.name, t.name || "")
+      );
+      if (!bestTeam || score > bestTeam.score) {
+        bestTeam = { team: t, score };
+      }
+    }
+    if (bestTeam && bestTeam.score >= 58) {
+      const roster = await fetchRawEspnRosterBySlugAndTeamId(
+        slug,
+        bestTeam.team.id,
+        bestTeam.team.displayName,
+        club
+      );
+      if (roster) return roster;
+    }
+  }
+  return null;
+}
+function cleanWikiTextValue(raw) {
+  let s = String(raw || "");
+  s = s.replace(/<ref[^>]*>[\s\S]*?<\/ref>/gi, "");
+  s = s.replace(/<ref[^>]*\/>/gi, "");
+  s = s.replace(/\[\[[^\]|]+\|([^\]]+)\]\]/g, "$1");
+  s = s.replace(/\[\[([^\]]+)\]\]/g, "$1");
+  s = s.replace(
+    /\{\{(?:nowrap|sortname)\|([^|}]+)(?:\|([^}]+))?\}\}/gi,
+    (_m, a, b) => b ? `${a} ${b}` : a
+  );
+  s = s.replace(/\{\{[^}]+\}\}/g, "");
+  s = s.replace(/<[^>]+>/g, "");
+  s = s.replace(/''+/g, "");
+  s = s.replace(/\s*\((?:interim|caretaker|footballer[^)]*)\)/gi, "");
+  return s.replace(/\s+/g, " ").trim();
+}
+function parseWikipediaSquadTemplates(wikitext, fallbackCountry) {
+  const players = [];
+  const templateRegex = /\{\{(?:fs player|football squad2? player)\s*\|([\s\S]*?)\}\}/gi;
+  let match;
+  let idx = 0;
+  while ((match = templateRegex.exec(wikitext)) !== null && players.length < 40) {
+    const body = match[1];
+    const parts = [];
+    let current = "";
+    let bracketDepth = 0;
+    let braceDepth = 0;
+    for (let i = 0; i < body.length; i++) {
+      const ch = body[i];
+      const next = body[i + 1];
+      if (ch === "[" && next === "[") {
+        bracketDepth++;
+        current += "[[";
+        i++;
+      } else if (ch === "]" && next === "]" && bracketDepth > 0) {
+        bracketDepth--;
+        current += "]]";
+        i++;
+      } else if (ch === "{" && next === "{") {
+        braceDepth++;
+        current += "{{";
+        i++;
+      } else if (ch === "}" && next === "}" && braceDepth > 0) {
+        braceDepth--;
+        current += "}}";
+        i++;
+      } else if (ch === "|" && bracketDepth === 0 && braceDepth === 0) {
+        parts.push(current);
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+    if (current) parts.push(current);
+    const fields = {};
+    for (const part of parts) {
+      const eq3 = part.indexOf("=");
+      if (eq3 > 0) {
+        const k = part.slice(0, eq3).trim().toLowerCase();
+        const v = part.slice(eq3 + 1).trim();
+        fields[k] = v;
+      }
+    }
+    const otherLower = (fields.other || "").toLowerCase();
+    if (otherLower.includes("on loan at") || otherLower.includes("out on loan")) {
+      continue;
+    }
+    const name = cleanWikiTextValue(fields.name || "");
+    if (name.length < 2 || name.length > 50) continue;
+    const mapped = mapExternalPositionToRole(fields.pos || "", fields.pos || "", idx);
+    const jerseyNum = fields.no ? Number.parseInt(fields.no.trim(), 10) : void 0;
+    const nat = translateNationalityToPt(cleanWikiTextValue(fields.nat || ""), fallbackCountry);
+    players.push({
+      name,
+      role: mapped.role,
+      roleIsGranular: mapped.granular,
+      nationality: nat,
+      jerseyNumber: jerseyNum && Number.isFinite(jerseyNum) && jerseyNum >= 1 && jerseyNum <= 99 ? jerseyNum : void 0,
+      activityScore: Math.max(1, 20 - Math.floor(idx / 2))
+    });
+    idx += 1;
+  }
+  return players;
+}
+function extractWikipediaManager(wikitext) {
+  const infoboxHead = wikitext.slice(0, 5500);
+  const mgrMatch = infoboxHead.match(
+    /\|\s*(?:manager|head coach|coach|treinador|t[eé]cnico)\s*=\s*([^\n]+)/i
+  );
+  if (!mgrMatch?.[1]) return void 0;
+  const cleaned = cleanWikiTextValue(mgrMatch[1]);
+  if (cleaned.length < 3 || cleaned.length > 48 || /^(?:vacant|tbd|none|n\/a|unknown|nenhum|indefinido)$/i.test(cleaned)) {
+    return void 0;
+  }
+  return cleaned;
+}
+var WIKI_EXCLUDED_TITLE_RE = /\b(disambiguation|desambiguação|list of|lista de|women|feminino|youth|sub-20|sub-17|under-21|under-23|u-19|u-20|u-23|reserves|castilla|b team|season|temporada|history of|records and statistics)\b/i;
+async function fetchWikipediaPageContent(apiBase, searchQuery) {
+  const wikiHeaders = { "User-Agent": WIKI_USER_AGENT };
+  const searchUrl = `${apiBase}?action=query&list=search&srsearch=${encodeURIComponent(
+    searchQuery
+  )}&srlimit=5&format=json`;
+  const searchRes = await fetchJsonWithTimeout(searchUrl, wikiHeaders);
+  const candidates = searchRes?.query?.search || [];
+  if (candidates.length === 0) return null;
+  const chosen = candidates.find((c) => c.title && !WIKI_EXCLUDED_TITLE_RE.test(c.title)) || candidates[0];
+  if (!chosen?.title) return null;
+  const pageUrl = `${apiBase}?action=query&prop=revisions&rvprop=content&rvslots=main&redirects=1&format=json&titles=${encodeURIComponent(
+    chosen.title
+  )}`;
+  const pageRes = await fetchJsonWithTimeout(pageUrl, wikiHeaders);
+  const pageObj = pageRes?.query?.pages ? Object.values(pageRes.query.pages)[0] : void 0;
+  const wikitext = pageObj?.revisions?.[0]?.slots?.main?.["*"];
+  if (!wikitext || wikitext.length < 200) return null;
+  return { title: pageObj.title || chosen.title, wikitext };
+}
+async function fetchRawFromWikipedia(club) {
+  const fallbackCountry = club.country || "Brasil";
+  const isBrazilOrLusophone = fallbackCountry === "Brasil" || fallbackCountry === "Portugal";
+  const enQuery = `${club.name} football club`;
+  const enPage = await fetchWikipediaPageContent(WIKIPEDIA_EN_API, enQuery);
+  let bestTitle = enPage?.title || club.name;
+  let bestUrl = enPage ? `https://en.wikipedia.org/wiki/${encodeURIComponent(enPage.title.replace(/ /g, "_"))}` : "https://en.wikipedia.org/";
+  let managerName = enPage ? extractWikipediaManager(enPage.wikitext) : void 0;
+  let players = enPage ? parseWikipediaSquadTemplates(enPage.wikitext, fallbackCountry) : [];
+  if (isBrazilOrLusophone && (!managerName || players.length < 10)) {
+    const ptPage = await fetchWikipediaPageContent(
+      WIKIPEDIA_PT_API,
+      `${club.name} futebol clube`
+    );
+    if (ptPage) {
+      if (!managerName) {
+        managerName = extractWikipediaManager(ptPage.wikitext);
+      }
+      if (players.length < 10) {
+        const ptPlayers = parseWikipediaSquadTemplates(ptPage.wikitext, fallbackCountry);
+        if (ptPlayers.length > players.length) {
+          players = ptPlayers;
+          bestTitle = ptPage.title;
+          bestUrl = `https://pt.wikipedia.org/wiki/${encodeURIComponent(
+            ptPage.title.replace(/ /g, "_")
+          )}`;
+        }
+      }
+    }
+  }
+  if (!managerName && players.length < 6) return null;
+  return {
+    source: "WIKIPEDIA",
+    sourceName: "Wikipedia Live",
+    sourceUrl: bestUrl,
+    matchedTeamName: bestTitle,
+    managerName,
+    players
+  };
+}
+function buildSearchNameVariants(clubName) {
+  const clean = clubName.trim();
+  const variants = [clean];
+  const noAccents = clean.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (noAccents !== clean) variants.push(noAccents);
+  const stripped = noAccents.replace(/\b(EC|FC|SC|CR|SE|CA|AC|CF|SAF|Esporte Clube|Clube de Regatas|Futebol Clube)\b/gi, "").replace(/\s+/g, " ").trim();
+  if (stripped.length >= 3 && !variants.includes(stripped)) {
+    variants.push(stripped);
+  }
+  return variants.slice(0, 2);
+}
+async function fetchRawFromTheSportsDb(club) {
+  const apiKey = (process.env.THESPORTSDB_API_KEY || "123").trim() || "123";
+  const safeKey = encodeURIComponent(apiKey);
+  const variants = buildSearchNameVariants(club.name);
+  let matchedTeam = null;
+  for (const queryVariant of variants) {
+    const searchUrl = `${THESPORTSDB_BASE}/${safeKey}/searchteams.php?t=${encodeURIComponent(
+      queryVariant
+    )}`;
+    const data = await fetchJsonWithTimeout(searchUrl);
+    const teams = Array.isArray(data?.teams) ? data.teams : [];
+    for (const t of teams) {
+      if (!t?.idTeam || !t?.strTeam) continue;
+      if (t.strSport && t.strSport.toLowerCase() !== "soccer") continue;
+      let score = Math.max(
+        scoreTeamNameSimilarity(club.name, t.strTeam),
+        scoreTeamNameSimilarity(club.name, t.strTeamAlternate || "")
+      );
+      if (club.country && t.strCountry && translateNationalityToPt(t.strCountry, "").toLowerCase() === club.country.toLowerCase()) {
+        score += 14;
+      }
+      if (!matchedTeam || score > matchedTeam.score) {
+        matchedTeam = {
+          idTeam: t.idTeam,
+          idESPN: t.idESPN || void 0,
+          strTeam: t.strTeam,
+          strCountry: t.strCountry,
+          strManager: t.strManager,
+          score
+        };
+      }
+    }
+    if (matchedTeam && matchedTeam.score >= 80) break;
+  }
+  if (!matchedTeam || matchedTeam.score < 58) return { squad: null };
+  const cleanManager = String(matchedTeam.strManager || "").trim();
+  const managerName = cleanManager.length >= 3 ? cleanManager : void 0;
+  const rosterUrl = `${THESPORTSDB_BASE}/${safeKey}/lookup_all_players.php?id=${encodeURIComponent(
+    matchedTeam.idTeam
+  )}`;
+  const rosterData = await fetchJsonWithTimeout(rosterUrl);
+  const rawList = Array.isArray(rosterData?.player) ? rosterData.player : [];
+  const activePlayers = rawList.filter((p) => {
+    const pos = String(p.strPosition || "").toLowerCase();
+    const status = String(p.strStatus || "").toLowerCase();
+    if (pos.includes("manager") || pos.includes("coach") || pos.includes("director")) return false;
+    if (status.includes("retired")) return false;
+    return Boolean(p.strPlayer && p.strPlayer.trim().length >= 2);
+  });
+  const fallbackCountry = club.country || "Brasil";
+  const squad = activePlayers.length > 0 || managerName ? {
+    source: "THESPORTSDB",
+    sourceName: "TheSportsDB",
+    sourceUrl: "https://www.thesportsdb.com/",
+    matchedTeamName: matchedTeam.strTeam,
+    managerName,
+    players: activePlayers.map((p, idx) => {
+      const mapped = mapExternalPositionToRole(p.strPosition, null, idx);
+      return {
+        name: String(p.strPlayer || "").trim(),
+        role: mapped.role,
+        roleIsGranular: mapped.granular,
+        age: computeAgeFromDateString(p.dateBorn),
+        nationality: translateNationalityToPt(p.strNationality, fallbackCountry),
+        jerseyNumber: p.strNumber ? Number.parseInt(p.strNumber, 10) || void 0 : void 0,
+        activityScore: Math.max(1, 18 - idx)
+      };
+    })
+  } : null;
+  return {
+    squad,
+    espnTeamId: matchedTeam.idESPN,
+    matchedName: matchedTeam.strTeam
+  };
+}
+function getRosterApiProvidersStatus() {
+  const hasApiFootball = Boolean(process.env.API_FOOTBALL_KEY?.trim());
+  const hasFootballData = Boolean(process.env.FOOTBALL_DATA_API_KEY?.trim());
+  const hasCustomSportsDb = Boolean(process.env.THESPORTSDB_API_KEY?.trim());
+  const hasGemini = Boolean(process.env.GEMINI_API_KEY?.trim());
+  return [
+    {
+      id: "ESPN_SOCCER",
+      name: "ESPN Soccer API",
+      kind: "FOOTBALL_API",
+      enabled: true,
+      configuredViaSecret: false,
+      description: "Ativa automaticamente \u2014 elencos reais, camisas, idades e minutagem em 37+ ligas (Brasileir\xE3o A/B, Europa, Am\xE9rica do Sul, MLS, M\xE9xico, Ar\xE1bia, Jap\xE3o, \xC1frica)."
+    },
+    {
+      id: "WIKIPEDIA",
+      name: "Wikipedia Live API",
+      kind: "FOOTBALL_API",
+      enabled: true,
+      configuredViaSecret: false,
+      description: "Ativa automaticamente \u2014 t\xE9cnicos reais atualizados e elencos completos de 100% dos clubes mundiais (incluindo S\xE9rie C, S\xE9rie D e Estaduais)."
+    },
+    {
+      id: "THESPORTSDB",
+      name: "TheSportsDB API",
+      kind: "FOOTBALL_API",
+      enabled: true,
+      configuredViaSecret: hasCustomSportsDb,
+      description: hasCustomSportsDb ? "Conectada com chave dedicada \u2014 refina posi\xE7\xF5es t\xE1ticas exatas (ZAG/LAT/VOL/MEI/ATA)." : "Ativa automaticamente \u2014 refina posi\xE7\xF5es t\xE1ticas exatas e cruza dados com a ESPN."
+    },
+    {
+      id: "API_FOOTBALL",
+      name: "API-Football v3",
+      kind: "FOOTBALL_API",
+      enabled: hasApiFootball,
+      configuredViaSecret: hasApiFootball,
+      description: hasApiFootball ? "Conectada via segredo do servidor (prioridade m\xE1xima na fus\xE3o)." : "Opcional \u2014 adicione API_FOOTBALL_KEY nos segredos do servidor para somar \xE0 fus\xE3o."
+    },
+    {
+      id: "FOOTBALL_DATA",
+      name: "Football-Data.org v4",
+      kind: "FOOTBALL_API",
+      enabled: hasFootballData,
+      configuredViaSecret: hasFootballData,
+      description: hasFootballData ? "Conectada via segredo do servidor (ligas UEFA e Brasileir\xE3o)." : "Opcional \u2014 adicione FOOTBALL_DATA_API_KEY nos segredos do servidor para somar \xE0 fus\xE3o."
+    },
+    {
+      id: "GEMINI_SEARCH",
+      name: "Gemini + Google Search",
+      kind: "AI_SEARCH",
+      enabled: hasGemini,
+      configuredViaSecret: hasGemini,
+      description: hasGemini ? "Ativo como camada final de busca web caso algum clube regional n\xE3o exista nas 5 APIs esportivas." : "Indispon\xEDvel no momento (requer GEMINI_API_KEY no servidor)."
+    }
+  ];
+}
+async function fetchClubRosterFromExternalApis(club) {
+  const [apiFootball, footballData, espnDirect, wikiSquad, sportsDbResult] = await Promise.all([
+    fetchRawFromApiFootball(club).catch(() => null),
+    fetchRawFromFootballDataOrg(club).catch(() => null),
+    fetchRawFromEspnSoccer(club).catch(() => null),
+    fetchRawFromWikipedia(club).catch(() => null),
+    fetchRawFromTheSportsDb(club).catch(
+      () => ({
+        squad: null
+      })
+    )
+  ]);
+  let espnSquad = espnDirect;
+  if (!espnSquad && sportsDbResult?.espnTeamId) {
+    espnSquad = await fetchRawEspnRosterBySlugAndTeamId(
+      "all",
+      sportsDbResult.espnTeamId,
+      sportsDbResult.matchedName || club.name,
+      club
+    ).catch(() => null);
+  }
+  const allResponses = [
+    apiFootball,
+    footballData,
+    espnSquad,
+    wikiSquad,
+    sportsDbResult?.squad || null
+  ].filter((r) => Boolean(r));
+  if (allResponses.length === 0) return null;
+  const squadPriority = allResponses.filter((r) => r.players.length >= 12);
+  const primarySquad = squadPriority[0] || [...allResponses].sort((a, b) => b.players.length - a.players.length)[0];
+  if (!primarySquad || primarySquad.players.length < 8) return null;
+  const enrichByNormName = /* @__PURE__ */ new Map();
+  const secondaryProviders = allResponses.filter((r) => r !== primarySquad);
+  for (const sec of secondaryProviders) {
+    for (const p of sec.players) {
+      const key = normalizePersonKey(p.name);
+      if (!key) continue;
+      const existing = enrichByNormName.get(key);
+      if (!existing) {
+        enrichByNormName.set(key, {
+          role: p.role,
+          roleIsGranular: p.roleIsGranular,
+          age: p.age,
+          nationality: p.nationality,
+          jerseyNumber: p.jerseyNumber,
+          source: sec.source
+        });
+      } else {
+        if (!existing.roleIsGranular && p.roleIsGranular) {
+          existing.role = p.role;
+          existing.roleIsGranular = true;
+        }
+        if (!existing.age && p.age) existing.age = p.age;
+        if (!existing.nationality && p.nationality) existing.nationality = p.nationality;
+        if (!existing.jerseyNumber && p.jerseyNumber) existing.jerseyNumber = p.jerseyNumber;
+      }
+    }
+  }
+  const sourcesUsedSet = /* @__PURE__ */ new Set([primarySquad.source]);
+  const sourceLabelsSet = /* @__PURE__ */ new Set([primarySquad.sourceName]);
+  const sourceUrlsMap = /* @__PURE__ */ new Map();
+  if (primarySquad.sourceUrl) {
+    sourceUrlsMap.set(primarySquad.sourceUrl, {
+      title: primarySquad.sourceName,
+      uri: primarySquad.sourceUrl
+    });
+  }
+  const addUsedSource = (provider) => {
+    sourcesUsedSet.add(provider.source);
+    sourceLabelsSet.add(provider.sourceName);
+    if (provider.sourceUrl && !sourceUrlsMap.has(provider.sourceUrl)) {
+      sourceUrlsMap.set(provider.sourceUrl, {
+        title: provider.sourceName,
+        uri: provider.sourceUrl
+      });
+    }
+  };
+  const fusedRawPlayers = primarySquad.players.map((p) => {
+    const key = normalizePersonKey(p.name);
+    const enrich = enrichByNormName.get(key);
+    if (!enrich) return p;
+    let enrichedSomething = false;
+    let role = p.role;
+    let roleIsGranular = p.roleIsGranular;
+    if (!roleIsGranular && enrich.role && enrich.roleIsGranular) {
+      role = enrich.role;
+      roleIsGranular = true;
+      enrichedSomething = true;
+    }
+    let age = p.age;
+    if ((!age || age < 16) && enrich.age && enrich.age >= 16) {
+      age = enrich.age;
+      enrichedSomething = true;
+    }
+    let jerseyNumber = p.jerseyNumber;
+    if (!jerseyNumber && enrich.jerseyNumber) {
+      jerseyNumber = enrich.jerseyNumber;
+      enrichedSomething = true;
+    }
+    let nationality = p.nationality;
+    if (!nationality && enrich.nationality) {
+      nationality = enrich.nationality;
+      enrichedSomething = true;
+    }
+    if (enrichedSomething) {
+      const secProv = secondaryProviders.find((s) => s.source === enrich.source);
+      if (secProv) addUsedSource(secProv);
+    }
+    return {
+      ...p,
+      role,
+      roleIsGranular,
+      age,
+      jerseyNumber,
+      nationality
+    };
+  });
+  if (fusedRawPlayers.length < 22) {
+    const seenKeys = new Set(fusedRawPlayers.map((p) => normalizePersonKey(p.name)));
+    for (const sec of secondaryProviders) {
+      let addedFromSec = false;
+      for (const p of sec.players) {
+        if (fusedRawPlayers.length >= 28) break;
+        const key = normalizePersonKey(p.name);
+        if (!key || seenKeys.has(key)) continue;
+        seenKeys.add(key);
+        fusedRawPlayers.push(p);
+        addedFromSec = true;
+      }
+      if (addedFromSec) addUsedSource(sec);
+    }
+  }
+  let managerName = primarySquad.managerName;
+  if (!managerName) {
+    const managerPriorityOrder = [
+      "API_FOOTBALL",
+      "FOOTBALL_DATA",
+      "WIKIPEDIA",
+      "ESPN_SOCCER",
+      "THESPORTSDB"
+    ];
+    for (const srcId of managerPriorityOrder) {
+      const match = allResponses.find((r) => r.source === srcId && r.managerName);
+      if (match?.managerName) {
+        managerName = match.managerName;
+        addUsedSource(match);
+        break;
+      }
+    }
+  }
+  const normalized = finalizeNormalizedPlayers(fusedRawPlayers, club);
+  if (normalized.length < 8) return null;
+  return {
+    clubId: club.id,
+    managerName: managerName || "Treinador Principal",
+    players: normalized,
+    source: primarySquad.source,
+    sourcesUsed: Array.from(sourcesUsedSet),
+    sourceLabel: Array.from(sourceLabelsSet).join(" + "),
+    sourceUrls: Array.from(sourceUrlsMap.values()),
+    matchedTeamName: primarySquad.matchedTeamName
+  };
+}
+
+// server.ts
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path.dirname(__filename);
 var ACCOUNTS_DIR = path.join(__dirname, "data");
@@ -179,7 +1649,7 @@ function makeCacheKey(p) {
 function makeOverallCacheKey(p) {
   return `${(p.clubId || "").trim().toLowerCase()}|${(p.name || "").trim().toLowerCase()}|${p.division || ""}`;
 }
-var PRIMARY_GEMINI_MODEL = "gemini-3.8-flash";
+var PRIMARY_GEMINI_MODEL = "gemini-4-hydrogen";
 var FALLBACK_GEMINI_MODEL = "gemini-3.1-flash-lite";
 var CANDIDATE_TEXT_MODELS = [PRIMARY_GEMINI_MODEL, FALLBACK_GEMINI_MODEL];
 var groundedSearchCooldownUntil = 0;
@@ -188,8 +1658,8 @@ function isGeminiQuotaError(err) {
   if (!err) return false;
   const anyErr = err;
   if (anyErr.status === 429 || anyErr.code === 429) return true;
-  const text = String(anyErr.message ?? err).toLowerCase();
-  return text.includes("429") || text.includes("resource_exhausted") || text.includes("exceeded your current quota") || text.includes("rate limit") || text.includes("quota");
+  const text2 = String(anyErr.message ?? err).toLowerCase();
+  return text2.includes("429") || text2.includes("resource_exhausted") || text2.includes("exceeded your current quota") || text2.includes("rate limit") || text2.includes("quota");
 }
 function getGenAIClient() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -366,6 +1836,269 @@ async function startServer() {
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", app: "PATOFOOT 2026", version: "1.0.0" });
   });
+  const resolvePublicOrigin = (req) => {
+    const envUrl = String(process.env.APP_URL || "").trim();
+    if (/^https?:\/\/[^/\s<>"']+$/i.test(envUrl) && !envUrl.includes("MY_APP_URL")) {
+      return envUrl.replace(/\/+$/, "");
+    }
+    const rawHost = String(req.get("host") || "").trim();
+    const safeHost = /^[a-z0-9.-]+(?::\d{1,5})?$/i.test(rawHost) ? rawHost : "";
+    const proto = req.protocol === "https" || req.get("x-forwarded-proto") === "https" ? "https" : "http";
+    if (safeHost) return `${proto}://${safeHost}`;
+    return "https://patofoot.app";
+  };
+  app.get("/.well-known/assetlinks.json", (_req, res) => {
+    const packageName = String(process.env.ANDROID_APP_PACKAGE || "com.patofoot.manager2026").trim() || "com.patofoot.manager2026";
+    const rawFingerprints = String(process.env.ANDROID_SHA256_FINGERPRINTS || "").split(",").map((fp) => fp.trim()).filter((fp) => fp.length >= 16);
+    const fingerprints = rawFingerprints.length > 0 ? rawFingerprints : ["SUBSTITUA_PELO_SHA256_DA_GOOGLE_PLAY_OU_DEFINA_ANDROID_SHA256_FINGERPRINTS"];
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.json([
+      {
+        relation: ["delegate_permission/common.handle_all_urls"],
+        target: {
+          namespace: "android_app",
+          package_name: packageName,
+          sha256_cert_fingerprints: fingerprints
+        }
+      }
+    ]);
+  });
+  app.get("/.well-known/apple-app-site-association", (_req, res) => {
+    const teamId = String(process.env.APPLE_TEAM_ID || "TEAMID").trim() || "TEAMID";
+    const bundleId = String(process.env.IOS_BUNDLE_ID || "com.patofoot.manager2026").trim() || "com.patofoot.manager2026";
+    const appID = `${teamId}.${bundleId}`;
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.json({
+      applinks: {
+        apps: [],
+        details: [
+          {
+            appID,
+            paths: ["/", "/site", "/site/*"]
+          }
+        ]
+      },
+      webcredentials: {
+        apps: [appID]
+      }
+    });
+  });
+  app.get("/robots.txt", (req, res) => {
+    const origin = resolvePublicOrigin(req);
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.send(`User-agent: *
+Allow: /
+
+Sitemap: ${origin}/sitemap.xml
+`);
+  });
+  app.get("/sitemap.xml", (req, res) => {
+    const origin = resolvePublicOrigin(req);
+    const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${origin}/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${origin}/site</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+</urlset>
+`;
+    res.setHeader("Content-Type", "application/xml; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.send(xml);
+  });
+  const sqlSaveBodyParser = express.json({ limit: "16mb" });
+  app.post("/api/sql/users/sync", requireAuth, async (req, res) => {
+    try {
+      const tokenUser = req.user;
+      const body = req.body || {};
+      const userRecord = await getOrCreateUser({
+        uid: tokenUser.uid,
+        email: tokenUser.email || `${tokenUser.uid}@acesso.patofoot.app`,
+        displayName: typeof body.displayName === "string" && body.displayName.trim().length >= 2 ? body.displayName.trim() : tokenUser.name,
+        usernameKey: typeof body.usernameKey === "string" ? body.usernameKey : void 0,
+        favoriteClubId: typeof body.favoriteClubId === "string" ? body.favoriteClubId : void 0
+      });
+      res.json({
+        uid: userRecord.uid,
+        displayName: userRecord.displayName,
+        usernameKey: userRecord.usernameKey,
+        favoriteClubId: userRecord.favoriteClubId
+      });
+    } catch (error) {
+      console.error("Failed to sync trainer profile:", error);
+      res.status(500).json({ error: "Failed to synchronize trainer account." });
+    }
+  });
+  app.patch("/api/sql/users/profile", requireAuth, async (req, res) => {
+    try {
+      const tokenUser = req.user;
+      const body = req.body || {};
+      await getOrCreateUser({
+        uid: tokenUser.uid,
+        email: tokenUser.email || `${tokenUser.uid}@acesso.patofoot.app`,
+        displayName: tokenUser.name
+      });
+      const updated = await updateSqlUserProfile(tokenUser.uid, {
+        displayName: typeof body.displayName === "string" ? body.displayName : void 0,
+        favoriteClubId: typeof body.favoriteClubId === "string" ? body.favoriteClubId : void 0
+      });
+      res.json({ ok: true, profile: updated });
+    } catch (error) {
+      console.error("Failed to update trainer profile:", error);
+      res.status(500).json({ error: "Failed to update trainer profile." });
+    }
+  });
+  app.get("/api/sql/saves", requireAuth, async (req, res) => {
+    try {
+      const tokenUser = req.user;
+      const rows = await listUserSqlCareerSaveSummaries(tokenUser.uid);
+      res.json({
+        saves: rows.map((row) => ({
+          slotId: row.slotId,
+          clubId: row.clubId,
+          clubName: row.clubName,
+          clubShortName: row.clubShortName,
+          clubPrimaryColor: row.clubPrimaryColor,
+          clubSecondaryColor: row.clubSecondaryColor,
+          division: row.division,
+          managerName: row.managerName,
+          seasonYear: row.seasonYear,
+          round: row.round,
+          currentDate: row.currentDate,
+          clubBalance: row.clubBalance,
+          partCount: 1,
+          updatedAtIso: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : new Date(row.updatedAt).toISOString()
+        }))
+      });
+    } catch (error) {
+      console.error("Failed to list SQL career saves:", error);
+      res.status(500).json({ error: "Failed to load cloud career saves." });
+    }
+  });
+  app.get("/api/sql/saves/:slotId", requireAuth, async (req, res) => {
+    const slotId = String(req.params.slotId || "");
+    if (!isValidSqlSlotId(slotId)) {
+      res.status(400).json({ error: "Invalid career slot ID." });
+      return;
+    }
+    try {
+      const tokenUser = req.user;
+      const row = await getUserSqlCareerSave(tokenUser.uid, slotId);
+      if (!row) {
+        res.status(404).json({ error: "Career save not found." });
+        return;
+      }
+      const inflated = zlib.gunzipSync(Buffer.from(row.payloadCompressed, "base64")).toString("utf-8");
+      const parsed = JSON.parse(inflated);
+      res.json({ save: parsed });
+    } catch (error) {
+      console.error("Failed to load SQL career save:", error);
+      res.status(500).json({ error: "Failed to download cloud career save." });
+    }
+  });
+  app.put("/api/sql/saves/:slotId", sqlSaveBodyParser, requireAuth, async (req, res) => {
+    const slotId = String(req.params.slotId || "");
+    if (!isValidSqlSlotId(slotId)) {
+      res.status(400).json({ error: "Invalid career slot ID." });
+      return;
+    }
+    const body = req.body || {};
+    if (!body.save || typeof body.save !== "object" || !Array.isArray(body.save.clubs)) {
+      res.status(400).json({ error: "Invalid career save payload." });
+      return;
+    }
+    try {
+      const tokenUser = req.user;
+      const summary = body.summary || {};
+      const managerName = String(summary.managerName || body.save.managerName || tokenUser.name || "Treinador").trim().slice(0, 80);
+      const clubId = String(summary.clubId || body.save.userClubId || "fla").trim().slice(0, 40);
+      const userRecord = await getOrCreateUser({
+        uid: tokenUser.uid,
+        email: tokenUser.email || `${tokenUser.uid}@acesso.patofoot.app`,
+        displayName: managerName,
+        favoriteClubId: clubId
+      });
+      const rawJson = JSON.stringify(body.save);
+      const payloadCompressed = zlib.gzipSync(Buffer.from(rawJson, "utf-8"), { level: 6 }).toString("base64");
+      const savedRow = await upsertUserSqlCareerSave({
+        userId: userRecord.id,
+        slotId,
+        clubId,
+        clubName: String(summary.clubName || "Clube").trim().slice(0, 80),
+        clubShortName: String(summary.clubShortName || "CLB").trim().slice(0, 32),
+        clubPrimaryColor: String(summary.clubPrimaryColor || "#10b981").slice(0, 16),
+        clubSecondaryColor: String(summary.clubSecondaryColor || "#0f172a").slice(0, 16),
+        division: String(summary.division || "A").slice(0, 16),
+        managerName,
+        seasonYear: Math.max(2025, Math.min(2150, Math.round(Number(summary.seasonYear || 2026)))),
+        round: Math.max(1, Math.min(120, Math.round(Number(summary.round || 1)))),
+        currentDate: String(summary.currentDate || "2026-01-11").slice(0, 20),
+        clubBalance: Number.isFinite(Number(summary.clubBalance)) ? Number(summary.clubBalance) : 0,
+        payloadCompressed,
+        trophiesCount: Number(summary.trophiesCount || 0),
+        hallOfFamePoints: Number(summary.hallOfFamePoints || 0),
+        winRatePct: Number(summary.winRatePct || 0)
+      });
+      res.json({
+        summary: {
+          slotId: savedRow.slotId,
+          clubId: savedRow.clubId,
+          clubName: savedRow.clubName,
+          clubShortName: savedRow.clubShortName,
+          clubPrimaryColor: savedRow.clubPrimaryColor,
+          clubSecondaryColor: savedRow.clubSecondaryColor,
+          division: savedRow.division,
+          managerName: savedRow.managerName,
+          seasonYear: savedRow.seasonYear,
+          round: savedRow.round,
+          currentDate: savedRow.currentDate,
+          clubBalance: savedRow.clubBalance,
+          partCount: 1,
+          updatedAtIso: savedRow.updatedAt instanceof Date ? savedRow.updatedAt.toISOString() : new Date(savedRow.updatedAt).toISOString()
+        }
+      });
+    } catch (error) {
+      console.error("Failed to upsert SQL career save:", error);
+      res.status(500).json({ error: "Failed to save career data to cloud." });
+    }
+  });
+  app.delete("/api/sql/saves/:slotId", requireAuth, async (req, res) => {
+    const slotId = String(req.params.slotId || "");
+    if (!isValidSqlSlotId(slotId)) {
+      res.status(400).json({ error: "Invalid career slot ID." });
+      return;
+    }
+    try {
+      const tokenUser = req.user;
+      await deleteUserSqlCareerSave(tokenUser.uid, slotId);
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Failed to delete SQL career save:", error);
+      res.status(500).json({ error: "Failed to delete cloud career save." });
+    }
+  });
+  app.get("/api/sql/hall-of-fame", requireAuth, async (req, res) => {
+    try {
+      const limit = Number(req.query.limit || 20);
+      const entries = await listHallOfFameLeaderboard(limit);
+      res.json({ entries });
+    } catch (error) {
+      console.error("Failed to load Hall of Fame entries:", error);
+      res.status(500).json({ error: "Failed to load Hall of Fame rankings." });
+    }
+  });
   app.use("/api/auth", authRateLimiter);
   app.use(
     [
@@ -525,7 +2258,7 @@ async function startServer() {
     res.json({
       configured: hasKey,
       cachedPlayers: resolvedNationalityCache.size,
-      model: "gemini-3.8-flash"
+      model: "gemini-4-hydrogen"
     });
   });
   app.post("/api/players/nationalities", async (req, res) => {
@@ -540,7 +2273,7 @@ async function startServer() {
           usedAi: false,
           usedGoogleSearch: false,
           groundingSources: [],
-          model: "gemini-3.8-flash"
+          model: "gemini-4-hydrogen"
         });
         return;
       }
@@ -566,7 +2299,7 @@ async function startServer() {
           usedAi: true,
           usedGoogleSearch: false,
           groundingSources: [],
-          model: "gemini-3.8-flash"
+          model: "gemini-4-hydrogen"
         });
         return;
       }
@@ -728,7 +2461,7 @@ async function startServer() {
           resolvedCount: 0,
           cachedCount: 0,
           usedAi: false,
-          model: "gemini-3.8-flash"
+          model: "gemini-4-hydrogen"
         });
         return;
       }
@@ -752,7 +2485,7 @@ async function startServer() {
           resolvedCount: Object.keys(overallsById).length,
           cachedCount,
           usedAi: true,
-          model: "gemini-3.8-flash"
+          model: "gemini-4-hydrogen"
         });
         return;
       }
@@ -877,7 +2610,7 @@ async function startServer() {
           leagueId,
           clubs: [],
           usedAi: false,
-          model: "gemini-3.8-flash"
+          model: "gemini-4-hydrogen"
         });
         return;
       }
@@ -898,7 +2631,7 @@ async function startServer() {
           clubs: calibratedResults,
           usedAi: true,
           cached: true,
-          model: "gemini-3.8-flash"
+          model: "gemini-4-hydrogen"
         });
         return;
       }
@@ -1045,7 +2778,7 @@ async function startServer() {
           leagueId,
           clubs: [],
           usedAi: false,
-          model: "gemini-3.8-flash"
+          model: "gemini-4-hydrogen"
         });
         return;
       }
@@ -1066,7 +2799,7 @@ async function startServer() {
           clubs: calibratedResults,
           usedAi: true,
           cached: true,
-          model: "gemini-3.8-flash"
+          model: "gemini-4-hydrogen"
         });
         return;
       }
@@ -1218,7 +2951,7 @@ async function startServer() {
           leagueId,
           clubs: [],
           usedAi: false,
-          model: "gemini-3.8-flash"
+          model: "gemini-4-hydrogen"
         });
         return;
       }
@@ -1239,7 +2972,7 @@ async function startServer() {
           clubs: calibratedResults,
           usedAi: true,
           cached: true,
-          model: "gemini-3.8-flash"
+          model: "gemini-4-hydrogen"
         });
         return;
       }
@@ -1401,7 +3134,6 @@ async function startServer() {
   app.get("/api/clubs/squads/october-2026/cache", (_req, res) => {
     const clubsById = {};
     for (const [clubId, profile] of resolvedOct2026SquadCache.entries()) {
-      if (clubId === "fla" || clubId === "pal") continue;
       if (profile && profile.clubId && Array.isArray(profile.players) && profile.players.length > 0) {
         clubsById[clubId] = profile;
       }
@@ -1412,17 +3144,113 @@ async function startServer() {
       model: PRIMARY_GEMINI_MODEL
     });
   });
-  app.post("/api/clubs/squads/october-2026", async (req, res) => {
+  app.get("/api/clubs/squads/monthly-sync/status", (_req, res) => {
+    const ptMonthsShort = [
+      "Jan",
+      "Fev",
+      "Mar",
+      "Abr",
+      "Mai",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Set",
+      "Out",
+      "Nov",
+      "Dez"
+    ];
+    const ptMonthsFull = [
+      "Janeiro",
+      "Fevereiro",
+      "Mar\xE7o",
+      "Abril",
+      "Maio",
+      "Junho",
+      "Julho",
+      "Agosto",
+      "Setembro",
+      "Outubro",
+      "Novembro",
+      "Dezembro"
+    ];
+    const now = /* @__PURE__ */ new Date();
+    const year = now.getFullYear();
+    const monthIdx = now.getMonth();
+    const monthKey = `${year}-${String(monthIdx + 1).padStart(2, "0")}`;
+    const shortLabel = `${ptMonthsShort[monthIdx] || "Nov"}/${year}`;
+    const fullLabel = `${ptMonthsFull[monthIdx] || "Novembro"} de ${year}`;
+    let syncedThisMonthCount = 0;
+    let lastUpdatedAt = null;
+    const sourcesBreakdown = {};
+    for (const profile of resolvedOct2026SquadCache.values()) {
+      if (!profile || !Array.isArray(profile.players) || profile.players.length === 0) continue;
+      const isThisMonth = profile.monthKey === monthKey || typeof profile.updatedAt === "string" && profile.updatedAt.startsWith(monthKey);
+      if (isThisMonth) {
+        syncedThisMonthCount += 1;
+        const srcKey = profile.source || "GEMINI_SEARCH";
+        sourcesBreakdown[srcKey] = (sourcesBreakdown[srcKey] || 0) + 1;
+      }
+      if (typeof profile.updatedAt === "string" && (!lastUpdatedAt || profile.updatedAt > lastUpdatedAt)) {
+        lastUpdatedAt = profile.updatedAt;
+      }
+    }
+    res.json({
+      monthKey,
+      shortLabel,
+      fullLabel,
+      providers: getRosterApiProvidersStatus(),
+      syncedThisMonthCount,
+      totalCachedCount: resolvedOct2026SquadCache.size,
+      lastUpdatedAt,
+      sourcesBreakdown,
+      model: PRIMARY_GEMINI_MODEL
+    });
+  });
+  const handleMonthlySquadSync = async (req, res) => {
+    const ptMonthsFull = [
+      "Janeiro",
+      "Fevereiro",
+      "Mar\xE7o",
+      "Abril",
+      "Maio",
+      "Junho",
+      "Julho",
+      "Agosto",
+      "Setembro",
+      "Outubro",
+      "Novembro",
+      "Dezembro"
+    ];
+    const now = /* @__PURE__ */ new Date();
+    const defaultYear = now.getFullYear();
+    const defaultMonthKey = `${defaultYear}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const defaultFullLabel = `${ptMonthsFull[now.getMonth()] || "Novembro"} de ${defaultYear}`;
+    const reqPeriod = req.body?.targetPeriod;
+    const syncMonthKey = typeof reqPeriod?.monthKey === "string" && /^\d{4}-\d{2}$/.test(reqPeriod.monthKey) ? reqPeriod.monthKey : defaultMonthKey;
+    const syncFullLabel = typeof reqPeriod?.fullLabel === "string" && reqPeriod.fullLabel.trim().length > 0 ? reqPeriod.fullLabel.trim().slice(0, 60) : defaultFullLabel;
+    const syncYear = typeof reqPeriod?.year === "number" && Number.isFinite(reqPeriod.year) && reqPeriod.year >= 2020 && reqPeriod.year <= 2040 ? Math.round(reqPeriod.year) : defaultYear;
+    const preferredProviderRaw = String(req.body?.preferredProvider || "AUTO").toUpperCase();
+    const preferredProvider = preferredProviderRaw === "GEMINI_SEARCH" ? "GEMINI_SEARCH" : preferredProviderRaw === "FOOTBALL_API_FIRST" ? "FOOTBALL_API_FIRST" : "AUTO";
     try {
       const forceRefresh = Boolean(req.body?.forceRefresh);
-      const rawClubs = Array.isArray(req.body?.clubs) ? req.body.clubs.slice(0, 6) : [];
+      const rawClubs = Array.isArray(req.body?.clubs) ? req.body.clubs.slice(0, 6).filter((c) => c && typeof c.id === "string" && typeof c.name === "string").map((c) => ({
+        id: c.id.trim().slice(0, 64),
+        name: c.name.trim().slice(0, 96),
+        country: typeof c.country === "string" ? c.country.trim().slice(0, 48) : "Brasil",
+        leagueName: typeof c.leagueName === "string" ? c.leagueName.trim().slice(0, 80) : void 0,
+        division: typeof c.division === "string" ? c.division.trim().slice(0, 12) : void 0,
+        reputation: typeof c.reputation === "number" && Number.isFinite(c.reputation) ? Math.max(1, Math.min(5, Math.round(c.reputation))) : 3
+      })).filter((c) => c.id.length > 0 && c.name.length > 0) : [];
       if (rawClubs.length === 0) {
         res.json({
           clubs: [],
           groundingSources: [],
+          providerCounts: {},
+          usedExternalApi: false,
           usedAi: false,
           usedGoogleSearch: false,
           cachedCount: 0,
+          monthKey: syncMonthKey,
           totalCachedOnServer: resolvedOct2026SquadCache.size,
           model: PRIMARY_GEMINI_MODEL
         });
@@ -1430,11 +3258,18 @@ async function startServer() {
       }
       const results = [];
       const uncached = [];
+      const groundingSourcesMap = /* @__PURE__ */ new Map();
+      const providerCounts = {};
       let cachedCount = 0;
+      let usedExternalApi = false;
+      let usedAi = false;
+      let usedGoogleSearch = false;
       for (const c of rawClubs) {
-        if (!c || !c.id || !c.name) continue;
         const cached = !forceRefresh ? resolvedOct2026SquadCache.get(c.id) : void 0;
-        if (cached && cached.players.length >= 18) {
+        const isFreshThisMonth = Boolean(
+          cached && cached.players.length >= 16 && (cached.monthKey === syncMonthKey || typeof cached.updatedAt === "string" && cached.updatedAt.startsWith(syncMonthKey))
+        );
+        if (cached && isFreshThisMonth) {
           results.push(cached);
           cachedCount += 1;
         } else {
@@ -1445,192 +3280,270 @@ async function startServer() {
         res.json({
           clubs: results,
           groundingSources: [],
-          usedAi: true,
+          providerCounts,
+          usedExternalApi: false,
+          usedAi: false,
           usedGoogleSearch: false,
           cached: true,
           cachedCount,
+          monthKey: syncMonthKey,
           totalCachedOnServer: resolvedOct2026SquadCache.size,
           model: PRIMARY_GEMINI_MODEL
         });
         return;
       }
-      const ai = getGenAIClient();
-      if (!ai) {
-        res.status(503).json({
-          error: "API_KEY_MISSING",
-          message: "Servi\xE7o de IA indispon\xEDvel no servidor neste momento.",
-          clubs: results,
-          groundingSources: [],
-          usedAi: false,
-          usedGoogleSearch: false,
-          cachedCount,
-          totalCachedOnServer: resolvedOct2026SquadCache.size
-        });
-        return;
-      }
-      const validRoles = /* @__PURE__ */ new Set(["GOL", "ZAG", "LAT", "VOL", "MEI", "ATA"]);
-      const groundingSourcesMap = /* @__PURE__ */ new Map();
-      let usedGoogleSearch = false;
-      const CHUNK_SIZE = uncached.length <= 2 ? 2 : 5;
-      const minPlayersTarget = uncached.length <= 2 ? 24 : 22;
-      for (let offset = 0; offset < uncached.length; offset += CHUNK_SIZE) {
-        const batch = uncached.slice(offset, offset + CHUNK_SIZE);
-        const clubLines = batch.map(
-          (c) => `- clubId="${c.id}" | clube="${c.name}" | pais="${c.country || "Brasil"}" | liga="${c.leagueName || c.division || "1\xAA Divis\xE3o"}" | reputacao=${c.reputation || 3}`
+      const needsAiFallback = [];
+      if (preferredProvider !== "GEMINI_SEARCH") {
+        const externalResults = await Promise.all(
+          uncached.map(
+            (clubQuery) => fetchClubRosterFromExternalApis(clubQuery).catch(() => null)
+          )
         );
-        const promptText = [
-          "Pesquise na web (Google Search) o elenco profissional real e atualizado de OUTUBRO DE 2026 para cada clube listado abaixo.",
-          "Regras obrigat\xF3rias de atualiza\xE7\xE3o Outubro de 2026:",
-          "1. Informe o nome real do t\xE9cnico atual em Outubro de 2026 em managerName.",
-          `2. Liste entre ${minPlayersTarget} e 28 jogadores reais do elenco atual de Outubro de 2026 (incluindo contrata\xE7\xF5es, chegadas de meio de ano/ver\xE3o 2026 e sa\xEDdas confirmadas at\xE9 Outubro de 2026), cobrindo todas as posi\xE7\xF5es de forma equilibrada: 3 goleiros (GOL), 4 a 6 zagueiros (ZAG), 4 laterais (LAT), 4 a 5 volantes (VOL), 4 a 5 meias (MEI) e 4 a 6 atacantes (ATA).`,
-          '3. Marque exatamente 11 atletas titulares habituais com "isStarter": true (1 GOL e 10 de linha) e os demais com "isStarter": false.',
-          '4. Em "role" use estritamente: "GOL", "ZAG", "LAT", "VOL", "MEI" ou "ATA".',
-          '5. Em "age" informe a idade real em Outubro de 2026 (16 a 46). Em "jerseyNumber" informe o n\xFAmero da camisa (1 a 99). Em "nationality" informe o pa\xEDs em portugu\xEAs do Brasil (ex.: "Brasil", "Argentina", "Uruguai", "Col\xF4mbia", "Paraguai", "Portugal", "Espanha", "Inglaterra", "Fran\xE7a", "Alemanha", "It\xE1lia", "Holanda", "Marrocos", "Egito", "Ar\xE1bia Saudita", "Jap\xE3o", "R\xFAssia", "M\xE9xico", "Estados Unidos").',
-          '6. Em "overall" calibre com realismo FIFA/EA FC em Outubro de 2026 conforme a for\xE7a real do clube e divis\xE3o (gigantes europeus: 76\u201391; S\xE9rie A Brasil / grandes da Am\xE9rica, Ar\xE1bia, M\xE9xico, MLS e R\xFAssia: 70\u201388; S\xE9rie B / ligas m\xE9dias: 63\u201376; S\xE9rie C/D / divis\xF5es inferiores: 54\u201369).',
-          "7. Retorne APENAS um array JSON puro (sem texto extra) com TODOS os clubes solicitados no formato:",
-          '[{"clubId":"...","managerName":"...","players":[{"name":"...","role":"GOL","age":28,"overall":82,"nationality":"Brasil","jerseyNumber":1,"isStarter":true}]}]',
-          "",
-          "Clubes para pesquisar elenco de Outubro de 2026:",
-          ...clubLines
-        ].join("\n");
-        let parsedBatch = null;
-        const groundedOctResult = await generateGroundedIfAvailable(
-          ai,
-          promptText,
-          "Voc\xEA \xE9 um especialista mundial em bancos de dados de futebol em Outubro de 2026 (Transfermarkt, SofaScore, FIFA, CBF, CONMEBOL, UEFA, CONCACAF, AFC e CAF). Use Google Search para consultar as transfer\xEAncias mais recentes at\xE9 Outubro de 2026 e retorne exclusivamente JSON v\xE1lido para todos os clubes solicitados."
-        );
-        if (groundedOctResult) {
-          const chunks = groundedOctResult.response.candidates?.[0]?.groundingMetadata?.groundingChunks;
-          if (Array.isArray(chunks)) {
-            for (const ch of chunks) {
-              const uri = ch?.web?.uri;
-              const title = ch?.web?.title;
-              if (uri && typeof uri === "string" && !groundingSourcesMap.has(uri)) {
-                usedGoogleSearch = true;
-                groundingSourcesMap.set(uri, {
-                  uri,
-                  title: typeof title === "string" && title.trim() ? title.trim() : "Fonte Web Outubro 2026"
+        for (let idx = 0; idx < uncached.length; idx++) {
+          const queryClub = uncached[idx];
+          const ext = externalResults[idx];
+          if (ext && ext.players.length >= 10) {
+            const sanitizedClub = {
+              clubId: queryClub.id,
+              managerName: ext.managerName,
+              updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+              monthKey: syncMonthKey,
+              source: ext.source,
+              sourceLabel: ext.sourceLabel,
+              players: ext.players.slice(0, 30)
+            };
+            resolvedOct2026SquadCache.set(sanitizedClub.clubId, sanitizedClub);
+            for (const p of sanitizedClub.players) {
+              if (p.nationality) {
+                resolvedNationalityCache.set(p.name.toLowerCase(), p.nationality);
+              }
+            }
+            results.push(sanitizedClub);
+            usedExternalApi = true;
+            for (const srcId of ext.sourcesUsed || [ext.source]) {
+              providerCounts[srcId] = (providerCounts[srcId] || 0) + 1;
+            }
+            for (const link of ext.sourceUrls || []) {
+              if (link?.uri && !groundingSourcesMap.has(link.uri)) {
+                groundingSourcesMap.set(link.uri, {
+                  uri: link.uri,
+                  title: `${link.title} (${syncFullLabel})`
                 });
               }
             }
-          }
-          const cleaned = (groundedOctResult.response.text || "").replace(/```json/gi, "").replace(/```/g, "").trim();
-          const startIdx = cleaned.indexOf("[");
-          const endIdx = cleaned.lastIndexOf("]");
-          if (startIdx !== -1 && endIdx > startIdx) {
-            try {
-              const candidate = JSON.parse(cleaned.slice(startIdx, endIdx + 1));
-              if (Array.isArray(candidate) && candidate.length > 0) {
-                parsedBatch = candidate;
-              }
-            } catch {
-            }
+          } else {
+            needsAiFallback.push(queryClub);
           }
         }
-        if (!parsedBatch || parsedBatch.length === 0) {
-          const fallbackResult = await generateStructuredWithFallback(ai, promptText, {
-            systemInstruction: "Voc\xEA \xE9 um especialista mundial em bancos de dados de futebol em Outubro de 2026. Liste os jogadores reais de cada clube solicitado em Outubro de 2026 e retorne exclusivamente JSON v\xE1lido seguindo o schema.",
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  clubId: { type: Type.STRING },
-                  managerName: { type: Type.STRING },
-                  players: {
-                    type: Type.ARRAY,
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        name: { type: Type.STRING },
-                        role: { type: Type.STRING },
-                        age: { type: Type.INTEGER },
-                        overall: { type: Type.INTEGER },
-                        nationality: { type: Type.STRING },
-                        jerseyNumber: { type: Type.INTEGER },
-                        isStarter: { type: Type.BOOLEAN }
-                      },
-                      required: [
-                        "name",
-                        "role",
-                        "age",
-                        "overall",
-                        "nationality",
-                        "jerseyNumber",
-                        "isStarter"
-                      ]
-                    }
-                  }
-                },
-                required: ["clubId", "managerName", "players"]
-              }
-            }
-          });
-          if (!fallbackResult) {
-            savePersistedOct2026SquadCache();
-            savePersistedNationalityCache();
+      } else {
+        needsAiFallback.push(...uncached);
+      }
+      if (needsAiFallback.length > 0) {
+        const ai = getGenAIClient();
+        if (!ai) {
+          savePersistedOct2026SquadCache();
+          savePersistedNationalityCache();
+          if (results.length > 0) {
             res.json({
               clubs: results,
               groundingSources: Array.from(groundingSourcesMap.values()).slice(0, 8),
-              usedAi: results.length > 0,
-              usedGoogleSearch,
-              quotaLimited: true,
+              providerCounts,
+              usedExternalApi,
+              usedAi: false,
+              usedGoogleSearch: false,
               cached: false,
               cachedCount,
+              monthKey: syncMonthKey,
               totalCachedOnServer: resolvedOct2026SquadCache.size,
               model: PRIMARY_GEMINI_MODEL
             });
             return;
           }
-          const rawFallback = fallbackResult.response.text || "[]";
-          parsedBatch = JSON.parse(rawFallback);
+          res.status(503).json({
+            error: "ROSTER_PROVIDERS_UNAVAILABLE",
+            message: "Nenhum elenco encontrado nas APIs de futebol ao vivo e a busca complementar de IA n\xE3o est\xE1 configurada no servidor.",
+            clubs: results,
+            groundingSources: [],
+            providerCounts,
+            usedExternalApi,
+            usedAi: false,
+            usedGoogleSearch: false,
+            cachedCount,
+            monthKey: syncMonthKey,
+            totalCachedOnServer: resolvedOct2026SquadCache.size
+          });
+          return;
         }
-        if (Array.isArray(parsedBatch)) {
-          for (const item of parsedBatch) {
-            if (!item || !item.clubId) continue;
-            const inputMeta = batch.find(
-              (b) => b.id === item.clubId || b.id.toLowerCase() === String(item.clubId).trim().toLowerCase()
-            );
-            const resolvedClubId = inputMeta ? inputMeta.id : item.clubId;
-            const fallbackCountry = inputMeta?.country || "Brasil";
-            const seenNames = /* @__PURE__ */ new Set();
-            const sanitizedPlayers = [];
-            if (Array.isArray(item.players)) {
-              for (let idx = 0; idx < item.players.length && sanitizedPlayers.length < 30; idx++) {
-                const rawP = item.players[idx];
-                const cleanName = String(rawP?.name || "").trim();
-                if (cleanName.length < 2) continue;
-                const normKey = cleanName.toLowerCase();
-                if (seenNames.has(normKey)) continue;
-                seenNames.add(normKey);
-                const normRole = String(rawP?.role || "MEI").toUpperCase().trim();
-                const safeRole = validRoles.has(normRole) ? normRole : "MEI";
-                const cleanNat = String(rawP?.nationality || fallbackCountry).trim() || fallbackCountry;
-                sanitizedPlayers.push({
-                  name: cleanName,
-                  role: safeRole,
-                  age: Math.max(16, Math.min(46, Math.round(Number(rawP?.age) || 25))),
-                  overall: Math.max(52, Math.min(93, Math.round(Number(rawP?.overall) || 73))),
-                  nationality: cleanNat,
-                  jerseyNumber: Math.max(
-                    1,
-                    Math.min(99, Math.round(Number(rawP?.jerseyNumber) || idx + 1))
-                  ),
-                  isStarter: Boolean(rawP?.isStarter)
-                });
-                resolvedNationalityCache.set(normKey, cleanNat);
+        const validRoles = /* @__PURE__ */ new Set(["GOL", "ZAG", "LAT", "VOL", "MEI", "ATA"]);
+        const CHUNK_SIZE = needsAiFallback.length <= 2 ? 2 : 5;
+        const minPlayersTarget = needsAiFallback.length <= 2 ? 24 : 22;
+        for (let offset = 0; offset < needsAiFallback.length; offset += CHUNK_SIZE) {
+          const batch = needsAiFallback.slice(offset, offset + CHUNK_SIZE);
+          const clubLines = batch.map(
+            (c) => `- clubId="${c.id}" | clube="${c.name}" | pais="${c.country || "Brasil"}" | liga="${c.leagueName || c.division || "1\xAA Divis\xE3o"}" | reputacao=${c.reputation || 3}`
+          );
+          const promptText = [
+            `Pesquise na web (Google Search) o elenco profissional real e atualizado de ${syncFullLabel.toUpperCase()} para cada clube listado abaixo.`,
+            `Regras obrigat\xF3rias de atualiza\xE7\xE3o mensal (${syncFullLabel}):`,
+            `1. Informe o nome real do t\xE9cnico atual em ${syncFullLabel} em managerName.`,
+            `2. Liste entre ${minPlayersTarget} e 28 jogadores reais do elenco atual de ${syncFullLabel} (incluindo contrata\xE7\xF5es, chegadas e sa\xEDdas confirmadas at\xE9 ${syncFullLabel}), cobrindo todas as posi\xE7\xF5es de forma equilibrada: 3 goleiros (GOL), 4 a 6 zagueiros (ZAG), 4 laterais (LAT), 4 a 5 volantes (VOL), 4 a 5 meias (MEI) e 4 a 6 atacantes (ATA).`,
+            '3. Marque exatamente 11 atletas titulares habituais com "isStarter": true (1 GOL e 10 de linha) e os demais com "isStarter": false.',
+            '4. Em "role" use estritamente: "GOL", "ZAG", "LAT", "VOL", "MEI" ou "ATA".',
+            `5. Em "age" informe a idade real em ${syncFullLabel} (16 a 46). Em "jerseyNumber" informe o n\xFAmero da camisa (1 a 99). Em "nationality" informe o pa\xEDs em portugu\xEAs do Brasil.`,
+            `6. Em "overall" calibre com realismo em ${syncFullLabel} (${syncYear}) conforme a for\xE7a real do clube e divis\xE3o (gigantes europeus: 76\u201391; S\xE9rie A Brasil / grandes da Am\xE9rica, Ar\xE1bia, M\xE9xico, MLS e R\xFAssia: 70\u201388; S\xE9rie B / ligas m\xE9dias: 63\u201376; S\xE9rie C/D / divis\xF5es inferiores: 54\u201369).`,
+            "7. Retorne APENAS um array JSON puro (sem texto extra) com TODOS os clubes solicitados no formato:",
+            '[{"clubId":"...","managerName":"...","players":[{"name":"...","role":"GOL","age":28,"overall":82,"nationality":"Brasil","jerseyNumber":1,"isStarter":true}]}]',
+            "",
+            `Clubes para pesquisar elenco de ${syncFullLabel}:`,
+            ...clubLines
+          ].join("\n");
+          let parsedBatch = null;
+          const groundedOctResult = await generateGroundedIfAvailable(
+            ai,
+            promptText,
+            `Voc\xEA \xE9 um especialista mundial em bancos de dados de futebol em ${syncFullLabel} (Transfermarkt, SofaScore, FIFA, CBF, CONMEBOL, UEFA, CONCACAF, AFC e CAF). Use Google Search para consultar as transfer\xEAncias mais recentes at\xE9 ${syncFullLabel} e retorne exclusivamente JSON v\xE1lido para todos os clubes solicitados.`
+          );
+          if (groundedOctResult) {
+            const chunks = groundedOctResult.response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+            if (Array.isArray(chunks)) {
+              for (const ch of chunks) {
+                const uri = ch?.web?.uri;
+                const title = ch?.web?.title;
+                if (uri && typeof uri === "string" && !groundingSourcesMap.has(uri)) {
+                  usedGoogleSearch = true;
+                  groundingSourcesMap.set(uri, {
+                    uri,
+                    title: typeof title === "string" && title.trim() ? title.trim() : `Fonte Web ${syncFullLabel}`
+                  });
+                }
               }
             }
-            if (sanitizedPlayers.length > 0) {
-              const sanitizedClub = {
-                clubId: resolvedClubId,
-                managerName: String(item.managerName || "").trim() || "Treinador Principal",
-                updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
-                players: sanitizedPlayers.slice(0, 30)
-              };
-              resolvedOct2026SquadCache.set(sanitizedClub.clubId, sanitizedClub);
-              results.push(sanitizedClub);
+            const cleaned = (groundedOctResult.response.text || "").replace(/```json/gi, "").replace(/```/g, "").trim();
+            const startIdx = cleaned.indexOf("[");
+            const endIdx = cleaned.lastIndexOf("]");
+            if (startIdx !== -1 && endIdx > startIdx) {
+              try {
+                const candidate = JSON.parse(cleaned.slice(startIdx, endIdx + 1));
+                if (Array.isArray(candidate) && candidate.length > 0) {
+                  parsedBatch = candidate;
+                }
+              } catch {
+              }
+            }
+          }
+          if (!parsedBatch || parsedBatch.length === 0) {
+            const fallbackResult = await generateStructuredWithFallback(ai, promptText, {
+              systemInstruction: `Voc\xEA \xE9 um especialista mundial em bancos de dados de futebol em ${syncFullLabel}. Liste os jogadores reais de cada clube solicitado em ${syncFullLabel} e retorne exclusivamente JSON v\xE1lido seguindo o schema.`,
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    clubId: { type: Type.STRING },
+                    managerName: { type: Type.STRING },
+                    players: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          name: { type: Type.STRING },
+                          role: { type: Type.STRING },
+                          age: { type: Type.INTEGER },
+                          overall: { type: Type.INTEGER },
+                          nationality: { type: Type.STRING },
+                          jerseyNumber: { type: Type.INTEGER },
+                          isStarter: { type: Type.BOOLEAN }
+                        },
+                        required: [
+                          "name",
+                          "role",
+                          "age",
+                          "overall",
+                          "nationality",
+                          "jerseyNumber",
+                          "isStarter"
+                        ]
+                      }
+                    }
+                  },
+                  required: ["clubId", "managerName", "players"]
+                }
+              }
+            });
+            if (!fallbackResult) {
+              savePersistedOct2026SquadCache();
+              savePersistedNationalityCache();
+              res.json({
+                clubs: results,
+                groundingSources: Array.from(groundingSourcesMap.values()).slice(0, 8),
+                providerCounts,
+                usedExternalApi,
+                usedAi,
+                usedGoogleSearch,
+                quotaLimited: true,
+                cached: false,
+                cachedCount,
+                monthKey: syncMonthKey,
+                totalCachedOnServer: resolvedOct2026SquadCache.size,
+                model: PRIMARY_GEMINI_MODEL
+              });
+              return;
+            }
+            const rawFallback = fallbackResult.response.text || "[]";
+            parsedBatch = JSON.parse(rawFallback);
+          }
+          if (Array.isArray(parsedBatch)) {
+            for (const item of parsedBatch) {
+              if (!item || !item.clubId) continue;
+              const inputMeta = batch.find(
+                (b) => b.id === item.clubId || b.id.toLowerCase() === String(item.clubId).trim().toLowerCase()
+              );
+              const resolvedClubId = inputMeta ? inputMeta.id : item.clubId;
+              const fallbackCountry = inputMeta?.country || "Brasil";
+              const seenNames = /* @__PURE__ */ new Set();
+              const sanitizedPlayers = [];
+              if (Array.isArray(item.players)) {
+                for (let idx = 0; idx < item.players.length && sanitizedPlayers.length < 30; idx++) {
+                  const rawP = item.players[idx];
+                  const cleanName = String(rawP?.name || "").trim();
+                  if (cleanName.length < 2) continue;
+                  const normKey = cleanName.toLowerCase();
+                  if (seenNames.has(normKey)) continue;
+                  seenNames.add(normKey);
+                  const normRole = String(rawP?.role || "MEI").toUpperCase().trim();
+                  const safeRole = validRoles.has(normRole) ? normRole : "MEI";
+                  const cleanNat = String(rawP?.nationality || fallbackCountry).trim() || fallbackCountry;
+                  sanitizedPlayers.push({
+                    name: cleanName,
+                    role: safeRole,
+                    age: Math.max(16, Math.min(46, Math.round(Number(rawP?.age) || 25))),
+                    overall: Math.max(52, Math.min(93, Math.round(Number(rawP?.overall) || 73))),
+                    nationality: cleanNat,
+                    jerseyNumber: Math.max(
+                      1,
+                      Math.min(99, Math.round(Number(rawP?.jerseyNumber) || idx + 1))
+                    ),
+                    isStarter: Boolean(rawP?.isStarter)
+                  });
+                  resolvedNationalityCache.set(normKey, cleanNat);
+                }
+              }
+              if (sanitizedPlayers.length > 0) {
+                const sanitizedClub = {
+                  clubId: resolvedClubId,
+                  managerName: String(item.managerName || "").trim() || "Treinador Principal",
+                  updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+                  monthKey: syncMonthKey,
+                  source: "GEMINI_SEARCH",
+                  sourceLabel: usedGoogleSearch ? "Gemini + Google Search" : "Gemini Live Roster",
+                  players: sanitizedPlayers.slice(0, 30)
+                };
+                resolvedOct2026SquadCache.set(sanitizedClub.clubId, sanitizedClub);
+                results.push(sanitizedClub);
+                usedAi = true;
+                providerCounts.GEMINI_SEARCH = (providerCounts.GEMINI_SEARCH || 0) + 1;
+              }
             }
           }
         }
@@ -1640,10 +3553,13 @@ async function startServer() {
       res.json({
         clubs: results,
         groundingSources: Array.from(groundingSourcesMap.values()).slice(0, 8),
-        usedAi: true,
+        providerCounts,
+        usedExternalApi,
+        usedAi,
         usedGoogleSearch,
         cached: false,
         cachedCount,
+        monthKey: syncMonthKey,
         totalCachedOnServer: resolvedOct2026SquadCache.size,
         model: PRIMARY_GEMINI_MODEL
       });
@@ -1652,21 +3568,26 @@ async function startServer() {
         res.json({
           clubs: [],
           groundingSources: [],
+          providerCounts: {},
+          usedExternalApi: false,
           usedAi: false,
           usedGoogleSearch: false,
           quotaLimited: true,
+          monthKey: syncMonthKey,
           totalCachedOnServer: resolvedOct2026SquadCache.size
         });
         return;
       }
       const msg = err instanceof Error ? err.message : String(err);
-      console.error("[Gemini Oct2026 Squad Sync Error]:", msg);
+      console.error("[Monthly Squad API Sync Error]:", msg);
       res.status(500).json({
-        error: "AI_REQUEST_FAILED",
-        message: "N\xE3o foi poss\xEDvel pesquisar o elenco de Outubro de 2026 via IA neste momento."
+        error: "ROSTER_SYNC_FAILED",
+        message: `N\xE3o foi poss\xEDvel atualizar os elencos de ${syncFullLabel} pela API neste momento.`
       });
     }
-  });
+  };
+  app.post("/api/clubs/squads/monthly-sync", handleMonthlySquadSync);
+  app.post("/api/clubs/squads/october-2026", handleMonthlySquadSync);
   app.post("/api/transfers/rumors", async (req, res) => {
     try {
       const body = req.body;
