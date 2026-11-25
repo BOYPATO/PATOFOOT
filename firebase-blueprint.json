@@ -234,6 +234,161 @@
         "payload",
         "updatedAt"
       ]
+    },
+    "ErrorLog": {
+      "title": "ErrorLog",
+      "description": "Registro estruturado de excecao critica ou falha do jogo capturada em tempo real para monitoramento de estabilidade entre dispositivos.",
+      "type": "object",
+      "properties": {
+        "logId": {
+          "type": "string",
+          "description": "Identificador unico do registro de erro.",
+          "minLength": 4,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "uid": {
+          "type": "string",
+          "description": "UID do usuario autenticado que reportou a falha.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "fingerprint": {
+          "type": "string",
+          "description": "Assinatura deterministica para agrupar falhas recorrentes.",
+          "minLength": 4,
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "severity": {
+          "type": "string",
+          "description": "Nivel de severidade da excecao capturada.",
+          "enum": ["critical", "error", "warning"],
+          "minLength": 4,
+          "maxLength": 16
+        },
+        "source": {
+          "type": "string",
+          "description": "Origem tecnica da captura da excecao.",
+          "enum": [
+            "react_boundary",
+            "window_error",
+            "unhandled_rejection",
+            "firestore",
+            "game_engine",
+            "manual_test"
+          ],
+          "minLength": 4,
+          "maxLength": 32
+        },
+        "message": {
+          "type": "string",
+          "description": "Mensagem principal resumida da excecao.",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "stack": {
+          "type": "string",
+          "description": "Stack trace ou component stack truncado para diagnostico.",
+          "minLength": 0,
+          "maxLength": 2000
+        },
+        "route": {
+          "type": "string",
+          "description": "Rota e aba ativa do jogo no momento do erro.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "appVersion": {
+          "type": "string",
+          "description": "Versao do build do aplicativo.",
+          "minLength": 1,
+          "maxLength": 24,
+          "pattern": "^[a-zA-Z0-9._\\-]+$"
+        },
+        "deviceType": {
+          "type": "string",
+          "description": "Categoria do dispositivo onde ocorreu o erro.",
+          "enum": ["mobile", "tablet", "desktop"],
+          "minLength": 4,
+          "maxLength": 16
+        },
+        "os": {
+          "type": "string",
+          "description": "Sistema operacional detectado.",
+          "minLength": 2,
+          "maxLength": 40
+        },
+        "browser": {
+          "type": "string",
+          "description": "Navegador ou WebView detectado.",
+          "minLength": 2,
+          "maxLength": 40
+        },
+        "displayMode": {
+          "type": "string",
+          "description": "Modo de execucao (navegador ou app PWA standalone).",
+          "enum": ["browser", "pwa_standalone"],
+          "minLength": 4,
+          "maxLength": 24
+        },
+        "viewport": {
+          "type": "string",
+          "description": "Dimensoes da tela em pixels (LxA).",
+          "minLength": 3,
+          "maxLength": 24,
+          "pattern": "^[0-9]{2,5}x[0-9]{2,5}$"
+        },
+        "userAgent": {
+          "type": "string",
+          "description": "Resumo truncado do User-Agent do dispositivo.",
+          "minLength": 2,
+          "maxLength": 240
+        },
+        "online": {
+          "type": "boolean",
+          "description": "Indica se o dispositivo estava online no momento da captura."
+        },
+        "status": {
+          "type": "string",
+          "description": "Estado de triagem do erro no painel de estabilidade.",
+          "enum": ["open", "resolved", "ignored"],
+          "minLength": 4,
+          "maxLength": 16
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp do servidor de registro da falha."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp do servidor da ultima atualizacao de triagem."
+        }
+      },
+      "required": [
+        "logId",
+        "uid",
+        "fingerprint",
+        "severity",
+        "source",
+        "message",
+        "stack",
+        "route",
+        "appVersion",
+        "deviceType",
+        "os",
+        "browser",
+        "displayMode",
+        "viewport",
+        "userAgent",
+        "online",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
     }
   },
   "firestore": {
@@ -248,6 +403,10 @@
     "/users/{userId}/cloudSaves/{slotId}/segments/{segmentId}": {
       "schema": "CloudSaveSegment",
       "description": "Subcolecao de segmentos nativos do estado completo da carreira."
+    },
+    "/errorLogs/{logId}": {
+      "schema": "ErrorLog",
+      "description": "Logs em tempo real de excecoes criticas e estabilidade por dispositivo."
     }
   }
 }

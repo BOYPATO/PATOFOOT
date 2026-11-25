@@ -13,6 +13,12 @@ service cloud.firestore {
         );
     }
 
+    function isBootstrappedAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == 'alexdantas001@gmail.com';
+    }
+
     function isValidId(id) {
       return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
@@ -216,6 +222,146 @@ service cloud.firestore {
         && data.payload.keys().size() >= 1
         && data.payload.keys().size() <= 64
         && data.updatedAt is timestamp;
+    }
+
+    function isValidErrorLog(data) {
+      return data.keys().hasAll([
+          'logId',
+          'uid',
+          'fingerprint',
+          'severity',
+          'source',
+          'message',
+          'stack',
+          'route',
+          'appVersion',
+          'deviceType',
+          'os',
+          'browser',
+          'displayMode',
+          'viewport',
+          'userAgent',
+          'online',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'logId',
+          'uid',
+          'fingerprint',
+          'severity',
+          'source',
+          'message',
+          'stack',
+          'route',
+          'appVersion',
+          'deviceType',
+          'os',
+          'browser',
+          'displayMode',
+          'viewport',
+          'userAgent',
+          'online',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.logId is string
+        && data.logId.size() >= 4
+        && data.logId.size() <= 64
+        && data.logId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.uid is string
+        && data.uid.size() >= 1
+        && data.uid.size() <= 128
+        && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.fingerprint is string
+        && data.fingerprint.size() >= 4
+        && data.fingerprint.size() <= 80
+        && data.fingerprint.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.severity is string
+        && data.severity.size() >= 4
+        && data.severity.size() <= 16
+        && data.severity in ['critical', 'error', 'warning']
+        && data.source is string
+        && data.source.size() >= 4
+        && data.source.size() <= 32
+        && data.source in ['react_boundary', 'window_error', 'unhandled_rejection', 'firestore', 'game_engine', 'manual_test']
+        && data.message is string
+        && data.message.size() >= 1
+        && data.message.size() <= 500
+        && data.stack is string
+        && data.stack.size() >= 0
+        && data.stack.size() <= 2000
+        && data.route is string
+        && data.route.size() >= 1
+        && data.route.size() <= 120
+        && data.appVersion is string
+        && data.appVersion.size() >= 1
+        && data.appVersion.size() <= 24
+        && data.appVersion.matches('^[a-zA-Z0-9._\\-]+$')
+        && data.deviceType is string
+        && data.deviceType.size() >= 4
+        && data.deviceType.size() <= 16
+        && data.deviceType in ['mobile', 'tablet', 'desktop']
+        && data.os is string
+        && data.os.size() >= 2
+        && data.os.size() <= 40
+        && data.browser is string
+        && data.browser.size() >= 2
+        && data.browser.size() <= 40
+        && data.displayMode is string
+        && data.displayMode.size() >= 4
+        && data.displayMode.size() <= 24
+        && data.displayMode in ['browser', 'pwa_standalone']
+        && data.viewport is string
+        && data.viewport.size() >= 3
+        && data.viewport.size() <= 24
+        && data.viewport.matches('^[0-9]{2,5}x[0-9]{2,5}$')
+        && data.userAgent is string
+        && data.userAgent.size() >= 2
+        && data.userAgent.size() <= 240
+        && data.online is bool
+        && data.status is string
+        && data.status.size() >= 4
+        && data.status.size() <= 16
+        && data.status in ['open', 'resolved', 'ignored']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /errorLogs/{logId} {
+      allow get: if isSignedIn()
+        && isValidId(logId)
+        && (resource.data.uid == request.auth.uid || isBootstrappedAdmin());
+
+      allow list: if isSignedIn()
+        && (resource.data.uid == request.auth.uid || isBootstrappedAdmin());
+
+      allow create: if isSignedIn()
+        && isValidId(logId)
+        && isValidErrorLog(incoming())
+        && incoming().logId == logId
+        && incoming().uid == request.auth.uid
+        && incoming().status == 'open'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isBootstrappedAdmin()
+        && isValidId(logId)
+        && isValidErrorLog(incoming())
+        && incoming().logId == existing().logId
+        && incoming().uid == existing().uid
+        && incoming().fingerprint == existing().fingerprint
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'status',
+          'updatedAt'
+        ]);
+
+      allow delete: if isBootstrappedAdmin()
+        && isValidId(logId);
     }
 
     match /users/{userId} {

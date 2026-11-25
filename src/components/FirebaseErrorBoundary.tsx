@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { captureErrorLog } from '../services/errorLoggerService';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -30,6 +31,16 @@ export class FirebaseErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     console.error('[PATOFOOT ErrorBoundary]:', error, errorInfo);
+    const combinedStack = [error?.stack || '', errorInfo?.componentStack || '']
+      .filter(Boolean)
+      .join('\n--- Component Stack ---\n');
+    void captureErrorLog({
+      error,
+      message: error?.message || 'Exceção crítica na renderização React',
+      stack: combinedStack,
+      severity: 'critical',
+      source: 'react_boundary',
+    });
   }
 
   render() {

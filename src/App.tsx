@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
+import { setErrorLogGameContext } from './services/errorLoggerService';
 import { 
   Club, 
   CompetitionType,
@@ -2510,8 +2511,19 @@ export default function App() {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [settingsInitialSection, setSettingsInitialSection] = useState<
-    'audio' | 'match' | 'career'
+    'audio' | 'match' | 'career' | 'stability'
   >('audio');
+
+  useEffect(() => {
+    const context = isMatchModalOpen
+      ? 'match_simulator'
+      : showOfficialSite
+      ? 'official_site'
+      : !gameState
+      ? 'title_screen'
+      : activeTab;
+    setErrorLogGameContext(context);
+  }, [activeTab, gameState, isMatchModalOpen, showOfficialSite]);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState<boolean>(false);
   const [guideInitialTab, setGuideInitialTab] = useState<GameGuideTab>('guide');
   const [isMuted, setIsMuted] = useState<boolean>(() => soundEngine.getMuted());

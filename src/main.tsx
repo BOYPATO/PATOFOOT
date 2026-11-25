@@ -2,7 +2,10 @@ import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App.tsx';
 import { FirebaseErrorBoundary } from './components/FirebaseErrorBoundary.tsx';
+import { installGlobalErrorMonitoring } from './services/errorLoggerService.ts';
 import './index.css';
+
+installGlobalErrorMonitoring();
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   const canonicalUrl = `${window.location.origin}${window.location.pathname}`;

@@ -12,7 +12,9 @@ import {
 } from '../utils/settingsEngine';
 import { soundEngine } from '../services/soundEngine';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { ErrorLogsMonitorPanel } from './ErrorLogsMonitorPanel';
 import {
+  Activity,
   Settings,
   Volume2,
   VolumeX,
@@ -33,7 +35,7 @@ interface SettingsModalProps {
   settings: GameSettings;
   onUpdateSettings: (next: GameSettings) => void;
   onClose: () => void;
-  initialSection?: 'audio' | 'match' | 'career';
+  initialSection?: 'audio' | 'match' | 'career' | 'stability';
   isInGame?: boolean;
   onSaveAndExitToTitle?: () => void;
   onClearAllSavedData?: () => void;
@@ -48,7 +50,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
   onSaveAndExitToTitle,
   onClearAllSavedData,
 }) => {
-  const [activeSection, setActiveSection] = useState<'audio' | 'match' | 'career'>(initialSection);
+  const [activeSection, setActiveSection] = useState<'audio' | 'match' | 'career' | 'stability'>(
+    initialSection
+  );
   const [confirmClearAll, setConfirmClearAll] = useState<boolean>(false);
   const [statusBanner, setStatusBanner] = useState<string | null>(null);
 
@@ -141,21 +145,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
         </div>
 
         {/* Section Tabs */}
-        <div className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl mt-4">
+        <div className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl mt-4 overflow-x-auto no-native-scrollbar">
           <button
             type="button"
             onClick={() => {
               soundEngine.playClick();
               setActiveSection('audio');
             }}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
               activeSection === 'audio'
                 ? 'bg-sky-400 text-slate-950 font-bold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
             <Volume2 className="w-3.5 h-3.5 shrink-0" />
-            <span>Áudio &amp; Som</span>
+            <span>Áudio</span>
           </button>
 
           <button
@@ -164,14 +168,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
               soundEngine.playClick();
               setActiveSection('match');
             }}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
               activeSection === 'match'
                 ? 'bg-sky-400 text-slate-950 font-bold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
             <Sliders className="w-3.5 h-3.5 shrink-0" />
-            <span>Partida &amp; Visual</span>
+            <span>Visual</span>
           </button>
 
           <button
@@ -180,14 +184,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
               soundEngine.playClick();
               setActiveSection('career');
             }}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
               activeSection === 'career'
                 ? 'bg-sky-400 text-slate-950 font-bold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
             <Shield className="w-3.5 h-3.5 shrink-0" />
-            <span>Carreira &amp; Salvamento</span>
+            <span>Carreira</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              soundEngine.playClick();
+              setActiveSection('stability');
+            }}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+              activeSection === 'stability'
+                ? 'bg-sky-400 text-slate-950 font-bold'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5 shrink-0" />
+            <span>Logs</span>
           </button>
         </div>
 
@@ -852,6 +872,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
               </div>
             </div>
           )}
+
+          {activeSection === 'stability' && <ErrorLogsMonitorPanel />}
         </div>
 
         {/* Footer */}

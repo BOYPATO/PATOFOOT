@@ -20,4 +20,17 @@
 9. **Unbounded Array / List Poisoning**: Submitting `segmentIds` with `> 200` items or non-string first item.
 10. **Non-Map Payload on Segment**: Sending `payload: "json_string_here"` instead of a native Firestore `map`.
 11. **Cross-User Cloud Save Enumeration (`list`)**: Authenticated as `user_A`, querying `/users/user_B/cloudSaves`.
-12. **Unauthenticated Access**: `request.auth == null` reading or writing any profile, save header, or save segment.
+12. **Unauthenticated Access**: `request.auth == null` reading or writing any profile, save header, save segment, or error log.
+
+## 3. Error Logging Collection Invariants (`/errorLogs/{logId}`)
+1. **Strict Author Binding on Create**: Any signed-in user may create `/errorLogs/{logId}` ONLY with `isValidId(logId)`, `incoming().logId == logId`, `incoming().uid == request.auth.uid`, `incoming().status == 'open'`, `incoming().createdAt == request.time`, `incoming().updatedAt == request.time`, and exact `isValidErrorLog(incoming())` validation (`hasAll` + `hasOnly` + strict string sizes/regex/enums).
+2. **Scoped Reads & Zero Cross-User Leakage**: Regular users can only `get` and `list` documents where `resource.data.uid == request.auth.uid`. The verified bootstrapped admin (`request.auth.token.email == 'alexdantas001@gmail.com' && request.auth.token.email_verified == true`) can monitor all devices' logs in real time (`get`, `list`, `update`, `delete`) without `get()`/`exists()` lookups inside `allow list`.
+3. **Immutable Telemetry & Admin-Only Triage Updates**: Non-admin users cannot update or delete logs (`allow update`, `allow delete` require verified admin). Admin updates must pass `isValidErrorLog(incoming())`, keep all telemetry fields (`logId`, `uid`, `fingerprint`, `severity`, `source`, `message`, `stack`, `route`, `appVersion`, `deviceType`, `os`, `browser`, `displayMode`, `viewport`, `userAgent`, `online`, `createdAt`) immutable, and only modify `['status', 'updatedAt']` with `incoming().updatedAt == request.time`.
+4. **ErrorLog Adversarial Payloads (Expected: `PERMISSION_DENIED`)**:
+   - Creating a log with `uid: "other_user_uid"` (Identity Spoofing).
+   - Creating a log with `status: "resolved"` instead of `"open"` (State Shortcutting).
+   - Creating a log with a 10KB `stack` or 2KB `message` (Resource Poisoning).
+   - Creating a log with ghost field `isAdmin: true` (Shadow Field Injection).
+   - Spoofing admin email with `email_verified: false` to `list` all `/errorLogs` (Email Spoofing).
+   - Regular user attempting `update` or `delete` on their own or another user's `/errorLogs/{logId}`.
+
