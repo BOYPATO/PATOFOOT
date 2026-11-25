@@ -9,10 +9,13 @@
 @layer base {
   html,
   body {
-    overscroll-behavior-y: none;
+    overscroll-behavior-y: auto;
     overflow-x: clip;
+    overflow-y: auto;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: #334155 #070c16;
   }
 
   body {
@@ -49,28 +52,87 @@
   }
 
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
     background: #070c16;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1e293b;
+    background: #334155;
     border-radius: 9999px;
+    border: 1px solid #070c16;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #0284c7;
+    background: #38bdf8;
   }
 }
 
-.no-native-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
+/* Universal smooth 2-axis scroll guarantees for every tab page, table, and horizontal bar */
+.patofoot-tab-viewport {
+  min-width: 0;
+  max-width: 100%;
 }
-.no-native-scrollbar::-webkit-scrollbar {
-  display: none;
+
+/* Prevent CSS Grid children from stretching wider than viewport and breaking horizontal scrollbars */
+.patofoot-tab-viewport [class*="grid"] > * {
+  min-width: 0;
+}
+
+.overflow-x-auto,
+.overflow-auto {
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: #0284c7 #0f172a;
+}
+
+.overflow-x-auto::-webkit-scrollbar,
+.overflow-auto::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track,
+.overflow-auto::-webkit-scrollbar-track {
+  background: #0f172a;
+  border-radius: 9999px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb,
+.overflow-auto::-webkit-scrollbar-thumb {
+  background: #0369a1;
+  border-radius: 9999px;
+  border: 1px solid #0f172a;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover,
+.overflow-auto::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
+}
+
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.patofoot-drag-scrolling {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+/* On touch devices hide scrollbar chrome where requested, but keep it visible & draggable on PC mice */
+@media (hover: none) and (pointer: coarse) {
+  .no-native-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .no-native-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .horizontal-league-scroll {

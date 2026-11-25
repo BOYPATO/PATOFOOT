@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Club, CompetitionType, MAX_SQUAD_SIZE, Player } from '../types/game';
 import { soundEngine } from '../services/soundEngine';
 import { PlayerAvatar } from './PlayerAvatar';
+import { ScrollableTabStrip } from './ScrollableTabStrip';
 import { usePlayerInspection } from '../context/PlayerInspectionContext';
 import {
   getPlayerVersatilityProfile,
@@ -703,11 +704,17 @@ export const MyPlayersView: React.FC<MyPlayersViewProps> = ({
       <div className="bg-[#0b1220] border border-slate-800 rounded-xl p-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Canonical Sector Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto">
+          <ScrollableTabStrip
+            activeKey={sectorFilter}
+            ariaLabel="Filtros de setor do elenco"
+            className="w-full lg:w-auto lg:flex-1 max-w-full"
+            innerClassName="flex items-center gap-1.5"
+          >
             {CANONICAL_SECTOR_FILTER_OPTIONS.map((opt) => (
               <button
                 key={opt.id}
                 type="button"
+                data-tab-active={sectorFilter === opt.id ? 'true' : undefined}
                 onClick={() => {
                   soundEngine.playClick();
                   setSectorFilter(opt.id);
@@ -721,7 +728,7 @@ export const MyPlayersView: React.FC<MyPlayersViewProps> = ({
                 {opt.label} ({sectorCounts[opt.id] ?? 0})
               </button>
             ))}
-          </div>
+          </ScrollableTabStrip>
 
           {/* View Mode Toggle */}
           <div className="flex items-center gap-1 p-1 bg-slate-900 rounded-lg shrink-0">
@@ -852,7 +859,7 @@ export const MyPlayersView: React.FC<MyPlayersViewProps> = ({
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full min-w-[820px] text-left text-xs">
                   {renderTableHeader()}
                   <tbody className="divide-y divide-slate-800/70">
                     {section.players.map((p) => renderPlayerRow(p))}
@@ -865,7 +872,7 @@ export const MyPlayersView: React.FC<MyPlayersViewProps> = ({
       ) : (
         <div className="bg-[#0b1220] border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[820px] text-left text-xs">
               {renderTableHeader()}
               <tbody className="divide-y divide-slate-800/70">
                 {filteredAndSortedPlayers.map((p) => renderPlayerRow(p))}

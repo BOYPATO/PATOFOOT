@@ -39,6 +39,7 @@ import {
 import { getClubSectorRatings } from '../utils/clubRatingsEngine';
 import { comparePlayersByPosition } from '../utils/playerOrdering';
 import { PlayerAvatar } from './PlayerAvatar';
+import { ScrollableTabStrip } from './ScrollableTabStrip';
 import { usePlayerInspection } from '../context/PlayerInspectionContext';
 
 const MAX_BENCH_PLAYERS = 11;
@@ -920,7 +921,12 @@ export const PitchTacticsView: React.FC<PitchTacticsViewProps> = ({
       <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 shadow-xl space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-4">
           {/* Formation Picker */}
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+          <ScrollableTabStrip
+            activeKey={club.tactics.formation}
+            ariaLabel="Esquemas táticos"
+            className="w-full xl:w-auto xl:flex-1 max-w-full"
+            innerClassName="flex items-center gap-2"
+          >
             <span className="text-xs font-semibold text-sky-400 shrink-0">
               Esquema Base:
             </span>
@@ -930,6 +936,7 @@ export const PitchTacticsView: React.FC<PitchTacticsViewProps> = ({
               return (
                 <button
                   key={f}
+                  data-tab-active={isActivePreset || isBaseOfCustom ? 'true' : undefined}
                   onClick={() => {
                     soundEngine.playClick();
                     // Clear any custom positions so the chosen preset takes immediate shape
@@ -962,7 +969,7 @@ export const PitchTacticsView: React.FC<PitchTacticsViewProps> = ({
                 · Livre ({liveFormationShape})
               </span>
             )}
-          </div>
+          </ScrollableTabStrip>
 
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-2">

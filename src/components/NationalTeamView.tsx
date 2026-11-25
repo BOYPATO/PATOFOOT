@@ -35,6 +35,7 @@ import {
   X,
 } from 'lucide-react';
 import { soundEngine } from '../services/soundEngine';
+import { ScrollableTabStrip } from './ScrollableTabStrip';
 import {
   CAF_2028_COHOSTS,
   CAF_WCQ_EXCLUDED_IDS,
@@ -1382,7 +1383,8 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({
                                     : 'Top 2 Acesso'}
                                 </span>
                               </div>
-                              <table className="w-full text-left text-xs">
+                              <div className="overflow-x-auto">
+                              <table className="w-full min-w-[300px] text-left text-xs">
                                 <thead className="text-[11px] text-slate-500 border-b border-slate-800/80">
                                   <tr>
                                     <th className="py-2 pl-3 pr-1">#</th>
@@ -1459,6 +1461,7 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({
                                   })}
                                 </tbody>
                               </table>
+                              </div>
                             </div>
                           );
                         })}
@@ -1491,7 +1494,8 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({
                             }`}
                       </span>
                     </div>
-                    <table className="w-full text-left text-xs">
+                    <div className="overflow-x-auto">
+                    <table className="w-full min-w-[300px] text-left text-xs">
                       <thead className="text-[11px] text-slate-500 border-b border-slate-800/80">
                         <tr>
                           <th className="py-2 pl-3 pr-1">#</th>
@@ -1559,6 +1563,7 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({
                         })}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 );
               })}
@@ -2281,9 +2286,15 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({
       {/* AREA 1: MINHA SELEÇÃO SUB-NAVIGATION */}
       {areaMode === 'MY_TEAM' && (
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl overflow-x-auto max-w-full">
+          <ScrollableTabStrip
+            activeKey={subTab}
+            ariaLabel="Sub-abas da Minha Seleção"
+            className="w-full lg:w-auto max-w-full"
+            innerClassName="flex items-center gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl"
+          >
             <button
               type="button"
+              data-tab-active={subTab === 'command' ? 'true' : undefined}
               onClick={() => {
                 soundEngine.playClick();
                 setSubTab('command');
@@ -2365,7 +2376,7 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({
               <Calendar className="w-3.5 h-3.5" />
               <span>Calendário FIFA &amp; Confed.</span>
             </button>
-          </div>
+          </ScrollableTabStrip>
         </div>
       )}
 
@@ -3025,8 +3036,8 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({
                 </div>
               </div>
 
-              <div className="overflow-x-auto max-h-[650px]">
-                <table className="w-full text-left text-xs">
+              <div className="overflow-auto max-h-[650px]">
+                <table className="w-full min-w-[680px] text-left text-xs">
                   <thead className="bg-black text-slate-400 font-semibold border-b border-slate-800 sticky top-0 z-10">
                     <tr>
                       <th className="py-2.5 pl-3 pr-1">#</th>
@@ -3341,8 +3352,8 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({
                   </div>
                 </div>
 
-                <div className="overflow-x-auto max-h-[540px]">
-                  <table className="w-full text-left text-xs">
+                <div className="overflow-auto max-h-[540px]">
+                  <table className="w-full min-w-[540px] text-left text-xs">
                     <thead className="bg-black text-slate-400 font-semibold border-b border-slate-800 sticky top-0 z-10">
                       <tr>
                         <th className="py-2.5 px-3">Atleta</th>

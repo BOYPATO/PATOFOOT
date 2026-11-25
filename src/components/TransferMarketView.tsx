@@ -51,6 +51,7 @@ import {
 import { PlayerComparisonModal } from './PlayerComparisonModal';
 import { ClubCrest } from './ClubCrest';
 import { PlayerAvatar } from './PlayerAvatar';
+import { ScrollableTabStrip } from './ScrollableTabStrip';
 import { comparePlayersByPosition } from '../utils/playerOrdering';
 import { usePlayerInspection } from '../context/PlayerInspectionContext';
 import {
@@ -1635,9 +1636,14 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
       )}
 
       {/* Top Banner & Tab Controls */}
-      <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 sm:p-4 flex flex-col gap-3 shadow-xl">
+        <ScrollableTabStrip
+          activeKey={activeTab}
+          ariaLabel="Abas do Mercado da Bola"
+          innerClassName="flex items-center gap-2"
+        >
           <button
+            data-tab-active={activeTab === 'all' ? 'true' : undefined}
             onClick={() => {
               soundEngine.playClick();
               setActiveTab('all');
@@ -1848,7 +1854,7 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
               <span>Olheiros</span>
             </button>
           )}
-        </div>
+        </ScrollableTabStrip>
 
         {/* Budget & AI Nationality Sync controls */}
         <div className="flex flex-wrap items-center gap-2">

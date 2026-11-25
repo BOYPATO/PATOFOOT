@@ -28,6 +28,7 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
+import { ScrollableTabStrip } from './ScrollableTabStrip';
 import {
   EURO_2028_COHOSTS,
   getIntercontinentalPlayoffParticipants,
@@ -377,7 +378,12 @@ export const NationalWorldHub: React.FC<NationalWorldHubProps> = ({
     <div className="space-y-5">
       {/* AREA 2 SUB-NAVIGATION */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl overflow-x-auto max-w-full">
+        <ScrollableTabStrip
+          activeKey={worldSubTab}
+          ariaLabel="Sub-abas de Seleções e Torneios FIFA"
+          className="w-full lg:w-auto max-w-full"
+          innerClassName="flex items-center gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl"
+        >
           {(
             [
               { id: 'nations', label: `Explorar Seleções (${NATIONAL_TEAMS_CATALOG.length})`, icon: Users },
@@ -394,6 +400,7 @@ export const NationalWorldHub: React.FC<NationalWorldHubProps> = ({
               <button
                 key={item.id}
                 type="button"
+                data-tab-active={active ? 'true' : undefined}
                 onClick={() => {
                   soundEngine.playClick();
                   onChangeWorldSubTab(item.id);
@@ -409,7 +416,7 @@ export const NationalWorldHub: React.FC<NationalWorldHubProps> = ({
               </button>
             );
           })}
-        </div>
+        </ScrollableTabStrip>
       </div>
 
       {/* ==================================================================== */}
@@ -606,8 +613,8 @@ export const NationalWorldHub: React.FC<NationalWorldHubProps> = ({
                     Pool Total: {inspectPool.length} atletas
                   </span>
                 </div>
-                <div className="overflow-x-auto max-h-[540px]">
-                  <table className="w-full text-left text-xs">
+                <div className="overflow-auto max-h-[540px]">
+                  <table className="w-full min-w-[540px] text-left text-xs">
                     <thead className="bg-black text-slate-400 border-b border-slate-800 sticky top-0">
                       <tr>
                         <th className="py-2.5 px-3">#</th>
@@ -2881,8 +2888,8 @@ export const NationalWorldHub: React.FC<NationalWorldHubProps> = ({
               </div>
             </div>
 
-            <div className="overflow-x-auto max-h-[640px]">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-auto max-h-[640px]">
+              <table className="w-full min-w-[640px] text-left text-xs">
                 <thead className="bg-black text-slate-400 border-b border-slate-800 sticky top-0 z-10">
                   <tr>
                     <th className="py-2.5 px-3">#</th>

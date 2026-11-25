@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
 import { setErrorLogGameContext } from './services/errorLoggerService';
+import { ScrollableTabStrip } from './components/ScrollableTabStrip';
+import { QuickTabsRibbon } from './components/QuickTabsRibbon';
 import { 
   Club, 
   CompetitionType,
@@ -2524,6 +2526,12 @@ export default function App() {
       : activeTab;
     setErrorLogGameContext(context);
   }, [activeTab, gameState, isMatchModalOpen, showOfficialSite]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && gameState && !showOfficialSite) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, [activeTab, gameState, showOfficialSite]);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState<boolean>(false);
   const [guideInitialTab, setGuideInitialTab] = useState<GameGuideTab>('guide');
   const [isMuted, setIsMuted] = useState<boolean>(() => soundEngine.getMuted());
@@ -10781,7 +10789,18 @@ export default function App() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 pt-3.5 sm:pt-6 pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:pb-8">
+        <main className="patofoot-tab-viewport flex-1 min-w-0 max-w-7xl mx-auto w-full px-3 sm:px-6 pt-3.5 sm:pt-6 pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:pb-8">
+          <QuickTabsRibbon
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            sidebarCollapsed={isSidebarCollapsed}
+            unreadCount={unreadMessagesCount}
+            scoutingBadge={activeScoutingMissionsCount}
+            marketBadge={pendingTransferOffersCount}
+            jobOffersBadge={pendingJobOffersCount}
+            selecaoBadge={selecaoActionCount}
+            financesAlert={userClub.finances.balance < 0}
+          />
           {/* Special Pre-Match Rivalry Alert Banner when next match is a Derby */}
           {activeTab !== 'hub' && upcomingRivalry && upcomingOpponentClub && upcomingUserFixture && (
             <div className="mb-5 bg-[#0c1424] border border-amber-500/40 rounded-2xl px-4 sm:px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
@@ -10930,8 +10949,14 @@ export default function App() {
                 </span>
               </h2>
 
-              <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 p-1 rounded-xl shadow-lg overflow-x-auto">
+              <ScrollableTabStrip
+                activeKey={squadSubView}
+                ariaLabel="Sub-abas de Escalação e Elenco"
+                className="w-full xl:w-auto max-w-full"
+                innerClassName="flex items-center gap-1 bg-slate-950 border border-slate-800 p-1 rounded-xl shadow-lg"
+              >
                 <button
+                  data-tab-active={squadSubView === 'pitch' ? 'true' : undefined}
                   onClick={() => {
                     soundEngine.playClick();
                     setSquadSubView('pitch');
@@ -10946,6 +10971,7 @@ export default function App() {
                   <span>Campo Tático</span>
                 </button>
                 <button
+                  data-tab-active={squadSubView === 'table' ? 'true' : undefined}
                   onClick={() => {
                     soundEngine.playClick();
                     setSquadSubView('table');
@@ -10960,6 +10986,7 @@ export default function App() {
                   <span>Lista do Elenco</span>
                 </button>
                 <button
+                  data-tab-active={squadSubView === 'report' ? 'true' : undefined}
                   onClick={() => {
                     soundEngine.playClick();
                     setSquadSubView('report');
@@ -10974,6 +11001,7 @@ export default function App() {
                   <span>Relatório de Atletas</span>
                 </button>
                 <button
+                  data-tab-active={squadSubView === 'contracts' ? 'true' : undefined}
                   onClick={() => {
                     soundEngine.playClick();
                     setSquadSubView('contracts');
@@ -10999,6 +11027,7 @@ export default function App() {
                   </span>
                 </button>
                 <button
+                  data-tab-active={squadSubView === 'management' ? 'true' : undefined}
                   onClick={() => {
                     soundEngine.playClick();
                     setSquadSubView('management');
@@ -11012,7 +11041,7 @@ export default function App() {
                   <Tag className="w-3.5 h-3.5" />
                   <span>Vendas & Empréstimos</span>
                 </button>
-              </div>
+              </ScrollableTabStrip>
             </div>
 
             {squadSubView === 'pitch' ? (

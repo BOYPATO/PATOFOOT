@@ -12,6 +12,7 @@ import {
 import { ActiveTransferClause, Club, FinanceCategory, MonthlyFinanceEntry } from '../types/game';
 import { soundEngine } from '../services/soundEngine';
 import { CommercialRevenueHub } from './CommercialRevenueHub';
+import { ScrollableTabStrip } from './ScrollableTabStrip';
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -802,9 +803,15 @@ export const FinancesStadiumView: React.FC<FinancesStadiumViewProps> = ({
       </div>
 
       {/* Sub-navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800/80 pb-3 overflow-x-auto">
+      <ScrollableTabStrip
+        activeKey={activeTab}
+        ariaLabel="Sub-abas de Finanças e Estádio"
+        className="border-b border-slate-800/80 pb-2"
+        innerClassName="flex items-center gap-2"
+      >
         <button
           type="button"
+          data-tab-active={activeTab === 'overview' ? 'true' : undefined}
           onClick={() => {
             soundEngine.playClick();
             setActiveTab('overview');
@@ -898,7 +905,7 @@ export const FinancesStadiumView: React.FC<FinancesStadiumViewProps> = ({
           <Building2 className="w-4 h-4" />
           <span>Estádio, CT & Premiações</span>
         </button>
-      </div>
+      </ScrollableTabStrip>
 
       {/* TAB 1: VISÃO GERAL, DRE & FLUXO DE CAIXA */}
       {activeTab === 'overview' && (

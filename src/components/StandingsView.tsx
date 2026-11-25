@@ -36,6 +36,7 @@ import { soundEngine } from '../services/soundEngine';
 import { formatCalendarDate, formatEuropeanSeason } from '../utils/calendarUtils';
 import { COMPETITIONS_CATALOG } from '../utils/competitionsEngine';
 import { ClubCrest, CompetitionCrest } from './ClubCrest';
+import { ScrollableTabStrip } from './ScrollableTabStrip';
 import { computeCompetitionPlayerStats, buildTeamOfTheRound } from '../utils/statsCentralEngine';
 import {
   resolveCupChampionId,
@@ -1299,7 +1300,11 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-800">
+        <ScrollableTabStrip
+          activeKey={activeEstadualGroup}
+          ariaLabel="Campeonatos Estaduais"
+          innerClassName="flex items-center gap-1.5"
+        >
           {orderedEstadualConfigs.map((cfg) => {
             const clubCountInGrp = groupedStandings[cfg.name]?.length || cfg.clubsCount;
             const isSelected = activeEstadualGroup === cfg.name;
@@ -1308,6 +1313,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
               <button
                 key={cfg.uf}
                 type="button"
+                data-tab-active={isSelected ? 'true' : undefined}
                 onClick={() => {
                   soundEngine.playClick();
                   setSelectedEstadualGroup(cfg.name);
@@ -1328,7 +1334,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
               </button>
             );
           })}
-        </div>
+        </ScrollableTabStrip>
       </div>
     );
   };
@@ -1346,7 +1352,12 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-800 w-full sm:w-auto">
+          <ScrollableTabStrip
+            activeKey={activeFolder}
+            ariaLabel="Pastas de Campeonatos"
+            className="w-full"
+            innerClassName="flex items-center gap-2"
+          >
             {(
               [
                 {
@@ -1443,7 +1454,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                 </button>
               );
             })}
-          </div>
+          </ScrollableTabStrip>
         </div>
 
         {/* Active Folder Drawer: Sub-Categories + Actions + Competition Badges */}
@@ -1851,7 +1862,11 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
           )}
 
           {/* Competitions Pills in Active Folder */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-800">
+          <ScrollableTabStrip
+            activeKey={selectedComp}
+            ariaLabel="Competições na pasta selecionada"
+            innerClassName="flex items-center gap-2"
+          >
             {(() => {
               let compsToShow: CompetitionType[] = [];
               if (activeFolder === 'BRASIL') {
@@ -1961,7 +1976,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                 );
               });
             })()}
-          </div>
+          </ScrollableTabStrip>
         </div>
 
         {(wlAiFeedback || saAiFeedback || euAiFeedback) && (
@@ -3154,15 +3169,15 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                     </div>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
+                    <table className="w-full min-w-[680px] text-left text-xs">
                       <thead className="bg-black text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                         <tr>
                           <th className="py-2.5 px-2.5 w-10 text-center">#</th>
                           <th className="py-2.5 px-3">Clube</th>
                           {isOverall && (
-                            <th className="py-2.5 px-2.5 text-center hidden sm:table-cell">Conf.</th>
+                            <th className="py-2.5 px-2.5 text-center whitespace-nowrap">Conf.</th>
                           )}
-                          <th className="py-2.5 px-2.5 text-center hidden lg:table-cell">OVR</th>
+                          <th className="py-2.5 px-2.5 text-center whitespace-nowrap">OVR</th>
                           <th className="py-2.5 px-2.5 text-center font-bold text-sky-300">P</th>
                           <th className="py-2.5 px-2 text-center">J</th>
                           <th className="py-2.5 px-2 text-center">V</th>
@@ -3171,7 +3186,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                           <th className="py-2.5 px-2 text-center">GP</th>
                           <th className="py-2.5 px-2 text-center">GC</th>
                           <th className="py-2.5 px-2 text-center">SG</th>
-                          <th className="py-2.5 px-3 text-center hidden md:table-cell">Forma</th>
+                          <th className="py-2.5 px-3 text-center whitespace-nowrap">Forma</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 font-medium">
@@ -3264,7 +3279,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                                 </button>
                               </td>
                               {isOverall && (
-                                <td className="py-2.5 px-2.5 text-center hidden sm:table-cell">
+                                <td className="py-2.5 px-2.5 text-center whitespace-nowrap">
                                   <span
                                     className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                                       conf === 'Leste'
@@ -3276,7 +3291,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                                   </span>
                                 </td>
                               )}
-                              <td className="py-2.5 px-2.5 text-center hidden lg:table-cell font-mono tabular-nums font-bold text-slate-300">
+                              <td className="py-2.5 px-2.5 text-center font-mono tabular-nums font-bold text-slate-300 whitespace-nowrap">
                                 {sectors.overall}
                               </td>
                               <td className="py-2.5 px-2.5 text-center font-black text-sky-400 font-mono text-sm tabular-nums">
@@ -3311,7 +3326,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                               >
                                 {st.goalDifference > 0 ? `+${st.goalDifference}` : st.goalDifference}
                               </td>
-                              <td className="py-2.5 px-3 text-center hidden md:table-cell">
+                              <td className="py-2.5 px-3 text-center whitespace-nowrap">
                                 <div className="flex items-center justify-center gap-0.5">
                                   {st.form.length === 0 ? (
                                     <span className="text-slate-600">-</span>
@@ -3719,13 +3734,13 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                   </div>
 
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
+                    <table className="w-full min-w-[700px] text-left text-xs">
                       <thead className="bg-black text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                         <tr>
                           <th className="py-3 px-3 w-12 text-center">#</th>
                           <th className="py-3 px-4">Clube</th>
                           {showInternationalColumns && (
-                            <th className="py-3 px-3 text-center hidden md:table-cell">Nível</th>
+                            <th className="py-3 px-3 text-center whitespace-nowrap">Nível</th>
                           )}
                           <th className="py-3 px-3 text-center font-bold text-sky-300">P</th>
                           <th className="py-3 px-3 text-center">J</th>
@@ -3736,7 +3751,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                           <th className="py-3 px-3 text-center">GC</th>
                           <th className="py-3 px-3 text-center">SG</th>
                           <th className="py-3 px-3 text-center">%</th>
-                          <th className="py-3 px-4 text-center">Últimos Jogos</th>
+                          <th className="py-3 px-4 text-center whitespace-nowrap">Últimos Jogos</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 font-medium">
@@ -3997,7 +4012,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                                 </button>
                               </td>
                               {showInternationalColumns && sectors && (
-                                <td className="py-3 px-3 text-center hidden md:table-cell font-mono tabular-nums text-[11px] text-slate-300">
+                                <td className="py-3 px-3 text-center whitespace-nowrap font-mono tabular-nums text-[11px] text-slate-300">
                                   <span className="font-bold text-white">{sectors.overall}</span>
                                   <span className="text-slate-500 ml-1.5">
                                     D{sectors.defense} · M{sectors.midfield} · A{sectors.attack}

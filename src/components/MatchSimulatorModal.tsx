@@ -3112,8 +3112,8 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
         )}
 
         {/* Speed & Control Bar */}
-        <div className="bg-slate-950 px-4 sm:px-5 py-2 border-b border-slate-900 flex flex-wrap items-center justify-between gap-2 shrink-0">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="bg-slate-950 px-3 sm:px-5 py-2 border-b border-slate-900 flex items-center justify-between gap-2 shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-2 shrink-0">
             {!isFinished && (
               isHalftime ? (
                 <button
@@ -3267,8 +3267,8 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
           )}
         </div>
 
-        {/* Main Split-Screen Broadcast Area: Pitch locked on Left, Live Info permanently on Right */}
-        <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-12 overflow-hidden">
+        {/* Main Split-Screen Broadcast Area: Scrollable vertically on mobile/tablet, locked split-screen on desktop */}
+        <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-12 overflow-y-auto lg:overflow-hidden">
           {/* Left / Main Stage (8 cols): 2D Live Pitch + Compact Touchline Command Dock */}
           <div className="shrink-0 lg:shrink lg:col-span-8 lg:min-h-0 lg:overflow-y-auto p-3 sm:p-4 flex flex-col gap-2.5 bg-slate-950/35">
             {/* 60fps Live 2D Pitch — Always pinned in direct view */}
@@ -3450,7 +3450,7 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
           </div>
 
           {/* Right Side Panel (4 cols): Always beside the pitch — Lances, Stats, Ratings, Bench & Simultaneous Round */}
-          <aside className="flex-1 min-h-0 lg:col-span-4 flex flex-col border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-950/85 overflow-hidden">
+          <aside className="flex-1 min-h-[360px] lg:min-h-0 lg:col-span-4 flex flex-col border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-950/85 overflow-hidden shrink-0 lg:shrink">
             {/* Side Panel Segmented Navigation */}
             <div className="px-3 py-2 border-b border-slate-800 bg-slate-950 shrink-0 grid grid-cols-4 gap-1">
               {[

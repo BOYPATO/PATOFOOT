@@ -3,9 +3,11 @@ import { registerSW } from 'virtual:pwa-register';
 import App from './App.tsx';
 import { FirebaseErrorBoundary } from './components/FirebaseErrorBoundary.tsx';
 import { installGlobalErrorMonitoring } from './services/errorLoggerService.ts';
+import { installHorizontalScrollEnhancer } from './utils/horizontalScrollEnhancer.ts';
 import './index.css';
 
 installGlobalErrorMonitoring();
+installHorizontalScrollEnhancer();
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   const canonicalUrl = `${window.location.origin}${window.location.pathname}`;

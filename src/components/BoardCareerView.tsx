@@ -34,6 +34,7 @@ import {
 import { formatCurrency } from '../utils/individualAwardsEngine';
 import { formatShortDate } from '../utils/calendarUtils';
 import { soundEngine } from '../services/soundEngine';
+import { ScrollableTabStrip } from './ScrollableTabStrip';
 import {
   buildRealCoachProfileFromName,
   ensureCoachingCarouselState,
@@ -479,9 +480,15 @@ export const BoardCareerView: React.FC<BoardCareerViewProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-xl border border-slate-800 overflow-x-auto self-start xl:self-auto">
+          <ScrollableTabStrip
+            activeKey={subTab}
+            ariaLabel="Sub-abas de Diretoria e Carreira"
+            className="w-full xl:w-auto max-w-full self-start xl:self-auto"
+            innerClassName="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-xl border border-slate-800"
+          >
             <button
               type="button"
+              data-tab-active={subTab === 'goals' ? 'true' : undefined}
               onClick={() => {
                 soundEngine.playClick();
                 setSubTab('goals');
@@ -630,7 +637,7 @@ export const BoardCareerView: React.FC<BoardCareerViewProps> = ({
                 ({hallOfFameSummary.unlockedCount}/{hallOfFameSummary.totalCount})
               </span>
             </button>
-          </div>
+          </ScrollableTabStrip>
         </div>
 
         {/* Board Evaluation Note & Resignation Control */}

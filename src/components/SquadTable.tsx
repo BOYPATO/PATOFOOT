@@ -573,7 +573,7 @@ export const SquadTable: React.FC<SquadTableProps> = ({
       {/* Roster Table */}
       <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full min-w-[980px] text-left text-xs">
             <thead className="bg-black text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
               <tr>
                 <th className="py-3 px-3 w-10 text-center">#</th>

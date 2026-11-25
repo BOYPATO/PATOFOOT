@@ -2049,22 +2049,25 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 )}
               </div>
 
-              {/* Day of Week Headers */}
-              <div className="grid grid-cols-7 gap-1.5 text-center">
-                {WEEKDAY_NAMES.map((name, i) => (
-                  <div
-                    key={name}
-                    className={`py-1 text-[11px] font-black uppercase tracking-wider ${
-                      i === 0 || i === 6 ? 'text-sky-400' : 'text-slate-400'
-                    }`}
-                  >
-                    {name}
+              {/* Scrollable 7-Day Monthly Calendar Grid */}
+              <div className="overflow-x-auto pb-1.5">
+                <div className="min-w-[640px] space-y-2">
+                  {/* Day of Week Headers */}
+                  <div className="grid grid-cols-7 gap-1.5 text-center">
+                    {WEEKDAY_NAMES.map((name, i) => (
+                      <div
+                        key={name}
+                        className={`py-1 text-[11px] font-black uppercase tracking-wider ${
+                          i === 0 || i === 6 ? 'text-sky-400' : 'text-slate-400'
+                        }`}
+                      >
+                        {name}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              {/* 35 or 42 Day Cells Grid */}
-              <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+                  {/* 35 or 42 Day Cells Grid */}
+                  <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
                 {calendarGrid.map((dateObj, idx) => {
                   const dateStr = toDateString(dateObj);
                   const isCurrentMonth = dateObj.getMonth() === viewMonth;
@@ -2586,6 +2589,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     </div>
                   );
                 })}
+                  </div>
+                </div>
               </div>
             </div>
           )}
