@@ -38,6 +38,9 @@ interface StoredTrainerAccount {
   passwordSalt: string;
   passwordHash: string;
   favoriteClubId: string;
+  recoveryEmail?: string;
+  recoverySecretSalt?: string;
+  recoverySecretHash?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -59,6 +62,22 @@ function normalizeServerUsernameKey(raw: string): string {
   const safe = ascii.slice(0, 60);
   if (safe.length === 1) return `${safe}1`;
   return safe;
+}
+
+function normalizeServerRecoveryEmail(raw: unknown): string | undefined {
+  const cleaned = String(raw ?? '').trim().toLowerCase().slice(0, 120);
+  if (!cleaned) return undefined;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleaned) ? cleaned : undefined;
+}
+
+function normalizeServerRecoverySecret(raw: unknown): string {
+  return String(raw ?? '')
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .slice(0, 80);
 }
 
 function readTrainerAccounts(): StoredTrainerAccount[] {
@@ -974,6 +993,8 @@ async function startServer() {
     const rawName = String(req.body?.displayName ?? '').trim();
     const rawPassword = String(req.body?.password ?? '');
     const rawClubId = String(req.body?.favoriteClubId ?? 'fla').trim() || 'fla';
+    const rawRecoveryEmail = String(req.body?.recoveryEmail ?? '').trim();
+    const rawRecoveryKeyword = String(req.body?.recoveryKeyword ?? '').trim();
 
     if (rawName.length < 2 || rawName.length > 60) {
       res.status(400).json({
@@ -1000,6 +1021,23 @@ async function startServer() {
       return;
     }
 
+    if (rawRecoveryEmail && !normalizeServerRecoveryEmail(rawRecoveryEmail)) {
+      res.status(400).json({
+        error: 'INVALID_RECOVERY_EMAIL',
+        message: 'Informe um e-mail de recuperação válido ou deixe o campo em branco.',
+      });
+      return;
+    }
+
+    const normalizedSecret = normalizeServerRecoverySecret(rawRecoveryKeyword);
+    if (rawRecoveryKeyword && normalizedSecret.length < 3) {
+      res.status(400).json({
+        error: 'INVALID_RECOVERY_SECRET',
+        message: 'A palavra secreta de recuperação precisa ter pelo menos 3 caracteres.',
+      });
+      return;
+    }
+
     const accounts = readTrainerAccounts();
     const existing = accounts.find((acc) => acc.usernameKey === usernameKey);
     if (existing) {
@@ -1015,6 +1053,16 @@ async function startServer() {
     const nowIso = new Date().toISOString();
     const uid = `usr_${crypto.randomBytes(10).toString('hex')}`;
     const safeClubId = /^[a-zA-Z0-9_\-]{2,32}$/.test(rawClubId) ? rawClubId : 'fla';
+    const recoveryEmail =
+      normalizeServerRecoveryEmail(rawRecoveryEmail) ||
+      normalizeServerRecoveryEmail(rawName);
+
+    let recoverySecretSalt: string | undefined;
+    let recoverySecretHash: string | undefined;
+    if (normalizedSecret.length >= 3) {
+      recoverySecretSalt = crypto.randomBytes(16).toString('hex');
+      recoverySecretHash = hashPasswordWithSalt(normalizedSecret, recoverySecretSalt);
+    }
 
     const newAccount: StoredTrainerAccount = {
       uid,
@@ -1023,6 +1071,10 @@ async function startServer() {
       passwordSalt: saltHex,
       passwordHash,
       favoriteClubId: safeClubId,
+      ...(recoveryEmail ? { recoveryEmail } : {}),
+      ...(recoverySecretSalt && recoverySecretHash
+        ? { recoverySecretSalt, recoverySecretHash }
+        : {}),
       createdAt: nowIso,
       updatedAt: nowIso,
     };
@@ -1044,6 +1096,7 @@ async function startServer() {
     const rawLogin = String(req.body?.login ?? '').trim();
     const rawPassword = String(req.body?.password ?? '');
     const usernameKey = normalizeServerUsernameKey(rawLogin);
+    const emailCandidate = normalizeServerRecoveryEmail(rawLogin);
 
     if (!usernameKey || usernameKey.length < 2) {
       res.status(400).json({
@@ -1065,7 +1118,8 @@ async function startServer() {
     const found = accounts.find(
       (acc) =>
         acc.usernameKey === usernameKey ||
-        acc.displayName.toLowerCase() === rawLogin.toLowerCase()
+        acc.displayName.toLowerCase() === rawLogin.toLowerCase() ||
+        (emailCandidate && acc.recoveryEmail === emailCandidate)
     );
 
     if (!found) {
@@ -1084,7 +1138,7 @@ async function startServer() {
     if (!isPasswordValid) {
       res.status(401).json({
         error: 'WRONG_PASSWORD',
-        message: 'Senha incorreta. Confira a senha digitada e tente novamente.',
+        message: 'Senha incorreta. Confira a senha digitada ou clique em "Esqueci minha senha".',
       });
       return;
     }
@@ -1096,6 +1150,140 @@ async function startServer() {
       favoriteClubId: found.favoriteClubId,
       createdAt: found.createdAt,
       sessionToken: issueServerSessionToken(found.uid),
+    });
+  });
+
+  app.post('/api/auth/recover-login', (req, res) => {
+    const cleanEmail = normalizeServerRecoveryEmail(req.body?.recoveryEmail);
+    if (!cleanEmail) {
+      res.status(400).json({
+        error: 'INVALID_EMAIL',
+        message: 'Digite um e-mail válido para localizar seu login.',
+      });
+      return;
+    }
+
+    const accounts = readTrainerAccounts();
+    const matches = accounts
+      .filter(
+        (acc) =>
+          acc.recoveryEmail === cleanEmail ||
+          acc.displayName.toLowerCase() === cleanEmail
+      )
+      .slice(0, 5)
+      .map((acc) => ({
+        displayName: acc.displayName,
+        usernameKey: acc.usernameKey,
+      }));
+
+    res.json({
+      accounts: matches,
+    });
+  });
+
+  app.post('/api/auth/reset-password', (req, res) => {
+    const rawLogin = String(req.body?.login ?? '').trim();
+    const cleanEmail = normalizeServerRecoveryEmail(req.body?.recoveryEmail);
+    const normalizedSecret = normalizeServerRecoverySecret(req.body?.recoveryKeyword);
+    const newPassword = String(req.body?.newPassword ?? '');
+
+    if (rawLogin.length < 2 && !cleanEmail) {
+      res.status(400).json({
+        error: 'INVALID_LOGIN',
+        message: 'Informe o seu login ou e-mail cadastrado.',
+      });
+      return;
+    }
+
+    if (newPassword.length < 4 || newPassword.length > 128) {
+      res.status(400).json({
+        error: 'INVALID_PASSWORD',
+        message: 'A nova senha deve ter entre 4 e 128 caracteres.',
+      });
+      return;
+    }
+
+    if (!cleanEmail && normalizedSecret.length < 3) {
+      res.status(400).json({
+        error: 'MISSING_RECOVERY_PROOF',
+        message: 'Informe o e-mail de recuperação ou a palavra secreta cadastrada na sua conta.',
+      });
+      return;
+    }
+
+    const usernameKey = normalizeServerUsernameKey(rawLogin);
+    const loginAsEmail = normalizeServerRecoveryEmail(rawLogin);
+    const accounts = readTrainerAccounts();
+    const idx = accounts.findIndex(
+      (acc) =>
+        (usernameKey.length >= 2 &&
+          (acc.usernameKey === usernameKey ||
+            acc.displayName.toLowerCase() === rawLogin.toLowerCase())) ||
+        (loginAsEmail && acc.recoveryEmail === loginAsEmail) ||
+        (!rawLogin && cleanEmail && acc.recoveryEmail === cleanEmail)
+    );
+
+    if (idx < 0) {
+      res.status(404).json({
+        error: 'ACCOUNT_NOT_FOUND',
+        message: 'Não encontramos uma conta com esses dados no servidor.',
+      });
+      return;
+    }
+
+    const account = accounts[idx];
+    const hasServerSecret = Boolean(account.recoverySecretSalt && account.recoverySecretHash);
+    const hasServerEmail = Boolean(account.recoveryEmail);
+
+    if (!hasServerSecret && !hasServerEmail) {
+      res.status(403).json({
+        error: 'NO_RECOVERY_CONFIGURED',
+        message:
+          'Esta conta foi criada sem e-mail ou palavra secreta de recuperação. Se você usou e-mail real ou Google, use a recuperação por e-mail ou entre com Google.',
+      });
+      return;
+    }
+
+    let verified = false;
+    if (hasServerSecret && normalizedSecret.length >= 3) {
+      verified = verifyPasswordHash(
+        normalizedSecret,
+        account.recoverySecretSalt!,
+        account.recoverySecretHash!
+      );
+    }
+    if (!verified && hasServerEmail && cleanEmail) {
+      // If a recovery secret was also set, require the secret when the user did not match it,
+      // otherwise exact recoveryEmail verifies accounts registered only with email.
+      if (!hasServerSecret && account.recoveryEmail === cleanEmail) {
+        verified = true;
+      }
+    }
+
+    if (!verified) {
+      res.status(401).json({
+        error: 'RECOVERY_VERIFICATION_FAILED',
+        message: hasServerSecret
+          ? 'Palavra secreta de recuperação incorreta. Verifique e tente novamente.'
+          : 'O e-mail de recuperação informado não corresponde ao cadastrado nesta conta.',
+      });
+      return;
+    }
+
+    const nextSalt = crypto.randomBytes(16).toString('hex');
+    const nextHash = hashPasswordWithSalt(newPassword, nextSalt);
+    accounts[idx] = {
+      ...account,
+      passwordSalt: nextSalt,
+      passwordHash: nextHash,
+      updatedAt: new Date().toISOString(),
+    };
+    writeTrainerAccounts(accounts);
+
+    res.json({
+      ok: true,
+      displayName: account.displayName,
+      usernameKey: account.usernameKey,
     });
   });
 

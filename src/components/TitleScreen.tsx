@@ -78,6 +78,9 @@ import {
   Search,
   Cloud,
   X,
+  KeyRound,
+  Mail,
+  ArrowLeft,
 } from 'lucide-react';
 import {
   useTrainerAuth,
@@ -85,6 +88,11 @@ import {
   registerTrainerWithNameAndPassword,
   loginTrainerWithGooglePopup,
   syncTrainerFavoriteClub,
+  sendFirebasePasswordReset,
+  resetTrainerPasswordWithRecovery,
+  recoverTrainerLoginsByEmail,
+  listDeviceSavedTrainerLogins,
+  type RecoveredLoginMatch,
 } from '../services/trainerAuthService';
 
 interface TitleScreenProps {
@@ -358,13 +366,31 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
 }) => {
   const { session: authSession, logout: handleLogoutTrainer } = useTrainerAuth();
 
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'recover'>('login');
   const [loginNameInput, setLoginNameInput] = useState<string>('');
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [confirmPasswordInput, setConfirmPasswordInput] = useState<string>('');
+  const [registerRecoveryEmail, setRegisterRecoveryEmail] = useState<string>('');
+  const [registerRecoveryKeyword, setRegisterRecoveryKeyword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isSubmittingAuth, setIsSubmittingAuth] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
+
+  const [recoverTab, setRecoverTab] = useState<'password' | 'login'>('password');
+  const [recoverPasswordMethod, setRecoverPasswordMethod] = useState<'secret' | 'email'>('secret');
+  const [recoverLoginInput, setRecoverLoginInput] = useState<string>('');
+  const [recoverEmailInput, setRecoverEmailInput] = useState<string>('');
+  const [recoverKeywordInput, setRecoverKeywordInput] = useState<string>('');
+  const [recoverNewPasswordInput, setRecoverNewPasswordInput] = useState<string>('');
+  const [recoverConfirmPasswordInput, setRecoverConfirmPasswordInput] = useState<string>('');
+  const [recoveredLogins, setRecoveredLogins] = useState<RecoveredLoginMatch[]>([]);
+  const [hasSearchedRecoverLogin, setHasSearchedRecoverLogin] = useState<boolean>(false);
+
+  const deviceLoginHints = useMemo(() => {
+    if (authMode !== 'recover') return [];
+    return listDeviceSavedTrainerLogins();
+  }, [authMode]);
 
   const [managerName, setManagerName] = useState<string>(
     savedCareer?.managerName || authSession?.displayName || 'Alex Dantas'
@@ -732,6 +758,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
     if (isSubmittingAuth) return;
     soundEngine.playClick();
     setAuthError(null);
+    setAuthSuccess(null);
 
     const cleanName = loginNameInput.trim();
     if (cleanName.length < 2) {
@@ -753,7 +780,11 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
         const created = await registerTrainerWithNameAndPassword(
           cleanName,
           passwordInput,
-          selectedClubId
+          selectedClubId,
+          {
+            recoveryEmail: registerRecoveryEmail.trim() || undefined,
+            recoveryKeyword: registerRecoveryKeyword.trim() || undefined,
+          }
         );
         setManagerName(created.displayName);
       } else {
@@ -762,7 +793,10 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
       }
       setPasswordInput('');
       setConfirmPasswordInput('');
+      setRegisterRecoveryEmail('');
+      setRegisterRecoveryKeyword('');
       setAuthError(null);
+      setAuthSuccess(null);
     } catch (err) {
       const msg =
         err instanceof Error
@@ -774,10 +808,112 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
     }
   };
 
+  const openRecoveryMode = (initialTab: 'password' | 'login' = 'password') => {
+    soundEngine.playClick();
+    setAuthMode('recover');
+    setRecoverTab(initialTab);
+    setAuthError(null);
+    setAuthSuccess(null);
+    setRecoveredLogins([]);
+    setHasSearchedRecoverLogin(false);
+    if (loginNameInput.trim() && !recoverLoginInput.trim()) {
+      setRecoverLoginInput(loginNameInput.trim());
+      if (loginNameInput.includes('@') && !recoverEmailInput.trim()) {
+        setRecoverEmailInput(loginNameInput.trim());
+      }
+    }
+  };
+
+  const handleRecoverPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmittingAuth) return;
+    soundEngine.playClick();
+    setAuthError(null);
+    setAuthSuccess(null);
+    setIsSubmittingAuth(true);
+
+    try {
+      if (recoverPasswordMethod === 'email') {
+        const sent = await sendFirebasePasswordReset(recoverEmailInput);
+        setAuthSuccess(
+          `Link de redefinição enviado para ${sent.email}. Verifique sua caixa de entrada (e o spam) para criar uma nova senha.`
+        );
+      } else {
+        if (recoverNewPasswordInput.length < 4) {
+          throw new Error('A nova senha deve ter pelo menos 4 caracteres.');
+        }
+        if (recoverNewPasswordInput !== recoverConfirmPasswordInput) {
+          throw new Error('As novas senhas não conferem. Repita a mesma senha nos dois campos.');
+        }
+        const resetResult = await resetTrainerPasswordWithRecovery({
+          login: recoverLoginInput,
+          recoveryEmail: recoverEmailInput.trim() || undefined,
+          recoveryKeyword: recoverKeywordInput.trim() || undefined,
+          newPassword: recoverNewPasswordInput,
+        });
+        setLoginNameInput(resetResult.displayName);
+        setPasswordInput('');
+        setRecoverKeywordInput('');
+        setRecoverNewPasswordInput('');
+        setRecoverConfirmPasswordInput('');
+        setAuthMode('login');
+        setAuthSuccess(
+          `Senha redefinida para "${resetResult.displayName}"! Digite sua nova senha para entrar.`
+        );
+      }
+    } catch (err) {
+      setAuthError(
+        err instanceof Error
+          ? err.message
+          : 'Não foi possível recuperar sua senha agora. Tente novamente.'
+      );
+    } finally {
+      setIsSubmittingAuth(false);
+    }
+  };
+
+  const handleRecoverLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmittingAuth) return;
+    soundEngine.playClick();
+    setAuthError(null);
+    setAuthSuccess(null);
+    setIsSubmittingAuth(true);
+
+    try {
+      const matches = await recoverTrainerLoginsByEmail(recoverEmailInput);
+      setRecoveredLogins(matches);
+      setHasSearchedRecoverLogin(true);
+      if (matches.length === 0) {
+        setAuthError(
+          'Nenhum login encontrado vinculado a este e-mail. Confira o endereço digitado ou veja as contas salvas neste aparelho abaixo.'
+        );
+      }
+    } catch (err) {
+      setAuthError(
+        err instanceof Error
+          ? err.message
+          : 'Não foi possível buscar seu login agora. Tente novamente.'
+      );
+    } finally {
+      setIsSubmittingAuth(false);
+    }
+  };
+
+  const handleSelectRecoveredLogin = (displayName: string) => {
+    soundEngine.playClick();
+    setLoginNameInput(displayName);
+    setRecoverLoginInput(displayName);
+    setAuthMode('login');
+    setAuthError(null);
+    setAuthSuccess(`Login "${displayName}" preenchido. Agora digite sua senha para entrar.`);
+  };
+
   const handleGoogleLogin = async () => {
     if (isSubmittingAuth) return;
     soundEngine.playClick();
     setAuthError(null);
+    setAuthSuccess(null);
     setIsSubmittingAuth(true);
     try {
       const logged = await loginTrainerWithGooglePopup();
@@ -1019,203 +1155,675 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
           )}
         </div>
 
-        {/* Gate 1: Trainer Login / Account Creation when not authenticated */}
+        {/* Gate 1: Trainer Login / Account Creation / Recovery when not authenticated */}
         {!authSession ? (
           <div className="w-full max-w-md bg-[#0c1424]/95 border border-slate-800 rounded-2xl p-6 sm:p-7 shadow-2xl">
-            {/* Mode Switcher Tabs */}
-            <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-slate-950 border border-slate-800 mb-5">
-              <button
-                type="button"
-                onClick={() => {
-                  soundEngine.playClick();
-                  setAuthMode('login');
-                  setAuthError(null);
-                }}
-                className={`py-2.5 px-3 rounded-lg text-xs font-extrabold flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
-                  authMode === 'login'
-                    ? 'bg-sky-400 text-slate-950 shadow-sm'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <LogIn className="w-3.5 h-3.5 shrink-0" />
-                <span>Entrar no Jogo</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  soundEngine.playClick();
-                  setAuthMode('register');
-                  setAuthError(null);
-                }}
-                className={`py-2.5 px-3 rounded-lg text-xs font-extrabold flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
-                  authMode === 'register'
-                    ? 'bg-sky-400 text-slate-950 shadow-sm'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <UserPlus className="w-3.5 h-3.5 shrink-0" />
-                <span>Criar Acesso</span>
-              </button>
-            </div>
-
-            <div className="mb-4">
-              <h2 className="text-base sm:text-lg font-extrabold text-white">
-                {authMode === 'login'
-                  ? 'Acesse sua Conta de Treinador'
-                  : 'Crie seu Acesso no Jogo'}
-              </h2>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                {authMode === 'login'
-                  ? 'Digite seu nome (ou login) e sua senha para liberar o menu principal.'
-                  : 'Escolha seu nome de treinador e uma senha normal. Depois de entrar, você fica logado sempre.'}
-              </p>
-            </div>
-
-            <form onSubmit={handleAuthSubmit} className="space-y-3.5">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Seu Nome ou Login
-                </label>
-                <input
-                  type="text"
-                  autoComplete="username"
-                  value={loginNameInput}
-                  onChange={(e) => {
-                    setLoginNameInput(e.target.value);
-                    if (authError) setAuthError(null);
-                  }}
-                  placeholder="Ex: Alex Dantas"
-                  className="w-full bg-slate-950 border border-slate-700/90 focus:border-sky-400 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Senha
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
-                    value={passwordInput}
-                    onChange={(e) => {
-                      setPasswordInput(e.target.value);
-                      if (authError) setAuthError(null);
-                    }}
-                    placeholder={
-                      authMode === 'login'
-                        ? 'Digite sua senha'
-                        : 'Crie uma senha (mín. 4 caracteres)'
-                    }
-                    className="w-full bg-slate-950 border border-slate-700/90 focus:border-sky-400 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
-                  />
+            {authMode === 'recover' ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    tabIndex={-1}
-                    title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white cursor-pointer"
+                    onClick={() => {
+                      soundEngine.playClick();
+                      setAuthMode('login');
+                      setAuthError(null);
+                      setAuthSuccess(null);
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white cursor-pointer transition-colors"
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
+                    <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                    <span>Voltar para Entrar</span>
+                  </button>
+                  <span className="text-[11px] font-bold text-sky-400 uppercase tracking-wider">
+                    Recuperação de Conta
+                  </span>
+                </div>
+
+                {/* Recovery Sub-tabs: Password vs Login */}
+                <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-slate-950 border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundEngine.playClick();
+                      setRecoverTab('password');
+                      setAuthError(null);
+                      setAuthSuccess(null);
+                    }}
+                    className={`py-2 px-3 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+                      recoverTab === 'password'
+                        ? 'bg-sky-400 text-slate-950 shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <KeyRound className="w-3.5 h-3.5 shrink-0" />
+                    <span>Esqueci a Senha</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundEngine.playClick();
+                      setRecoverTab('login');
+                      setAuthError(null);
+                      setAuthSuccess(null);
+                    }}
+                    className={`py-2 px-3 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+                      recoverTab === 'login'
+                        ? 'bg-sky-400 text-slate-950 shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Search className="w-3.5 h-3.5 shrink-0" />
+                    <span>Esqueci o Login</span>
+                  </button>
+                </div>
+
+                {recoverTab === 'password' ? (
+                  <form onSubmit={handleRecoverPasswordSubmit} className="space-y-3.5">
+                    <div>
+                      <h2 className="text-base font-extrabold text-white">
+                        Redefinir sua Senha
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                        Escolha se prefere redefinir na hora com sua palavra secreta / e-mail de recuperação ou receber um link oficial por e-mail.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundEngine.playClick();
+                          setRecoverPasswordMethod('secret');
+                          setAuthError(null);
+                          setAuthSuccess(null);
+                        }}
+                        className={`py-2 px-2.5 rounded-xl border text-[11px] font-bold text-center cursor-pointer transition-colors ${
+                          recoverPasswordMethod === 'secret'
+                            ? 'bg-sky-500/15 border-sky-400 text-sky-200'
+                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Palavra Secreta / E-mail
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundEngine.playClick();
+                          setRecoverPasswordMethod('email');
+                          setAuthError(null);
+                          setAuthSuccess(null);
+                        }}
+                        className={`py-2 px-2.5 rounded-xl border text-[11px] font-bold text-center cursor-pointer transition-colors ${
+                          recoverPasswordMethod === 'email'
+                            ? 'bg-sky-500/15 border-sky-400 text-sky-200'
+                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Enviar Link por E-mail
+                      </button>
+                    </div>
+
+                    {recoverPasswordMethod === 'email' ? (
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                          E-mail da sua conta
+                        </label>
+                        <input
+                          type="email"
+                          autoComplete="email"
+                          value={recoverEmailInput}
+                          onChange={(e) => {
+                            setRecoverEmailInput(e.target.value);
+                            if (authError) setAuthError(null);
+                          }}
+                          placeholder="Ex: seuemail@gmail.com"
+                          className="w-full bg-slate-950 border border-slate-700/90 focus:border-sky-400 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
+                        />
+                      </div>
                     ) : (
-                      <Eye className="w-4 h-4" />
+                      <>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                            Seu Nome ou Login
+                          </label>
+                          <input
+                            type="text"
+                            autoComplete="username"
+                            value={recoverLoginInput}
+                            onChange={(e) => {
+                              setRecoverLoginInput(e.target.value);
+                              if (authError) setAuthError(null);
+                            }}
+                            placeholder="Ex: Alex Dantas"
+                            className="w-full bg-slate-950 border border-slate-700/90 focus:border-sky-400 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                              Palavra Secreta
+                            </label>
+                            <input
+                              type="text"
+                              value={recoverKeywordInput}
+                              onChange={(e) => {
+                                setRecoverKeywordInput(e.target.value);
+                                if (authError) setAuthError(null);
+                              }}
+                              placeholder="Time ou apelido"
+                              className="w-full bg-slate-950 border border-slate-700/90 focus:border-sky-400 rounded-xl px-3 py-2.5 text-sm text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                              E-mail de Recuperação
+                            </label>
+                            <input
+                              type="email"
+                              value={recoverEmailInput}
+                              onChange={(e) => {
+                                setRecoverEmailInput(e.target.value);
+                                if (authError) setAuthError(null);
+                              }}
+                              placeholder="seucadastro@..."
+                              className="w-full bg-slate-950 border border-slate-700/90 focus:border-sky-400 rounded-xl px-3 py-2.5 text-sm text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                              Nova Senha
+                            </label>
+                            <input
+                              type={showPassword ? 'text' : 'password'}
+                              autoComplete="new-password"
+                              value={recoverNewPasswordInput}
+                              onChange={(e) => {
+                                setRecoverNewPasswordInput(e.target.value);
+                                if (authError) setAuthError(null);
+                              }}
+                              placeholder="Mín. 4 caracteres"
+                              className="w-full bg-slate-950 border border-slate-700/90 focus:border-sky-400 rounded-xl px-3 py-2.5 text-sm text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                              Confirmar Nova Senha
+                            </label>
+                            <input
+                              type={showPassword ? 'text' : 'password'}
+                              autoComplete="new-password"
+                              value={recoverConfirmPasswordInput}
+                              onChange={(e) => {
+                                setRecoverConfirmPasswordInput(e.target.value);
+                                if (authError) setAuthError(null);
+                              }}
+                              placeholder="Repita a senha"
+                              className="w-full bg-slate-950 border border-slate-700/90 focus:border-sky-400 rounded-xl px-3 py-2.5 text-sm text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
+                            />
+                          </div>
+                        </div>
+                      </>
                     )}
+
+                    {authSuccess && (
+                      <div className="p-3 rounded-xl bg-emerald-950/50 border border-emerald-500/40 text-xs text-emerald-200 flex items-start gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <span className="leading-relaxed">{authSuccess}</span>
+                      </div>
+                    )}
+
+                    {authError && (
+                      <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-500/40 text-xs text-rose-200 flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                        <span className="leading-relaxed">{authError}</span>
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={isSubmittingAuth}
+                      className="w-full py-3 px-5 rounded-xl bg-sky-400 hover:bg-sky-300 disabled:opacity-60 text-slate-950 font-black text-sm flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors shadow-lg shadow-sky-500/20"
+                    >
+                      {recoverPasswordMethod === 'email' ? (
+                        <>
+                          <Mail className="w-4 h-4 shrink-0" />
+                          <span>
+                            {isSubmittingAuth ? 'Enviando Link...' : 'Enviar Link de Redefinição'}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <KeyRound className="w-4 h-4 shrink-0" />
+                          <span>
+                            {isSubmittingAuth ? 'Redefinindo...' : 'Redefinir Senha Agora'}
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <h2 className="text-base font-extrabold text-white">
+                        Encontrar seu Login
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                        Digite o e-mail de recuperação vinculado à sua conta ou escolha uma conta usada anteriormente neste aparelho.
+                      </p>
+                    </div>
+
+                    <form onSubmit={handleRecoverLoginSubmit} className="space-y-2.5">
+                      <label className="block text-xs font-semibold text-slate-300">
+                        E-mail de Recuperação
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="email"
+                          autoComplete="email"
+                          value={recoverEmailInput}
+                          onChange={(e) => {
+                            setRecoverEmailInput(e.target.value);
+                            if (authError) setAuthError(null);
+                          }}
+                          placeholder="Ex: seuemail@gmail.com"
+                          className="flex-1 min-w-0 bg-slate-950 border border-slate-700/90 focus:border-sky-400 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
+                        />
+                        <button
+                          type="submit"
+                          disabled={isSubmittingAuth}
+                          className="px-4 py-2.5 rounded-xl bg-sky-400 hover:bg-sky-300 disabled:opacity-60 text-slate-950 font-black text-xs whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                        >
+                          {isSubmittingAuth ? 'Buscando...' : 'Buscar'}
+                        </button>
+                      </div>
+                    </form>
+
+                    {hasSearchedRecoverLogin && recoveredLogins.length > 0 && (
+                      <div className="p-3 rounded-xl bg-emerald-950/35 border border-emerald-500/35 space-y-2">
+                        <p className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider">
+                          Login(s) encontrado(s)
+                        </p>
+                        {recoveredLogins.map((item) => (
+                          <div
+                            key={item.usernameKey}
+                            className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-slate-950/90 border border-slate-800"
+                          >
+                            <div className="min-w-0">
+                              <span className="text-xs font-extrabold text-white block truncate">
+                                {item.displayName}
+                              </span>
+                              <span className="text-[10px] text-slate-400 block">
+                                @{item.usernameKey}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecoveredLogin(item.displayName)}
+                              className="px-2.5 py-1.5 rounded-lg bg-sky-400 hover:bg-sky-300 text-slate-950 font-black text-[11px] whitespace-nowrap shrink-0 cursor-pointer"
+                            >
+                              Usar login
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {authError && (
+                      <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-500/40 text-xs text-rose-200 flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                        <span className="leading-relaxed">{authError}</span>
+                      </div>
+                    )}
+
+                    {deviceLoginHints.length > 0 && (
+                      <div className="pt-2 border-t border-slate-800 space-y-2">
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                          Contas usadas neste aparelho
+                        </p>
+                        <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                          {deviceLoginHints.map((hint) => (
+                            <div
+                              key={hint.usernameKey}
+                              className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-950 border border-slate-800"
+                            >
+                              <div className="min-w-0">
+                                <span className="text-xs font-bold text-white block truncate">
+                                  {hint.displayName}
+                                </span>
+                                <span className="text-[10px] text-slate-400 block truncate">
+                                  {hint.maskedEmail
+                                    ? hint.maskedEmail
+                                    : `@${hint.usernameKey}`}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSelectRecoveredLogin(hint.displayName)}
+                                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-sky-400 text-slate-200 hover:text-slate-950 font-bold text-[11px] cursor-pointer transition-colors"
+                                >
+                                  Usar
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="pt-2 border-t border-slate-800">
+                  <p className="text-[11px] text-slate-400 mb-2">
+                    Entrou com sua conta Google antes?
+                  </p>
+                  <button
+                    type="button"
+                    disabled={isSubmittingAuth}
+                    onClick={handleGoogleLogin}
+                    className="w-full py-2.5 px-4 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200 hover:text-white flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                  >
+                    <span className="w-4 h-4 rounded-full bg-white text-slate-950 font-black text-[10px] flex items-center justify-center shrink-0">
+                      G
+                    </span>
+                    <span>Entrar com Conta Google</span>
                   </button>
                 </div>
               </div>
-
-              {authMode === 'register' && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    Confirmar Senha
-                  </label>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    value={confirmPasswordInput}
-                    onChange={(e) => {
-                      setConfirmPasswordInput(e.target.value);
-                      if (authError) setAuthError(null);
+            ) : (
+              <>
+                {/* Mode Switcher Tabs */}
+                <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-slate-950 border border-slate-800 mb-5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundEngine.playClick();
+                      setAuthMode('login');
+                      setAuthError(null);
                     }}
-                    placeholder="Repita sua senha"
-                    className="w-full bg-slate-950 border border-slate-700/90 focus:border-sky-400 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
-                  />
+                    className={`py-2.5 px-3 rounded-lg text-xs font-extrabold flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+                      authMode === 'login'
+                        ? 'bg-sky-400 text-slate-950 shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <LogIn className="w-3.5 h-3.5 shrink-0" />
+                    <span>Entrar no Jogo</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundEngine.playClick();
+                      setAuthMode('register');
+                      setAuthError(null);
+                      setAuthSuccess(null);
+                    }}
+                    className={`py-2.5 px-3 rounded-lg text-xs font-extrabold flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+                      authMode === 'register'
+                        ? 'bg-sky-400 text-slate-950 shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <UserPlus className="w-3.5 h-3.5 shrink-0" />
+                    <span>Criar Acesso</span>
+                  </button>
                 </div>
-              )}
 
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-950/30 border border-emerald-500/25 text-[11px] text-emerald-300">
-                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Sessão permanente ativada — você continuará logado sempre</span>
-              </div>
+                <div className="mb-4">
+                  <h2 className="text-base sm:text-lg font-extrabold text-white">
+                    {authMode === 'login'
+                      ? 'Acesse sua Conta de Treinador'
+                      : 'Crie seu Acesso no Jogo'}
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                    {authMode === 'login'
+                      ? 'Digite seu nome (ou login/e-mail) e sua senha para liberar o menu principal.'
+                      : 'Escolha seu nome de treinador e uma senha. Informe um e-mail ou palavra secreta para recuperar a conta se esquecer.'}
+                  </p>
+                </div>
 
-              {authError && (
-                <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-500/40 text-xs text-rose-200 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                    <span className="leading-relaxed">{authError}</span>
+                <form onSubmit={handleAuthSubmit} className="space-y-3.5">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                      Seu Nome, Login ou E-mail
+                    </label>
+                    <input
+                      type="text"
+                      autoComplete="username"
+                      value={loginNameInput}
+                      onChange={(e) => {
+                        setLoginNameInput(e.target.value);
+                        if (authError) setAuthError(null);
+                      }}
+                      placeholder="Ex: Alex Dantas"
+                      className="w-full bg-slate-950 border border-slate-700/90 focus:border-sky-400 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
+                    />
                   </div>
-                  {authMode === 'login' && authError.includes('Criar Acesso') && (
+
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-300">
+                        Senha
+                      </label>
+                      {authMode === 'login' && (
+                        <button
+                          type="button"
+                          onClick={() => openRecoveryMode('password')}
+                          className="text-[11px] font-bold text-sky-400 hover:text-sky-300 transition-colors cursor-pointer"
+                        >
+                          Esqueci senha ou login
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
+                        value={passwordInput}
+                        onChange={(e) => {
+                          setPasswordInput(e.target.value);
+                          if (authError) setAuthError(null);
+                        }}
+                        placeholder={
+                          authMode === 'login'
+                            ? 'Digite sua senha'
+                            : 'Crie uma senha (mín. 4 caracteres)'
+                        }
+                        className="w-full bg-slate-950 border border-slate-700/90 focus:border-sky-400 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        tabIndex={-1}
+                        title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white cursor-pointer"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {authMode === 'register' && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                          Confirmar Senha
+                        </label>
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          autoComplete="new-password"
+                          value={confirmPasswordInput}
+                          onChange={(e) => {
+                            setConfirmPasswordInput(e.target.value);
+                            if (authError) setAuthError(null);
+                          }}
+                          placeholder="Repita sua senha"
+                          className="w-full bg-slate-950 border border-slate-700/90 focus:border-sky-400 rounded-xl px-3.5 py-2.5 text-sm text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2.5">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-sky-300">
+                          <KeyRound className="w-3.5 h-3.5 shrink-0" />
+                          <span>Recuperação de Conta (opcional, recomendado)</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                              E-mail de recuperação
+                            </label>
+                            <input
+                              type="email"
+                              autoComplete="email"
+                              value={registerRecoveryEmail}
+                              onChange={(e) => {
+                                setRegisterRecoveryEmail(e.target.value);
+                                if (authError) setAuthError(null);
+                              }}
+                              placeholder="seuemail@gmail.com"
+                              className="w-full bg-[#0c1424] border border-slate-700/90 focus:border-sky-400 rounded-lg px-2.5 py-2 text-xs text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                              Palavra secreta
+                            </label>
+                            <input
+                              type="text"
+                              value={registerRecoveryKeyword}
+                              onChange={(e) => {
+                                setRegisterRecoveryKeyword(e.target.value);
+                                if (authError) setAuthError(null);
+                              }}
+                              placeholder="Ex: seu time ou apelido"
+                              className="w-full bg-[#0c1424] border border-slate-700/90 focus:border-sky-400 rounded-lg px-2.5 py-2 text-xs text-white font-semibold placeholder-slate-500 focus:outline-none transition-colors"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-950/30 border border-emerald-500/25 text-[11px] text-emerald-300">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Sessão permanente ativada — você continuará logado sempre</span>
+                  </div>
+
+                  {authSuccess && (
+                    <div className="p-3 rounded-xl bg-emerald-950/50 border border-emerald-500/40 text-xs text-emerald-200 flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <span className="leading-relaxed">{authSuccess}</span>
+                    </div>
+                  )}
+
+                  {authError && (
+                    <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-500/40 text-xs text-rose-200 space-y-2">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                        <span className="leading-relaxed">{authError}</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                        {authMode === 'login' && (
+                          <button
+                            type="button"
+                            onClick={() => openRecoveryMode('password')}
+                            className="text-[11px] font-bold text-amber-300 hover:text-amber-200 underline cursor-pointer"
+                          >
+                            Recuperar senha ou login →
+                          </button>
+                        )}
+                        {authMode === 'login' && authError.includes('Criar Acesso') && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              soundEngine.playClick();
+                              setAuthMode('register');
+                              setAuthError(null);
+                            }}
+                            className="text-[11px] font-bold text-sky-300 hover:text-sky-200 underline cursor-pointer"
+                          >
+                            Mudar para Criar Acesso agora →
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isSubmittingAuth}
+                    className="w-full py-3.5 px-5 rounded-xl bg-sky-400 hover:bg-sky-300 disabled:opacity-60 text-slate-950 font-black text-sm flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors shadow-lg shadow-sky-500/20"
+                  >
+                    {authMode === 'login' ? (
+                      <>
+                        <LogIn className="w-4 h-4 shrink-0" />
+                        <span>
+                          {isSubmittingAuth ? 'Entrando no Jogo...' : 'Entrar no PATOFOOT 2026'}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-4 h-4 shrink-0" />
+                        <span>
+                          {isSubmittingAuth
+                            ? 'Criando seu Acesso...'
+                            : 'Criar Acesso e Entrar no Jogo'}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {authMode === 'login' && (
+                  <div className="mt-3 flex items-center justify-center gap-4 text-[11px]">
                     <button
                       type="button"
-                      onClick={() => {
-                        soundEngine.playClick();
-                        setAuthMode('register');
-                        setAuthError(null);
-                      }}
-                      className="text-[11px] font-bold text-sky-300 hover:text-sky-200 underline cursor-pointer"
+                      onClick={() => openRecoveryMode('password')}
+                      className="text-slate-400 hover:text-sky-300 font-semibold transition-colors cursor-pointer"
                     >
-                      Mudar para Criar Acesso agora →
+                      Recuperar senha
                     </button>
-                  )}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isSubmittingAuth}
-                className="w-full py-3.5 px-5 rounded-xl bg-sky-400 hover:bg-sky-300 disabled:opacity-60 text-slate-950 font-black text-sm flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors shadow-lg shadow-sky-500/20"
-              >
-                {authMode === 'login' ? (
-                  <>
-                    <LogIn className="w-4 h-4 shrink-0" />
-                    <span>
-                      {isSubmittingAuth ? 'Entrando no Jogo...' : 'Entrar no PATOFOOT 2026'}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-4 h-4 shrink-0" />
-                    <span>
-                      {isSubmittingAuth
-                        ? 'Criando seu Acesso...'
-                        : 'Criar Acesso e Entrar no Jogo'}
-                    </span>
-                  </>
+                    <span className="text-slate-700">·</span>
+                    <button
+                      type="button"
+                      onClick={() => openRecoveryMode('login')}
+                      className="text-slate-400 hover:text-sky-300 font-semibold transition-colors cursor-pointer"
+                    >
+                      Esqueci meu login
+                    </button>
+                  </div>
                 )}
-              </button>
-            </form>
 
-            <div className="relative my-4 flex items-center justify-center">
-              <div className="border-t border-slate-800 w-full" />
-              <span className="px-3 bg-[#0c1424] text-[11px] text-slate-500 whitespace-nowrap">
-                ou acesse rápido
-              </span>
-              <div className="border-t border-slate-800 w-full" />
-            </div>
+                <div className="relative my-4 flex items-center justify-center">
+                  <div className="border-t border-slate-800 w-full" />
+                  <span className="px-3 bg-[#0c1424] text-[11px] text-slate-500 whitespace-nowrap">
+                    ou acesse rápido
+                  </span>
+                  <div className="border-t border-slate-800 w-full" />
+                </div>
 
-            <button
-              type="button"
-              disabled={isSubmittingAuth}
-              onClick={handleGoogleLogin}
-              className="w-full py-2.5 px-4 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200 hover:text-white flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
-            >
-              <span className="w-4 h-4 rounded-full bg-white text-slate-950 font-black text-[10px] flex items-center justify-center shrink-0">
-                G
-              </span>
-              <span>Entrar com Conta Google</span>
-            </button>
+                <button
+                  type="button"
+                  disabled={isSubmittingAuth}
+                  onClick={handleGoogleLogin}
+                  className="w-full py-2.5 px-4 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200 hover:text-white flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                >
+                  <span className="w-4 h-4 rounded-full bg-white text-slate-950 font-black text-[10px] flex items-center justify-center shrink-0">
+                    G
+                  </span>
+                  <span>Entrar com Conta Google</span>
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div className="w-full space-y-4">

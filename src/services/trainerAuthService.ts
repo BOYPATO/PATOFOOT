@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   User,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
@@ -38,7 +39,27 @@ interface LocalHashedAccountBackup {
   usernameKey: string;
   passwordDigest: string;
   favoriteClubId: string;
+  recoveryEmail?: string;
+  recoverySecretDigest?: string;
   createdAt: string;
+}
+
+export interface TrainerRecoveryOptions {
+  recoveryEmail?: string;
+  recoveryKeyword?: string;
+}
+
+export interface RecoveredLoginMatch {
+  displayName: string;
+  usernameKey: string;
+  source: 'server' | 'device';
+}
+
+export interface DeviceSavedLoginHint {
+  displayName: string;
+  usernameKey: string;
+  hasRecoveryWord: boolean;
+  maskedEmail?: string;
 }
 
 const SESSION_STORAGE_KEY = 'patofoot_trainer_session_v1';
@@ -85,6 +106,30 @@ function toSyntheticEmail(usernameKey: string, rawInput: string): string {
     return trimmed;
   }
   return `${usernameKey}@acesso.patofoot.app`;
+}
+
+function normalizeRecoveryEmailInput(raw?: string): string | undefined {
+  const cleaned = String(raw || '').trim().toLowerCase().slice(0, 120);
+  if (!cleaned) return undefined;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleaned) ? cleaned : undefined;
+}
+
+function normalizeRecoveryKeywordInput(raw?: string): string {
+  return String(raw || '')
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .slice(0, 80);
+}
+
+function maskEmailForDisplay(email?: string): string | undefined {
+  if (!email || !email.includes('@')) return undefined;
+  const [local, domain] = email.split('@');
+  if (!local || !domain) return undefined;
+  const visible = local.slice(0, Math.min(2, local.length));
+  return `${visible}***@${domain}`;
 }
 
 export function loadStoredTrainerSession(): TrainerAuthSession | null {
@@ -297,7 +342,8 @@ function getFirebaseErrorCode(err: unknown): string {
 export async function registerTrainerWithNameAndPassword(
   rawName: string,
   rawPassword: string,
-  initialClubId = 'fla'
+  initialClubId = 'fla',
+  recoveryOptions?: TrainerRecoveryOptions
 ): Promise<TrainerAuthSession> {
   const trimmedName = rawName.trim();
   if (trimmedName.length < 2 || trimmedName.length > 60) {
@@ -313,14 +359,32 @@ export async function registerTrainerWithNameAndPassword(
     throw new Error('Sua senha precisa ter pelo menos 4 caracteres.');
   }
 
+  const rawRecoveryEmail = String(recoveryOptions?.recoveryEmail || '').trim();
+  if (rawRecoveryEmail && !normalizeRecoveryEmailInput(rawRecoveryEmail)) {
+    throw new Error('Digite um e-mail de recuperação válido ou deixe o campo em branco.');
+  }
+  const cleanRecoveryEmail =
+    normalizeRecoveryEmailInput(rawRecoveryEmail) ||
+    normalizeRecoveryEmailInput(trimmedName);
+
+  const rawRecoveryKeyword = String(recoveryOptions?.recoveryKeyword || '').trim();
+  const normalizedRecoveryKeyword = normalizeRecoveryKeywordInput(rawRecoveryKeyword);
+  if (rawRecoveryKeyword && normalizedRecoveryKeyword.length < 3) {
+    throw new Error('A palavra secreta de recuperação deve ter pelo menos 3 caracteres.');
+  }
+
   const displayName = sanitizeDisplayName(trimmedName, usernameKey);
   const favoriteClubId = sanitizeFavoriteClubId(initialClubId);
   const digest = await computeClientDigest(usernameKey, rawPassword);
+  const recoverySecretDigest =
+    normalizedRecoveryKeyword.length >= 3
+      ? await computeClientDigest(`recovery::${usernameKey}`, normalizedRecoveryKeyword)
+      : undefined;
 
   // 1. Try Firebase Email/Password Auth first when password >= 6 chars
   if (rawPassword.length >= 6) {
     try {
-      const syntheticEmail = toSyntheticEmail(usernameKey, trimmedName);
+      const syntheticEmail = cleanRecoveryEmail || toSyntheticEmail(usernameKey, trimmedName);
       const cred = await createUserWithEmailAndPassword(auth, syntheticEmail, rawPassword);
       await updateProfile(cred.user, { displayName }).catch(() => {});
 
@@ -334,7 +398,13 @@ export async function registerTrainerWithNameAndPassword(
       fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ displayName, password: rawPassword, favoriteClubId }),
+        body: JSON.stringify({
+          displayName,
+          password: rawPassword,
+          favoriteClubId,
+          recoveryEmail: cleanRecoveryEmail,
+          recoveryKeyword: rawRecoveryKeyword || undefined,
+        }),
       })
         .then((res) => (res.ok ? res.json() : null))
         .then((payload) => {
@@ -350,6 +420,8 @@ export async function registerTrainerWithNameAndPassword(
         usernameKey: profile.usernameKey,
         passwordDigest: digest,
         favoriteClubId: profile.favoriteClubId,
+        ...(cleanRecoveryEmail ? { recoveryEmail: cleanRecoveryEmail } : {}),
+        ...(recoverySecretDigest ? { recoverySecretDigest } : {}),
         createdAt: new Date().toISOString(),
       });
 
@@ -367,7 +439,7 @@ export async function registerTrainerWithNameAndPassword(
       const code = getFirebaseErrorCode(err);
       if (code === 'auth/email-already-in-use') {
         throw new Error(
-          'Já existe um acesso criado com esse nome/login. Mude para "Entrar no Jogo" e digite sua senha.'
+          'Já existe um acesso criado com esse nome/login ou e-mail. Mude para "Entrar no Jogo" ou clique em "Esqueci minha senha".'
         );
       }
       // If Email/Password provider isn't toggled yet in Firebase Console (auth/operation-not-allowed)
@@ -390,7 +462,13 @@ export async function registerTrainerWithNameAndPassword(
     const response = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ displayName, password: rawPassword, favoriteClubId }),
+      body: JSON.stringify({
+        displayName,
+        password: rawPassword,
+        favoriteClubId,
+        recoveryEmail: cleanRecoveryEmail,
+        recoveryKeyword: rawRecoveryKeyword || undefined,
+      }),
     });
     const data = await response.json();
 
@@ -406,6 +484,8 @@ export async function registerTrainerWithNameAndPassword(
       usernameKey: data.usernameKey,
       passwordDigest: digest,
       favoriteClubId: sanitizeFavoriteClubId(data.favoriteClubId),
+      ...(cleanRecoveryEmail ? { recoveryEmail: cleanRecoveryEmail } : {}),
+      ...(recoverySecretDigest ? { recoverySecretDigest } : {}),
       createdAt: data.createdAt || new Date().toISOString(),
     });
 
@@ -443,6 +523,8 @@ export async function registerTrainerWithNameAndPassword(
       usernameKey,
       passwordDigest: digest,
       favoriteClubId,
+      ...(cleanRecoveryEmail ? { recoveryEmail: cleanRecoveryEmail } : {}),
+      ...(recoverySecretDigest ? { recoverySecretDigest } : {}),
       createdAt: nowIso,
     });
 
@@ -533,16 +615,18 @@ export async function loginTrainerWithNameAndPassword(
     }
 
     // Check client hashed backup in case server restarted in ephemeral preview container
-    const digest = await computeClientDigest(usernameKey, rawPassword);
+    const loginEmailLower = trimmedLogin.toLowerCase();
     const localMatch = readLocalAccountBackups().find(
       (b) =>
         b.usernameKey === usernameKey ||
-        b.displayName.toLowerCase() === trimmedLogin.toLowerCase()
+        b.displayName.toLowerCase() === loginEmailLower ||
+        (b.recoveryEmail && b.recoveryEmail === loginEmailLower)
     );
 
     if (localMatch) {
+      const digest = await computeClientDigest(localMatch.usernameKey, rawPassword);
       if (localMatch.passwordDigest !== digest) {
-        throw new Error('Senha incorreta. Confira a senha digitada e tente novamente.');
+        throw new Error('Senha incorreta. Confira a senha digitada ou clique em "Esqueci senha ou login".');
       }
       const session: TrainerAuthSession = {
         uid: localMatch.uid,
@@ -558,7 +642,7 @@ export async function loginTrainerWithNameAndPassword(
 
     if (firebaseWrongCreds && response.status === 404) {
       throw new Error(
-        'Nome/login não encontrado ou senha incorreta. Se ainda não tem conta, clique em "Criar Acesso".'
+        'Nome/login não encontrado ou senha incorreta. Use "Esqueci senha ou login" ou clique em "Criar Acesso".'
       );
     }
 
@@ -570,19 +654,21 @@ export async function loginTrainerWithNameAndPassword(
       throw err;
     }
 
-    const digest = await computeClientDigest(usernameKey, rawPassword);
+    const loginEmailLower = trimmedLogin.toLowerCase();
     const localMatch = readLocalAccountBackups().find(
       (b) =>
         b.usernameKey === usernameKey ||
-        b.displayName.toLowerCase() === trimmedLogin.toLowerCase()
+        b.displayName.toLowerCase() === loginEmailLower ||
+        (b.recoveryEmail && b.recoveryEmail === loginEmailLower)
     );
     if (!localMatch) {
       throw new Error(
         'Nenhum acesso encontrado para este nome. Clique em "Criar Acesso" para cadastrar.'
       );
     }
+    const digest = await computeClientDigest(localMatch.usernameKey, rawPassword);
     if (localMatch.passwordDigest !== digest) {
-      throw new Error('Senha incorreta. Confira a senha digitada e tente novamente.');
+      throw new Error('Senha incorreta. Confira a senha digitada ou clique em "Esqueci senha ou login".');
     }
 
     const session: TrainerAuthSession = {
@@ -622,6 +708,200 @@ export async function loginTrainerWithGooglePopup(): Promise<TrainerAuthSession>
     }
     throw new Error('Não foi possível autenticar com o Google agora. Use seu Nome e Senha.');
   }
+}
+
+export async function sendFirebasePasswordReset(rawEmail: string): Promise<{ email: string }> {
+  const cleanEmail = normalizeRecoveryEmailInput(rawEmail);
+  if (!cleanEmail) {
+    throw new Error('Digite um endereço de e-mail válido para receber o link de redefinição.');
+  }
+  try {
+    await sendPasswordResetEmail(auth, cleanEmail);
+    return { email: cleanEmail };
+  } catch (err) {
+    const code = getFirebaseErrorCode(err);
+    if (code === 'auth/user-not-found') {
+      throw new Error(
+        'Não encontramos uma conta com esse e-mail no Firebase. Se você entrou usando nome de login + palavra secreta, use a opção "Redefinir com Palavra Secreta" abaixo.'
+      );
+    }
+    if (code === 'auth/invalid-email') {
+      throw new Error('O e-mail informado não parece válido.');
+    }
+    if (code === 'auth/too-many-requests') {
+      throw new Error('Muitas solicitações seguidas. Aguarde alguns minutos antes de tentar novamente.');
+    }
+    if (code === 'auth/operation-not-allowed') {
+      throw new Error(
+        'O envio por e-mail ainda não está ativado no Firebase. Use a opção "Redefinir com Palavra Secreta" ou entre com sua Conta Google.'
+      );
+    }
+    throw new Error('Não foi possível enviar o e-mail de redefinição agora. Tente novamente em instantes.');
+  }
+}
+
+export async function resetTrainerPasswordWithRecovery(params: {
+  login: string;
+  recoveryEmail?: string;
+  recoveryKeyword?: string;
+  newPassword: string;
+}): Promise<{
+  displayName: string;
+  usernameKey: string;
+  updatedServer: boolean;
+  updatedLocal: boolean;
+}> {
+  const trimmedLogin = String(params.login || '').trim();
+  const cleanEmail = normalizeRecoveryEmailInput(params.recoveryEmail);
+  const normalizedKeyword = normalizeRecoveryKeywordInput(params.recoveryKeyword);
+  const newPassword = String(params.newPassword || '');
+
+  if (trimmedLogin.length < 2 && !cleanEmail) {
+    throw new Error('Digite seu login (ou e-mail) para identificar sua conta.');
+  }
+  if (newPassword.length < 4 || newPassword.length > 128) {
+    throw new Error('A nova senha deve ter pelo menos 4 caracteres.');
+  }
+  if (!cleanEmail && normalizedKeyword.length < 3) {
+    throw new Error('Informe sua palavra secreta ou o e-mail de recuperação cadastrado.');
+  }
+
+  let serverData: { displayName?: string; usernameKey?: string } | null = null;
+  let serverErrorMessage: string | null = null;
+  let updatedServer = false;
+
+  try {
+    const response = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        login: trimmedLogin,
+        recoveryEmail: cleanEmail,
+        recoveryKeyword: params.recoveryKeyword?.trim() || undefined,
+        newPassword,
+      }),
+    });
+    const data = await response.json();
+    if (response.ok && data?.ok) {
+      updatedServer = true;
+      serverData = data;
+    } else {
+      serverErrorMessage =
+        typeof data?.message === 'string' ? data.message : 'Não foi possível validar a recuperação.';
+    }
+  } catch {
+    // Offline or unreachable server — check local device backup below
+  }
+
+  // Also check / sync matching local device backup so the user can sign in seamlessly
+  const usernameKey = normalizeUsernameKey(serverData?.usernameKey || trimmedLogin);
+  const backups = readLocalAccountBackups();
+  const localMatch = backups.find(
+    (b) =>
+      (usernameKey.length >= 2 &&
+        (b.usernameKey === usernameKey ||
+          b.displayName.toLowerCase() === trimmedLogin.toLowerCase())) ||
+      (cleanEmail && b.recoveryEmail === cleanEmail)
+  );
+
+  let updatedLocal = false;
+  if (localMatch) {
+    let localVerified = updatedServer;
+    if (!localVerified && localMatch.recoverySecretDigest && normalizedKeyword.length >= 3) {
+      const candidateSecretDigest = await computeClientDigest(
+        `recovery::${localMatch.usernameKey}`,
+        normalizedKeyword
+      );
+      localVerified = candidateSecretDigest === localMatch.recoverySecretDigest;
+    }
+    if (!localVerified && !localMatch.recoverySecretDigest && localMatch.recoveryEmail && cleanEmail) {
+      localVerified = localMatch.recoveryEmail === cleanEmail;
+    }
+
+    if (localVerified) {
+      const nextDigest = await computeClientDigest(localMatch.usernameKey, newPassword);
+      writeLocalAccountBackup({
+        ...localMatch,
+        passwordDigest: nextDigest,
+      });
+      updatedLocal = true;
+    }
+  }
+
+  if (!updatedServer && !updatedLocal) {
+    throw new Error(
+      serverErrorMessage ||
+        'Não foi possível confirmar os dados de recuperação. Confira seu login, e-mail ou palavra secreta.'
+    );
+  }
+
+  return {
+    displayName: serverData?.displayName || localMatch?.displayName || trimmedLogin,
+    usernameKey: serverData?.usernameKey || localMatch?.usernameKey || usernameKey,
+    updatedServer,
+    updatedLocal,
+  };
+}
+
+export async function recoverTrainerLoginsByEmail(
+  rawEmail: string
+): Promise<RecoveredLoginMatch[]> {
+  const cleanEmail = normalizeRecoveryEmailInput(rawEmail);
+  if (!cleanEmail) {
+    throw new Error('Digite um e-mail válido para localizar seu login.');
+  }
+
+  const byKey = new Map<string, RecoveredLoginMatch>();
+
+  try {
+    const response = await fetch('/api/auth/recover-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recoveryEmail: cleanEmail }),
+    });
+    if (response.ok) {
+      const data = await response.json();
+      if (Array.isArray(data?.accounts)) {
+        for (const item of data.accounts as Array<{ displayName?: string; usernameKey?: string }>) {
+          if (item?.displayName && item?.usernameKey) {
+            byKey.set(item.usernameKey, {
+              displayName: item.displayName,
+              usernameKey: item.usernameKey,
+              source: 'server',
+            });
+          }
+        }
+      }
+    }
+  } catch {
+    // Fallback gracefully to local device accounts below
+  }
+
+  for (const localAcc of readLocalAccountBackups()) {
+    if (
+      localAcc.recoveryEmail === cleanEmail ||
+      localAcc.displayName.toLowerCase() === cleanEmail
+    ) {
+      if (!byKey.has(localAcc.usernameKey)) {
+        byKey.set(localAcc.usernameKey, {
+          displayName: localAcc.displayName,
+          usernameKey: localAcc.usernameKey,
+          source: 'device',
+        });
+      }
+    }
+  }
+
+  return Array.from(byKey.values());
+}
+
+export function listDeviceSavedTrainerLogins(): DeviceSavedLoginHint[] {
+  return readLocalAccountBackups().map((acc) => ({
+    displayName: acc.displayName,
+    usernameKey: acc.usernameKey,
+    hasRecoveryWord: Boolean(acc.recoverySecretDigest),
+    maskedEmail: maskEmailForDisplay(acc.recoveryEmail),
+  }));
 }
 
 export async function syncTrainerFavoriteClub(
