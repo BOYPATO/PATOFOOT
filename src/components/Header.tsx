@@ -137,10 +137,10 @@ export const Header: React.FC<HeaderProps> = React.memo(({
       : null;
 
   return (
-    <header className="sticky top-0 z-20 bg-[#090f1d]/95 backdrop-blur-md border-b border-slate-800/80 text-white">
-      <div className="h-16 px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4">
+    <header className="sticky top-0 z-20 bg-[#090f1d]/95 backdrop-blur-md border-b border-slate-800/80 text-white pt-[env(safe-area-inset-top)]">
+      <div className="h-14 sm:h-16 px-2.5 sm:px-6 flex items-center justify-between gap-1.5 sm:gap-4">
         {/* Left Zone: Mobile Menu Trigger + Club Identity & Current Breadcrumb */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <button
             type="button"
             onClick={() => {
@@ -148,6 +148,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               onOpenMobileMenu();
             }}
             title="Abrir menu de navegação"
+            aria-label="Abrir menu de navegação"
             className="lg:hidden p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 shrink-0 cursor-pointer"
           >
             <Menu className="w-5 h-5" />
@@ -160,12 +161,17 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               setActiveTab('hub');
             }}
             title="Ir para a Central do Clube"
-            className="flex items-center gap-2.5 text-left min-w-0 cursor-pointer group"
+            className="flex items-center gap-2 sm:gap-2.5 text-left min-w-0 cursor-pointer group"
           >
-            <ClubCrest club={userClub} size="md" />
+            <div className="shrink-0 sm:hidden">
+              <ClubCrest club={userClub} size="sm" />
+            </div>
+            <div className="hidden sm:block shrink-0">
+              <ClubCrest club={userClub} size="md" />
+            </div>
 
             <div className="min-w-0">
-              <div className="flex items-center gap-2 text-sm font-bold text-white truncate">
+              <div className="flex items-center gap-2 text-[13px] sm:text-sm font-bold text-white truncate">
                 <span className="truncate group-hover:text-sky-300 transition-colors">
                   {userClub.name}
                 </span>
@@ -267,7 +273,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
         </div>
 
         {/* Right Zone: Global Search, Cash, Utility Icons & Primary Match CTA */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button
             type="button"
             onClick={() => {
@@ -275,7 +281,8 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               onOpenGlobalSearch();
             }}
             title="Pesquisar jogadores, times ou competições (Ctrl + K)"
-            className="flex items-center gap-2 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/40 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-200 hover:text-white transition-colors whitespace-nowrap cursor-pointer"
+            aria-label="Pesquisar"
+            className="flex items-center gap-2 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/40 p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-semibold text-slate-200 hover:text-white transition-colors whitespace-nowrap cursor-pointer"
           >
             <Search className="w-4 h-4 text-sky-400 shrink-0" />
             <span className="hidden md:inline">Pesquisar</span>
@@ -364,13 +371,15 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                 onOpenGuideModal();
               }}
               title="Manual · Como Jogar & Novidades v1.0"
-              className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-emerald-300 hover:text-emerald-200 transition-colors border border-slate-800 cursor-pointer"
+              className="hidden sm:flex p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-emerald-300 hover:text-emerald-200 transition-colors border border-slate-800 cursor-pointer"
             >
               <HelpCircle className="w-4 h-4" />
             </button>
           )}
 
-          <LanguageSwitcher compact />
+          <div className="hidden sm:block">
+            <LanguageSwitcher compact />
+          </div>
 
           <button
             type="button"
@@ -391,6 +400,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               onOpenSaveModal();
             }}
             title="Salvar / Gerenciar Carreira"
+            aria-label="Salvar carreira"
             className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors border border-slate-800 cursor-pointer"
           >
             <Save className="w-4 h-4 text-sky-400" />
@@ -420,10 +430,11 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                 soundEngine.playClick();
                 onFinishSeason();
               }}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
-              <Trophy className="w-4 h-4" />
-              <span>Retrospectiva</span>
+              <Trophy className="w-4 h-4 shrink-0" />
+              <span className="sm:hidden">Encerrar</span>
+              <span className="hidden sm:inline">Retrospectiva</span>
             </button>
           ) : (
             <button
@@ -432,21 +443,24 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                 soundEngine.playClick();
                 onOpenMatchModal();
               }}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-slate-950 font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-xl text-slate-950 font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                 isTodayMatchDay
                   ? 'bg-emerald-400 hover:bg-emerald-300'
                   : 'bg-sky-400 hover:bg-sky-300'
               }`}
             >
-              <PlayCircle className="w-4 h-4" />
-              <span>{isTodayMatchDay ? 'Jogar Hoje' : 'Jogar Rodada'}</span>
+              <PlayCircle className="w-4 h-4 shrink-0" />
+              <span className="sm:hidden">{isTodayMatchDay ? 'Jogar' : 'Rodada'}</span>
+              <span className="hidden sm:inline">
+                {isTodayMatchDay ? 'Jogar Hoje' : 'Jogar Rodada'}
+              </span>
             </button>
           )}
         </div>
       </div>
 
       {/* Compact Mobile & Tablet Utility Bar (< xl) so Date, Round, Cash and +1 Day stay 1-tap accessible */}
-      <div className="xl:hidden border-t border-slate-800/70 bg-slate-950/60 px-3 sm:px-6 py-1.5 flex items-center justify-between gap-2 text-[11px] overflow-x-auto">
+      <div className="xl:hidden border-t border-slate-800/70 bg-slate-950/60 px-2.5 sm:px-6 py-1.5 flex items-center justify-between gap-2 text-[11px] overflow-x-auto no-native-scrollbar">
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
@@ -485,7 +499,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <PWAInstallButton compact className="lg:hidden" />
+          <PWAInstallButton compact iconOnlyOnMobile className="lg:hidden" />
           {onAdvanceDay && (
             <button
               type="button"

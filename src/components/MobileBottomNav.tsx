@@ -29,9 +29,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = React.memo(
     return (
       <nav
         aria-label="Navegação rápida mobile"
-        className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#090f1d]/95 backdrop-blur-md border-t border-slate-800/90 pb-[env(safe-area-inset-bottom)]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#080e1c]/96 backdrop-blur-md border-t border-slate-800/90 shadow-[0_-8px_24px_rgba(2,6,23,0.55)] pb-[env(safe-area-inset-bottom)]"
       >
-        <div className="grid grid-cols-5 h-14 max-w-lg mx-auto">
+        <div className="grid grid-cols-5 h-[58px] max-w-lg mx-auto px-1">
           {PRIMARY_MOBILE_TABS.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -44,10 +44,16 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = React.memo(
                   setActiveTab(item.id);
                 }}
                 aria-current={isActive ? 'page' : undefined}
-                className={`min-h-[44px] flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer ${
+                className={`relative min-h-[44px] flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer active:scale-95 ${
                   isActive ? 'text-sky-400' : 'text-slate-400 active:text-slate-200'
                 }`}
               >
+                {isActive && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-sky-400"
+                  />
+                )}
                 <Icon className="w-5 h-5 shrink-0" />
                 <span className="text-[10px] font-semibold tracking-tight leading-none">
                   {item.label}
@@ -62,10 +68,16 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = React.memo(
               soundEngine.playClick();
               onOpenMoreMenu();
             }}
-            className={`relative min-h-[44px] flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer ${
+            className={`relative min-h-[44px] flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer active:scale-95 ${
               isSecondaryTabActive ? 'text-sky-400' : 'text-slate-400 active:text-slate-200'
             }`}
           >
+            {isSecondaryTabActive && (
+              <span
+                aria-hidden="true"
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-sky-400"
+              />
+            )}
             <span className="relative inline-flex">
               <Menu className="w-5 h-5 shrink-0" />
               {badgeCount > 0 && (

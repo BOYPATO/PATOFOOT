@@ -2796,10 +2796,10 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
   const revenue = matchTicketRevenue;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/92 backdrop-blur-md flex items-center justify-center p-1.5 sm:p-3 overflow-hidden">
-      <div className="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-[1440px] h-[96vh] max-h-[96vh] shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 bg-slate-950/92 backdrop-blur-md flex items-center justify-center p-1.5 sm:p-3 pt-[max(0.375rem,env(safe-area-inset-top))] pb-[max(0.375rem,env(safe-area-inset-bottom))] overflow-hidden">
+      <div className="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-[1440px] h-[96dvh] max-h-[96dvh] shadow-2xl overflow-hidden flex flex-col">
         {/* Modal Top Bar: Competition & Round */}
-        <div className="bg-black px-4 sm:px-5 py-1.5 flex items-center justify-between gap-2 border-b border-slate-900 shrink-0">
+        <div className="bg-black px-3 sm:px-5 py-1.5 flex items-center justify-between gap-2 border-b border-slate-900 shrink-0">
           <div className="flex flex-wrap items-center gap-2 min-w-0">
             {(() => {
               const meta = COMPETITIONS_CATALOG[userFixture?.competition || 'serie_a'] || COMPETITIONS_CATALOG.serie_a;

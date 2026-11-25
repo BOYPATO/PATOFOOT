@@ -970,7 +970,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
   };
 
   return (
-    <div className="relative min-h-screen bg-[#070c16] text-white flex flex-col justify-between overflow-hidden select-none">
+    <div className="relative min-h-[100dvh] bg-[#070c16] text-white flex flex-col justify-between overflow-x-clip select-none">
       {/* Subtle Lightweight Atmospheric Backdrop */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -981,10 +981,10 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
       />
 
       {/* Top Navigation Bar */}
-      <header className="relative z-10 max-w-6xl mx-auto w-full px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4 border-b border-slate-800/70">
-        <div className="flex items-center gap-2.5 whitespace-nowrap shrink-0">
-          <PatoLogo size={32} />
-          <span className="text-base sm:text-lg font-extrabold tracking-wider text-sky-400 font-display">
+      <header className="relative z-20 max-w-6xl mx-auto w-full px-3 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4 border-b border-slate-800/70">
+        <div className="flex items-center gap-2 sm:gap-2.5 whitespace-nowrap shrink-0">
+          <PatoLogo size={28} />
+          <span className="text-sm sm:text-lg font-extrabold tracking-wider text-sky-400 font-display">
             PATOFOOT <span className="text-white">2026</span>
           </span>
         </div>
@@ -1050,11 +1050,11 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
           </div>
         )}
 
-        <div className="flex items-center gap-2.5 shrink-0">
-          <LanguageSwitcher />
+        <div className="flex items-center flex-wrap sm:flex-nowrap justify-end gap-1.5 sm:gap-2.5 ml-auto">
+          <LanguageSwitcher compact />
           {authSession && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0c1424] border border-slate-800">
-              <UserCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-[#0c1424] border border-slate-800">
+              <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
               <div className="text-left leading-tight hidden sm:block">
                 <span className="text-xs font-bold text-white block max-w-[140px] truncate">
                   {authSession.displayName}
@@ -1071,7 +1071,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
                   handleLogoutTrainer();
                 }}
                 title="Sair da conta atual"
-                className="ml-1 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-rose-950/60 border border-slate-800 hover:border-rose-500/40 text-[11px] font-semibold text-slate-300 hover:text-rose-300 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                className="sm:ml-1 px-2 sm:px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-rose-950/60 border border-slate-800 hover:border-rose-500/40 text-[11px] font-semibold text-slate-300 hover:text-rose-300 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
               >
                 <LogOut className="w-3.5 h-3.5 shrink-0" />
                 <span>Sair</span>
@@ -1079,7 +1079,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
             </div>
           )}
 
-          <PWAInstallButton alwaysShow />
+          <PWAInstallButton alwaysShow compact iconOnlyOnMobile />
 
           {onOpenOfficialSite && (
             <button
@@ -1089,7 +1089,8 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
                 onOpenOfficialSite();
               }}
               title="Abrir Site Oficial e Guia de Download (Web, Android, iOS e PC)"
-              className="px-3 py-2 rounded-xl bg-[#0c1424] hover:bg-slate-800/80 border border-slate-800 text-xs font-semibold text-sky-300 hover:text-sky-200 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+              aria-label="Site Oficial"
+              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-[#0c1424] hover:bg-slate-800/80 border border-slate-800 text-xs font-semibold text-sky-300 hover:text-sky-200 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
             >
               <Globe className="w-4 h-4 shrink-0" />
               <span className="hidden sm:inline">Site Oficial</span>
@@ -1104,7 +1105,8 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
                 onOpenGuide('guide');
               }}
               title="Manual · Como Jogar & Novidades v1.0"
-              className="px-3 py-2 rounded-xl bg-[#0c1424] hover:bg-slate-800/80 border border-slate-800 text-xs font-semibold text-emerald-300 hover:text-emerald-200 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+              aria-label="Manual"
+              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-[#0c1424] hover:bg-slate-800/80 border border-slate-800 text-xs font-semibold text-emerald-300 hover:text-emerald-200 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
             >
               <BookOpen className="w-4 h-4 shrink-0" />
               <span className="hidden sm:inline">Manual</span>
@@ -1117,7 +1119,9 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
               soundEngine.playClick();
               onOpenSettings();
             }}
-            className="px-3.5 py-2 rounded-xl bg-[#0c1424] hover:bg-slate-800/80 border border-slate-800 text-xs font-semibold text-slate-200 hover:text-white flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+            title="Configurações"
+            aria-label="Configurações"
+            className="p-2 sm:px-3.5 sm:py-2 rounded-xl bg-[#0c1424] hover:bg-slate-800/80 border border-slate-800 text-xs font-semibold text-slate-200 hover:text-white flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
           >
             <Settings className="w-4 h-4 text-sky-400 shrink-0" />
             <span className="hidden sm:inline">Configurações</span>
@@ -1126,7 +1130,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
       </header>
 
       {/* Main Title Hub */}
-      <main className="relative z-10 max-w-6xl mx-auto w-full px-4 sm:px-6 py-5 sm:py-6 flex flex-col items-center">
+      <main className="relative z-10 max-w-6xl mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-6 flex flex-col items-center">
         {/* Compact Brand Strip */}
         <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3.5 text-center sm:text-left">
@@ -2088,8 +2092,8 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
       </main>
 
       {/* Footer Strip */}
-      <footer className="relative z-10 border-t border-slate-900 bg-black/80 py-4">
-        <div className="max-w-6xl mx-auto px-6 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
+      <footer className="relative z-10 border-t border-slate-900 bg-black/80 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4 text-xs text-slate-500">
           <span>PATOFOOT Edição 2026 · Simulador de Futebol Manager</span>
           <span>Calendário Completo · Lei Bosman · Olheiros · Seleção Brasileira</span>
         </div>
@@ -2097,8 +2101,8 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
 
       {/* Club Picker Modal for Starting Another Career */}
       {showClubPicker && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-5xl shadow-2xl my-auto flex flex-col max-h-[94vh] overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-start justify-center p-2 sm:p-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] overflow-y-auto">
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-5xl shadow-2xl my-auto flex flex-col max-h-[94dvh] overflow-hidden">
             {/* Pinned Compact Modal Header */}
             <div className="shrink-0 flex items-center justify-between gap-3 px-5 sm:px-6 py-3.5 border-b border-slate-800 bg-slate-950">
               <div className="flex items-center gap-3 min-w-0">
@@ -2917,7 +2921,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
             </div>
 
             {/* Sticky Bottom Action Footer — Always Visible */}
-            <div className="shrink-0 px-5 sm:px-6 py-3.5 border-t border-slate-800 bg-slate-950/95 flex flex-wrap items-center justify-between gap-3">
+            <div className="shrink-0 px-3.5 sm:px-6 py-3 sm:py-3.5 border-t border-slate-800 bg-slate-950/95 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
               {selectedClub ? (
                 <div className="flex items-center gap-2.5 min-w-0">
                   <ClubCrest club={selectedClub} size="sm" rounded="lg" />
@@ -2935,14 +2939,14 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
                 <div className="text-xs text-slate-400">Selecione um clube para começar</div>
               )}
 
-              <div className="flex items-center gap-2 ml-auto">
+              <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
                 <button
                   type="button"
                   onClick={() => {
                     soundEngine.playClick();
                     setShowClubPicker(false);
                   }}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                  className="px-3.5 sm:px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
                 >
                   Voltar
                 </button>
@@ -2950,7 +2954,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
                   <button
                     type="button"
                     onClick={handleConfirmStart}
-                    className="px-5 py-2.5 rounded-xl bg-sky-400 hover:bg-sky-300 text-slate-950 font-black text-xs whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                    className="flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 rounded-xl bg-sky-400 hover:bg-sky-300 text-slate-950 font-black text-xs whitespace-nowrap shrink-0 cursor-pointer transition-colors text-center"
                   >
                     Assumir {selectedClub.shortName} (Espaço {targetCareerSlot})
                   </button>

@@ -6,12 +6,14 @@ import { soundEngine } from '../services/soundEngine';
 interface PWAInstallButtonProps {
   compact?: boolean;
   alwaysShow?: boolean;
+  iconOnlyOnMobile?: boolean;
   className?: string;
 }
 
 export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   compact = false,
   alwaysShow = false,
+  iconOnlyOnMobile = false,
   className = '',
 }) => {
   const { isInstallable, isInstalled, isIOS, promptInstall } = usePWAInstall();
@@ -37,16 +39,29 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
         onClick={() => void handleClick()}
         title="Instalar PATOFOOT 2026 como aplicativo no dispositivo"
         className={`inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 hover:text-emerald-200 font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-          compact ? 'px-2.5 py-1.5 text-xs' : 'px-3.5 py-2 text-xs'
+          iconOnlyOnMobile
+            ? compact
+              ? 'px-2 py-1.5 sm:px-2.5 text-xs'
+              : 'px-2.5 py-2 sm:px-3.5 text-xs'
+            : compact
+            ? 'px-2.5 py-1.5 text-xs'
+            : 'px-3.5 py-2 text-xs'
         } ${className}`}
       >
         <Download className="w-3.5 h-3.5 shrink-0" />
-        <span>Instalar App</span>
+        {iconOnlyOnMobile ? (
+          <>
+            <span className="sm:hidden">App</span>
+            <span className="hidden sm:inline">Instalar App</span>
+          </>
+        ) : (
+          <span>Instalar App</span>
+        )}
       </button>
 
       {showGuide && (
         <div
-          className="fixed inset-0 z-[80] bg-slate-950/85 backdrop-blur-sm flex items-start justify-center p-2 sm:p-4 overflow-y-auto"
+          className="fixed inset-0 z-[80] bg-slate-950/85 backdrop-blur-sm flex items-start justify-center p-3 sm:p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] overflow-y-auto"
           onClick={() => setShowGuide(false)}
         >
           <div

@@ -172,17 +172,17 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-100 selection:bg-sky-400/30 selection:text-white">
+    <div className="min-h-[100dvh] overflow-x-clip bg-[#020617] text-slate-100 selection:bg-sky-400/30 selection:text-white">
       {/* Top Bar: Strict 3-zone contract */}
-      <header className="sticky top-0 z-40 bg-[#020617]/90 backdrop-blur-md border-b border-slate-800/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-8">
+      <header className="sticky top-0 z-40 bg-[#020617]/90 backdrop-blur-md border-b border-slate-800/80 pt-[env(safe-area-inset-top)]">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-3 sm:gap-8">
           <a
             href="#inicio"
             onClick={(e) => {
               e.preventDefault();
               scrollToSection('inicio');
             }}
-            className="font-display text-lg font-extrabold tracking-tight text-white whitespace-nowrap shrink-0"
+            className="font-display text-base sm:text-lg font-extrabold tracking-tight text-white whitespace-nowrap shrink-0"
           >
             PATOFOOT <span className="text-emerald-400">2026</span>
           </a>
@@ -228,7 +228,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                 soundEngine.playClick();
                 onEnterWebGame();
               }}
-              className="px-4 py-2 rounded-lg bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer inline-flex items-center gap-2"
+              className="px-3.5 sm:px-4 py-2 rounded-lg bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer inline-flex items-center gap-1.5 sm:gap-2"
             >
               <Play className="w-3.5 h-3.5 fill-current shrink-0" />
               <span>Jogar Agora</span>
@@ -877,7 +877,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
 
       {/* Quiet Footer */}
       <footer className="border-t border-slate-800/80 bg-[#020617]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-[max(2rem,env(safe-area-inset-bottom))] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div className="font-display font-bold text-slate-300">
             PATOFOOT 2026 · Futebol Manager Mundial
           </div>

@@ -298,10 +298,10 @@ export const InGameSubModal: React.FC<InGameSubModalProps> = ({
   const totalUsedAfterConfirm = maxSubs - subsRemaining + queuedSubs.length;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-start justify-center p-2 sm:p-5 overflow-y-auto">
-      <div className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-5xl shadow-2xl my-auto flex flex-col max-h-[94vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-start justify-center p-2 sm:p-5 pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] overflow-y-auto">
+      <div className="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-5xl shadow-2xl my-auto flex flex-col max-h-[94dvh] overflow-hidden">
         {/* Header */}
-        <div className="shrink-0 bg-black px-5 sm:px-6 py-3.5 border-b border-slate-900 flex flex-wrap items-center justify-between gap-3">
+        <div className="shrink-0 bg-black px-4 sm:px-6 py-3 sm:py-3.5 border-b border-slate-900 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
           <div className="flex items-center gap-3">
             <div
               className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${

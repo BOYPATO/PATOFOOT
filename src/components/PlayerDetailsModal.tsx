@@ -207,15 +207,15 @@ export const PlayerDetailsModal: React.FC<PlayerDetailsModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[70] bg-slate-950/85 backdrop-blur-sm flex items-start justify-center p-2 sm:p-5 overflow-y-auto"
+      className="fixed inset-0 z-[70] bg-slate-950/85 backdrop-blur-sm flex items-start justify-center p-2 sm:p-5 pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl bg-[#0b1220] border border-slate-800 rounded-2xl shadow-2xl my-auto overflow-hidden flex flex-col max-h-[92vh]"
+        className="w-full max-w-2xl bg-[#0b1220] border border-slate-800 rounded-2xl shadow-2xl my-auto overflow-hidden flex flex-col max-h-[92dvh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Profile Band */}
-        <div className="shrink-0 p-5 sm:p-6 border-b border-slate-800 bg-gradient-to-br from-slate-900/90 via-[#0b1220] to-slate-950">
+        <div className="shrink-0 p-4 sm:p-6 border-b border-slate-800 bg-gradient-to-br from-slate-900/90 via-[#0b1220] to-slate-950">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-4 min-w-0">
               <div className="relative shrink-0">

@@ -10,7 +10,9 @@
   html,
   body {
     overscroll-behavior-y: none;
+    overflow-x: clip;
     -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
@@ -29,8 +31,21 @@
   a,
   select,
   input,
+  textarea,
   [role="button"] {
     touch-action: manipulation;
+  }
+
+  /* Prevent jarring iOS Safari auto-zoom on form field focus without affecting desktop */
+  @media (hover: none) and (pointer: coarse) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="search"],
+    input[type="number"],
+    textarea {
+      font-size: 16px;
+    }
   }
 
   ::-webkit-scrollbar {
@@ -52,6 +67,7 @@
 .no-native-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 .no-native-scrollbar::-webkit-scrollbar {
   display: none;
@@ -60,6 +76,7 @@
 .horizontal-league-scroll {
   scrollbar-width: thin;
   scrollbar-color: #0284c7 #0f172a;
+  -webkit-overflow-scrolling: touch;
 }
 .horizontal-league-scroll::-webkit-scrollbar {
   height: 8px;

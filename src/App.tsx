@@ -10666,7 +10666,7 @@ export default function App() {
       onChangeLanguage={handleChangeLanguage}
     >
     <PlayerInspectionProvider onInspectPlayer={handleInspectPlayerGlobal}>
-    <div className="min-h-screen bg-[#070c16] text-slate-100 flex font-sans selection:bg-sky-400 selection:text-slate-950">
+    <div className="min-h-[100dvh] overflow-x-clip bg-[#070c16] text-slate-100 flex font-sans selection:bg-sky-400 selection:text-slate-950">
       {/* Categorized Left Navigation Sidebar & Mobile Drawer */}
       <GameSidebar
         userClub={userClub}
@@ -10687,6 +10687,23 @@ export default function App() {
           setInspectedClubId(clubId);
           setActiveTab('clubs');
         }}
+        isMuted={isMuted}
+        onToggleMute={() => {
+          const nextMuted = soundEngine.toggleMute();
+          handleUpdateSettings({ ...gameSettings, isMuted: nextMuted });
+        }}
+        onOpenSettingsModal={() => {
+          setSettingsInitialSection('career');
+          setIsSettingsModalOpen(true);
+        }}
+        onOpenGuideModal={() => {
+          setGuideInitialTab('guide');
+          setIsGuideModalOpen(true);
+        }}
+        onSaveAndExitToTitle={handleSaveAndExitToTitle}
+        onOpenOct2026GlobalSyncModal={() => setIsOct2026ModalOpen(true)}
+        isSyncingOct2026Global={isSyncingOct2026Global}
+        autoSaveEnabled={gameSettings.autoSaveEnabled}
       />
 
       {/* Right Workspace Column: Slim Executive Top Bar + Main Content */}
@@ -10731,7 +10748,7 @@ export default function App() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 max-w-7xl mx-auto w-full px-3.5 sm:px-6 pt-4 sm:pt-6 pb-20 lg:pb-6">
+        <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 pt-3.5 sm:pt-6 pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:pb-8">
           {/* Special Pre-Match Rivalry Alert Banner when next match is a Derby */}
           {activeTab !== 'hub' && upcomingRivalry && upcomingOpponentClub && upcomingUserFixture && (
             <div className="mb-5 bg-[#0c1424] border border-amber-500/40 rounded-2xl px-4 sm:px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">

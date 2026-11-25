@@ -2,6 +2,7 @@ import React from 'react';
 import { Club, Fixture } from '../types/game';
 import { PatoLogo } from './PatoLogo';
 import { ClubCrest } from './ClubCrest';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { soundEngine } from '../services/soundEngine';
 import { countActiveSponsors } from '../utils/sponsorEngine';
 import { formatShortDate } from '../utils/calendarUtils';
@@ -16,17 +17,23 @@ import {
   Dumbbell,
   Globe,
   Handshake,
+  HelpCircle,
   History,
   LayoutDashboard,
+  LogOut,
   Mail,
   PanelLeftClose,
   PanelLeftOpen,
+  RefreshCw,
+  Settings,
   Shield,
   ShoppingBag,
   Sliders,
   Trophy,
   UserCheck,
   Users,
+  Volume2,
+  VolumeX,
   X,
 } from 'lucide-react';
 
@@ -58,6 +65,14 @@ interface GameSidebarProps {
   upcomingFixture?: Fixture | null;
   upcomingOpponent?: Club | null;
   onInspectOpponent?: (clubId: string) => void;
+  isMuted?: boolean;
+  onToggleMute?: () => void;
+  onOpenSettingsModal?: () => void;
+  onOpenGuideModal?: () => void;
+  onSaveAndExitToTitle?: () => void;
+  onOpenOct2026GlobalSyncModal?: () => void;
+  isSyncingOct2026Global?: boolean;
+  autoSaveEnabled?: boolean;
 }
 
 export const GameSidebar: React.FC<GameSidebarProps> = ({
@@ -76,6 +91,14 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
   upcomingFixture,
   upcomingOpponent,
   onInspectOpponent,
+  isMuted = false,
+  onToggleMute,
+  onOpenSettingsModal,
+  onOpenGuideModal,
+  onSaveAndExitToTitle,
+  onOpenOct2026GlobalSyncModal,
+  isSyncingOct2026Global = false,
+  autoSaveEnabled = true,
 }) => {
   const openSponsorSlots = Math.max(0, 4 - countActiveSponsors(userClub.sponsors));
 
@@ -175,10 +198,14 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
     : null;
 
   const renderNavContent = (isCompact: boolean, isMobileDrawer: boolean) => (
-    <div className="flex flex-col h-full bg-[#090f1d] border-r border-slate-800/80 text-slate-200 select-none">
+    <div
+      className={`flex flex-col h-full bg-[#090f1d] border-r border-slate-800/80 text-slate-200 select-none ${
+        isMobileDrawer ? 'pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]' : ''
+      }`}
+    >
       {/* Brand Header */}
       <div
-        className={`h-16 px-4 border-b border-slate-800/80 flex items-center ${
+        className={`${isMobileDrawer ? 'h-14' : 'h-16'} px-4 border-b border-slate-800/80 flex items-center ${
           isCompact ? 'justify-center' : 'justify-between'
         } shrink-0`}
       >
@@ -245,7 +272,11 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
                   onClick={() => handleSelect(item.id)}
                   title={isCompact ? item.label : undefined}
                   className={`w-full flex items-center ${
-                    isCompact ? 'justify-center px-2 py-2.5' : 'justify-between px-2.5 py-2'
+                    isCompact
+                      ? 'justify-center px-2 py-2.5'
+                      : isMobileDrawer
+                      ? 'justify-between px-3 py-2.5 min-h-[42px]'
+                      : 'justify-between px-2.5 py-2'
                   } rounded-xl text-[13px] transition-colors relative cursor-pointer ${
                     isActive
                       ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30 font-semibold'
@@ -279,6 +310,106 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
             })}
           </div>
         ))}
+
+        {/* Mobile Drawer System & Preferences Utilities (restores desktop-header controls on phones) */}
+        {isMobileDrawer && (
+          <div className="pt-3 mt-2 border-t border-slate-800/80 space-y-2.5">
+            <div className="px-2.5 text-[11px] font-semibold text-slate-500">
+              Sistema & Preferências
+            </div>
+
+            <div className="px-1 flex items-center justify-between gap-2">
+              <span className="text-xs text-slate-400 font-medium pl-1.5">Idioma</span>
+              <LanguageSwitcher compact align="right" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5 px-1">
+              {onToggleMute && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onToggleMute();
+                    soundEngine.playClick();
+                  }}
+                  className="min-h-[40px] px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-200 flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  {isMuted ? (
+                    <VolumeX className="w-4 h-4 text-rose-400 shrink-0" />
+                  ) : (
+                    <Volume2 className="w-4 h-4 text-sky-400 shrink-0" />
+                  )}
+                  <span className="truncate">{isMuted ? 'Sem Som' : 'Som Ativo'}</span>
+                </button>
+              )}
+
+              {onOpenSettingsModal && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    onCloseMobile();
+                    onOpenSettingsModal();
+                  }}
+                  className="min-h-[40px] px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-200 flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <Settings className="w-4 h-4 text-sky-400 shrink-0" />
+                  <span className="truncate">Ajustes</span>
+                </button>
+              )}
+
+              {onOpenGuideModal && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    onCloseMobile();
+                    onOpenGuideModal();
+                  }}
+                  className="min-h-[40px] px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-emerald-300 flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <HelpCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="truncate">Manual</span>
+                </button>
+              )}
+
+              {onOpenOct2026GlobalSyncModal && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    onCloseMobile();
+                    onOpenOct2026GlobalSyncModal();
+                  }}
+                  className="min-h-[40px] px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-sky-300 flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 text-sky-400 shrink-0 ${
+                      isSyncingOct2026Global ? 'animate-spin' : ''
+                    }`}
+                  />
+                  <span className="truncate">IA Elencos</span>
+                </button>
+              )}
+            </div>
+
+            {onSaveAndExitToTitle && (
+              <div className="px-1 pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    onCloseMobile();
+                    onSaveAndExitToTitle();
+                  }}
+                  className="w-full min-h-[42px] px-3 py-2 rounded-xl bg-rose-950/35 hover:bg-rose-950/60 border border-rose-500/30 text-xs font-semibold text-rose-200 flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                >
+                  <LogOut className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>{autoSaveEnabled ? 'Salvar e Voltar ao Início' : 'Voltar ao Início'}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Bottom Next Match Mini-Card (Expanded Mode) */}
@@ -340,7 +471,7 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
             className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs"
             onClick={onCloseMobile}
           />
-          <div className="relative w-64 max-w-[82vw] h-full z-10 shadow-2xl">
+          <div className="relative w-72 max-w-[85vw] h-[100dvh] z-10 shadow-2xl">
             {renderNavContent(false, true)}
           </div>
         </div>
