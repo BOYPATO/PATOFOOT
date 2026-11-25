@@ -23,6 +23,7 @@ import {
   PauseCircle,
   Play,
   RefreshCw,
+  Search,
   Shield,
   Sparkles,
   Users,
@@ -87,6 +88,7 @@ export const Oct2026GlobalSyncModal: React.FC<Oct2026GlobalSyncModalProps> = ({
   const [forceRefreshAll, setForceRefreshAll] = useState<boolean>(false);
   const [providerPref, setProviderPref] = useState<RosterSyncProviderPreference>('AUTO');
   const [apiStatus, setApiStatus] = useState<MonthlyRosterApiStatus | null>(null);
+  const [clubSearchQuery, setClubSearchQuery] = useState<string>('');
 
   useEffect(() => {
     if (!isOpen) return;
@@ -111,6 +113,19 @@ export const Oct2026GlobalSyncModal: React.FC<Oct2026GlobalSyncModalProps> = ({
     );
   }, [isOpen, clubs, syncedClubIds, cacheVersion]);
 
+  const matchingSingleClubs = useMemo(() => {
+    const q = clubSearchQuery.trim().toLowerCase();
+    if (!isOpen || !q || !onSyncSingleClub) return [];
+    return clubs
+      .filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.shortName.toLowerCase().includes(q) ||
+          c.initials.toLowerCase().includes(q)
+      )
+      .slice(0, 6);
+  }, [isOpen, clubSearchQuery, clubs, onSyncSingleClub]);
+
   if (!isOpen || !coverage) return null;
 
   const realSyncPeriod = getCurrentRealWorldSyncPeriod();
@@ -134,7 +149,7 @@ export const Oct2026GlobalSyncModal: React.FC<Oct2026GlobalSyncModalProps> = ({
   const busy = isSyncing || isSyncingSingleClub;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
       <div className="bg-[#090f1d] border border-slate-800 rounded-2xl w-full max-w-4xl my-auto shadow-2xl flex flex-col max-h-[94vh] overflow-hidden">
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between gap-4 bg-[#070c16]">
@@ -144,10 +159,10 @@ export const Oct2026GlobalSyncModal: React.FC<Oct2026GlobalSyncModalProps> = ({
             </div>
             <div className="min-w-0">
               <h2 className="text-base sm:text-lg font-extrabold text-white truncate">
-                API de Elencos Mensal · {realSyncPeriod.fullLabel}
+                Atualizar Elencos (API &amp; IA) · {realSyncPeriod.fullLabel}
               </h2>
               <p className="text-xs text-slate-400 truncate">
-                Fusão Multi-API ao vivo: ESPN Soccer + Wikipedia Live + TheSportsDB + API-Football + Gemini Search
+                Atualize a base antes de iniciar um novo save · ESPN Soccer + Wikipedia Live + TheSportsDB + Gemini Search
               </p>
             </div>
           </div>
@@ -424,6 +439,81 @@ export const Oct2026GlobalSyncModal: React.FC<Oct2026GlobalSyncModalProps> = ({
             </div>
           </div>
 
+          {/* Single-Club Quick Update Search (Pre-Career) */}
+          {onSyncSingleClub && (
+            <div className="bg-[#0c1424] border border-slate-800 rounded-xl p-4 space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Atualizar Clube Específico (API / IA)
+                </h3>
+                <span className="text-[11px] text-slate-400">
+                  Busque qualquer clube para atualizar o elenco individualmente antes de criar o save
+                </span>
+              </div>
+
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={clubSearchQuery}
+                  onChange={(e) => setClubSearchQuery(e.target.value)}
+                  disabled={busy}
+                  placeholder="Digite o nome do clube (ex.: Flamengo, Palmeiras, Real Madrid, Arsenal...)"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-800 focus:border-sky-400 focus:outline-none text-xs text-white placeholder:text-slate-500 disabled:opacity-60"
+                />
+              </div>
+
+              {clubSearchQuery.trim().length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                  {matchingSingleClubs.length > 0 ? (
+                    matchingSingleClubs.map((club) => (
+                      <div
+                        key={club.id}
+                        className="flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div
+                            className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-[10px] border border-white/15 shrink-0"
+                            style={{
+                              backgroundColor: club.colors.primary,
+                              color: club.colors.text,
+                            }}
+                          >
+                            {club.initials}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-white truncate">
+                              {club.name}
+                            </div>
+                            <div className="text-[10px] text-slate-400 truncate">
+                              {resolveClubLeagueDisplayName(club)}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => {
+                            soundEngine.playClick();
+                            onSyncSingleClub(club);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-50 transition-colors"
+                        >
+                          <RefreshCw className={`w-3 h-3 ${isSyncingSingleClub ? 'animate-spin' : ''}`} />
+                          <span>Atualizar</span>
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full text-xs text-slate-400 py-1">
+                      Nenhum clube encontrado para "{clubSearchQuery}".
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Recently Updated Clubs Feed */}
           <div className="bg-[#0c1424] border border-slate-800 rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between gap-2">
@@ -504,7 +594,7 @@ export const Oct2026GlobalSyncModal: React.FC<Oct2026GlobalSyncModalProps> = ({
         {/* Footer Actions */}
         <div className="px-6 py-4 border-t border-slate-800 bg-[#070c16] flex flex-wrap items-center justify-between gap-3">
           <div className="text-xs text-slate-400">
-            Cache mensal automático ({realSyncPeriod.shortLabel}) · Você pode fechar esta janela durante a atualização.
+            Os elencos atualizados aqui ficam salvos na base do jogo e entram automaticamente em qualquer Nova Carreira ({realSyncPeriod.shortLabel}).
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">

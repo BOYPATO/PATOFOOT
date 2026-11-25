@@ -19,6 +19,7 @@ import { PatoLogo } from './PatoLogo';
 import { ClubCrest } from './ClubCrest';
 import { PWAInstallButton } from './PWAInstallButton';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { getCurrentRealWorldSyncPeriod } from '../services/october2026SquadAiService';
 import { formatEuropeanSeason, formatShortDate } from '../utils/calendarUtils';
 import {
   CAREER_SLOT_NUMBERS,
@@ -2023,8 +2024,56 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
               </div>
             </section>
 
+            {/* Dedicated Pre-Career Squad Updater Card (API & IA) */}
+            {onOpenOct2026GlobalSyncModal && (
+              <section className="w-full bg-slate-950/95 border border-sky-500/35 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                <div className="flex items-start sm:items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/35 flex items-center justify-center shrink-0">
+                    {isSyncingOct2026Global ? (
+                      <RefreshCw className="w-5 h-5 text-sky-400 animate-spin" />
+                    ) : (
+                      <Globe className="w-5 h-5 text-sky-400" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-xs sm:text-sm font-black text-white">
+                        Atualizar Elencos via API &amp; IA ({getCurrentRealWorldSyncPeriod().fullLabel})
+                      </h3>
+                      {oct2026TotalClubsCount > 0 && (
+                        <span className="text-[11px] font-mono tabular-nums font-bold text-sky-300">
+                          {oct2026SyncedCount}/{oct2026TotalClubsCount} clubes
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                      Atualize técnicos, contratações e elencos pela API ao vivo ou IA antes de iniciar um novo save. Os elencos baixados entram automaticamente em toda nova carreira.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    onOpenOct2026GlobalSyncModal();
+                  }}
+                  className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-black flex items-center justify-center gap-2 whitespace-nowrap shrink-0 transition-colors cursor-pointer"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 shrink-0 ${isSyncingOct2026Global ? 'animate-spin' : ''}`}
+                  />
+                  <span className="tabular-nums">
+                    {isSyncingOct2026Global
+                      ? `Sincronizando (${oct2026SyncedCount}/${oct2026TotalClubsCount})...`
+                      : 'Atualizar Elencos (API / IA)'}
+                  </span>
+                </button>
+              </section>
+            )}
+
             {/* Compact Quick Tools Row */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <button
                 type="button"
                 onClick={() => {
@@ -2064,28 +2113,6 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
                   <span className="truncate">Manual &amp; Novidades</span>
                 </button>
               )}
-
-              {onOpenOct2026GlobalSyncModal && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundEngine.playClick();
-                    onOpenOct2026GlobalSyncModal();
-                  }}
-                  className="py-2.5 px-3.5 rounded-xl bg-sky-950/35 hover:bg-sky-950/55 border border-sky-500/40 text-xs font-bold text-sky-200 hover:text-white flex items-center justify-center gap-2 transition-colors cursor-pointer"
-                >
-                  {isSyncingOct2026Global ? (
-                    <RefreshCw className="w-4 h-4 text-sky-400 animate-spin shrink-0" />
-                  ) : (
-                    <Globe className="w-4 h-4 text-sky-400 shrink-0" />
-                  )}
-                  <span className="truncate tabular-nums">
-                    {isSyncingOct2026Global
-                      ? `Sincronizando (${oct2026SyncedCount}/${oct2026TotalClubsCount})...`
-                      : 'Atualizar Elencos IA'}
-                  </span>
-                </button>
-              )}
             </div>
           </div>
         )}
@@ -2116,17 +2143,38 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  soundEngine.playClick();
-                  setShowClubPicker(false);
-                }}
-                className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0"
-                title="Fechar"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                {onOpenOct2026GlobalSyncModal && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundEngine.playClick();
+                      onOpenOct2026GlobalSyncModal();
+                    }}
+                    className="px-3 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/40 text-sky-300 hover:text-white text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer"
+                    title="Atualizar elencos pela API ou IA antes de iniciar o save"
+                  >
+                    <RefreshCw
+                      className={`w-3.5 h-3.5 text-sky-400 shrink-0 ${
+                        isSyncingOct2026Global ? 'animate-spin' : ''
+                      }`}
+                    />
+                    <span className="hidden sm:inline">Atualizar Elencos (API / IA)</span>
+                    <span className="sm:hidden">API / IA</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    setShowClubPicker(false);
+                  }}
+                  className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0"
+                  title="Fechar"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Single Smooth Scrollable Body for Filters, Challenges, Club Grid & Selected Details */}

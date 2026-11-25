@@ -3158,85 +3158,6 @@ export default function App() {
         .catch(() => {});
     }
 
-    // Auto-sync priority wave (user club + immediate league rivals) with October 2026 squads via Gemini + Google Search
-    const activeUserClub = gameState.clubs.find((c) => c.id === gameState.userClubId);
-    const alreadySyncedIds = new Set(gameState.aiOct2026SquadSyncedClubIds || []);
-    const cachedOctProfiles = getCachedOct2026SquadProfiles();
-    if (activeUserClub && gameState.currentRound <= 5) {
-      const sameDivisionRivals = gameState.clubs.filter((c) => {
-        if (c.id === activeUserClub.id) return false;
-        if (activeUserClub.europeanLeagueId) {
-          return c.europeanLeagueId === activeUserClub.europeanLeagueId;
-        }
-        if (activeUserClub.southAmericanLeagueId) {
-          return c.southAmericanLeagueId === activeUserClub.southAmericanLeagueId;
-        }
-        if (activeUserClub.worldLeagueId) {
-          return c.worldLeagueId === activeUserClub.worldLeagueId;
-        }
-        return c.division === activeUserClub.division;
-      });
-
-      const priorityWave = [activeUserClub, ...sameDivisionRivals]
-        .filter(
-          (c) =>
-            !SERIE_A_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !SERIE_B_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !SERIE_C_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !POTIGUAR_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !ECUADOR_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !COLOMBIA_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !URUGUAY_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !CHILE_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !PARAGUAY_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !PERU_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !BOLIVIA_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !VENEZUELA_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !ARGENTINA_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !SAUDI_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !MEXICO_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !USA_MLS_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !CANADA_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !RUSSIA_2026_CURATED_CLUB_IDS.has(c.id) &&
-            !alreadySyncedIds.has(c.id) &&
-            !cachedOctProfiles[c.id]
-        )
-        .slice(0, 6);
-
-      if (priorityWave.length > 0) {
-        void syncClubsOct2026SquadsWithAI(priorityWave, {
-          forceRefresh: false,
-          batchSize: priorityWave.length <= 2 ? 2 : 5,
-          onBatchSynced: (batchProfiles, sources) => {
-            if (cancelled) return;
-            const syncedIds = Object.keys(batchProfiles);
-            if (syncedIds.length === 0) return;
-            setOct2026CacheVersion((v) => v + 1);
-            setGameState((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    clubs: prev.clubs.map((c) =>
-                      batchProfiles[c.id] ? applyOct2026AiSquadToClub(c, batchProfiles[c.id]) : c
-                    ),
-                    aiOct2026SquadSyncedClubIds: Array.from(
-                      new Set([...(prev.aiOct2026SquadSyncedClubIds || []), ...syncedIds])
-                    ),
-                  }
-                : prev
-            );
-            if (sources.length > 0) {
-              setOct2026GroundingSources((prev) => {
-                const map = new Map(prev.map((s) => [s.uri, s]));
-                sources.forEach((s) => map.set(s.uri, s));
-                return Array.from(map.values()).slice(0, 16);
-              });
-            }
-          },
-        }).catch(() => {});
-      }
-    }
-
     return () => {
       cancelled = true;
     };
@@ -3260,7 +3181,7 @@ export default function App() {
   const latestGameStateForOctRef = useRef<GameSave | null>(gameState);
   latestGameStateForOctRef.current = gameState;
 
-  // Hydrate persistent server-side October 2026 AI squad cache on boot
+  // Hydrate persistent server-side AI/API squad cache on boot (for Title Screen & new careers)
   useEffect(() => {
     let active = true;
     void hydrateOct2026CacheFromServer()
@@ -3269,17 +3190,6 @@ export default function App() {
         const syncedIds = Object.keys(serverRes.profilesByClubId);
         if (syncedIds.length === 0) return;
         setOct2026CacheVersion((v) => v + 1);
-        setGameState((prev) =>
-          prev
-            ? {
-                ...prev,
-                clubs: applyCachedOct2026SquadsToClubs(prev.clubs, serverRes.profilesByClubId),
-                aiOct2026SquadSyncedClubIds: Array.from(
-                  new Set([...(prev.aiOct2026SquadSyncedClubIds || []), ...syncedIds])
-                ),
-              }
-            : prev
-        );
       })
       .catch(() => {});
     return () => {
@@ -3468,84 +3378,18 @@ export default function App() {
     [gameState, calibratingWlLeagueId]
   );
 
-  const handleSyncOct2026SquadsWithAI = useCallback(
-    async (
-      target:
-        | { mode: 'CLUB'; clubId: string; forceRefresh?: boolean }
-        | { mode: 'COMPETITION'; competition: CompetitionType; forceRefresh?: boolean }
-    ) => {
-      if (!gameState || syncingOct2026Target) return;
-
-      let targetClubs: Club[] = [];
-      let targetKey = '';
-      let targetLabel = '';
-
-      if (target.mode === 'CLUB') {
-        const found = gameState.clubs.find((c) => c.id === target.clubId);
-        if (!found) return;
-        targetClubs = [found];
-        targetKey = `club:${found.id}`;
-        targetLabel = found.name;
-      } else {
-        const comp = target.competition;
-        targetKey = `comp:${comp}`;
-        targetLabel = COMPETITIONS_CATALOG[comp]?.name || comp;
-
-        if (comp === 'serie_a') {
-          targetClubs = gameState.clubs.filter((c) => c.division === 'A');
-        } else if (comp === 'serie_b') {
-          targetClubs = gameState.clubs.filter((c) => c.division === 'B');
-        } else if (comp === 'serie_c') {
-          targetClubs = gameState.clubs.filter((c) => c.division === 'C');
-        } else if (comp === 'serie_d') {
-          targetClubs = gameState.clubs.filter((c) => c.division === 'D');
-        } else if (isSouthAmericanLeague(comp)) {
-          targetClubs = gameState.clubs.filter(
-            (c) => getClubSouthAmericanLeagueId(c) === comp
-          );
-        } else if (isEuropeanLeague(comp)) {
-          targetClubs = gameState.clubs.filter((c) => getClubEuropeanLeagueId(c) === comp);
-        } else if (isWorldLeague(comp)) {
-          targetClubs = gameState.clubs.filter((c) => getClubWorldLeagueId(c) === comp);
-        } else {
-          // Cup/continental competitions: sync participating career clubs
-          const participantIds = new Set<string>();
-          const allCupFixtures = [
-            ...(comp === 'libertadores' ? gameState.fixturesLibertadores || [] : []),
-            ...(comp === 'sulamericana' ? gameState.fixturesSulamericana || [] : []),
-            ...(comp === 'champions_league' ? gameState.fixturesChampionsLeague || [] : []),
-            ...(comp === 'europa_league' ? gameState.fixturesEuropaLeague || [] : []),
-            ...(comp === 'conference_league' ? gameState.fixturesConferenceLeague || [] : []),
-            ...(comp === 'uefa_supercup' ? gameState.fixturesUefaSupercup || [] : []),
-            ...(comp === 'copa_internacional' ? gameState.fixturesCopaInternacional || [] : []),
-            ...(comp === 'concacaf_champions' ? gameState.fixturesConcacafChampions || [] : []),
-            ...(comp === 'afc_champions' ? gameState.fixturesAfcChampions || [] : []),
-            ...(comp === 'intercontinental' ? gameState.fixturesIntercontinental || [] : []),
-            ...(comp === 'copa_brasil' ? gameState.fixturesCopaBrasil || [] : []),
-            ...(comp === 'copa_nordeste' ? gameState.fixturesCopaNordeste || [] : []),
-            ...(comp === 'estadual' ? gameState.fixturesEstadual || [] : []),
-          ];
-          allCupFixtures.forEach((f) => {
-            if (f.homeTeamId) participantIds.add(f.homeTeamId);
-            if (f.awayTeamId) participantIds.add(f.awayTeamId);
-          });
-          targetClubs = gameState.clubs
-            .filter((c) => participantIds.has(c.id))
-            .slice(0, 20);
-        }
-      }
-
-      if (targetClubs.length === 0) return;
-
+  const handleSyncSingleClubForBaseCatalog = useCallback(
+    async (club: Club) => {
+      if (syncingOct2026Target || isSyncingOct2026Global) return;
       const realSyncPeriod = getCurrentRealWorldSyncPeriod();
-      setSyncingOct2026Target(targetKey);
+      setSyncingOct2026Target(`club:${club.id}`);
       setOct2026SyncFeedback(
-        `Consultando API de elencos (${realSyncPeriod.fullLabel}) para ${targetLabel}...`
+        `Consultando API de elencos (${realSyncPeriod.fullLabel}) para ${club.name}...`
       );
       try {
         const res = await syncClubsOct2026SquadsWithAI(
-          targetClubs,
-          target.forceRefresh ?? true,
+          [club],
+          true,
           (batchLabel, done, total) => {
             setOct2026SyncFeedback(
               `Consultando API ${realSyncPeriod.shortLabel} (${done}/${total}): ${batchLabel}...`
@@ -3555,56 +3399,35 @@ export default function App() {
 
         if (res.syncedCount > 0) {
           setOct2026CacheVersion((v) => v + 1);
-          const batchRecent = Object.entries(res.profilesByClubId)
-            .map(([clubId, profile]) => {
-              const baseClub = targetClubs.find((c) => c.id === clubId);
-              if (!baseClub) return null;
-              const updated = applyOct2026AiSquadToClub(baseClub, profile);
-              const starters = updated.squad.filter((p) => p.isStarter);
-              const avgOvr =
-                starters.length > 0
-                  ? Math.round(starters.reduce((s, p) => s + p.overall, 0) / starters.length)
-                  : 70;
-              const topPlayers = [...updated.squad]
-                .sort((a, b) => b.overall - a.overall)
-                .slice(0, 3)
-                .map((p) => `${p.name} (${p.overall})`);
-              const item: RecentUpdatedClubItem = {
-                clubId: updated.id,
-                clubName: updated.name,
-                initials: updated.initials,
-                primaryColor: updated.colors.primary,
-                textColor: updated.colors.text,
-                leagueLabel: resolveClubLeagueDisplayName(updated),
-                managerName: updated.managerName || profile.managerName || 'Comissão Técnica',
-                topPlayers,
-                avgOvr,
-                sourceLabel: profile.sourceLabel,
-              };
-              return item;
-            })
-            .filter((item): item is RecentUpdatedClubItem => item !== null);
-          if (batchRecent.length > 0) {
-            setOct2026RecentUpdatedClubs((prev) => {
-              const seen = new Set(batchRecent.map((r) => r.clubId));
-              return [...batchRecent, ...prev.filter((r) => !seen.has(r.clubId))].slice(0, 40);
-            });
-          }
-          setGameState((prev) => {
-            if (!prev) return prev;
-            const syncedIds = Object.keys(res.profilesByClubId);
-            return {
-              ...prev,
-              clubs: prev.clubs.map((c) =>
-                res.profilesByClubId[c.id]
-                  ? applyOct2026AiSquadToClub(c, res.profilesByClubId[c.id])
-                  : c
-              ),
-              aiOct2026SquadSyncedClubIds: Array.from(
-                new Set([...(prev.aiOct2026SquadSyncedClubIds || []), ...syncedIds])
-              ),
+          const profile = res.profilesByClubId[club.id];
+          if (profile) {
+            const updated = applyOct2026AiSquadToClub(club, profile);
+            const starters = updated.squad.filter((p) => p.isStarter);
+            const avgOvr =
+              starters.length > 0
+                ? Math.round(starters.reduce((s, p) => s + p.overall, 0) / starters.length)
+                : 70;
+            const topPlayers = [...updated.squad]
+              .sort((a, b) => b.overall - a.overall)
+              .slice(0, 3)
+              .map((p) => `${p.name} (${p.overall})`);
+            const item: RecentUpdatedClubItem = {
+              clubId: updated.id,
+              clubName: updated.name,
+              initials: updated.initials,
+              primaryColor: updated.colors.primary,
+              textColor: updated.colors.text,
+              leagueLabel: resolveClubLeagueDisplayName(updated),
+              managerName: updated.managerName || profile.managerName || 'Comissão Técnica',
+              topPlayers,
+              avgOvr,
+              sourceLabel: profile.sourceLabel,
             };
-          });
+            setOct2026RecentUpdatedClubs((prev) => [
+              item,
+              ...prev.filter((r) => r.clubId !== item.clubId),
+            ].slice(0, 40));
+          }
           if (res.groundingSources.length > 0) {
             setOct2026GroundingSources(res.groundingSources);
           }
@@ -3617,13 +3440,11 @@ export default function App() {
           ).join(' + ');
           const sourceSuffix = usedSourcesSummary ? ` (${usedSourcesSummary})` : '';
           setOct2026SyncFeedback(
-            target.mode === 'CLUB'
-              ? `Elenco de ${targetLabel} atualizado via API para ${realSyncPeriod.fullLabel}${sourceSuffix}!`
-              : `${targetLabel}: ${res.syncedCount} clube(s) atualizados via API para ${realSyncPeriod.fullLabel}${sourceSuffix}!`
+            `Elenco de ${club.name} atualizado via API para ${realSyncPeriod.fullLabel}${sourceSuffix}! Disponível para novas carreiras.`
           );
         } else {
           setOct2026SyncFeedback(
-            `Elenco de ${targetLabel} mantido com 30 jogadores de ${realSyncPeriod.fullLabel}.`
+            `Elenco de ${club.name} mantido com os dados atuais de ${realSyncPeriod.fullLabel}.`
           );
         }
       } catch (err: unknown) {
@@ -3636,7 +3457,7 @@ export default function App() {
         setSyncingOct2026Target(null);
       }
     },
-    [gameState, syncingOct2026Target]
+    [syncingOct2026Target, isSyncingOct2026Global]
   );
 
   const handleStopGlobalOct2026Sync = useCallback(() => {
@@ -3659,15 +3480,14 @@ export default function App() {
       const controller = new AbortController();
       oct2026AbortRef.current = controller;
 
-      const currentSave = latestGameStateForOctRef.current;
-      const sourceClubs =
-        currentSave?.clubs ||
-        applyCachedOct2026SquadsToClubs(generateInitialClubs(), getCachedOct2026SquadProfiles());
+      const sourceClubs = applyCachedOct2026SquadsToClubs(
+        generateInitialClubs(),
+        getCachedOct2026SquadProfiles()
+      );
 
       const orderedClubs = filterAndPrioritizeClubsForOct2026Sync(
         sourceClubs,
-        scope,
-        currentSave?.userClubId
+        scope
       );
 
       if (orderedClubs.length === 0) return;
@@ -3715,11 +3535,10 @@ export default function App() {
 
             setOct2026CacheVersion((v) => v + 1);
 
-            const latestClubs = latestGameStateForOctRef.current?.clubs || sourceClubs;
             const batchRecent: RecentUpdatedClubItem[] = [];
             for (const clubId of syncedIds) {
               const profile = batchProfiles[clubId];
-              const baseClub = latestClubs.find((c) => c.id === clubId);
+              const baseClub = sourceClubs.find((c) => c.id === clubId);
               if (!profile || !baseClub) continue;
               const updated = applyOct2026AiSquadToClub(baseClub, profile);
               const starters = updated.squad.filter((p) => p.isStarter);
@@ -3759,42 +3578,11 @@ export default function App() {
                 return Array.from(map.values()).slice(0, 16);
               });
             }
-
-            setGameState((prev) => {
-              if (!prev) return prev;
-              return {
-                ...prev,
-                clubs: prev.clubs.map((c) =>
-                  batchProfiles[c.id] ? applyOct2026AiSquadToClub(c, batchProfiles[c.id]) : c
-                ),
-                aiOct2026SquadSyncedClubIds: Array.from(
-                  new Set([...(prev.aiOct2026SquadSyncedClubIds || []), ...syncedIds])
-                ),
-                aiOct2026GlobalSyncedAt: new Date().toLocaleString('pt-BR'),
-              };
-            });
           },
         });
 
-        // Also apply any already-cached profiles from this run that didn't require a network batch
         if (res.syncedCount > 0) {
           setOct2026CacheVersion((v) => v + 1);
-          setGameState((prev) => {
-            if (!prev) return prev;
-            const allProfileIds = Object.keys(res.profilesByClubId);
-            return {
-              ...prev,
-              clubs: prev.clubs.map((c) =>
-                res.profilesByClubId[c.id]
-                  ? applyOct2026AiSquadToClub(c, res.profilesByClubId[c.id])
-                  : c
-              ),
-              aiOct2026SquadSyncedClubIds: Array.from(
-                new Set([...(prev.aiOct2026SquadSyncedClubIds || []), ...allProfileIds])
-              ),
-              aiOct2026GlobalSyncedAt: new Date().toLocaleString('pt-BR'),
-            };
-          });
         }
 
         if (res.quotaPaused) {
@@ -3860,6 +3648,7 @@ export default function App() {
       challengeId?: CareerChallengeId;
     }
   ) => {
+    setIsOct2026ModalOpen(false);
     const chosenSpecialty = getManagerSpecialtyProfile(options?.managerSpecialty);
     const chosenChallenge = getCareerChallengeDefinition(options?.challengeId);
 
@@ -4482,10 +4271,10 @@ export default function App() {
     void oct2026CacheVersion;
     return computeOct2026CoverageSummary(
       titleInitialClubs,
-      gameState?.aiOct2026SquadSyncedClubIds || [],
+      [],
       getCachedOct2026SquadProfiles()
     );
-  }, [needsTitleCatalog, titleInitialClubs, gameState?.aiOct2026SquadSyncedClubIds, oct2026CacheVersion]);
+  }, [needsTitleCatalog, titleInitialClubs, oct2026CacheVersion]);
 
   const handleRequestTitleClubsCatalog = useCallback(() => {
     setIsTitleCatalogRequested(true);
@@ -4497,6 +4286,7 @@ export default function App() {
       if (gameSettings.autoSaveEnabled) {
         void persistCareerSave('brasfoot_autosave', sanitized);
       }
+      setIsOct2026ModalOpen(false);
       setGameState(sanitized);
       setIsAtTitleScreen(false);
     },
@@ -4504,6 +4294,7 @@ export default function App() {
   );
 
   const handleResumeSavedGameOnTitle = useCallback(() => {
+    setIsOct2026ModalOpen(false);
     if (gameState) {
       setIsAtTitleScreen(false);
       return;
@@ -4656,9 +4447,9 @@ export default function App() {
         {isOct2026ModalOpen && (
           <Oct2026GlobalSyncModal
             isOpen={isOct2026ModalOpen}
-            clubs={gameState?.clubs || titleInitialClubs}
-            userClub={activeUserClub || null}
-            syncedClubIds={gameState?.aiOct2026SquadSyncedClubIds || []}
+            clubs={titleInitialClubs}
+            userClub={null}
+            syncedClubIds={[]}
             cacheVersion={oct2026CacheVersion}
             isSyncing={isSyncingOct2026Global}
             isSyncingSingleClub={Boolean(syncingOct2026Target)}
@@ -4670,17 +4461,9 @@ export default function App() {
             onStartSync={(scope, forceRefresh, preferredProvider) => {
               void handleStartGlobalOct2026Sync(scope, forceRefresh, preferredProvider);
             }}
-            onSyncSingleClub={
-              gameState
-                ? (club) => {
-                    void handleSyncOct2026SquadsWithAI({
-                      mode: 'CLUB',
-                      clubId: club.id,
-                      forceRefresh: true,
-                    });
-                  }
-                : undefined
-            }
+            onSyncSingleClub={(club) => {
+              void handleSyncSingleClubForBaseCatalog(club);
+            }}
             onStopSync={handleStopGlobalOct2026Sync}
             onClose={() => setIsOct2026ModalOpen(false)}
           />
@@ -10790,8 +10573,6 @@ export default function App() {
         }}
         onOpenOfficialSite={() => handleOpenOfficialSite('compartilhar')}
         onSaveAndExitToTitle={handleSaveAndExitToTitle}
-        onOpenOct2026GlobalSyncModal={() => setIsOct2026ModalOpen(true)}
-        isSyncingOct2026Global={isSyncingOct2026Global}
         autoSaveEnabled={gameSettings.autoSaveEnabled}
       />
 
@@ -10831,10 +10612,6 @@ export default function App() {
           hasUpcomingMatch={Boolean(upcomingUserFixture || hasPreCutoffSelecaoMatches)}
           onFinishSeason={handleFinishSeason}
           autoSaveEnabled={gameSettings.autoSaveEnabled}
-          onOpenOct2026GlobalSyncModal={() => setIsOct2026ModalOpen(true)}
-          isSyncingOct2026Global={isSyncingOct2026Global}
-          oct2026SyncedCount={oct2026Coverage.syncedClubs}
-          oct2026TotalClubsCount={oct2026Coverage.totalClubs}
         />
 
         {/* Main Content Area */}
@@ -10925,23 +10702,6 @@ export default function App() {
               onInstantResult={() => handleInstantSimulateNextMatch()}
               onAdvanceToMatch={handleAdvanceToMatch}
               onFinishSeason={handleFinishSeason}
-              onOpenOct2026GlobalSyncModal={() => setIsOct2026ModalOpen(true)}
-              onQuickSyncAllClubsOct2026={() => {
-                setIsOct2026ModalOpen(true);
-                void handleStartGlobalOct2026Sync('ALL', false);
-              }}
-              onQuickSyncMyClubOct2026={() => {
-                void handleSyncOct2026SquadsWithAI({
-                  mode: 'CLUB',
-                  clubId: userClub.id,
-                  forceRefresh: true,
-                });
-              }}
-              isSyncingOct2026Global={isSyncingOct2026Global}
-              isSyncingMyClubOct2026={Boolean(syncingOct2026Target)}
-              oct2026SyncedCount={oct2026Coverage.syncedClubs}
-              oct2026TotalClubsCount={oct2026Coverage.totalClubs}
-              oct2026GlobalStatusText={oct2026SyncFeedback}
               hasDismissedOnboarding={Boolean(gameSettings.hasDismissedOnboarding)}
               onDismissOnboarding={() =>
                 handleUpdateSettings({
@@ -11112,21 +10872,6 @@ export default function App() {
                 nationalitySyncFeedback={nationalitySyncFeedback}
                 onSyncNationalitiesWithAI={() => void handleSyncNationalitiesWithAI(true)}
                 onDismissNationalitySyncFeedback={() => setNationalitySyncFeedback(null)}
-                isSyncingOct2026Squad={syncingOct2026Target === `club:${userClub.id}`}
-                oct2026SyncFeedback={oct2026SyncFeedback}
-                oct2026GroundingSources={oct2026GroundingSources}
-                onSyncOct2026SquadWithAI={() =>
-                  void handleSyncOct2026SquadsWithAI({
-                    mode: 'CLUB',
-                    clubId: userClub.id,
-                    forceRefresh: true,
-                  })
-                }
-                onDismissOct2026SyncFeedback={() => {
-                  setOct2026SyncFeedback(null);
-                  setOct2026GroundingSources([]);
-                }}
-                onOpenOct2026GlobalSyncModal={() => setIsOct2026ModalOpen(true)}
                 onUpdateSquad={handleUpdateSquad}
                 onTriggerBuyOption={handleTriggerBuyOption}
                 onNegotiateLoanBuyOption={handleNegotiateLoanBuyOption}
@@ -11298,30 +11043,6 @@ export default function App() {
             saSeasonYear={gameState.saSeasonYear}
             initialCompetition={standingsInitialComp}
             competitionSelectNonce={standingsCompNonce}
-            calibratingSaLeagueId={calibratingSaLeagueId}
-            saAiFeedback={saAiFeedback}
-            onCalibrateSouthAmericaLeague={handleCalibrateSouthAmericaLeagueWithAI}
-            calibratingEuLeagueId={calibratingEuLeagueId}
-            euAiFeedback={euAiFeedback}
-            onCalibrateEuropeLeague={handleCalibrateEuropeLeagueWithAI}
-            calibratingWlLeagueId={calibratingWlLeagueId}
-            wlAiFeedback={wlAiFeedback}
-            onCalibrateWorldLeague={handleCalibrateWorldLeagueWithAI}
-            syncingOct2026Target={syncingOct2026Target}
-            oct2026SyncFeedback={oct2026SyncFeedback}
-            oct2026GroundingSources={oct2026GroundingSources}
-            onSyncCompetitionOct2026Squads={(comp) =>
-              void handleSyncOct2026SquadsWithAI({
-                mode: 'COMPETITION',
-                competition: comp,
-                forceRefresh: true,
-              })
-            }
-            onDismissOct2026Feedback={() => {
-              setOct2026SyncFeedback(null);
-              setOct2026GroundingSources([]);
-            }}
-            onOpenOct2026GlobalSyncModal={() => setIsOct2026ModalOpen(true)}
             onInspectClub={(clubId) => {
               setInspectedClubId(clubId);
               setInspectedPlayerId(undefined);
@@ -11353,22 +11074,6 @@ export default function App() {
               setMarketInitialTab('all');
               setActiveTab('market');
             }}
-            syncingOct2026Target={syncingOct2026Target}
-            oct2026SyncFeedback={oct2026SyncFeedback}
-            oct2026GroundingSources={oct2026GroundingSources}
-            onSyncClubOct2026Squad={(clubId) =>
-              void handleSyncOct2026SquadsWithAI({
-                mode: 'CLUB',
-                clubId,
-                forceRefresh: true,
-              })
-            }
-            onDismissOct2026Feedback={() => {
-              setOct2026SyncFeedback(null);
-              setOct2026GroundingSources([]);
-            }}
-            onOpenOct2026GlobalSyncModal={() => setIsOct2026ModalOpen(true)}
-            isSyncingOct2026Global={isSyncingOct2026Global}
           />
         )}
 
@@ -11773,36 +11478,6 @@ export default function App() {
         <GameGuideModal
           initialTab={guideInitialTab}
           onClose={() => setIsGuideModalOpen(false)}
-        />
-      )}
-
-      {/* Global Monthly Live Roster API Sync Modal */}
-      {isOct2026ModalOpen && (
-        <Oct2026GlobalSyncModal
-          isOpen={isOct2026ModalOpen}
-          clubs={gameState.clubs}
-          userClub={userClub}
-          syncedClubIds={gameState.aiOct2026SquadSyncedClubIds || []}
-          cacheVersion={oct2026CacheVersion}
-          isSyncing={isSyncingOct2026Global}
-          isSyncingSingleClub={Boolean(syncingOct2026Target)}
-          activeScope={oct2026ActiveScope}
-          progress={oct2026BatchProgress}
-          statusMessage={oct2026SyncFeedback}
-          groundingSources={oct2026GroundingSources}
-          recentUpdatedClubs={oct2026RecentUpdatedClubs}
-          onStartSync={(scope, forceRefresh, preferredProvider) => {
-            void handleStartGlobalOct2026Sync(scope, forceRefresh, preferredProvider);
-          }}
-          onSyncSingleClub={(club) => {
-            void handleSyncOct2026SquadsWithAI({
-              mode: 'CLUB',
-              clubId: club.id,
-              forceRefresh: true,
-            });
-          }}
-          onStopSync={handleStopGlobalOct2026Sync}
-          onClose={() => setIsOct2026ModalOpen(false)}
         />
       )}
 
