@@ -336,6 +336,8 @@ service cloud.firestore {
         && (resource.data.uid == request.auth.uid || isBootstrappedAdmin());
 
       allow list: if isSignedIn()
+        && request.query.limit != null
+        && request.query.limit <= 100
         && (resource.data.uid == request.auth.uid || isBootstrappedAdmin());
 
       allow create: if isSignedIn()

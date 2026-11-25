@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import crypto from 'crypto';
 import fs from 'fs';
+import { promisify } from 'util';
 import zlib from 'zlib';
 import { execSync } from 'child_process';
 import express from 'express';
@@ -80,35 +81,74 @@ function normalizeServerRecoverySecret(raw: unknown): string {
     .slice(0, 80);
 }
 
-function readTrainerAccounts(): StoredTrainerAccount[] {
+const scryptAsync = promisify(crypto.scrypt);
+const gzipAsync = promisify(zlib.gzip);
+const gunzipAsync = promisify(zlib.gunzip);
+
+const SCRYPT_KEYLEN = 64;
+const MAX_STORED_ACCOUNTS = 20_000;
+const MAX_DECOMPRESSED_SAVE_BYTES = 24 * 1024 * 1024; // 24 MB anti-zip-bomb cap
+
+let trainerAccountsCache: StoredTrainerAccount[] | null = null;
+let accountsWriteChain: Promise<void> = Promise.resolve();
+
+async function atomicWriteJsonFile(targetPath: string, data: unknown): Promise<void> {
+  if (!fs.existsSync(ACCOUNTS_DIR)) {
+    await fs.promises.mkdir(ACCOUNTS_DIR, { recursive: true });
+  }
+  const tmpPath = `${targetPath}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`;
+  const serialized = JSON.stringify(data, null, 2);
+  await fs.promises.writeFile(tmpPath, serialized, { encoding: 'utf-8', mode: 0o600 });
+  await fs.promises.rename(tmpPath, targetPath);
+}
+
+function getTrainerAccountsSnapshot(): StoredTrainerAccount[] {
+  if (trainerAccountsCache !== null) {
+    return trainerAccountsCache;
+  }
   try {
-    if (!fs.existsSync(ACCOUNTS_FILE)) return [];
+    if (!fs.existsSync(ACCOUNTS_FILE)) {
+      trainerAccountsCache = [];
+      return trainerAccountsCache;
+    }
     const content = fs.readFileSync(ACCOUNTS_FILE, 'utf-8');
     const parsed = JSON.parse(content);
-    return Array.isArray(parsed) ? (parsed as StoredTrainerAccount[]) : [];
+    trainerAccountsCache = Array.isArray(parsed) ? (parsed as StoredTrainerAccount[]) : [];
+    return trainerAccountsCache;
   } catch {
-    return [];
+    trainerAccountsCache = [];
+    return trainerAccountsCache;
   }
 }
 
-function writeTrainerAccounts(accounts: StoredTrainerAccount[]): void {
-  try {
-    if (!fs.existsSync(ACCOUNTS_DIR)) {
-      fs.mkdirSync(ACCOUNTS_DIR, { recursive: true });
-    }
-    fs.writeFileSync(ACCOUNTS_FILE, JSON.stringify(accounts, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('[Trainer Auth Store Write Error]:', err);
-  }
+function enqueueTrainerAccountsPersist(accounts: StoredTrainerAccount[]): Promise<void> {
+  trainerAccountsCache = accounts;
+  const snapshot = accounts.slice(0, MAX_STORED_ACCOUNTS);
+  accountsWriteChain = accountsWriteChain
+    .then(() => atomicWriteJsonFile(ACCOUNTS_FILE, snapshot))
+    .catch((err) => {
+      console.error('[Trainer Auth Store Write Error]:', err);
+    });
+  return accountsWriteChain;
 }
 
-function hashPasswordWithSalt(password: string, saltHex: string): string {
-  return crypto.scryptSync(password, Buffer.from(saltHex, 'hex'), 64).toString('hex');
+async function hashPasswordWithSaltAsync(password: string, saltHex: string): Promise<string> {
+  const derived = (await scryptAsync(
+    password,
+    Buffer.from(saltHex, 'hex'),
+    SCRYPT_KEYLEN
+  )) as Buffer;
+  return derived.toString('hex');
 }
 
-function verifyPasswordHash(password: string, saltHex: string, expectedHashHex: string): boolean {
+async function verifyPasswordHashAsync(
+  password: string,
+  saltHex: string,
+  expectedHashHex: string
+): Promise<boolean> {
   try {
-    const computed = Buffer.from(hashPasswordWithSalt(password, saltHex), 'hex');
+    const computedHex = await hashPasswordWithSaltAsync(password, saltHex);
+    const computed = Buffer.from(computedHex, 'hex');
     const expected = Buffer.from(expectedHashHex, 'hex');
     if (computed.length !== expected.length) return false;
     return crypto.timingSafeEqual(computed, expected);
@@ -308,19 +348,36 @@ function loadPersistedNationalityCache(): void {
   }
 }
 
+const MAX_NATIONALITY_CACHE_ENTRIES = 25_000;
+const MAX_SQUAD_CACHE_ENTRIES = 1_500;
+let cachePersistChain: Promise<void> = Promise.resolve();
+let nationalitySaveTimer: ReturnType<typeof setTimeout> | null = null;
+let oct2026SaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+function trimMapToLimit<K, V>(map: Map<K, V>, maxEntries: number): void {
+  while (map.size > maxEntries) {
+    const oldestKey = map.keys().next().value;
+    if (oldestKey === undefined) break;
+    map.delete(oldestKey);
+  }
+}
+
 function savePersistedNationalityCache(): void {
-  try {
-    if (!fs.existsSync(ACCOUNTS_DIR)) {
-      fs.mkdirSync(ACCOUNTS_DIR, { recursive: true });
-    }
+  trimMapToLimit(resolvedNationalityCache, MAX_NATIONALITY_CACHE_ENTRIES);
+  if (nationalitySaveTimer) return;
+  nationalitySaveTimer = setTimeout(() => {
+    nationalitySaveTimer = null;
     const obj: Record<string, string> = {};
     for (const [k, v] of resolvedNationalityCache.entries()) {
       obj[k] = v;
     }
-    fs.writeFileSync(NATIONALITIES_CACHE_FILE, JSON.stringify(obj, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('[Nationality Cache Write Error]:', err);
-  }
+    cachePersistChain = cachePersistChain
+      .then(() => atomicWriteJsonFile(NATIONALITIES_CACHE_FILE, obj))
+      .catch((err) => {
+        console.error('[Nationality Cache Write Error]:', err);
+      });
+  }, 500);
+  nationalitySaveTimer.unref?.();
 }
 
 function loadPersistedOct2026SquadCache(): void {
@@ -334,6 +391,7 @@ function loadPersistedOct2026SquadCache(): void {
           resolvedOct2026SquadCache.set(k, v);
         }
       }
+      trimMapToLimit(resolvedOct2026SquadCache, MAX_SQUAD_CACHE_ENTRIES);
     }
   } catch {
     // Ignore corrupted cache file
@@ -341,22 +399,26 @@ function loadPersistedOct2026SquadCache(): void {
 }
 
 function savePersistedOct2026SquadCache(): void {
-  try {
-    if (!fs.existsSync(ACCOUNTS_DIR)) {
-      fs.mkdirSync(ACCOUNTS_DIR, { recursive: true });
-    }
+  trimMapToLimit(resolvedOct2026SquadCache, MAX_SQUAD_CACHE_ENTRIES);
+  if (oct2026SaveTimer) return;
+  oct2026SaveTimer = setTimeout(() => {
+    oct2026SaveTimer = null;
     const obj: Record<string, Oct2026ClubSquadOutput> = {};
     for (const [k, v] of resolvedOct2026SquadCache.entries()) {
       obj[k] = v;
     }
-    fs.writeFileSync(OCT2026_SQUADS_CACHE_FILE, JSON.stringify(obj, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('[Oct2026 Squad Cache Write Error]:', err);
-  }
+    cachePersistChain = cachePersistChain
+      .then(() => atomicWriteJsonFile(OCT2026_SQUADS_CACHE_FILE, obj))
+      .catch((err) => {
+        console.error('[Oct2026 Squad Cache Write Error]:', err);
+      });
+  }, 500);
+  oct2026SaveTimer.unref?.();
 }
 
 loadPersistedNationalityCache();
 loadPersistedOct2026SquadCache();
+getTrainerAccountsSnapshot();
 
 function extractJsonArrayFromText(rawText: string): Array<{ id: string; nationality: string }> | null {
   const cleaned = (rawText || '')
@@ -512,11 +574,23 @@ async function startServer() {
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
 
-  // Security headers (compatible with iframe preview — intentionally omits X-Frame-Options)
-  app.use((_req, res, next) => {
+  // Hardened security headers (compatible with iframe preview — intentionally omits X-Frame-Options)
+  app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+    res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+    const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
+    if (isHttps) {
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+    if (req.path.startsWith('/api/')) {
+      res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+    }
+    if (req.path.startsWith('/api/auth') || req.path.startsWith('/api/sql')) {
+      res.setHeader('Cache-Control', 'no-store, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+    }
     next();
   });
 
@@ -565,9 +639,141 @@ async function startServer() {
     next();
   });
 
-  app.use(express.json({ limit: '2mb' }));
+  // Neutralize compressed-request-body DoS attacks on API endpoints before JSON body parsing
+  app.use('/api', (req, res, next) => {
+    if (req.headers['content-encoding'] && req.headers['content-encoding'] !== 'identity') {
+      res.status(415).json({
+        error: 'UNSUPPORTED_CONTENT_ENCODING',
+        message: 'Requisições compactadas não são aceitas neste endpoint.',
+      });
+      return;
+    }
+    next();
+  });
 
-  // Zero-dependency sliding-window rate limiter for production quota & auth protection
+  // Same-Origin enforcement on state-changing API requests (anti-CSRF / cross-domain abuse guard)
+  app.use('/api', (req, res, next) => {
+    const isMutation =
+      req.method === 'POST' ||
+      req.method === 'PUT' ||
+      req.method === 'PATCH' ||
+      req.method === 'DELETE';
+    if (!isMutation) {
+      next();
+      return;
+    }
+    const originHeader = req.get('origin');
+    if (!originHeader) {
+      next();
+      return;
+    }
+    try {
+      const parsedOrigin = new URL(originHeader);
+      const allowedHosts = new Set<string>();
+      const reqHost = String(req.get('x-forwarded-host') || req.get('host') || '')
+        .split(',')[0]
+        .trim()
+        .toLowerCase();
+      if (reqHost) {
+        allowedHosts.add(reqHost);
+        allowedHosts.add(reqHost.split(':')[0]);
+      }
+      const envAppUrl = String(process.env.APP_URL || '').trim();
+      if (/^https?:\/\//i.test(envAppUrl) && !envAppUrl.includes('MY_APP_URL')) {
+        try {
+          const parsedEnv = new URL(envAppUrl);
+          allowedHosts.add(parsedEnv.host.toLowerCase());
+          allowedHosts.add(parsedEnv.hostname.toLowerCase());
+        } catch {
+          // ignore malformed APP_URL
+        }
+      }
+      const originHost = parsedOrigin.host.toLowerCase();
+      const originHostname = parsedOrigin.hostname.toLowerCase();
+      const isAllowed =
+        allowedHosts.size === 0 ||
+        allowedHosts.has(originHost) ||
+        allowedHosts.has(originHostname);
+      if (!isAllowed) {
+        res.status(403).json({
+          error: 'FORBIDDEN_ORIGIN',
+          message: 'Origem da requisição não autorizada.',
+        });
+        return;
+      }
+      next();
+    } catch {
+      res.status(403).json({
+        error: 'INVALID_ORIGIN',
+        message: 'Cabeçalho de origem inválido.',
+      });
+    }
+  });
+
+  app.use(express.json({ limit: '2mb', strict: true }));
+
+  // Clean JSON 400 error handler for malformed payloads (never leak Express HTML stack traces)
+  app.use(
+    (
+      err: unknown,
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ) => {
+      if (err && typeof err === 'object' && 'status' in err && (err as { status?: number }).status === 400) {
+        res.status(400).json({
+          error: 'INVALID_JSON',
+          message: 'Corpo JSON inválido.',
+        });
+        return;
+      }
+      if (err && typeof err === 'object' && 'type' in err && (err as { type?: string }).type === 'entity.too.large') {
+        res.status(413).json({
+          error: 'PAYLOAD_TOO_LARGE',
+          message: 'Tamanho máximo da requisição excedido.',
+        });
+        return;
+      }
+      if (req.path.startsWith('/api/')) {
+        console.error('[API Middleware Error]:', err);
+        res.status(500).json({
+          error: 'INTERNAL_ERROR',
+          message: 'Erro interno ao processar a requisição.',
+        });
+        return;
+      }
+      next(err);
+    }
+  );
+
+  // Strip dangerous prototype-pollution keys (__proto__, constructor, prototype) from incoming JSON bodies
+  const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+  const sanitizeIncomingObject = (value: unknown, depth = 0): unknown => {
+    if (depth > 12 || value === null || typeof value !== 'object') return value;
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        value[i] = sanitizeIncomingObject(value[i], depth + 1);
+      }
+      return value;
+    }
+    const obj = value as Record<string, unknown>;
+    for (const key of Object.keys(obj)) {
+      if (DANGEROUS_KEYS.has(key)) {
+        delete obj[key];
+      } else {
+        obj[key] = sanitizeIncomingObject(obj[key], depth + 1);
+      }
+    }
+    return obj;
+  };
+  app.use('/api', (req, _res, next) => {
+    if (req.body && typeof req.body === 'object') {
+      sanitizeIncomingObject(req.body);
+    }
+    next();
+  });
+
+  // Zero-dependency bounded sliding-window rate limiter (memory-capped for DDoS/flood resilience)
   interface RateBucket {
     count: number;
     resetAt: number;
@@ -577,8 +783,10 @@ async function startServer() {
     max: number;
     message: string;
     bucketPrefix: string;
+    maxEntries?: number;
   }) => {
     const store = new Map<string, RateBucket>();
+    const maxEntries = opts.maxEntries ?? 10_000;
     const cleanupTimer = setInterval(() => {
       const now = Date.now();
       for (const [k, entry] of store.entries()) {
@@ -596,7 +804,13 @@ async function startServer() {
       const existing = store.get(key);
 
       if (!existing || existing.resetAt <= now) {
+        if (store.size >= maxEntries) {
+          const oldestKey = store.keys().next().value;
+          if (oldestKey !== undefined) store.delete(oldestKey);
+        }
         store.set(key, { count: 1, resetAt: now + opts.windowMs });
+        res.setHeader('X-RateLimit-Limit', String(opts.max));
+        res.setHeader('X-RateLimit-Remaining', String(Math.max(0, opts.max - 1)));
         next();
         return;
       }
@@ -604,6 +818,8 @@ async function startServer() {
       if (existing.count >= opts.max) {
         const retryAfterSeconds = Math.max(1, Math.ceil((existing.resetAt - now) / 1000));
         res.setHeader('Retry-After', String(retryAfterSeconds));
+        res.setHeader('X-RateLimit-Limit', String(opts.max));
+        res.setHeader('X-RateLimit-Remaining', '0');
         res.status(429).json({
           error: 'RATE_LIMITED',
           message: opts.message,
@@ -613,9 +829,99 @@ async function startServer() {
       }
 
       existing.count += 1;
+      res.setHeader('X-RateLimit-Limit', String(opts.max));
+      res.setHeader('X-RateLimit-Remaining', String(Math.max(0, opts.max - existing.count)));
       next();
     };
   };
+
+  // Per-account brute-force lockout guard (stops distributed password guessing across rotating IPs)
+  interface AccountLockState {
+    failures: number;
+    lockUntil: number;
+    lastAttemptAt: number;
+  }
+  const accountLockStore = new Map<string, AccountLockState>();
+  const ACCOUNT_LOCK_MAX_FAILURES = 6;
+  const ACCOUNT_LOCK_DURATION_MS = 15 * 60 * 1000;
+  const ACCOUNT_LOCK_WINDOW_MS = 15 * 60 * 1000;
+
+  const accountLockCleanup = setInterval(() => {
+    const now = Date.now();
+    for (const [k, state] of accountLockStore.entries()) {
+      if (state.lockUntil <= now && now - state.lastAttemptAt > ACCOUNT_LOCK_WINDOW_MS) {
+        accountLockStore.delete(k);
+      }
+    }
+  }, 5 * 60 * 1000);
+  accountLockCleanup.unref?.();
+
+  const getAccountLockRemainingSeconds = (accountKey: string): number => {
+    const state = accountLockStore.get(accountKey);
+    if (!state) return 0;
+    const now = Date.now();
+    if (state.lockUntil > now) {
+      return Math.max(1, Math.ceil((state.lockUntil - now) / 1000));
+    }
+    return 0;
+  };
+
+  const recordAccountAuthFailure = (accountKey: string): number => {
+    const now = Date.now();
+    const prev = accountLockStore.get(accountKey);
+    const failures =
+      prev && now - prev.lastAttemptAt <= ACCOUNT_LOCK_WINDOW_MS ? prev.failures + 1 : 1;
+    const lockUntil = failures >= ACCOUNT_LOCK_MAX_FAILURES ? now + ACCOUNT_LOCK_DURATION_MS : 0;
+    if (accountLockStore.size >= 10_000 && !accountLockStore.has(accountKey)) {
+      const oldest = accountLockStore.keys().next().value;
+      if (oldest !== undefined) accountLockStore.delete(oldest);
+    }
+    accountLockStore.set(accountKey, { failures, lockUntil, lastAttemptAt: now });
+    return lockUntil > now ? Math.ceil((lockUntil - now) / 1000) : 0;
+  };
+
+  const clearAccountAuthFailures = (accountKey: string): void => {
+    accountLockStore.delete(accountKey);
+  };
+
+  // Heavy AI / External API concurrency limiter (protects RAM & CPU under simultaneous user spikes)
+  let activeHeavyAiOps = 0;
+  const MAX_CONCURRENT_HEAVY_AI_OPS = 8;
+  const heavyAiConcurrencyGuard: express.RequestHandler = (_req, res, next) => {
+    if (activeHeavyAiOps >= MAX_CONCURRENT_HEAVY_AI_OPS) {
+      res.setHeader('Retry-After', '5');
+      res.status(503).json({
+        error: 'SERVER_BUSY',
+        message: 'Muitos jogadores sincronizando elencos ao mesmo tempo. Tente novamente em alguns segundos.',
+      });
+      return;
+    }
+    activeHeavyAiOps += 1;
+    let released = false;
+    const release = () => {
+      if (!released) {
+        released = true;
+        activeHeavyAiOps = Math.max(0, activeHeavyAiOps - 1);
+      }
+    };
+    res.on('finish', release);
+    res.on('close', release);
+    next();
+  };
+
+  const globalApiRateLimiter = createRateLimiter({
+    windowMs: 60 * 1000,
+    max: 180,
+    bucketPrefix: 'api_global',
+    message: 'Muitas requisições simultâneas detectadas. Aguarde alguns segundos e tente novamente.',
+  });
+
+  const sqlRateLimiter = createRateLimiter({
+    windowMs: 60 * 1000,
+    max: 60,
+    bucketPrefix: 'sql',
+    message: 'Limite de sincronizações de save atingido temporariamente. Aguarde alguns segundos.',
+  });
 
   const authRateLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
@@ -624,12 +930,22 @@ async function startServer() {
     message: 'Muitas tentativas de acesso em sequência. Aguarde alguns minutos e tente novamente.',
   });
 
+  const recoveryRateLimiter = createRateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 8,
+    bucketPrefix: 'auth_recover',
+    message: 'Muitas tentativas de recuperação de conta em sequência. Aguarde 15 minutos e tente novamente.',
+  });
+
   const aiRateLimiter = createRateLimiter({
     windowMs: 10 * 60 * 1000,
     max: 30,
     bucketPrefix: 'ai',
     message: 'Limite temporário de requisições inteligentes atingido. Aguarde alguns instantes.',
   });
+
+  app.use('/api', globalApiRateLimiter);
+  app.use('/api/sql', sqlRateLimiter);
 
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', app: 'PATOFOOT 2026', version: '1.0.0' });
@@ -843,8 +1159,10 @@ async function startServer() {
         res.status(404).json({ error: 'Career save not found.' });
         return;
       }
-      const inflated = zlib.gunzipSync(Buffer.from(row.payloadCompressed, 'base64')).toString('utf-8');
-      const parsed = JSON.parse(inflated);
+      const inflatedBuf = (await gunzipAsync(Buffer.from(row.payloadCompressed, 'base64'), {
+        maxOutputLength: MAX_DECOMPRESSED_SAVE_BYTES,
+      })) as Buffer;
+      const parsed = JSON.parse(inflatedBuf.toString('utf-8'));
       res.json({ save: parsed });
     } catch (error) {
       console.error('Failed to load SQL career save:', error);
@@ -899,7 +1217,14 @@ async function startServer() {
       });
 
       const rawJson = JSON.stringify(body.save);
-      const payloadCompressed = zlib.gzipSync(Buffer.from(rawJson, 'utf-8'), { level: 6 }).toString('base64');
+      if (Buffer.byteLength(rawJson, 'utf-8') > MAX_DECOMPRESSED_SAVE_BYTES) {
+        res.status(413).json({ error: 'Career save exceeds maximum permitted size.' });
+        return;
+      }
+      const compressedBuf = (await gzipAsync(Buffer.from(rawJson, 'utf-8'), {
+        level: 6,
+      })) as Buffer;
+      const payloadCompressed = compressedBuf.toString('base64');
 
       const savedRow = await upsertUserSqlCareerSave({
         userId: userRecord.id,
@@ -976,6 +1301,7 @@ async function startServer() {
   });
 
   app.use('/api/auth', authRateLimiter);
+  app.use(['/api/auth/recover-login', '/api/auth/reset-password'], recoveryRateLimiter);
   app.use(
     [
       '/api/players/nationalities',
@@ -984,179 +1310,258 @@ async function startServer() {
       '/api/leagues/europe/calibrate',
       '/api/leagues/world/calibrate',
       '/api/clubs/squads/october-2026',
+      '/api/clubs/squads/monthly-sync',
       '/api/transfers/rumors',
     ],
     (req, res, next) => {
       if (req.method === 'POST') {
-        aiRateLimiter(req, res, next);
+        aiRateLimiter(req, res, () => {
+          heavyAiConcurrencyGuard(req, res, next);
+        });
         return;
       }
       next();
     },
   );
 
-  app.post('/api/auth/register', (req, res) => {
-    const rawName = String(req.body?.displayName ?? '').trim();
-    const rawPassword = String(req.body?.password ?? '');
-    const rawClubId = String(req.body?.favoriteClubId ?? 'fla').trim() || 'fla';
-    const rawRecoveryEmail = String(req.body?.recoveryEmail ?? '').trim();
-    const rawRecoveryKeyword = String(req.body?.recoveryKeyword ?? '').trim();
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const rawName = String(req.body?.displayName ?? '').trim();
+      const rawPassword = String(req.body?.password ?? '');
+      const rawClubId = String(req.body?.favoriteClubId ?? 'fla').trim() || 'fla';
+      const rawRecoveryEmail = String(req.body?.recoveryEmail ?? '').trim();
+      const rawRecoveryKeyword = String(req.body?.recoveryKeyword ?? '').trim();
 
-    if (rawName.length < 2 || rawName.length > 60) {
-      res.status(400).json({
-        error: 'INVALID_NAME',
-        message: 'Informe seu nome ou login entre 2 e 60 caracteres.',
+      if (rawName.length < 2 || rawName.length > 60) {
+        res.status(400).json({
+          error: 'INVALID_NAME',
+          message: 'Informe seu nome ou login entre 2 e 60 caracteres.',
+        });
+        return;
+      }
+
+      const usernameKey = normalizeServerUsernameKey(rawName);
+      if (usernameKey.length < 2) {
+        res.status(400).json({
+          error: 'INVALID_LOGIN',
+          message: 'Use letras ou números válidos para criar seu login.',
+        });
+        return;
+      }
+
+      if (rawPassword.length < 4 || rawPassword.length > 128) {
+        res.status(400).json({
+          error: 'INVALID_PASSWORD',
+          message: 'A senha deve ter pelo menos 4 caracteres.',
+        });
+        return;
+      }
+
+      if (rawRecoveryEmail && !normalizeServerRecoveryEmail(rawRecoveryEmail)) {
+        res.status(400).json({
+          error: 'INVALID_RECOVERY_EMAIL',
+          message: 'Informe um e-mail de recuperação válido ou deixe o campo em branco.',
+        });
+        return;
+      }
+
+      const normalizedSecret = normalizeServerRecoverySecret(rawRecoveryKeyword);
+      if (rawRecoveryKeyword && normalizedSecret.length < 3) {
+        res.status(400).json({
+          error: 'INVALID_RECOVERY_SECRET',
+          message: 'A palavra secreta de recuperação precisa ter pelo menos 3 caracteres.',
+        });
+        return;
+      }
+
+      const accounts = getTrainerAccountsSnapshot();
+      if (accounts.length >= MAX_STORED_ACCOUNTS) {
+        res.status(503).json({
+          error: 'REGISTRATION_CAPACITY',
+          message: 'Servidor em capacidade máxima de cadastros locais. Entre usando sua Conta Google.',
+        });
+        return;
+      }
+
+      const existing = accounts.find((acc) => acc.usernameKey === usernameKey);
+      if (existing) {
+        res.status(409).json({
+          error: 'ACCOUNT_EXISTS',
+          message: 'Já existe um acesso cadastrado com esse nome/login. Clique em "Entrar no Jogo" e digite sua senha.',
+        });
+        return;
+      }
+
+      const saltHex = crypto.randomBytes(16).toString('hex');
+      const passwordHash = await hashPasswordWithSaltAsync(rawPassword, saltHex);
+      const nowIso = new Date().toISOString();
+      const uid = `usr_${crypto.randomBytes(12).toString('hex')}`;
+      const safeClubId = /^[a-zA-Z0-9_\-]{2,32}$/.test(rawClubId) ? rawClubId : 'fla';
+      const recoveryEmail =
+        normalizeServerRecoveryEmail(rawRecoveryEmail) ||
+        normalizeServerRecoveryEmail(rawName);
+
+      let recoverySecretSalt: string | undefined;
+      let recoverySecretHash: string | undefined;
+      if (normalizedSecret.length >= 3) {
+        recoverySecretSalt = crypto.randomBytes(16).toString('hex');
+        recoverySecretHash = await hashPasswordWithSaltAsync(normalizedSecret, recoverySecretSalt);
+      }
+
+      // Re-check uniqueness after async scrypt to prevent concurrent duplicate registration race
+      const latestAccounts = getTrainerAccountsSnapshot();
+      if (latestAccounts.some((acc) => acc.usernameKey === usernameKey)) {
+        res.status(409).json({
+          error: 'ACCOUNT_EXISTS',
+          message: 'Já existe um acesso cadastrado com esse nome/login. Clique em "Entrar no Jogo" e digite sua senha.',
+        });
+        return;
+      }
+
+      const newAccount: StoredTrainerAccount = {
+        uid,
+        displayName: rawName,
+        usernameKey,
+        passwordSalt: saltHex,
+        passwordHash,
+        favoriteClubId: safeClubId,
+        ...(recoveryEmail ? { recoveryEmail } : {}),
+        ...(recoverySecretSalt && recoverySecretHash
+          ? { recoverySecretSalt, recoverySecretHash }
+          : {}),
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      };
+
+      const nextAccounts = [...latestAccounts, newAccount];
+      await enqueueTrainerAccountsPersist(nextAccounts);
+
+      res.status(201).json({
+        uid: newAccount.uid,
+        displayName: newAccount.displayName,
+        usernameKey: newAccount.usernameKey,
+        favoriteClubId: newAccount.favoriteClubId,
+        createdAt: newAccount.createdAt,
+        sessionToken: issueServerSessionToken(newAccount.uid),
       });
-      return;
-    }
-
-    const usernameKey = normalizeServerUsernameKey(rawName);
-    if (usernameKey.length < 2) {
-      res.status(400).json({
-        error: 'INVALID_LOGIN',
-        message: 'Use letras ou números válidos para criar seu login.',
+    } catch (err) {
+      console.error('[Auth Register Error]:', err);
+      res.status(500).json({
+        error: 'AUTH_REGISTER_FAILED',
+        message: 'Não foi possível concluir o cadastro agora. Tente novamente.',
       });
-      return;
     }
-
-    if (rawPassword.length < 4 || rawPassword.length > 128) {
-      res.status(400).json({
-        error: 'INVALID_PASSWORD',
-        message: 'A senha deve ter pelo menos 4 caracteres.',
-      });
-      return;
-    }
-
-    if (rawRecoveryEmail && !normalizeServerRecoveryEmail(rawRecoveryEmail)) {
-      res.status(400).json({
-        error: 'INVALID_RECOVERY_EMAIL',
-        message: 'Informe um e-mail de recuperação válido ou deixe o campo em branco.',
-      });
-      return;
-    }
-
-    const normalizedSecret = normalizeServerRecoverySecret(rawRecoveryKeyword);
-    if (rawRecoveryKeyword && normalizedSecret.length < 3) {
-      res.status(400).json({
-        error: 'INVALID_RECOVERY_SECRET',
-        message: 'A palavra secreta de recuperação precisa ter pelo menos 3 caracteres.',
-      });
-      return;
-    }
-
-    const accounts = readTrainerAccounts();
-    const existing = accounts.find((acc) => acc.usernameKey === usernameKey);
-    if (existing) {
-      res.status(409).json({
-        error: 'ACCOUNT_EXISTS',
-        message: 'Já existe um acesso cadastrado com esse nome/login. Clique em "Entrar no Jogo" e digite sua senha.',
-      });
-      return;
-    }
-
-    const saltHex = crypto.randomBytes(16).toString('hex');
-    const passwordHash = hashPasswordWithSalt(rawPassword, saltHex);
-    const nowIso = new Date().toISOString();
-    const uid = `usr_${crypto.randomBytes(10).toString('hex')}`;
-    const safeClubId = /^[a-zA-Z0-9_\-]{2,32}$/.test(rawClubId) ? rawClubId : 'fla';
-    const recoveryEmail =
-      normalizeServerRecoveryEmail(rawRecoveryEmail) ||
-      normalizeServerRecoveryEmail(rawName);
-
-    let recoverySecretSalt: string | undefined;
-    let recoverySecretHash: string | undefined;
-    if (normalizedSecret.length >= 3) {
-      recoverySecretSalt = crypto.randomBytes(16).toString('hex');
-      recoverySecretHash = hashPasswordWithSalt(normalizedSecret, recoverySecretSalt);
-    }
-
-    const newAccount: StoredTrainerAccount = {
-      uid,
-      displayName: rawName,
-      usernameKey,
-      passwordSalt: saltHex,
-      passwordHash,
-      favoriteClubId: safeClubId,
-      ...(recoveryEmail ? { recoveryEmail } : {}),
-      ...(recoverySecretSalt && recoverySecretHash
-        ? { recoverySecretSalt, recoverySecretHash }
-        : {}),
-      createdAt: nowIso,
-      updatedAt: nowIso,
-    };
-
-    accounts.push(newAccount);
-    writeTrainerAccounts(accounts);
-
-    res.status(201).json({
-      uid: newAccount.uid,
-      displayName: newAccount.displayName,
-      usernameKey: newAccount.usernameKey,
-      favoriteClubId: newAccount.favoriteClubId,
-      createdAt: newAccount.createdAt,
-      sessionToken: issueServerSessionToken(newAccount.uid),
-    });
   });
 
-  app.post('/api/auth/login', (req, res) => {
-    const rawLogin = String(req.body?.login ?? '').trim();
-    const rawPassword = String(req.body?.password ?? '');
-    const usernameKey = normalizeServerUsernameKey(rawLogin);
-    const emailCandidate = normalizeServerRecoveryEmail(rawLogin);
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const rawLogin = String(req.body?.login ?? '').trim();
+      const rawPassword = String(req.body?.password ?? '');
+      const usernameKey = normalizeServerUsernameKey(rawLogin);
+      const emailCandidate = normalizeServerRecoveryEmail(rawLogin);
 
-    if (!usernameKey || usernameKey.length < 2) {
-      res.status(400).json({
-        error: 'INVALID_LOGIN',
-        message: 'Digite seu nome ou login para entrar.',
+      if (!usernameKey || usernameKey.length < 2) {
+        res.status(400).json({
+          error: 'INVALID_LOGIN',
+          message: 'Digite seu nome ou login para entrar.',
+        });
+        return;
+      }
+
+      if (!rawPassword || rawPassword.length > 128) {
+        res.status(400).json({
+          error: 'MISSING_PASSWORD',
+          message: 'Digite sua senha para entrar no jogo.',
+        });
+        return;
+      }
+
+      const lockKey = `login:${emailCandidate || usernameKey}`;
+      const lockedSec = getAccountLockRemainingSeconds(lockKey);
+      if (lockedSec > 0) {
+        res.setHeader('Retry-After', String(lockedSec));
+        res.status(429).json({
+          error: 'ACCOUNT_LOCKED',
+          message: `Muitas tentativas incorretas nesta conta. Por segurança, aguarde ${Math.ceil(
+            lockedSec / 60
+          )} minuto(s) ou use "Esqueci minha senha".`,
+          retryAfterSeconds: lockedSec,
+        });
+        return;
+      }
+
+      const accounts = getTrainerAccountsSnapshot();
+      const found = accounts.find(
+        (acc) =>
+          acc.usernameKey === usernameKey ||
+          acc.displayName.toLowerCase() === rawLogin.toLowerCase() ||
+          (emailCandidate && acc.recoveryEmail === emailCandidate)
+      );
+
+      if (!found) {
+        recordAccountAuthFailure(lockKey);
+        res.status(404).json({
+          error: 'ACCOUNT_NOT_FOUND',
+          message: 'Nenhum acesso encontrado com esse nome/login. Use a aba "Criar Acesso" para se cadastrar.',
+        });
+        return;
+      }
+
+      const accountLockKey = `login:${found.usernameKey}`;
+      const accountLockedSec = getAccountLockRemainingSeconds(accountLockKey);
+      if (accountLockedSec > 0) {
+        res.setHeader('Retry-After', String(accountLockedSec));
+        res.status(429).json({
+          error: 'ACCOUNT_LOCKED',
+          message: `Muitas tentativas incorretas nesta conta. Por segurança, aguarde ${Math.ceil(
+            accountLockedSec / 60
+          )} minuto(s) ou use "Esqueci minha senha".`,
+          retryAfterSeconds: accountLockedSec,
+        });
+        return;
+      }
+
+      const isPasswordValid = await verifyPasswordHashAsync(
+        rawPassword,
+        found.passwordSalt,
+        found.passwordHash
+      );
+      if (!isPasswordValid) {
+        const nextLockSec = recordAccountAuthFailure(accountLockKey);
+        if (nextLockSec > 0) {
+          res.setHeader('Retry-After', String(nextLockSec));
+          res.status(429).json({
+            error: 'ACCOUNT_LOCKED',
+            message: 'Conta temporariamente bloqueada por excesso de senhas incorretas. Aguarde 15 minutos ou recupere sua senha.',
+            retryAfterSeconds: nextLockSec,
+          });
+          return;
+        }
+        res.status(401).json({
+          error: 'WRONG_PASSWORD',
+          message: 'Senha incorreta. Confira a senha digitada ou clique em "Esqueci minha senha".',
+        });
+        return;
+      }
+
+      clearAccountAuthFailures(lockKey);
+      clearAccountAuthFailures(accountLockKey);
+
+      res.json({
+        uid: found.uid,
+        displayName: found.displayName,
+        usernameKey: found.usernameKey,
+        favoriteClubId: found.favoriteClubId,
+        createdAt: found.createdAt,
+        sessionToken: issueServerSessionToken(found.uid),
       });
-      return;
-    }
-
-    if (!rawPassword) {
-      res.status(400).json({
-        error: 'MISSING_PASSWORD',
-        message: 'Digite sua senha para entrar no jogo.',
+    } catch (err) {
+      console.error('[Auth Login Error]:', err);
+      res.status(500).json({
+        error: 'AUTH_LOGIN_FAILED',
+        message: 'Não foi possível validar o login agora. Tente novamente.',
       });
-      return;
     }
-
-    const accounts = readTrainerAccounts();
-    const found = accounts.find(
-      (acc) =>
-        acc.usernameKey === usernameKey ||
-        acc.displayName.toLowerCase() === rawLogin.toLowerCase() ||
-        (emailCandidate && acc.recoveryEmail === emailCandidate)
-    );
-
-    if (!found) {
-      res.status(404).json({
-        error: 'ACCOUNT_NOT_FOUND',
-        message: 'Nenhum acesso encontrado com esse nome/login. Use a aba "Criar Acesso" para se cadastrar.',
-      });
-      return;
-    }
-
-    const isPasswordValid = verifyPasswordHash(
-      rawPassword,
-      found.passwordSalt,
-      found.passwordHash
-    );
-    if (!isPasswordValid) {
-      res.status(401).json({
-        error: 'WRONG_PASSWORD',
-        message: 'Senha incorreta. Confira a senha digitada ou clique em "Esqueci minha senha".',
-      });
-      return;
-    }
-
-    res.json({
-      uid: found.uid,
-      displayName: found.displayName,
-      usernameKey: found.usernameKey,
-      favoriteClubId: found.favoriteClubId,
-      createdAt: found.createdAt,
-      sessionToken: issueServerSessionToken(found.uid),
-    });
   });
 
   app.post('/api/auth/recover-login', (req, res) => {
@@ -1169,7 +1574,7 @@ async function startServer() {
       return;
     }
 
-    const accounts = readTrainerAccounts();
+    const accounts = getTrainerAccountsSnapshot();
     const matches = accounts
       .filter(
         (acc) =>
@@ -1187,135 +1592,187 @@ async function startServer() {
     });
   });
 
-  app.post('/api/auth/reset-password', (req, res) => {
-    const rawLogin = String(req.body?.login ?? '').trim();
-    const cleanEmail = normalizeServerRecoveryEmail(req.body?.recoveryEmail);
-    const normalizedSecret = normalizeServerRecoverySecret(req.body?.recoveryKeyword);
-    const newPassword = String(req.body?.newPassword ?? '');
+  app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+      const rawLogin = String(req.body?.login ?? '').trim();
+      const cleanEmail = normalizeServerRecoveryEmail(req.body?.recoveryEmail);
+      const normalizedSecret = normalizeServerRecoverySecret(req.body?.recoveryKeyword);
+      const newPassword = String(req.body?.newPassword ?? '');
 
-    if (rawLogin.length < 2 && !cleanEmail) {
-      res.status(400).json({
-        error: 'INVALID_LOGIN',
-        message: 'Informe o seu login ou e-mail cadastrado.',
-      });
-      return;
-    }
-
-    if (newPassword.length < 4 || newPassword.length > 128) {
-      res.status(400).json({
-        error: 'INVALID_PASSWORD',
-        message: 'A nova senha deve ter entre 4 e 128 caracteres.',
-      });
-      return;
-    }
-
-    if (!cleanEmail && normalizedSecret.length < 3) {
-      res.status(400).json({
-        error: 'MISSING_RECOVERY_PROOF',
-        message: 'Informe o e-mail de recuperação ou a palavra secreta cadastrada na sua conta.',
-      });
-      return;
-    }
-
-    const usernameKey = normalizeServerUsernameKey(rawLogin);
-    const loginAsEmail = normalizeServerRecoveryEmail(rawLogin);
-    const accounts = readTrainerAccounts();
-    const idx = accounts.findIndex(
-      (acc) =>
-        (usernameKey.length >= 2 &&
-          (acc.usernameKey === usernameKey ||
-            acc.displayName.toLowerCase() === rawLogin.toLowerCase())) ||
-        (loginAsEmail && acc.recoveryEmail === loginAsEmail) ||
-        (!rawLogin && cleanEmail && acc.recoveryEmail === cleanEmail)
-    );
-
-    if (idx < 0) {
-      res.status(404).json({
-        error: 'ACCOUNT_NOT_FOUND',
-        message: 'Não encontramos uma conta com esses dados no servidor.',
-      });
-      return;
-    }
-
-    const account = accounts[idx];
-    const hasServerSecret = Boolean(account.recoverySecretSalt && account.recoverySecretHash);
-    const hasServerEmail = Boolean(account.recoveryEmail);
-
-    if (!hasServerSecret && !hasServerEmail) {
-      res.status(403).json({
-        error: 'NO_RECOVERY_CONFIGURED',
-        message:
-          'Esta conta foi criada sem e-mail ou palavra secreta de recuperação. Se você usou e-mail real ou Google, use a recuperação por e-mail ou entre com Google.',
-      });
-      return;
-    }
-
-    let verified = false;
-    if (hasServerSecret && normalizedSecret.length >= 3) {
-      verified = verifyPasswordHash(
-        normalizedSecret,
-        account.recoverySecretSalt!,
-        account.recoverySecretHash!
-      );
-    }
-    if (!verified && hasServerEmail && cleanEmail) {
-      // If a recovery secret was also set, require the secret when the user did not match it,
-      // otherwise exact recoveryEmail verifies accounts registered only with email.
-      if (!hasServerSecret && account.recoveryEmail === cleanEmail) {
-        verified = true;
+      if (rawLogin.length < 2 && !cleanEmail) {
+        res.status(400).json({
+          error: 'INVALID_LOGIN',
+          message: 'Informe o seu login ou e-mail cadastrado.',
+        });
+        return;
       }
-    }
 
-    if (!verified) {
-      res.status(401).json({
-        error: 'RECOVERY_VERIFICATION_FAILED',
-        message: hasServerSecret
-          ? 'Palavra secreta de recuperação incorreta. Verifique e tente novamente.'
-          : 'O e-mail de recuperação informado não corresponde ao cadastrado nesta conta.',
+      if (newPassword.length < 4 || newPassword.length > 128) {
+        res.status(400).json({
+          error: 'INVALID_PASSWORD',
+          message: 'A nova senha deve ter entre 4 e 128 caracteres.',
+        });
+        return;
+      }
+
+      if (!cleanEmail && normalizedSecret.length < 3) {
+        res.status(400).json({
+          error: 'MISSING_RECOVERY_PROOF',
+          message: 'Informe o e-mail de recuperação ou a palavra secreta cadastrada na sua conta.',
+        });
+        return;
+      }
+
+      const usernameKey = normalizeServerUsernameKey(rawLogin);
+      const loginAsEmail = normalizeServerRecoveryEmail(rawLogin);
+      const resetLockKey = `reset:${usernameKey || cleanEmail || 'unknown'}`;
+      const lockedSec = getAccountLockRemainingSeconds(resetLockKey);
+      if (lockedSec > 0) {
+        res.setHeader('Retry-After', String(lockedSec));
+        res.status(429).json({
+          error: 'RECOVERY_LOCKED',
+          message: 'Muitas tentativas de recuperação nesta conta. Aguarde alguns minutos e tente novamente.',
+          retryAfterSeconds: lockedSec,
+        });
+        return;
+      }
+
+      const accounts = getTrainerAccountsSnapshot();
+      const idx = accounts.findIndex(
+        (acc) =>
+          (usernameKey.length >= 2 &&
+            (acc.usernameKey === usernameKey ||
+              acc.displayName.toLowerCase() === rawLogin.toLowerCase())) ||
+          (loginAsEmail && acc.recoveryEmail === loginAsEmail) ||
+          (!rawLogin && cleanEmail && acc.recoveryEmail === cleanEmail)
+      );
+
+      if (idx < 0) {
+        recordAccountAuthFailure(resetLockKey);
+        res.status(404).json({
+          error: 'ACCOUNT_NOT_FOUND',
+          message: 'Não encontramos uma conta com esses dados no servidor.',
+        });
+        return;
+      }
+
+      const account = accounts[idx];
+      const accountResetLockKey = `reset:${account.usernameKey}`;
+      const accountLockedSec = getAccountLockRemainingSeconds(accountResetLockKey);
+      if (accountLockedSec > 0) {
+        res.setHeader('Retry-After', String(accountLockedSec));
+        res.status(429).json({
+          error: 'RECOVERY_LOCKED',
+          message: 'Muitas tentativas de recuperação nesta conta. Aguarde alguns minutos e tente novamente.',
+          retryAfterSeconds: accountLockedSec,
+        });
+        return;
+      }
+
+      const hasServerSecret = Boolean(account.recoverySecretSalt && account.recoverySecretHash);
+      const hasServerEmail = Boolean(account.recoveryEmail);
+
+      if (!hasServerSecret && !hasServerEmail) {
+        res.status(403).json({
+          error: 'NO_RECOVERY_CONFIGURED',
+          message:
+            'Esta conta foi criada sem e-mail ou palavra secreta de recuperação. Se você usou e-mail real ou Google, use a recuperação por e-mail ou entre com Google.',
+        });
+        return;
+      }
+
+      let verified = false;
+      if (hasServerSecret && normalizedSecret.length >= 3) {
+        verified = await verifyPasswordHashAsync(
+          normalizedSecret,
+          account.recoverySecretSalt!,
+          account.recoverySecretHash!
+        );
+      }
+      if (!verified && hasServerEmail && cleanEmail && !hasServerSecret) {
+        // Require BOTH explicit matching login/username AND matching recoveryEmail when no secret word was configured
+        const explicitLoginMatches =
+          usernameKey.length >= 2 &&
+          (account.usernameKey === usernameKey ||
+            account.displayName.toLowerCase() === rawLogin.toLowerCase());
+        if (explicitLoginMatches && account.recoveryEmail === cleanEmail) {
+          verified = true;
+        }
+      }
+
+      if (!verified) {
+        recordAccountAuthFailure(accountResetLockKey);
+        res.status(401).json({
+          error: 'RECOVERY_VERIFICATION_FAILED',
+          message: hasServerSecret
+            ? 'Palavra secreta de recuperação incorreta. Verifique e tente novamente.'
+            : 'Para redefinir sem palavra secreta, informe exatamente o seu login e o e-mail de recuperação cadastrados.',
+        });
+        return;
+      }
+
+      const nextSalt = crypto.randomBytes(16).toString('hex');
+      const nextHash = await hashPasswordWithSaltAsync(newPassword, nextSalt);
+      const latestAccounts = getTrainerAccountsSnapshot();
+      const freshIdx = latestAccounts.findIndex((acc) => acc.uid === account.uid);
+      if (freshIdx >= 0) {
+        const updatedAccounts = [...latestAccounts];
+        updatedAccounts[freshIdx] = {
+          ...latestAccounts[freshIdx],
+          passwordSalt: nextSalt,
+          passwordHash: nextHash,
+          updatedAt: new Date().toISOString(),
+        };
+        await enqueueTrainerAccountsPersist(updatedAccounts);
+      }
+
+      clearAccountAuthFailures(resetLockKey);
+      clearAccountAuthFailures(accountResetLockKey);
+      clearAccountAuthFailures(`login:${account.usernameKey}`);
+
+      res.json({
+        ok: true,
+        displayName: account.displayName,
+        usernameKey: account.usernameKey,
       });
-      return;
+    } catch (err) {
+      console.error('[Auth Reset Password Error]:', err);
+      res.status(500).json({
+        error: 'AUTH_RESET_FAILED',
+        message: 'Não foi possível redefinir a senha agora. Tente novamente.',
+      });
     }
-
-    const nextSalt = crypto.randomBytes(16).toString('hex');
-    const nextHash = hashPasswordWithSalt(newPassword, nextSalt);
-    accounts[idx] = {
-      ...account,
-      passwordSalt: nextSalt,
-      passwordHash: nextHash,
-      updatedAt: new Date().toISOString(),
-    };
-    writeTrainerAccounts(accounts);
-
-    res.json({
-      ok: true,
-      displayName: account.displayName,
-      usernameKey: account.usernameKey,
-    });
   });
 
-  app.post('/api/auth/club', (req, res) => {
-    const authenticatedUid = verifyServerSessionToken(req.headers.authorization);
-    const uid = String(req.body?.uid ?? '').trim();
-    const rawClubId = String(req.body?.favoriteClubId ?? '').trim();
-    if (!authenticatedUid || !uid || authenticatedUid !== uid) {
-      res.status(401).json({ error: 'UNAUTHORIZED' });
-      return;
+  app.post('/api/auth/club', async (req, res) => {
+    try {
+      const authenticatedUid = verifyServerSessionToken(req.headers.authorization);
+      const uid = String(req.body?.uid ?? '').trim();
+      const rawClubId = String(req.body?.favoriteClubId ?? '').trim();
+      if (!authenticatedUid || !uid || authenticatedUid !== uid) {
+        res.status(401).json({ error: 'UNAUTHORIZED' });
+        return;
+      }
+      if (!/^[a-zA-Z0-9_\-]{2,32}$/.test(rawClubId)) {
+        res.status(400).json({ error: 'INVALID_INPUT' });
+        return;
+      }
+      const accounts = getTrainerAccountsSnapshot();
+      const idx = accounts.findIndex((acc) => acc.uid === authenticatedUid);
+      if (idx >= 0) {
+        const updatedAccounts = [...accounts];
+        updatedAccounts[idx] = {
+          ...accounts[idx],
+          favoriteClubId: rawClubId,
+          updatedAt: new Date().toISOString(),
+        };
+        await enqueueTrainerAccountsPersist(updatedAccounts);
+      }
+      res.json({ ok: true });
+    } catch (err) {
+      console.error('[Auth Club Sync Error]:', err);
+      res.status(500).json({ error: 'CLUB_UPDATE_FAILED' });
     }
-    if (!/^[a-zA-Z0-9_\-]{2,32}$/.test(rawClubId)) {
-      res.status(400).json({ error: 'INVALID_INPUT' });
-      return;
-    }
-    const accounts = readTrainerAccounts();
-    const idx = accounts.findIndex((acc) => acc.uid === authenticatedUid);
-    if (idx >= 0) {
-      accounts[idx] = {
-        ...accounts[idx],
-        favoriteClubId: rawClubId,
-        updatedAt: new Date().toISOString(),
-      };
-      writeTrainerAccounts(accounts);
-    }
-    res.json({ ok: true });
   });
 
   app.get('/api/players/nationalities/status', (_req, res) => {
@@ -3199,6 +3656,12 @@ async function startServer() {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
 
+  // High-concurrency socket & Slowloris attack timeouts (compatible with Render / Cloud Run load balancers)
+  server.keepAliveTimeout = 65_000;
+  server.headersTimeout = 66_000;
+  server.requestTimeout = 35_000;
+  server.maxRequestsPerSocket = 1000;
+
   const handleShutdown = () => {
     server.close(() => {
       process.exit(0);
@@ -3206,6 +3669,9 @@ async function startServer() {
   };
   process.on('SIGTERM', handleShutdown);
   process.on('SIGINT', handleShutdown);
+  process.on('unhandledRejection', (reason) => {
+    console.error('[Server Unhandled Rejection]:', reason);
+  });
 }
 
 startServer();

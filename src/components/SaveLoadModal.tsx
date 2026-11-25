@@ -264,6 +264,12 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 20 * 1024 * 1024) {
+      showMessage('err', 'Arquivo muito grande. O limite máximo de backup .json é 20 MB.');
+      e.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       const validation = validateAndParseImportedSaveJson(String(event.target?.result || ''));

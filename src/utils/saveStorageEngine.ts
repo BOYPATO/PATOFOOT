@@ -947,6 +947,9 @@ export async function exportSlotAsJsonFile(key: CareerSaveKey): Promise<boolean>
   return downloadSaveAsJsonFile(save, tag);
 }
 
+const MAX_IMPORT_JSON_CHARS = 20 * 1024 * 1024; // 20 MB safety ceiling
+const BLOCKED_JSON_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 export function validateAndParseImportedSaveJson(rawText: string): {
   ok: boolean;
   save?: GameSave;
@@ -955,20 +958,26 @@ export function validateAndParseImportedSaveJson(rawText: string): {
   if (!rawText || typeof rawText !== 'string' || rawText.trim().length < 20) {
     return { ok: false, error: 'O arquivo selecionado está vazio ou corrompido.' };
   }
+  if (rawText.length > MAX_IMPORT_JSON_CHARS) {
+    return { ok: false, error: 'Arquivo muito grande (limite de 20 MB por backup).' };
+  }
   let parsed: unknown;
   try {
-    parsed = JSON.parse(rawText);
+    parsed = JSON.parse(rawText, (key, value) => (BLOCKED_JSON_KEYS.has(key) ? undefined : value));
   } catch {
     return { ok: false, error: 'Formato JSON inválido. Selecione um backup .json do PATOFOOT 2026.' };
   }
-  if (!parsed || typeof parsed !== 'object') {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     return { ok: false, error: 'Estrutura do arquivo incompatível com o PATOFOOT 2026.' };
   }
   const candidate = parsed as Partial<GameSave>;
-  if (!Array.isArray(candidate.clubs) || candidate.clubs.length === 0) {
-    return { ok: false, error: 'Arquivo inválido: lista de clubes não encontrada.' };
+  if (!Array.isArray(candidate.clubs) || candidate.clubs.length === 0 || candidate.clubs.length > 2500) {
+    return { ok: false, error: 'Arquivo inválido: lista de clubes ausente ou fora do limite.' };
   }
-  if (typeof candidate.userClubId !== 'string' || !candidate.userClubId.trim()) {
+  if (
+    typeof candidate.userClubId !== 'string' ||
+    !/^[a-zA-Z0-9_\-]{1,64}$/.test(candidate.userClubId.trim())
+  ) {
     return { ok: false, error: 'Arquivo inválido: clube do treinador não identificado.' };
   }
   const userClubExists = candidate.clubs.some((c) => c && c.id === candidate.userClubId);
@@ -981,7 +990,12 @@ export function validateAndParseImportedSaveJson(rawText: string): {
   if (!hasValidSquads) {
     return { ok: false, error: 'Arquivo danificado: dados de elenco inválidos.' };
   }
-  if (typeof candidate.currentSeasonYear !== 'number' || candidate.currentSeasonYear < 2020) {
+  if (
+    typeof candidate.currentSeasonYear !== 'number' ||
+    !Number.isFinite(candidate.currentSeasonYear) ||
+    candidate.currentSeasonYear < 2020 ||
+    candidate.currentSeasonYear > 2200
+  ) {
     return { ok: false, error: 'Arquivo inválido: ano da temporada ausente ou corrompido.' };
   }
   return { ok: true, save: candidate as GameSave };
