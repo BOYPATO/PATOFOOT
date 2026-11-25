@@ -1088,12 +1088,12 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
                 soundEngine.playClick();
                 onOpenOfficialSite();
               }}
-              title="Abrir Site Oficial e Guia de Download (Web, Android, iOS e PC)"
-              aria-label="Site Oficial"
+              title="Abrir Site Oficial, Baixar App e Link para Convidar Amigos"
+              aria-label="Site Oficial e Convidar Amigos"
               className="p-2 sm:px-3 sm:py-2 rounded-xl bg-[#0c1424] hover:bg-slate-800/80 border border-slate-800 text-xs font-semibold text-sky-300 hover:text-sky-200 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
             >
               <Globe className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline">Site Oficial</span>
+              <span className="hidden sm:inline">Site &amp; Baixar</span>
             </button>
           )}
 

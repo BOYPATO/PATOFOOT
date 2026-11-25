@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ArrowRight,
   Check,
@@ -7,8 +7,10 @@ import {
   Download,
   Globe,
   Laptop,
+  MessageCircle,
   Play,
   Share2,
+  ShieldCheck,
   Smartphone,
   WifiOff,
 } from 'lucide-react';
@@ -21,29 +23,44 @@ import { soundEngine } from '../services/soundEngine';
 interface OfficialWebsiteViewProps {
   hasSavedCareer: boolean;
   savedClubName?: string;
+  initialSection?: 'baixar-app' | 'compartilhar';
   onEnterWebGame: () => void;
   onStartNewCareerDirect: () => void;
   onResumeCareerDirect?: () => void;
 }
 
-type PlatformTab = 'web' | 'android' | 'ios' | 'desktop';
+type PlatformTab = 'android' | 'ios' | 'desktop' | 'web';
+
+function detectPreferredPlatform(isIOS: boolean): PlatformTab {
+  if (isIOS) return 'ios';
+  if (typeof navigator !== 'undefined') {
+    const ua = navigator.userAgent || '';
+    if (/Android/i.test(ua)) return 'android';
+    if (/Windows|Macintosh|Linux|CrOS/i.test(ua) && !/Mobile/i.test(ua)) return 'desktop';
+  }
+  return 'android';
+}
 
 const FAQ_ITEMS: Array<{ q: string; a: string }> = [
   {
-    q: 'O PATOFOOT 2026 é gratuito para jogar no site e no aplicativo?',
-    a: 'Sim. Todos os 930+ clubes, 27 campeonatos estaduais, ligas internacionais, Copa do Mundo de 48 seleções e o aplicativo instalável são 100% gratuitos, sem anúncios intrusivos ou travas de temporadas.',
+    q: 'Se eu compartilhar o link do site com meus amigos, eles entram no meu save?',
+    a: 'Não! O link oficial (/site) abre esta página pública de apresentação e download. Cada amigo cria o próprio login e senha no próprio celular ou computador e começa sua carreira do zero, com 5 espaços de save independentes. O seu progresso fica privado na sua conta e no seu dispositivo.',
   },
   {
-    q: 'Como instalar como aplicativo no celular Android ou iPhone?',
-    a: 'No Android (Chrome ou Edge), clique em "Instalar App" nesta página para adicionar o PATOFOOT 2026 direto à tela inicial em tela cheia. No iPhone ou iPad (Safari), toque no botão Compartilhar e escolha "Adicionar à Tela de Início".',
+    q: 'Como baixar e instalar o PATOFOOT 2026 no celular Android, iPhone ou PC?',
+    a: 'No Android (Chrome ou Edge) e no PC/Mac (Chrome, Edge ou Brave), basta clicar em "Baixar / Instalar App" nesta página para instalar o jogo em tela cheia com ícone oficial. No iPhone ou iPad (Safari), toque em Compartilhar e selecione "Adicionar à Tela de Início".',
   },
   {
-    q: 'Posso jogar sem internet depois de instalar o app?',
-    a: 'Sim. O aplicativo usa Service Worker com cache offline completo dos recursos do jogo e salva suas carreiras localmente no dispositivo, sincronizando automaticamente na nuvem quando você estiver conectado.',
+    q: 'O jogo é gratuito e funciona sem internet depois de instalado?',
+    a: 'Sim. Todos os 930+ clubes, 27 campeonatos estaduais, ligas internacionais, 200+ jogadores livres reais no mercado e a Copa do Mundo de 48 seleções são 100% gratuitos. Após o primeiro acesso ou instalação, o app funciona offline e sincroniza na nuvem quando voltar a ter internet.',
+  },
+  {
+    q: 'E se eu esquecer minha senha ou login depois de criar minha conta?',
+    a: 'Na tela de entrada do jogo existe a opção "Esqueci minha senha ou login", permitindo recuperar seu nome de acesso pelo e-mail cadastrado ou redefinir sua senha com segurança.',
   },
   {
     q: 'Quantas carreiras posso manter ao mesmo tempo?',
-    a: 'Você conta com 5 espaços independentes de carreira, salvamento automático configurável (a cada 10, 30 ou 60 minutos) e suporte a vários idiomas diretamente nas configurações.',
+    a: 'Cada jogador conta com 5 espaços independentes de carreira, salvamento automático configurável (a cada 10, 30 ou 60 minutos), backup em arquivo .json e suporte a 6 idiomas.',
   },
 ];
 
@@ -57,7 +74,7 @@ const COMPETITIONS_CATALOG_GROUPS: Array<{
       'Brasileirão Séries A, B, C e D com acesso e rebaixamento reais',
       'Todos os 27 Campeonatos Estaduais com elencos oficiais 2026',
       'Copa do Brasil, Copa do Nordeste, Copa Verde e Supercopa Rei',
-      'Premiações oficiais por posição e participação pagas ao caixa',
+      'Premiações oficiais por posição e participação pagas direto ao caixa',
     ],
   },
   {
@@ -89,60 +106,105 @@ const COMPETITIONS_CATALOG_GROUPS: Array<{
 export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
   hasSavedCareer,
   savedClubName,
+  initialSection,
   onEnterWebGame,
   onStartNewCareerDirect,
   onResumeCareerDirect,
 }) => {
   const { isInstallable, isInstalled, isIOS, promptInstall } = usePWAInstall();
   const [activePlatform, setActivePlatform] = useState<PlatformTab>(() =>
-    isIOS ? 'ios' : 'web'
+    detectPreferredPlatform(isIOS)
   );
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedInvite, setCopiedInvite] = useState(false);
   const [installFeedback, setInstallFeedback] = useState<string | null>(null);
   const [heroImgFailed, setHeroImgFailed] = useState(false);
   const [tacticsImgFailed, setTacticsImgFailed] = useState(false);
   const [tunnelImgFailed, setTunnelImgFailed] = useState(false);
 
-  const shareUrl =
-    typeof window !== 'undefined' ? window.location.origin : 'https://patofoot2026.app';
+  useEffect(() => {
+    if (isIOS) {
+      setActivePlatform('ios');
+    }
+  }, [isIOS]);
+
+  useEffect(() => {
+    if (!initialSection) return;
+    const timer = window.setTimeout(() => {
+      const target = document.getElementById(initialSection);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [initialSection]);
+
+  // Always share the public /site landing page so friends land on the game info + download page
+  // instead of a root game session URL.
+  const baseOrigin =
+    typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null'
+      ? window.location.origin.replace(/\/+$/, '')
+      : 'https://patofoot.onrender.com';
+  const publicSiteUrl = `${baseOrigin}/site`;
+  const directDownloadUrl = `${baseOrigin}/baixar`;
+
+  const inviteMessage = `Venha jogar PATOFOOT 2026! Futebol Manager grátis com 930+ clubes, 27 estaduais, simulação 2D ao vivo, 200+ jogadores livres e Copa do Mundo. Baixe o app ou jogue no navegador com sua própria carreira: ${publicSiteUrl}`;
+  const whatsappShareHref = `https://wa.me/?text=${encodeURIComponent(inviteMessage)}`;
 
   const handleInstallAction = async () => {
     soundEngine.playClick();
     if (isInstalled) {
-      setInstallFeedback('O PATOFOOT 2026 já está instalado neste dispositivo.');
+      setInstallFeedback('O PATOFOOT 2026 já está instalado como aplicativo neste dispositivo.');
       return;
     }
     if (isInstallable) {
       const accepted = await promptInstall();
       setInstallFeedback(
         accepted
-          ? 'Instalação iniciada! O ícone do PATOFOOT 2026 aparecerá na sua tela inicial.'
-          : 'Você pode instalar o aplicativo a qualquer momento pelo menu do navegador.'
+          ? 'Download e instalação iniciados! O ícone do PATOFOOT 2026 aparecerá na sua tela inicial.'
+          : 'Instalação cancelada. Você pode instalar o aplicativo quando quiser por este botão ou pelo menu do navegador.'
       );
       return;
     }
     if (isIOS) {
       setActivePlatform('ios');
       setInstallFeedback(
-        'No Safari do iPhone/iPad: toque em Compartilhar e selecione "Adicionar à Tela de Início".'
+        'No Safari do iPhone/iPad: toque no botão Compartilhar (ícone com seta para cima) e selecione "Adicionar à Tela de Início".'
+      );
+      return;
+    }
+    if (activePlatform === 'desktop') {
+      setInstallFeedback(
+        'No Chrome, Edge ou Brave no PC/Mac: clique no ícone de instalação na barra de endereços (ou no menu ⋮ → Instalar PATOFOOT 2026).'
       );
       return;
     }
     setActivePlatform('android');
     setInstallFeedback(
-      'No Chrome ou Edge, abra o menu do navegador (⋮) e toque em "Instalar aplicativo" ou "Adicionar à tela inicial".'
+      'No Chrome ou Edge do Android: abra o menu do navegador (⋮) no canto superior direito e toque em "Instalar aplicativo" ou "Adicionar à tela inicial".'
     );
   };
 
-  const handleCopyShareLink = async () => {
+  const handleCopyShareLink = async (urlToCopy: string = publicSiteUrl) => {
     soundEngine.playClick();
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(urlToCopy);
       setCopiedLink(true);
-      window.setTimeout(() => setCopiedLink(false), 2400);
+      window.setTimeout(() => setCopiedLink(false), 2600);
     } catch {
-      setInstallFeedback(`Copie o endereço: ${shareUrl}`);
+      setInstallFeedback(`Copie o link oficial: ${urlToCopy}`);
+    }
+  };
+
+  const handleCopyInviteMessage = async () => {
+    soundEngine.playClick();
+    try {
+      await navigator.clipboard.writeText(inviteMessage);
+      setCopiedInvite(true);
+      window.setTimeout(() => setCopiedInvite(false), 2600);
+    } catch {
+      setInstallFeedback(`Copie o convite: ${inviteMessage}`);
     }
   };
 
@@ -152,15 +214,15 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
       try {
         await navigator.share({
           title: 'PATOFOOT 2026 – Futebol Manager Mundial',
-          text: 'Jogue PATOFOOT 2026 grátis na Web ou instale como App: 930+ clubes, 27 estaduais, simulação 2D e Copa do Mundo.',
-          url: shareUrl,
+          text: 'Baixe o app ou jogue PATOFOOT 2026 grátis: 930+ clubes, 27 estaduais, simulação 2D ao vivo e Copa do Mundo. Crie sua própria carreira!',
+          url: publicSiteUrl,
         });
         return;
       } catch {
-        // Fallback to copy
+        // User cancelled or share unavailable — fallback to copy
       }
     }
-    await handleCopyShareLink();
+    await handleCopyShareLink(publicSiteUrl);
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -196,14 +258,14 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
               onClick={() => scrollToSection('recursos')}
               className="hover:text-white transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
-              Recursos
+              Sobre o Jogo
             </button>
             <button
               type="button"
-              onClick={() => scrollToSection('web-e-app')}
+              onClick={() => scrollToSection('baixar-app')}
               className="hover:text-white transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
-              Web e App
+              Baixar Jogo
             </button>
             <button
               type="button"
@@ -214,10 +276,10 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => scrollToSection('perguntas')}
+              onClick={() => scrollToSection('compartilhar')}
               className="hover:text-white transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
-              Perguntas
+              Compartilhar
             </button>
           </nav>
 
@@ -231,7 +293,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
               className="px-3.5 sm:px-4 py-2 rounded-lg bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer inline-flex items-center gap-1.5 sm:gap-2"
             >
               <Play className="w-3.5 h-3.5 fill-current shrink-0" />
-              <span>Jogar Agora</span>
+              <span>Jogar Grátis</span>
             </button>
           </div>
         </div>
@@ -243,7 +305,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
             <div className="lg:col-span-6 flex flex-col justify-center">
               <p className="text-xs sm:text-sm font-medium text-slate-400 mb-4">
-                Site Oficial · Versão Web Instantânea · App Android, iOS e Desktop
+                Site Oficial PATOFOOT 2026 · Download para Android, iPhone, PC e Web
               </p>
 
               <h1
@@ -253,58 +315,65 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                   textWrap: 'balance',
                 }}
               >
-                Assuma qualquer clube do mundo e leve sua gestão ao topo.
+                Assuma qualquer clube do mundo e construa sua própria carreira.
               </h1>
 
               <p className="mt-5 text-base sm:text-lg text-slate-300 leading-relaxed max-w-xl">
                 PATOFOOT 2026 reúne mais de 930 clubes, 27 estaduais brasileiros, simulação 2D em
-                tempo real, mercado da bola completo, finanças com premiações reais e Copa do Mundo
-                de 48 seleções — direto no navegador ou instalado como aplicativo.
+                tempo real, mercado da bola com 200+ jogadores livres reais, finanças completas e
+                Copa do Mundo de 48 seleções — grátis no navegador ou instalado como aplicativo.
               </p>
 
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                {hasSavedCareer && onResumeCareerDirect ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      soundEngine.playClick();
-                      onResumeCareerDirect();
-                    }}
-                    className="px-6 py-3.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-sm sm:text-base transition-colors inline-flex items-center gap-2.5 whitespace-nowrap shrink-0 cursor-pointer"
-                  >
-                    <Play className="w-4 h-4 fill-current shrink-0" />
-                    <span>
-                      {savedClubName
-                        ? `Continuar com ${savedClubName}`
-                        : 'Continuar Carreira na Web'}
-                    </span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      soundEngine.playClick();
-                      onEnterWebGame();
-                    }}
-                    className="px-6 py-3.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-sm sm:text-base transition-colors inline-flex items-center gap-2.5 whitespace-nowrap shrink-0 cursor-pointer"
-                  >
-                    <Play className="w-4 h-4 fill-current shrink-0" />
-                    <span>Jogar na Web Agora</span>
-                  </button>
-                )}
+              <div className="mt-8 flex flex-wrap items-center gap-3.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    onStartNewCareerDirect();
+                  }}
+                  className="px-6 py-3.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-sm sm:text-base transition-colors inline-flex items-center gap-2.5 whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <Play className="w-4 h-4 fill-current shrink-0" />
+                  <span>Jogar Grátis Agora</span>
+                </button>
 
                 <button
                   type="button"
-                  onClick={() => scrollToSection('web-e-app')}
-                  className="px-5 py-3.5 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-200 hover:text-white font-semibold text-sm sm:text-base transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                  onClick={() => scrollToSection('baixar-app')}
+                  className="px-5 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-500 text-white font-semibold text-sm sm:text-base transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
                 >
-                  <Download className="w-4 h-4 shrink-0" />
-                  <span>{isInstalled ? 'App Instalado' : 'Instalar como App'}</span>
+                  <Download className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{isInstalled ? 'App Instalado' : 'Baixar / Instalar Jogo'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => scrollToSection('compartilhar')}
+                  className="px-4 py-3.5 rounded-xl border border-slate-800 hover:border-sky-500/50 text-sky-300 hover:text-sky-200 font-semibold text-sm transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <Share2 className="w-4 h-4 shrink-0" />
+                  <span>Enviar para Amigos</span>
                 </button>
               </div>
 
               {hasSavedCareer && (
-                <div className="mt-4 flex items-center gap-4 text-xs text-slate-400">
+                <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-400">
+                  <span className="text-slate-300 font-medium">
+                    Carreira salva apenas neste aparelho
+                    {savedClubName ? ` (${savedClubName})` : ''}:
+                  </span>
+                  {onResumeCareerDirect && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundEngine.playClick();
+                        onResumeCareerDirect();
+                      }}
+                      className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-4 cursor-pointer transition-colors"
+                    >
+                      Retomar minha carreira
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => {
@@ -313,18 +382,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                     }}
                     className="hover:text-white underline underline-offset-4 cursor-pointer transition-colors"
                   >
-                    Abrir menu de espaços salvos
-                  </button>
-                  <span aria-hidden="true">·</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      soundEngine.playClick();
-                      onStartNewCareerDirect();
-                    }}
-                    className="hover:text-white underline underline-offset-4 cursor-pointer transition-colors"
-                  >
-                    Começar nova carreira
+                    Abrir tela inicial e saves
                   </button>
                 </div>
               )}
@@ -351,7 +409,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                 <div className="absolute bottom-4 left-5 right-5 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-200">
                   <span className="font-semibold">Temporada 2026 pronta para jogar</span>
                   <span className="font-mono tabular-nums text-slate-300">
-                    Web · Android · iOS · Desktop
+                    Android · iOS · PC · Web
                   </span>
                 </div>
               </div>
@@ -404,18 +462,18 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
             <article className="lg:col-span-2 rounded-2xl border border-slate-800 bg-[#0b1220] overflow-hidden grid grid-cols-1 md:grid-cols-12">
               <div className="md:col-span-6 p-6 sm:p-8 flex flex-col justify-between">
                 <div>
-                  <span className="font-mono text-xs text-slate-400">01. Tática e Partida</span>
+                  <span className="font-mono text-xs text-slate-400">01. Tática e Partida 2D</span>
                   <h3 className="mt-2 font-display text-xl sm:text-2xl font-bold text-white">
-                    Prancheta livre, versatilidade por setor e simulação 2D
+                    Prancheta livre, versatilidade por setor e simulação ao vivo
                   </h3>
                   <p className="mt-3 text-sm text-slate-300 leading-relaxed">
                     Posicione seus titulares livremente no gramado, aproveite atletas versáteis no
                     mesmo setor sem perder Overall (ZAG↔LAT, VOL↔MC, Ponta↔ME/MD/CA) e faça
-                    substituições e ajustes táticos durante a partida ao vivo.
+                    substituições e ajustes táticos durante a partida ao vivo em 2D.
                   </p>
                 </div>
                 <p className="mt-6 text-xs text-slate-400">
-                  7 formações base · 27 zonas táticas · Penaltis, faltas e escanteios configuráveis
+                  7 formações base · 27 zonas táticas · Pênaltis, faltas e escanteios configuráveis
                 </p>
               </div>
               <div className="md:col-span-6 min-h-[220px] bg-slate-900">
@@ -436,14 +494,14 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
             {/* 02 Card */}
             <article className="rounded-2xl border border-slate-800 bg-[#0b1220] p-6 sm:p-8 flex flex-col justify-between">
               <div>
-                <span className="font-mono text-xs text-slate-400">02. Economia Real</span>
+                <span className="font-mono text-xs text-slate-400">02. Mercado & Economia Real</span>
                 <h3 className="mt-2 font-display text-xl font-bold text-white">
-                  Mercado da bola, estádio e premiações oficiais
+                  200+ jogadores livres reais, estádio e premiações oficiais
                 </h3>
                 <p className="mt-3 text-sm text-slate-300 leading-relaxed">
-                  Negocie compras, trocas, empréstimos com opção de compra e pré-contratos pela Lei
-                  Bosman. Arrecade com sócio-torcedor, patrocínios, Naming Rights e premiações reais
-                  pagas no encerramento de cada liga e copa.
+                  Contrate craques sem clube atualizados de 2026, negocie compras, trocas,
+                  empréstimos com opção de compra e pré-contratos pela Lei Bosman. Arrecade com
+                  sócio-torcedor, patrocínios, Naming Rights e premiações reais de cada competição.
                 </p>
               </div>
               <p className="mt-6 text-xs text-slate-400">
@@ -456,12 +514,12 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
               <div>
                 <span className="font-mono text-xs text-slate-400">03. Calendário Profissional</span>
                 <h3 className="mt-2 font-display text-xl font-bold text-white">
-                  Descanso mínimo de 66 horas e gestão física
+                  Descanso mínimo de 66 horas, Seleções e Copa do Mundo
                 </h3>
                 <p className="mt-3 text-sm text-slate-300 leading-relaxed">
-                  Calendário respeitando o intervalo mínimo de 66 horas entre partidas oficiais,
-                  controle de departamento médico, suspensões por competição, datas FIFA e
-                  calendário sincronizado entre Brasil e Europa.
+                  Calendário respeitando o intervalo mínimo de 66 horas entre jogos oficiais,
+                  departamento médico, suspensões por competição, Data FIFA sincronizada entre
+                  Brasil e Europa e comando de seleções rumo à Copa do Mundo de 48 times.
                 </p>
               </div>
               <p className="mt-6 text-xs text-slate-400">
@@ -486,53 +544,53 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
               </div>
               <div className="md:col-span-6 p-6 sm:p-8 flex flex-col justify-between order-1 md:order-2">
                 <div>
-                  <span className="font-mono text-xs text-slate-400">04. Sempre Atualizado</span>
+                  <span className="font-mono text-xs text-slate-400">04. Conta Própria & App Offline</span>
                   <h3 className="mt-2 font-display text-xl sm:text-2xl font-bold text-white">
-                    Elencos 2026 atualizáveis, nuvem e vários idiomas
+                    Login individual, recuperação de senha e 5 espaços de save
                   </h3>
                   <p className="mt-3 text-sm text-slate-300 leading-relaxed">
-                    Jogue com elencos brasileiros e mundiais de 2026, atualize plantéis via API
-                    quando desejar, escolha entre vários idiomas e salve até 5 carreiras com
-                    auto-salvamento configurável a cada 10, 30 ou 60 minutos.
+                    Cada jogador cria sua conta privada com login, senha e recuperação de acesso,
+                    mantém até 5 carreiras independentes, joga no celular ou computador com rolagem
+                    fluida em todas as abas e atualiza os elencos 2026 quando quiser.
                   </p>
                 </div>
                 <p className="mt-6 text-xs text-slate-400">
-                  Português, Inglês, Espanhol, Francês, Italiano e Alemão · 5 espaços de save
+                  Português, Inglês, Espanhol, Francês, Italiano e Alemão · Backup .json e nuvem
                 </p>
               </div>
             </article>
           </div>
         </section>
 
-        {/* 3. Web & App Distribution Hub */}
+        {/* 3. Download Hub & Share With Friends */}
         <section
-          id="web-e-app"
+          id="baixar-app"
           className="border-y border-slate-800/80 bg-[#070d1a] py-14 sm:py-20"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
               <div className="max-w-2xl">
                 <h2 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
-                  Jogue na Web ou instale o Aplicativo
+                  Baixe o PATOFOOT 2026 ou jogue na Web
                 </h2>
                 <p className="mt-3 text-sm sm:text-base text-slate-400 leading-relaxed">
-                  Uma única experiência sincronizada para navegador, celular Android, iPhone/iPad e
-                  computador, com funcionamento offline e tela cheia.
+                  Escolha seu dispositivo abaixo para instalar o aplicativo oficial em tela cheia
+                  com funcionamento offline, ou jogue instantaneamente pelo navegador.
                 </p>
               </div>
 
               {/* Interactive Platform Segmented Switch */}
               <div
                 role="tablist"
-                aria-label="Plataformas suportadas"
+                aria-label="Plataformas suportadas para download"
                 className="inline-flex flex-wrap items-center gap-1 p-1 rounded-xl bg-slate-950 border border-slate-800 self-start"
               >
                 {(
                   [
-                    { id: 'web', label: 'Web', icon: Globe },
                     { id: 'android', label: 'Android', icon: Smartphone },
                     { id: 'ios', label: 'iPhone / iPad', icon: Smartphone },
                     { id: 'desktop', label: 'PC / Mac', icon: Laptop },
+                    { id: 'web', label: 'Web', icon: Globe },
                   ] as const
                 ).map(({ id, label, icon: Icon }) => (
                   <button
@@ -559,67 +617,29 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-              {/* Platform Details Card */}
+              {/* Platform Download & Install Card */}
               <div className="lg:col-span-7 rounded-2xl border border-slate-800 bg-[#0b1220] p-6 sm:p-8 flex flex-col justify-between">
-                {activePlatform === 'web' && (
-                  <div>
-                    <h3 className="font-display text-xl sm:text-2xl font-bold text-white">
-                      Versão Web Instantânea (Navegador)
-                    </h3>
-                    <p className="mt-2.5 text-sm text-slate-300 leading-relaxed">
-                      Abra e jogue imediatamente em qualquer navegador moderno (Chrome, Edge,
-                      Safari ou Firefox) sem precisar baixar arquivos pesados. Ideal para jogar no
-                      computador, tablet ou celular com carregamento instantâneo.
-                    </p>
-                    <ul className="mt-5 space-y-2.5 text-sm text-slate-300">
-                      <li className="flex items-start gap-2.5">
-                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                        <span>Acesso imediato em tela ampla ou responsiva no celular</span>
-                      </li>
-                      <li className="flex items-start gap-2.5">
-                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                        <span>Conta de treinador com sessão permanente e 5 espaços de save</span>
-                      </li>
-                      <li className="flex items-start gap-2.5">
-                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                        <span>Exportação e importação de backup .json em qualquer dispositivo</span>
-                      </li>
-                    </ul>
-                    <div className="mt-7">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          soundEngine.playClick();
-                          onEnterWebGame();
-                        }}
-                        className="px-5 py-3 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-sm inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
-                      >
-                        <Play className="w-4 h-4 fill-current shrink-0" />
-                        <span>Abrir Jogo na Web</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
                 {activePlatform === 'android' && (
                   <div>
                     <h3 className="font-display text-xl sm:text-2xl font-bold text-white">
-                      Aplicativo Android (PWA Instalável)
+                      Baixar Aplicativo para Android
                     </h3>
                     <p className="mt-2.5 text-sm text-slate-300 leading-relaxed">
-                      Instale o PATOFOOT 2026 diretamente na tela inicial do seu Android. O jogo
-                      abre em modo aplicativo (sem barra do navegador), com ícone adaptativo e
-                      suporte offline via Service Worker.
+                      Instale o PATOFOOT 2026 direto na tela inicial do seu celular Android sem
+                      ocupar memória pesada de loja. O jogo abre em modo app (tela cheia sem barra
+                      do navegador), com ícone oficial e modo offline automático.
                     </p>
                     <ol className="mt-5 space-y-2.5 text-sm text-slate-300 list-decimal list-inside">
-                      <li>Abra o endereço oficial no Google Chrome ou Microsoft Edge do celular.</li>
+                      <li>Abra este site oficial no Google Chrome ou Microsoft Edge do celular.</li>
                       <li>
-                        Clique em <strong className="text-white">Instalar App no Android</strong>{' '}
-                        abaixo ou toque no menu <strong className="text-white">(⋮)</strong> →{' '}
-                        <strong className="text-white">Instalar aplicativo</strong>.
+                        Toque no botão{' '}
+                        <strong className="text-white">Baixar / Instalar App Android</strong> abaixo
+                        (ou abra o menu <strong className="text-white">⋮</strong> →{' '}
+                        <strong className="text-white">Instalar aplicativo</strong>).
                       </li>
                       <li>
-                        Confirme para criar o atalho oficial na tela inicial e jogar em tela cheia.
+                        Confirme a instalação para criar o ícone do PATOFOOT 2026 no celular e jogar
+                        mesmo sem internet.
                       </li>
                     </ol>
                     <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -630,8 +650,21 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                       >
                         <Download className="w-4 h-4 shrink-0" />
                         <span>
-                          {isInstalled ? 'Aplicativo já instalado' : 'Instalar App no Android'}
+                          {isInstalled
+                            ? 'Aplicativo já instalado'
+                            : 'Baixar / Instalar App Android'}
                         </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundEngine.playClick();
+                          onStartNewCareerDirect();
+                        }}
+                        className="px-4 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-semibold text-sm inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current shrink-0" />
+                        <span>Jogar pelo Navegador</span>
                       </button>
                     </div>
                   </div>
@@ -640,35 +673,39 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                 {activePlatform === 'ios' && (
                   <div>
                     <h3 className="font-display text-xl sm:text-2xl font-bold text-white">
-                      Aplicativo para iPhone e iPad (iOS Safari)
+                      Instalar no iPhone e iPad (iOS Safari)
                     </h3>
                     <p className="mt-2.5 text-sm text-slate-300 leading-relaxed">
-                      O PATOFOOT 2026 inclui ícone Apple Touch em alta resolução e modo tela cheia
-                      para iOS, rodando como aplicativo nativo na tela inicial do iPhone ou iPad.
+                      O PATOFOOT 2026 possui ícone Apple Touch em alta resolução e modo tela cheia
+                      para iOS, funcionando como aplicativo direto na tela inicial do seu iPhone ou
+                      iPad.
                     </p>
                     <ol className="mt-5 space-y-2.5 text-sm text-slate-300 list-decimal list-inside">
-                      <li>Abra este site no navegador <strong className="text-white">Safari</strong> do seu iPhone ou iPad.</li>
                       <li>
-                        Toque no botão <strong className="text-white">Compartilhar</strong> na barra
-                        inferior do Safari.
+                        Abra o link oficial no navegador <strong className="text-white">Safari</strong>{' '}
+                        do seu iPhone ou iPad.
                       </li>
                       <li>
-                        Role a lista e toque em{' '}
-                        <strong className="text-white">Adicionar à Tela de Início</strong> e
-                        depois em <strong className="text-white">Adicionar</strong>.
+                        Toque no botão <strong className="text-white">Compartilhar</strong> (ícone
+                        do quadrado com seta para cima na barra inferior).
+                      </li>
+                      <li>
+                        Role as opções, toque em{' '}
+                        <strong className="text-white">Adicionar à Tela de Início</strong> e depois
+                        em <strong className="text-white">Adicionar</strong>.
                       </li>
                     </ol>
-                    <div className="mt-7">
+                    <div className="mt-7 flex flex-wrap items-center gap-3">
                       <button
                         type="button"
                         onClick={() => {
                           soundEngine.playClick();
-                          onEnterWebGame();
+                          onStartNewCareerDirect();
                         }}
                         className="px-5 py-3 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-sm inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
                       >
                         <Play className="w-4 h-4 fill-current shrink-0" />
-                        <span>Jogar no Safari Agora</span>
+                        <span>Abrir no Safari Agora</span>
                       </button>
                     </div>
                   </div>
@@ -677,23 +714,25 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                 {activePlatform === 'desktop' && (
                   <div>
                     <h3 className="font-display text-xl sm:text-2xl font-bold text-white">
-                      Aplicativo Desktop (Windows, macOS e Linux)
+                      Baixar para Computador (Windows, macOS e Linux)
                     </h3>
                     <p className="mt-2.5 text-sm text-slate-300 leading-relaxed">
-                      Transforme o PATOFOOT 2026 em um aplicativo dedicado na barra de tarefas ou
-                      Dock do seu computador, com janela própria, atalhos rápidos e cache offline.
+                      Instale o PATOFOOT 2026 como aplicativo de computador com janela dedicada,
+                      atalho na barra de tarefas ou área de trabalho, tela widescreen completa e
+                      suporte offline.
                     </p>
                     <ol className="mt-5 space-y-2.5 text-sm text-slate-300 list-decimal list-inside">
-                      <li>Abra este endereço no Google Chrome, Microsoft Edge ou Brave.</li>
+                      <li>Abra este site no Google Chrome, Microsoft Edge ou Brave.</li>
                       <li>
-                        Clique no botão <strong className="text-white">Instalar no PC / Mac</strong>{' '}
-                        abaixo ou no ícone de instalação na barra de endereços.
+                        Clique em <strong className="text-white">Instalar no PC / Mac</strong> abaixo
+                        (ou no ícone de instalação na barra de endereços do navegador).
                       </li>
                       <li>
-                        Fixe o PATOFOOT 2026 na barra de tarefas para abrir direto em janela própria.
+                        Fixe o ícone do PATOFOOT 2026 na barra de tarefas ou Dock para abrir em 1
+                        clique.
                       </li>
                     </ol>
-                    <div className="mt-7">
+                    <div className="mt-7 flex flex-wrap items-center gap-3">
                       <button
                         type="button"
                         onClick={() => void handleInstallAction()}
@@ -704,37 +743,114 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                           {isInstalled ? 'Aplicativo já instalado' : 'Instalar no PC / Mac'}
                         </span>
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundEngine.playClick();
+                          onStartNewCareerDirect();
+                        }}
+                        className="px-4 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-semibold text-sm inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current shrink-0" />
+                        <span>Jogar na Web</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activePlatform === 'web' && (
+                  <div>
+                    <h3 className="font-display text-xl sm:text-2xl font-bold text-white">
+                      Versão Web Instantânea (Sem Baixar Nada)
+                    </h3>
+                    <p className="mt-2.5 text-sm text-slate-300 leading-relaxed">
+                      Prefere jogar direto no navegador? Abra e jogue imediatamente no Chrome, Edge,
+                      Safari ou Firefox, no celular, tablet ou PC, com carregamento rápido e
+                      salvamento seguro.
+                    </p>
+                    <ul className="mt-5 space-y-2.5 text-sm text-slate-300">
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <span>Criação de conta individual com login, senha e recuperação</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <span>5 espaços de carreira salvos automaticamente por jogador</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <span>Exportação e importação de backup .json para levar seu save onde quiser</span>
+                      </li>
+                    </ul>
+                    <div className="mt-7">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundEngine.playClick();
+                          onStartNewCareerDirect();
+                        }}
+                        className="px-5 py-3 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-sm inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                      >
+                        <Play className="w-4 h-4 fill-current shrink-0" />
+                        <span>Abrir Jogo na Web</span>
+                      </button>
                     </div>
                   </div>
                 )}
 
                 {installFeedback && (
-                  <p className="mt-4 text-xs text-sky-300 bg-sky-950/40 border border-sky-500/30 rounded-xl px-3.5 py-2.5">
+                  <p className="mt-4 text-xs text-sky-300 bg-sky-950/40 border border-sky-500/30 rounded-xl px-3.5 py-2.5 leading-relaxed">
                     {installFeedback}
                   </p>
                 )}
+
+                <div className="mt-6 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                  <span>Link direto da página de download:</span>
+                  <button
+                    type="button"
+                    onClick={() => void handleCopyShareLink(directDownloadUrl)}
+                    className="font-mono text-sky-300 hover:text-sky-200 underline underline-offset-4 cursor-pointer"
+                  >
+                    {directDownloadUrl}
+                  </button>
+                </div>
               </div>
 
-              {/* Share & Offline Readiness Card */}
-              <div className="lg:col-span-5 rounded-2xl border border-slate-800 bg-[#0b1220] p-6 sm:p-8 flex flex-col justify-between gap-6">
+              {/* Share With Friends Card (Clean Public /site Invite) */}
+              <div
+                id="compartilhar"
+                className="lg:col-span-5 rounded-2xl border border-slate-800 bg-[#0b1220] p-6 sm:p-8 flex flex-col justify-between gap-6 scroll-mt-24"
+              >
                 <div>
                   <h3 className="font-display text-lg sm:text-xl font-bold text-white">
-                    Link Oficial de Acesso &amp; Divulgação
+                    Compartilhar com Amigos
                   </h3>
-                  <p className="mt-2 text-sm text-slate-400 leading-relaxed">
-                    Envie o endereço abaixo para jogar no celular ou compartilhar o lançamento com
-                    amigos.
+                  <p className="mt-2 text-sm text-slate-300 leading-relaxed">
+                    Use sempre este <strong className="text-white">Link Oficial do Site</strong>{' '}
+                    para convidar amigos. Ele abre esta página de informações e download — nunca o
+                    seu save.
                   </p>
 
-                  <div className="mt-4 p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-slate-300 break-all">
-                    {shareUrl}
+                  <div className="mt-4 p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-emerald-300 break-all">
+                    {publicSiteUrl}
                   </div>
 
-                  <div className="mt-3 flex flex-wrap gap-2.5">
+                  <div className="mt-3.5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <a
+                      href={whatsappShareHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => soundEngine.playClick()}
+                      className="sm:col-span-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4 shrink-0" />
+                      <span>Enviar Convite no WhatsApp</span>
+                    </a>
+
                     <button
                       type="button"
-                      onClick={() => void handleCopyShareLink()}
-                      className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-white inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer transition-colors"
+                      onClick={() => void handleCopyShareLink(publicSiteUrl)}
+                      className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-white inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer transition-colors"
                     >
                       {copiedLink ? (
                         <>
@@ -744,7 +860,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                       ) : (
                         <>
                           <Copy className="w-3.5 h-3.5 shrink-0" />
-                          <span>Copiar Link</span>
+                          <span>Copiar Link /site</span>
                         </>
                       )}
                     </button>
@@ -752,22 +868,47 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                     <button
                       type="button"
                       onClick={() => void handleNativeShare()}
-                      className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-sky-300 inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer transition-colors"
+                      className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-sky-300 inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer transition-colors"
                     >
                       <Share2 className="w-3.5 h-3.5 shrink-0" />
                       <span>Compartilhar</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => void handleCopyInviteMessage()}
+                      className="sm:col-span-2 px-4 py-2 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer transition-colors"
+                    >
+                      {copiedInvite ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span>Mensagem de convite copiada!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 shrink-0" />
+                          <span>Copiar texto pronto de convite</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
 
                 <div className="pt-5 border-t border-slate-800/80 space-y-2.5 text-xs text-slate-300">
-                  <div className="flex items-center gap-2.5">
-                    <WifiOff className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>Modo Offline ativo automaticamente após o primeiro acesso</span>
+                  <div className="flex items-start gap-2.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>
+                      <strong className="text-white">Saves 100% separados:</strong> cada amigo cria
+                      sua própria conta e carreira no próprio aparelho — ninguém acessa o seu save.
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2.5">
-                    <Smartphone className="w-4 h-4 text-sky-400 shrink-0" />
-                    <span>Interface adaptada para celular, tablet e tela widescreen</span>
+                  <div className="flex items-start gap-2.5">
+                    <WifiOff className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                    <span>Modo offline ativo automaticamente após instalar ou abrir pela primeira vez</span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <Smartphone className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                    <span>Mesma qualidade em celular Android, iPhone, tablet e tela widescreen</span>
                   </div>
                 </div>
               </div>
@@ -856,20 +997,23 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                   Pronto para estrear na beira do campo?
                 </h3>
                 <p className="mt-2 text-sm text-slate-400">
-                  Escolha seu clube agora e comece sua carreira na temporada 2026.
+                  Escolha seu clube agora, baixe o app e convide seus amigos para criarem suas
+                  carreiras.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  soundEngine.playClick();
-                  onEnterWebGame();
-                }}
-                className="px-6 py-3.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-sm inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
-              >
-                <span>Abrir PATOFOOT 2026</span>
-                <ArrowRight className="w-4 h-4 shrink-0" />
-              </button>
+              <div className="flex flex-wrap items-center gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    onStartNewCareerDirect();
+                  }}
+                  className="px-6 py-3.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-sm inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                >
+                  <span>Abrir PATOFOOT 2026</span>
+                  <ArrowRight className="w-4 h-4 shrink-0" />
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -887,21 +1031,21 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
               onClick={() => scrollToSection('recursos')}
               className="hover:text-slate-300 transition-colors cursor-pointer"
             >
-              Recursos
+              Sobre o Jogo
             </button>
             <button
               type="button"
-              onClick={() => scrollToSection('web-e-app')}
+              onClick={() => scrollToSection('baixar-app')}
               className="hover:text-slate-300 transition-colors cursor-pointer"
             >
-              Web e App
+              Baixar App
             </button>
             <button
               type="button"
-              onClick={() => scrollToSection('competicoes')}
+              onClick={() => scrollToSection('compartilhar')}
               className="hover:text-slate-300 transition-colors cursor-pointer"
             >
-              Competições
+              Compartilhar
             </button>
             <button
               type="button"

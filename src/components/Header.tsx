@@ -18,6 +18,7 @@ import {
   Plus,
   Search,
   RefreshCw,
+  Globe,
 } from 'lucide-react';
 import { soundEngine } from '../services/soundEngine';
 import { getCurrentRealWorldSyncPeriod } from '../services/october2026SquadAiService';
@@ -54,6 +55,7 @@ interface HeaderProps {
   onOpenSaveModal: () => void;
   onOpenSettingsModal: () => void;
   onOpenGuideModal?: () => void;
+  onOpenOfficialSite?: () => void;
   onOpenGlobalSearch: () => void;
   onSaveAndExitToTitle: () => void;
   onOpenMatchModal: () => void;
@@ -107,6 +109,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   onOpenSaveModal,
   onOpenSettingsModal,
   onOpenGuideModal,
+  onOpenOfficialSite,
   onOpenGlobalSearch,
   onSaveAndExitToTitle,
   onOpenMatchModal,
@@ -374,6 +377,21 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               className="hidden sm:flex p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-emerald-300 hover:text-emerald-200 transition-colors border border-slate-800 cursor-pointer"
             >
               <HelpCircle className="w-4 h-4" />
+            </button>
+          )}
+
+          {onOpenOfficialSite && (
+            <button
+              type="button"
+              onClick={() => {
+                soundEngine.playClick();
+                onOpenOfficialSite();
+              }}
+              title="Site Oficial, Baixar App & Link para Convidar Amigos"
+              aria-label="Site Oficial e Convidar Amigos"
+              className="hidden sm:flex p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-sky-300 hover:text-sky-200 transition-colors border border-slate-800 cursor-pointer"
+            >
+              <Globe className="w-4 h-4" />
             </button>
           )}
 

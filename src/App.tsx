@@ -2409,11 +2409,48 @@ export default function App() {
   const [openClubPickerOnTitle, setOpenClubPickerOnTitle] = useState<boolean>(false);
   const [isTitleCatalogRequested, setIsTitleCatalogRequested] = useState<boolean>(false);
   const [titleSlotsRefreshKey, setTitleSlotsRefreshKey] = useState<number>(0);
-  const [showOfficialSite, setShowOfficialSite] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
+  const getOfficialSiteRouteState = useCallback((): {
+    wantsSite: boolean;
+    section?: 'baixar-app' | 'compartilhar';
+  } => {
+    if (typeof window === 'undefined') return { wantsSite: false };
     const pathname = window.location.pathname.toLowerCase();
     const params = new URLSearchParams(window.location.search);
-    if (pathname === '/site' || pathname.startsWith('/site/') || params.get('view') === 'site') {
+    const viewParam = (params.get('view') || '').toLowerCase();
+
+    if (
+      pathname === '/baixar' ||
+      pathname.startsWith('/baixar/') ||
+      pathname === '/download' ||
+      pathname.startsWith('/download/') ||
+      viewParam === 'download' ||
+      params.get('baixar') === '1'
+    ) {
+      return { wantsSite: true, section: 'baixar-app' };
+    }
+    if (
+      pathname === '/convite' ||
+      pathname.startsWith('/convite/') ||
+      pathname === '/compartilhar' ||
+      pathname.startsWith('/compartilhar/') ||
+      params.get('convite') === '1'
+    ) {
+      return { wantsSite: true, section: 'compartilhar' };
+    }
+    if (pathname === '/site' || pathname.startsWith('/site/') || viewParam === 'site') {
+      return { wantsSite: true };
+    }
+    return { wantsSite: false };
+  }, []);
+
+  const [officialSiteSection, setOfficialSiteSection] = useState<
+    'baixar-app' | 'compartilhar' | undefined
+  >(() => getOfficialSiteRouteState().section);
+
+  const [showOfficialSite, setShowOfficialSite] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const routeState = getOfficialSiteRouteState();
+    if (routeState.wantsSite) {
       return true;
     }
     const isStandaloneApp =
@@ -2432,42 +2469,52 @@ export default function App() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const onPopState = () => {
-      const pathname = window.location.pathname.toLowerCase();
-      const params = new URLSearchParams(window.location.search);
-      const wantsSite =
-        pathname === '/site' || pathname.startsWith('/site/') || params.get('view') === 'site';
-      setShowOfficialSite(wantsSite);
+      const routeState = getOfficialSiteRouteState();
+      setOfficialSiteSection(routeState.section);
+      setShowOfficialSite(routeState.wantsSite);
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, []);
+  }, [getOfficialSiteRouteState]);
 
-  const handleOpenOfficialSite = useCallback(() => {
+  const handleOpenOfficialSite = useCallback((section?: 'baixar-app' | 'compartilhar') => {
+    setOfficialSiteSection(section);
     setShowOfficialSite(true);
     if (typeof window !== 'undefined') {
-      if (window.location.pathname.toLowerCase() !== '/site') {
-        window.history.pushState({}, '', '/site');
+      const targetPath =
+        section === 'baixar-app'
+          ? '/baixar'
+          : section === 'compartilhar'
+          ? '/convite'
+          : '/site';
+      if (window.location.pathname.toLowerCase() !== targetPath) {
+        window.history.pushState({}, '', targetPath);
       }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!section) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   }, []);
 
-  const handleExitOfficialSiteToGame = useCallback(() => {
+  const handleExitOfficialSiteToGame = useCallback((openTitleMenu: boolean = true) => {
     try {
       localStorage.setItem('patofoot_launch_site_seen_v1', '1');
     } catch {
       // ignore storage errors in restricted contexts
     }
+    setOfficialSiteSection(undefined);
     setShowOfficialSite(false);
+    if (openTitleMenu) {
+      setIsAtTitleScreen(true);
+    }
     if (typeof window !== 'undefined') {
-      const pathname = window.location.pathname.toLowerCase();
-      const params = new URLSearchParams(window.location.search);
-      if (pathname === '/site' || pathname.startsWith('/site/') || params.get('view') === 'site') {
+      const routeState = getOfficialSiteRouteState();
+      if (routeState.wantsSite) {
         window.history.pushState({}, '', '/');
       }
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
-  }, []);
+  }, [getOfficialSiteRouteState]);
 
   // UI Navigation & Modals
   const [activeTab, setActiveTab] = useState<string>('hub');
@@ -4509,16 +4556,16 @@ export default function App() {
           <OfficialWebsiteView
             hasSavedCareer={hasAnySlotSave}
             savedClubName={savedClubName}
-            onEnterWebGame={handleExitOfficialSiteToGame}
+            initialSection={officialSiteSection}
+            onEnterWebGame={() => handleExitOfficialSiteToGame(true)}
             onStartNewCareerDirect={() => {
-              handleExitOfficialSiteToGame();
+              handleExitOfficialSiteToGame(true);
               setOpenClubPickerOnTitle(true);
-              setIsAtTitleScreen(true);
             }}
             onResumeCareerDirect={
               gameState
                 ? () => {
-                    handleExitOfficialSiteToGame();
+                    handleExitOfficialSiteToGame(false);
                     setIsAtTitleScreen(false);
                   }
                 : undefined
@@ -4555,7 +4602,7 @@ export default function App() {
             setGuideInitialTab(tab);
             setIsGuideModalOpen(true);
           }}
-          onOpenOfficialSite={handleOpenOfficialSite}
+          onOpenOfficialSite={() => handleOpenOfficialSite()}
           onOpenOct2026GlobalSyncModal={handleOpenTitleOct2026Modal}
           isSyncingOct2026Global={isSyncingOct2026Global}
           oct2026SyncedCount={titleCoverage.syncedClubs}
@@ -10741,6 +10788,7 @@ export default function App() {
           setGuideInitialTab('guide');
           setIsGuideModalOpen(true);
         }}
+        onOpenOfficialSite={() => handleOpenOfficialSite('compartilhar')}
         onSaveAndExitToTitle={handleSaveAndExitToTitle}
         onOpenOct2026GlobalSyncModal={() => setIsOct2026ModalOpen(true)}
         isSyncingOct2026Global={isSyncingOct2026Global}
@@ -10775,6 +10823,7 @@ export default function App() {
             setGuideInitialTab('guide');
             setIsGuideModalOpen(true);
           }}
+          onOpenOfficialSite={() => handleOpenOfficialSite()}
           onOpenGlobalSearch={() => setIsGlobalSearchOpen(true)}
           onSaveAndExitToTitle={handleSaveAndExitToTitle}
           onOpenMatchModal={handleOpenMatchModalWithDateCheck}

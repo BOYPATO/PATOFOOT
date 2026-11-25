@@ -69,6 +69,7 @@ interface GameSidebarProps {
   onToggleMute?: () => void;
   onOpenSettingsModal?: () => void;
   onOpenGuideModal?: () => void;
+  onOpenOfficialSite?: () => void;
   onSaveAndExitToTitle?: () => void;
   onOpenOct2026GlobalSyncModal?: () => void;
   isSyncingOct2026Global?: boolean;
@@ -95,6 +96,7 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
   onToggleMute,
   onOpenSettingsModal,
   onOpenGuideModal,
+  onOpenOfficialSite,
   onSaveAndExitToTitle,
   onOpenOct2026GlobalSyncModal,
   isSyncingOct2026Global = false,
@@ -388,6 +390,21 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
                     }`}
                   />
                   <span className="truncate">IA Elencos</span>
+                </button>
+              )}
+
+              {onOpenOfficialSite && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    onCloseMobile();
+                    onOpenOfficialSite();
+                  }}
+                  className="col-span-2 min-h-[40px] px-2.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-xs font-semibold text-emerald-300 flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                >
+                  <Globe className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="truncate">Site Oficial, Baixar App &amp; Convidar Amigos</span>
                 </button>
               )}
             </div>

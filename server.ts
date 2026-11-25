@@ -693,7 +693,7 @@ async function startServer() {
         details: [
           {
             appID,
-            paths: ['/', '/site', '/site/*'],
+            paths: ['/', '/site', '/site/*', '/baixar', '/download', '/convite'],
           },
         ],
       },
@@ -724,6 +724,12 @@ async function startServer() {
   </url>
   <url>
     <loc>${origin}/site</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${origin}/baixar</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
