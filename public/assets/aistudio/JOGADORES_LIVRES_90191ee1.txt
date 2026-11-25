@@ -1,0 +1,688 @@
+JOGADORES LIVRES
+
+GOLEIROS
+
+Bruno Varela	Bruno Varela
+Goleiro
+Cabo Verde
+Portugal	32	01/08/2026	€ 1,50 mil
+Aleksandr Vasyutin	Aleksandr Vasyutin
+Goleiro
+Rússia	31	01/07/2026	500 milhões
+Maksym Kovalyov	Maksym Kovalyov
+Goleiro
+Ucrânia
+Bulgária	26	01/07/2026	400 milhões
+André Moreira	André Moreira
+Goleiro
+Portugal	30	23/08/2026	400 milhões
+Sérgio Rico	Sérgio Rico
+Goleiro
+Espanha	33	01/07/2026	400 milhões
+Santiago Ramírez	Santiago Ramírez
+Goleiro
+México	29	01/09/2026	350 milhões
+Volodymyr Makhankov	Volodymyr Makhankov
+Goleiro
+Ucrânia	29	01/07/2026	350 milhões
+Phillip Menzel	Phillip Menzel
+Goleiro
+Alemanha	28	01/07/2026	350 milhões
+Gabriel	Gabriel
+Goleiro
+Brasil	34	25/08/2026	350 milhões
+Étienne Green	Étienne Green  
+Goleiro
+Inglaterra
+França	26	01/07/2026	300 milhões
+Nikolay Sysuev	Nikolay Sysuev
+Goleiro
+Rússia	27	01/07/2026	300 milhões
+Joana Femenías	Joana Femenías
+Goleiro
+Espanha	30	04/09/2026	300 milhões
+Joshua Oluwayemi	Joshua Oluwayemi
+Goleiro
+Nigéria
+Inglaterra	25	01/07/2026	300 milhões
+Felipe López	Felipe López
+Goleiro
+México	30	01/07/2026	300 milhões
+Raúl Gudiño	Raúl Gudiño
+Goleiro
+México	30	01/07/2026	300 milhões
+Mohamed Al-Shamsi	Mohamed Al-Shamsi
+Goleiro
+Emirados Árabes Unidos	29	01/07/2026	300 milhões
+Ricardo Ofori	Ricardo Ofori
+Goleiro
+Gana	33	01/07/2026	300 milhões
+Guillermo Viscarra	Guillermo Viscarra
+Goleiro
+Bolívia
+Alemanha	33	20/07/2026	300 milhões
+Dejan Iliev	Dejan Iliev
+Goleiro
+Macedônia do Norte
+Inglaterra	31	01/07/2026	300 milhões
+Benjamin Siegrist	Benjamin Siegrist
+Goleiro
+Suíça	34	01/07/2026	300 milhões
+Mykyta Turbayevskyi	Mykyta Turbayevskyi
+Goleiro
+Ucrânia	24	01/07/2026	250 milhões
+Alejandro Maqueda	Alejandro Maqueda
+Goleiro
+Espanha	26	01/07/2026	250 milhões
+Marco Angeletti	Marco Angeletti
+Goleiro
+Itália	25	01/07/2026	250 milhões
+Myles Roberts	Myles Roberts
+Goleiro
+Inglaterra	24	01/07/2026	250 milhões
+Tom Heward-Belle	Tom Heward-Belle
+Goleiro
+Austrália	29	01/07/2026	250 milhões
+Kleton Perntreou	Kleton Perntreou
+Goleiro
+Grécia
+Albânia	31	01/07/2026	250 milhões
+Luka Kukic	Luka Kukic
+Goleiro
+Bósnia e Herzegovina
+Croácia	30	01/07/2026	250 milhões
+Carlos	Carlos
+Goleiro
+Brasil	32	01/09/2026	250 milhões
+Riccardo Piscitelli	Riccardo Piscitelli
+Goleiro
+Itália	33	01/07/2026	250 milhões
+Yuriy Lodygin	Yuriy Lodygin
+Goleiro
+Rússia
+Grécia	36	15/10/2026	250 milhões
+Rami Hamadeh	Rami Hamadeh
+Goleiro
+Palestina
+Israel	32	01/07/2026	€ 225 milhões
+Magnus Brøndbo	Magnus Brøndbo
+Goleiro
+Noruega	21	01/07/2026	200 milhões
+Randall Rodríguez	Randall Rodríguez  
+Goleiro
+Uruguai	22	31/01/2026	200 milhões
+Pedro Mateus	Pedro Mateus
+Goleiro
+São Tomé e Príncipe
+Portugal	30	01/07/2026	200 milhões
+Marsel Islamkulov	Marsel Islamkulov
+Goleiro
+Quirguistão
+”	32	23/07/2026	200 milhões
+Guilherme Dietsch	Guilherme Dietsch
+Goleiro
+França	25	01/07/2026	200 milhões
+André Vlad	André Vlad
+Goleiro
+Romênia	27	01/07/2026	200 milhões
+Antônio Torres	Antônio Torres
+Goleiro
+México	30	01/07/2026	200 milhões
+Hassan Hamza	Hassan Hamza
+Goleiro
+Emirados Árabes Unidos	32	01/07/2026	200 milhões
+Kai Eisele	Kai Eisele
+Goleiro
+Alemanha	31	01/07/2026	200 milhões
+Gergely Nagy	Gergely Nagy
+Goleiro
+Hungria	32	01/07/2026	200 milhões
+William Rovida	William Rovida
+Goleiro
+Itália	23	01/07/2026	€ 175 milhões
+Tein Troost	Tein Troost
+Goleiro
+Holanda	24	06/10/2026	€ 175 milhões
+Luís Corredor	Luís Corredor
+Goleiro
+Venezuela	29	01/07/2026	€ 175 milhões
+Raghed Al-Najjar	Raghed Al-Najjar  
+Goleiro
+Arábia Saudita	30	01/07/2026	€ 175 milhões
+Nils Körber	Nils Körber
+Goleiro
+Alemanha	30	01/07/2026	€ 175 milhões
+Julian Pollersbeck	Julian Pollersbeck
+Goleiro
+Alemanha	32	01/07/2026	€ 175 milhões
+Marcelo Grohe	Marcelo Grohe
+Goleiro
+Brasil
+Itália	39	01/07/2026	€ 175 milhões
+Diego Urtiaga	Diego Urtiaga
+Goleiro
+México	28	02/09/2026	150 milhões
+Bryan Bonucci	Bryan Bonucci
+Goleiro
+Itália	22	01/07/2026	150 milhões
+
+DEFENSORES
+
+
+Oleksandr Zinchenko	Oleksandr Zinchenko  
+Esq. Lateral
+Ucrânia	29	01/07/2026	€6,00mi
+Rodrigão	Rodrigão
+Zagueiro
+Brasil	31	02/10/2026	€ 2,00 milhões
+Rodrigo Schlegel	Rodrigo Schlegel
+Zagueiro
+Argentina
+Alemanha	29	11/09/2026	€ 2,00 milhões
+Rafael Guerreiro	Rafael Guerreiro
+Esq. Lateral
+Portugal
+França	32	01/07/2026	€ 2,00 milhões
+Marcel Beifus	Marcel Beifus  
+Zagueiro
+Alemanha	24	01/07/2026	€ 1,80 mil
+Adam Webster	Adam Webster
+Zagueiro
+Inglaterra	31	01/07/2026	€ 1,50 mil
+Francesco Acerbi	Francesco Acerbi
+Zagueiro
+Itália	38	01/07/2026	€ 1,50 mil
+Renzo Saravia	Renzo Saravia
+Diretor Lateral
+Argentina	33	01/07/2026	€ 1,20 mil
+Yahav Gurfinkel	Yahav Gurfinkel
+Esq. Lateral
+Israel
+Hungria	28	15/09/2026	€ 1,00 mil
+Pol Lirola	Pol Lirola
+Diretor Lateral
+Espanha	29	01/07/2026	€ 1,00 mil
+Bazoer Rico	Bazoer Rico
+Zagueiro
+Curaçao
+Holanda	30	01/07/2026	€ 1,00 mil
+Ricardo Pereira	Ricardo Pereira
+Diretor Lateral
+Portugal
+Cabo Verde	33	01/07/2026	€ 1,00 mil
+José Aidoo	José Aidoo
+Zagueiro
+Gana	31	01/07/2026	900 milhões de euros
+Romain Saïss	Romain Saïss
+Zagueiro
+Marrocos
+França	36	01/07/2026	900 milhões de euros
+Mayke	Mayke
+Diretor Lateral
+Brasil	34	06/08/2026	900 milhões de euros
+Gustavo Ferrareis	Gustavo Ferrareis
+Diretor Lateral
+Brasil
+Itália	30	25/08/2026	800 milhões
+Jamal Lewis	Jamal Lewis  
+Esq. Lateral
+Irlanda do Norte
+Inglaterra	28	01/07/2026	800 milhões
+Fodé Ballo-Touré	Fodé Ballo-Touré
+Esq. Lateral
+Senegal
+França	29	01/07/2026	800 milhões
+Nikolay Minkov	Nikolay Minkov
+Diretor Lateral
+Bulgária	29	01/07/2026	800 milhões
+Samuel Gigot	Samuel Gigot  
+Zagueiro
+França	33	01/09/2026	800 milhões
+Elseid Hysaj	Elseid Hysaj
+Diretor Lateral
+Albânia	32	01/07/2026	800 milhões
+Pascal Stenzel	Pascal Stenzel
+Diretor Lateral
+Alemanha	30	01/07/2026	800 milhões
+Sérgio Ramos	Sérgio Ramos
+Zagueiro
+Espanha	40	01/01/2026	800 milhões
+Casper Højer	Casper Højer
+Esq. Lateral
+Dinamarca	32	01/07/2026	750 milhões
+Dexter Lembikisa	Dexter Lembikisa
+Diretor Lateral
+Jamaica
+Inglaterra	23	01/07/2026	700 milhões
+Thibaut Vargas	Thibaut Vargas
+Diretor Lateral
+França	26	01/07/2026	700 milhões
+Mikel Villanueva	Mikel Villanueva
+Zagueiro
+Venezuela
+Espanha	33	01/07/2026	700 milhões
+Jamaal Lascelles	Jamaal Lascelles
+Zagueiro
+Inglaterra
+Barbados	33	01/07/2026	700 milhões
+Tom Holmes	Tom Holmes
+Zagueiro
+Inglaterra	26	01/09/2026	600 milhões
+Maximiliano Caufriez	Maximiliano Caufriez
+Zagueiro
+Bélgica	29	01/07/2026	600 milhões
+Faitout Maouassa	Faitout Maouassa
+Esq. Lateral
+França
+Congo	28	01/07/2026	600 milhões
+Florin Ștefan	Florin Ștefan
+Esq. Lateral
+Romênia	30	06/09/2026	600 milhões
+Majid Hosseini	Majid Hosseini
+Zagueiro
+Irão	30	01/07/2026	600 milhões
+Jordan Amavi	Jordan Amavi
+Esq. Lateral
+França
+Senegal	32	01/07/2025	600 milhões
+Issiaga Sylla	Issiaga Sylla
+Esq. Lateral
+Guiné	32	12/10/2026	600 milhões
+Emil Krafth	Emil Krafth
+Diretor Lateral
+Suécia	32	01/07/2026	600 milhões
+Jan Dapo	Jan Dapo  
+Esq. Lateral
+Eslovênia	24	18/08/2026	500 milhões
+Patrik-Gabriel Galchev	Patrik-Gabriel Galchev
+Diretor Lateral
+Bulgária	25	01/07/2026	500 milhões
+Marko Lukovic	Marko Lukovic  
+Diretor Lateral
+Servia	23	22/09/2026	500 milhões
+Ricardo Graça	Ricardo Graça
+Zagueiro
+Brasil
+Portugal	29	01/01/2026	500 milhões
+Mamadou Diarra	Mamadou Diarra
+Zagueiro
+Senegal	28	01/07/2026	500 milhões
+Maxim Leitsch	Maxim Leitsch  
+Zagueiro
+Alemanha	28	01/07/2026	500 milhões
+Ronaldo Rodrigues	Ronaldo Rodrigues
+Zagueiro
+Brasil	28	04/08/2026	500 milhões
+Filippo Romagna	Filippo Romagna
+Zagueiro
+Itália	29	01/07/2026	500 milhões
+Glenn Bijl	Glenn Bijl
+Diretor Lateral
+Holanda	31	01/07/2026	500 milhões
+Matija Nastasić	Matija Nastasić
+Zagueiro
+Servia	33	01/07/2026	500 milhões
+Bart Schenkeveld	Bart Schenkeveld
+Zagueiro
+Holanda	35	01/07/2026	500 milhões
+Raúl Albiol	Raúl Albiol
+Zagueiro
+Espanha	41	01/07/2026	500 milhões
+Kganyane Letsoenyo	Kganyane Letsoenyo
+Esq. Lateral
+África do Sul	28	01/07/2026	450 milhões
+Paulo Medina	Paulo Medina
+Diretor Lateral
+México
+Espanha	27	01/07/2026	450 milhões
+
+MEIO CAMPO
+
+Felipe Carballo	Felipe Carballo  
+Meia Central
+Uruguai
+Itália	30	20/01/2026	€ 2,50 milhões
+Tanguy Ndombélé	Tanguy Ndombélé
+Meia Central
+França
+RD do Congo	29	01/07/2026	€ 2,00 milhões
+Abdoulaye Touré	Abdoulaye Touré
+Volante
+Guiné
+França	32	01/07/2026	€ 2,00 milhões
+Paulo Pogba	Paulo Pogba
+Meia Central
+França
+Guiné	33	19/08/2026	€ 2,00 milhões
+Habib Keïta	Habib Keïta
+Meia Central
+Mali
+Costa do Marfim	24	05/09/2026	€ 1,80 mil
+Serra Jordan	Serra Jordan
+Meia Central
+Equador	29	01/07/2026	€ 1,80 mil
+Renato Sanches	Renato Sanches
+Meia Central
+Portugal
+São Tomé e Príncipe	29	01/09/2026	€ 1,50 mil
+Tozé	Tozé
+Meia Ofensivo
+Portugal	33	01/07/2026	€ 1,50 mil
+Matías Rojas	Matías Rojas
+Meia Ofensivo
+Paraguai	31	01/07/2026	€ 1,20 mil
+Ulises Rivas	Ulises Rivas
+Meia Central
+México
+Itália	30	01/07/2026	€ 1,20 mil
+Olivier Ntcham	Olivier Ntcham
+Meia Central
+Camarões
+França	30	01/07/2026	€ 1,20 mil
+Praxedes	Praxedes
+Meia Central
+Brasil	24	01/07/2026	€ 1,00 mil
+Beni Baningime	Beni Baningime
+Volante
+RD do Congo
+Inglaterra	28	01/07/2026	€ 1,00 mil
+Rifat Zhemaletdinov	Rifat Zhemaletdinov
+Meia Ofensivo
+Rússia	30	01/07/2026	€ 1,00 mil
+Adrien Tamèze	Adrien Tamèze
+Volante
+França
+Camarões	32	01/07/2026	€ 1,00 mil
+Daniel Bessa	Daniel Bessa
+Meia Central
+Itália
+Brasil	33	01/07/2026	€ 1,00 mil
+Christian Eriksen	Christian Eriksen  
+Meia Ofensivo
+Dinamarca	34	23/09/2026	€ 1,00 mil
+Luan	Luan
+Volante
+Brasil	27	11/09/2026	900 milhões de euros
+Matías Vecino	Matías Vecino  
+Meia Central
+Uruguai
+Itália	35	21/08/2026	900 milhões de euros
+Dani Parejo	Dani Parejo
+Meia Central
+Espanha	37	01/07/2026	900 milhões de euros
+Jean Onana	Jean Onana
+Volante
+Camarões	26	25/08/2026	800 milhões
+Sandry	Sandry
+Volante
+Brasil	24	11/09/2026	800 milhões
+Joe Aribo	Joe Aribo
+Meia Central
+Nigéria
+Inglaterra	30	01/07/2026	800 milhões
+Idrissa Doumbia	Idrissa Doumbia
+Volante
+Costa do Marfim	28	01/07/2026	800 milhões
+Kevin N'Doram	Kevin N'Doram
+Volante
+França
+Chade	30	01/07/2026	800 milhões
+Tom Davis	Tom Davis
+Meia Central
+Inglaterra	28	01/07/2026	800 milhões
+Carlos Gruezo	Carlos Gruezo
+Volante
+Equador	31	09/09/2026	800 milhões
+Dánnovi Quiñónes	Dánnovi Quiñónes
+Volante
+Colômbia	25	02/10/2026	700 milhões
+Luka Gagnidze	Luka Gagnidze
+Meia Central
+Geórgia	23	07/10/2026	700 milhões
+João Mendes	João Mendes
+Meia Ofensivo
+Portugal	32	01/08/2026	700 milhões
+Didier Ndong	Didier Ndong
+Volante
+Gabão	32	01/07/2026	700 milhões
+Jeffrey Schlupp	Jeffrey Schlupp
+Meia Esquerda
+Gana
+Alemanha	33	01/07/2026	700 milhões
+Cristo Papadopoulos	Cristo Papadopoulos
+Meia Ofensivo
+Grécia	22	27/10/2026	600 milhões
+Roger Aholou	Roger Aholou
+Volante
+Ir
+Costa do Marfim	32	01/07/2026	600 milhões
+Javi Serrano	Javi Serrano
+Meia Central
+Espanha	23	01/07/2026	600 milhões
+Ben Elliott	Ben Elliott
+Meia Central
+Camarões
+Inglaterra	24	01/07/2026	600 milhões
+Raúl Guti	Raúl Guti
+Meia Central
+Espanha	29	01/07/2026	600 milhões
+Viktor Kovalenko	Viktor Kovalenko
+Meia Central
+Ucrânia	30	01/07/2026	600 milhões
+Kevin Escamilla	Kevin Escamilla
+Volante
+México	32	01/07/2026	600 milhões
+JC Ngando	JC Ngando
+Volante
+França
+Camarões	27	02/09/2026	500 milhões
+Sam Rak-Sakyi	Sam Rak-Sakyi
+Volante
+Inglaterra
+Gana	21	01/07/2026	500 milhões
+Adama Traoré	Adama Traoré
+Meia Central
+Mali	31	01/07/2026	500 milhões
+Dele Alli	Dele Alli  
+Meia Ofensivo
+Inglaterra
+Nigéria	30	01/09/2025	500 milhões
+Julian Green	Julian Green
+Meia Central
+Estados Unidos
+Alemanha	31	01/07/2026	500 milhões
+Sofiane Hanni	Sofiane Hanni
+Meia Ofensivo
+Argélia
+França	35	01/07/2026	500 milhões
+Sérgio Oliveira	Sérgio Oliveira
+Meia Central
+Portugal	34	23/01/2026	500 milhões
+Erik De Los Santos	Erik De Los Santos
+Meia Central
+Uruguai	27	26/08/2026	450 milhões
+Marco John	Marco John  
+Meia Central
+Alemanha	24	01/07/2026	450 milhões
+Bogdan Lednev	Bogdan Lednev
+Meia Ofensivo
+Ucrânia	28	01/07/2026	450 milhões
+Lesiba Nku	Lesiba Nku
+Meia Ofensivo
+África do Sul	30	01/07/2026	400 milhões
+
+ATACANTES
+
+
+Jadon Sancho	Jadon Sancho
+Ponta-Esquerda
+Inglaterra
+Jamaica	26	01/07/2026	€10,00mi
+Karim Benzema	Karim Benzema
+Centroavante
+França
+Argélia	38	31/08/2026	€4,00mi
+Antônio Marcial	Antônio Marcial
+Centroavante
+França
+Guadalupe	30	06/07/2026	€3,00mi
+Mauro Icardi	Mauro Icardi
+Centroavante
+Argentina
+Itália	33	01/07/2026	€3,00mi
+Wilfried Zaha	Wilfried Zaha
+Ponta-Esquerda
+Costa do Marfim
+Inglaterra	34	01/07/2026	€ 2,50 milhões
+Carlos Júnior	Carlos Júnior
+Ponta Direita
+Brasil	31	21/08/2026	€ 2,00 milhões
+Raheem Sterling	Raheem Sterling
+Ponta Direita
+Inglaterra
+Jamaica	31	01/07/2026	€ 1,50 mil
+Yazan Al-Naimat	Yazan Al-Naimat
+Centroavante
+Jordânia	27	01/07/2026	€ 1,00 mil
+Manuel Benson	Manuel Benson  
+Ponta Direita
+Angola
+Bélgica	29	08/09/2026	€ 1,00 mil
+Ryan Kent	Ryan Kent
+Ponta-Esquerda
+Inglaterra	30	01/01/2026	€ 1,00 mil
+Fábio Martins	Fábio Martins
+Ponta-Esquerda
+Portugal
+Brasil	33	01/07/2026	€ 1,00 mil
+Cedric Teuchert	Cedric Teuchert
+Centroavante
+Alemanha	29	01/07/2026	€ 1,00 mil
+Iuri Medeiros	Iuri Medeiros
+Ponta Direita
+Portugal	32	31/03/2026	900 milhões de euros
+Adnan Januzaj	Adnan Januzaj
+Ponta Direita
+Bélgica
+Kosovo	31	01/07/2026	900 milhões de euros
+Marouan Azarkan	Marouan Azarkan
+Ponta Direita
+Marrocos
+Holanda	24	01/07/2026	800 milhões
+Henrique Onyekuru	Henrique Onyekuru
+Ponta-Esquerda
+Nigéria	29	12/07/2026	800 milhões
+David Kownacki	David Kownacki
+Centroavante
+Polônia	29	30/09/2026	800 milhões
+Léo Bonatini	Léo Bonatini
+Centroavante
+Brasil
+Itália	32	01/07/2025	800 milhões
+Lucas Braga	Lucas Braga  
+Ponta-Esquerda
+Brasil	30	20/02/2026	750 milhões
+André Shinyashiki	André Shinyashiki
+Ponta-Esquerda
+Brasil
+Itália	29	01/07/2026	700 milhões
+Kobamelo Kodisang	Kobamelo Kodisang
+Ponta Direita
+África do Sul	27	22/09/2026	700 milhões
+Enzo Crivelli	Enzo Crivelli
+Centroavante
+França
+Argélia	31	01/07/2026	700 milhões
+Luciano Vietto	Luciano Vietto
+Centroavante
+Argentina
+Itália	32	01/07/2026	700 milhões
+Alef Manga	Alef Manga
+Ponta-Esquerda
+Brasil	31	01/10/2026	600 milhões
+Myziane Maolida	Myziane Maolida
+Ponta-Esquerda
+Comores
+França	27	01/07/2026	600 milhões
+Carlos Cisneros	Carlos Cisneros
+Ponta-Esquerda
+México	33	01/07/2026	600 milhões
+Munas Dabbur	Munas Dabbur
+Centroavante
+Israel	34	01/07/2026	600 milhões
+Gabriel Novaes	Gabriel Novaes
+Centroavante
+Brasil	27	01/06/2026	500 milhões
+Kristijan Trapanovski	Kristijan Trapanovski  
+Ponta-Esquerda
+Macedônia do Norte	27	01/07/2026	500 milhões
+Corey Baird	Corey Baird
+Centroavante
+Estados Unidos	30	01/01/2026	500 milhões
+Percy Tau	Percy Tau
+Ponta Direita
+África do Sul	32	01/07/2026	500 milhões
+Pione Sisto	Pione Sisto
+Ponta-Esquerda
+Dinamarca
+Sudão do Sul	31	01/07/2026	500 milhões
+Solly March	Solly March
+Ponta Direita
+Inglaterra	32	01/07/2026	500 milhões
+Ante Rebić	Ante Rebić
+Ponta-Esquerda
+Croácia	33	01/07/2026	500 milhões
+Ahmed Hassan	Ahmed Hassan
+Centroavante
+Egito
+Portugal	33	01/07/2026	500 milhões
+Alan Pulido	Alan Pulido
+Centroavante
+México	35	15/04/2026	500 milhões
+Choco Lozano	Choco Lozano
+Centroavante
+Honduras
+Espanha	33	01/07/2026	500 milhões
+Nathan Redmond	Nathan Redmond
+Ponta Direita
+Inglaterra
+Jamaica	32	01/07/2026	500 milhões
+Rachid Ghezzal	Rachid Ghezzal
+Ponta Direita
+Argélia
+França	34	01/07/2026	500 milhões
+Ali Mabkhout	Ali Mabkhout
+Centroavante
+Emirados Árabes Unidos	36	01/07/2026	500 milhões
+Luuk de Jong	Luuk de Jong
+Centroavante
+Holanda	36	01/07/2026	500 milhões
+Edinson Cavani	Edinson Cavani
+Centroavante
+Uruguai
+Itália	39	01/07/2026	500 milhões
+José Peralta	José Peralta
+Ponta Direita
+México	29	01/07/2026	450 milhões
+Assan Ceesay	Assan Ceesay
+Centroavante
+Gâmbia	32	11/09/2025	450 milhões
+Diego Campos	Diego Campos  
+Ponta-Esquerda
+Costa Rica	31	01/07/2026	450 milhões
+Panagiotis Moraitis	Panagiotis Moraitis
+Centroavante
+Grécia	29	04/11/2026	450 milhões
+Jeison Lucumí	Jeison Lucumí
+Ponta-Esquerda
+Colômbia	31	28/09/2026	450 milhões
+Carlos Mané	Carlos Mané
+Ponta Direita
+Guiné-Bissau
+Portugal	32	01/07/2026	450 milhões
+Ari Moura	Ari Moura
+Ponta Direita
+Brasil	30	21/09/2026	400 milhões
+Gustavo Santos	Gustavo Santos
+Centroavante
+Brasil	30	01/07/2026	400 milhões

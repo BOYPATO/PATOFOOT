@@ -57,6 +57,7 @@ import {
   generateLeagueSchedule, 
   generateInitialStandings, 
   generateFreeAgents,
+  CURRENT_FREE_AGENTS_2026_VERSION,
   ensureMinimumSquadDepth,
   getDefaultClubRivals,
   createPlayer,
@@ -2186,9 +2187,28 @@ function sanitizeSave(save: GameSave): GameSave {
         : Math.min(save.currentRound || 1, resolvedTotalRounds),
     totalRounds: resolvedTotalRounds,
     clubs: oct2026HydratedClubs,
-    transferMarket: (save.transferMarket || []).map((p) =>
-      ensurePlayerContractFields(p, p.nationality || 'Brasil')
-    ),
+    freeAgents2026Version: CURRENT_FREE_AGENTS_2026_VERSION,
+    transferMarket: (() => {
+      const existingMarket = (save.transferMarket || []).map((p) =>
+        ensurePlayerContractFields(p, p.nationality || 'Brasil')
+      );
+      if ((save.freeAgents2026Version || 0) >= CURRENT_FREE_AGENTS_2026_VERSION) {
+        return existingMarket;
+      }
+      const signedPlayerIds = new Set<string>();
+      for (const club of oct2026HydratedClubs) {
+        for (const p of club.squad || []) {
+          signedPlayerIds.add(p.id);
+        }
+      }
+      const freshFreeAgents = generateFreeAgents()
+        .map((p) => ensurePlayerContractFields(p, p.nationality || 'Brasil'))
+        .filter((p) => !signedPlayerIds.has(p.id));
+      const dynamicCareerFreeAgents = existingMarket.filter(
+        (p) => !p.id.startsWith('fa_2026_') && !signedPlayerIds.has(p.id)
+      );
+      return [...freshFreeAgents, ...dynamicCareerFreeAgents];
+    })(),
     currentDate,
     fixturesA,
     fixturesB,
@@ -4123,6 +4143,7 @@ export default function App() {
       standingsSuperMundial: [],
       inbox: initialInbox,
       transferMarket: freeAgents,
+      freeAgents2026Version: CURRENT_FREE_AGENTS_2026_VERSION,
       transferOffers: [],
       transferHistory: [],
       pendingTransfers: [],

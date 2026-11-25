@@ -54,6 +54,12 @@ import { SPECIAL_LEAGUE_2_2026 } from './specialLeague2Rosters';
 import { CHAMPIONSHIP_LEAGUE_2026 } from './championship2026Rosters';
 import { LEAGUE_ONE_2026 } from './leagueOne2026Rosters';
 import { LEAGUE_TWO_2026 } from './leagueTwo2026Rosters';
+import {
+  FREE_AGENTS_2026_SPECS,
+  CURRENT_FREE_AGENTS_2026_VERSION,
+} from './freeAgents2026';
+
+export { CURRENT_FREE_AGENTS_2026_VERSION };
 
 // === VERSIONS OF OFFICIAL 2026 ROSTERS ===
 export const CURRENT_FLAMENGO_ROSTER_VERSION = 2;
@@ -1531,63 +1537,10 @@ export function generateInitialStandings(clubIds: string[]): Standing[] {
 }
 
 export function generateFreeAgents(): Player[] {
-  const freeAgentSpecs: Array<[string, DetailedRole, number, number, string]> = [
-    ['Diego Costa', 'ATA', 75, 37, 'Brasil'],
-    ['Fernandinho', 'VOL', 76, 40, 'Brasil'],
-    ['Renato Augusto', 'MEI', 74, 38, 'Brasil'],
-    ['William Farias', 'VOL', 70, 36, 'Brasil'],
-    ['Luan', 'MEI', 71, 33, 'Brasil'],
-    ['Alexandre Pato', 'ATA', 72, 36, 'Brasil'],
-    ['Rômulo', 'VOL', 69, 35, 'Brasil'],
-    ['Mariano', 'LAT', 71, 39, 'Brasil'],
-    ['Fábio Santos', 'LAT', 69, 40, 'Brasil'],
-    ['Sidnei', 'ZAG', 70, 36, 'Brasil'],
-    ['Vitor Bueno', 'MEI', 73, 31, 'Brasil'],
-    ['Marinho', 'ATA', 72, 35, 'Brasil'],
-    ['Douglas Costa', 'ATA', 73, 35, 'Brasil'],
-    ['Jailson', 'GOL', 69, 44, 'Brasil'],
-    ['Vanderlei', 'GOL', 70, 42, 'Brasil'],
-    ['Felipe Melo', 'ZAG', 72, 42, 'Brasil'],
-    ['Rafinha', 'LAT', 71, 40, 'Brasil'],
-    ['David Luiz', 'ZAG', 74, 38, 'Brasil'],
-    ['Bruno Henrique', 'VOL', 73, 36, 'Brasil'],
-    ['Luiz Adriano', 'ATA', 71, 38, 'Brasil'],
-    ['Ganso', 'MEI', 74, 36, 'Brasil'],
-    ['Matías Zaracho', 'MEI', 76, 28, 'Argentina'],
-    ['Franco Cristaldo', 'MEI', 75, 29, 'Argentina'],
-    ['Cristian Pavón', 'ATA', 74, 30, 'Argentina'],
-    ['Nicolás Lodeiro', 'MEI', 73, 37, 'Uruguai'],
-    ['Abel Hernández', 'ATA', 72, 35, 'Uruguai'],
-    ['Diego Godín', 'ZAG', 72, 40, 'Uruguai'],
-    ['Arturo Vidal', 'VOL', 75, 38, 'Chile'],
-    ['Gary Medel', 'ZAG', 73, 38, 'Chile'],
-    ['Charles Aránguiz', 'VOL', 75, 37, 'Chile'],
-    ['Juan Cuadrado', 'LAT', 76, 37, 'Colômbia'],
-    ['James Rodríguez', 'MEI', 77, 34, 'Colômbia'],
-    ['Sergio Ramos', 'ZAG', 79, 40, 'Espanha'],
-    ['Mats Hummels', 'ZAG', 78, 37, 'Alemanha'],
-    ['Marcelo', 'LAT', 74, 37, 'Brasil'],
-    ['Keylor Navas', 'GOL', 77, 39, 'Costa Rica'],
-    ['Dele Alli', 'MEI', 71, 30, 'Inglaterra'],
-    ['Jesse Lingard', 'MEI', 72, 33, 'Inglaterra'],
-    ['Memphis Depay', 'ATA', 79, 32, 'Holanda'],
-    ['Christian Eriksen', 'MEI', 77, 34, 'Dinamarca'],
-    ['Kaua Souza', 'ATA', 62, 19, 'Brasil'],
-    ['Matheus Oliveira', 'MEI', 61, 20, 'Brasil'],
-    ['Pedro Henrique', 'ZAG', 63, 21, 'Brasil'],
-    ['Lucas Bezerra', 'LAT', 60, 21, 'Brasil'],
-    ['Igor Nascimento', 'VOL', 61, 22, 'Brasil'],
-    ['Gabriel Gomes', 'GOL', 60, 22, 'Brasil'],
-    ['Vinícius Rocha', 'ATA', 58, 19, 'Brasil'],
-    ['Danilo Mendes', 'ZAG', 57, 23, 'Brasil'],
-    ['Rafael Barbosa', 'MEI', 58, 24, 'Brasil'],
-    ['Bruno Cardoso', 'GOL', 57, 25, 'Brasil'],
-  ];
-
-  return freeAgentSpecs.map(([name, role, ovr, age, nat], idx) => {
+  return FREE_AGENTS_2026_SPECS.map(([name, role, ovr, age, nat], idx) => {
     const targetDiv: Division = ovr >= 76 ? 'A' : ovr >= 70 ? 'B' : ovr >= 62 ? 'C' : 'EST';
     return createPlayer(
-      `fa_2026_${idx + 1}`,
+      `fa_2026_v2_${idx + 1}`,
       name,
       role,
       ovr,

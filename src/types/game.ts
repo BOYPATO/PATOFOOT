@@ -1923,6 +1923,7 @@ export interface GameSave {
   aiWorldLeaguesCalibratedAt?: string;
   inbox: InboxMessage[];
   transferMarket: Player[]; // Free agents
+  freeAgents2026Version?: number;
   transferOffers: TransferOffer[];
   transferHistory?: TransferHistoryRecord[];
   pendingTransfers?: PendingTransferDeal[];
