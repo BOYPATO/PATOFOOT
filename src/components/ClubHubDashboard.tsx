@@ -18,6 +18,8 @@ import { getManagerSpecialtyProfile } from '../utils/managerSpecialtyEngine';
 import { evaluateChallengeStatus } from '../utils/careerChallengesEngine';
 import { DirectorAdvicePanel } from './DirectorAdvicePanel';
 import { ManagementTipsPanel } from './ManagementTipsPanel';
+import { CoachTipsBar } from './CoachTipsBar';
+import { CoachTipActionTarget } from '../utils/coachTipsEngine';
 import { ClubCrest, CompetitionCrest } from './ClubCrest';
 import { soundEngine } from '../services/soundEngine';
 import { getCurrentRealWorldSyncPeriod } from '../services/october2026SquadAiService';
@@ -339,6 +341,23 @@ export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
     [gameState]
   );
   const savedPresets = userClub.tacticalPresets || [];
+
+  const handleCoachTipAction = (target: CoachTipActionTarget) => {
+    switch (target) {
+      case 'contracts':
+        onOpenContracts();
+        return;
+      case 'market_free':
+        if (onOpenMarketTarget) onOpenMarketTarget('free');
+        else onNavigateTab('market');
+        return;
+      case 'play':
+        onPlayMatch();
+        return;
+      default:
+        onNavigateTab(target);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -809,6 +828,17 @@ export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
         </section>
         );
       })()}
+
+      {/* Dicas do Treinador: mensagens curtas e contextuais baseadas no momento do clube */}
+      <CoachTipsBar
+        userClub={userClub}
+        gameState={gameState}
+        upcomingFixture={upcomingFixture}
+        upcomingOpponent={upcomingOpponent}
+        userPosition={leagueSlice.userPosition}
+        classicFastMode={classicFastMode}
+        onAction={handleCoachTipAction}
+      />
 
       {/* TOP SPLIT: Next Match Centerpiece (7 cols) + Financial & Window Summary (5 cols) */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch">
