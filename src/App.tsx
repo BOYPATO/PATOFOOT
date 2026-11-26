@@ -950,7 +950,7 @@ function sanitizeSave(save: GameSave): GameSave {
   const needsAfcChampions2026Migration =
     (save.afcChampions2026Version ?? 0) < CURRENT_AFC_CHAMPIONS_2026_VERSION;
 
-  const baseSeasonYear = save.currentSeasonYear || 2026;
+  const baseSeasonYear = save.currentSeasonYear || 2027;
   const rawSavedDate = save.currentDate || '';
   const calYearFromDate = /^\d{4}-\d{2}-\d{2}$/.test(rawSavedDate)
     ? Number(rawSavedDate.slice(0, 4))
@@ -3701,18 +3701,14 @@ export default function App() {
     const isUserRussia = selectedWlId === 'rus_premier';
     const isUserSplitAsiaRussia = Boolean(selectedWlId && isSplitYearWorldLeague(selectedWlId));
 
-    // SA / North America / Africa run Jan..Dec of saSeasonYear; Europe + Asia/Russia run Jul/Aug(europeSeasonYear)..May(europeSeasonYear + 1)
-    const saSeasonYear = 2026;
-    const europeSeasonYear = isUserEu ? 2026 : 2025;
+    // SA / North America / Africa start in Jan 2027; Europe + Asia/Russia start in Jul/Aug 2026 (2026/27 season ending in May 2027)
+    const saSeasonYear = 2027;
+    const europeSeasonYear = 2026;
     const seasonYear = isUserEu ? europeSeasonYear : saSeasonYear;
     const startDate = isUserEu
       ? getSplitSeasonStartDate(europeSeasonYear, isUserRussia)
-      : getSeasonStartDate(saSeasonYear); // 2026-01-11
-    const startDateDisplay = isUserEu
-      ? isUserRussia
-        ? `24/07/${europeSeasonYear}`
-        : `01/08/${europeSeasonYear}`
-      : `11/01/${saSeasonYear}`;
+      : getSeasonStartDate(saSeasonYear); // 2027-01-10
+    const startDateDisplay = `${startDate.slice(8, 10)}/${startDate.slice(5, 7)}/${startDate.slice(0, 4)}`;
 
     const fixturesA = generateLeagueSchedule(serieAClubs, 'serie_a', saSeasonYear);
     const fixturesB = generateLeagueSchedule(serieBClubs, 'serie_b', saSeasonYear);
@@ -3832,8 +3828,8 @@ export default function App() {
           : userWlMeta && isUserSplitAsiaRussia
           ? `Bem-vindo ao ${userTeam?.name} • ${userWlMeta.name} ${euSeasonLabel}!`
           : userWlMeta
-          ? `Bem-vindo ao ${userTeam?.name} • ${userWlMeta.name} 2026!`
-          : 'Bem-vindo ao PATOFOOT • Temporada Oficial 2026!',
+          ? `Bem-vindo ao ${userTeam?.name} • ${userWlMeta.name} ${saSeasonYear}!`
+          : `Bem-vindo ao PATOFOOT • Temporada Oficial ${saSeasonYear}!`,
         message: userEuMeta
           ? `Você assumiu o comando do ${userTeam?.name} na ${userEuMeta.name} (${userEuMeta.country})! Seguindo o calendário real europeu, a temporada ${euSeasonLabel} começa neste mês de Agosto de ${europeSeasonYear} (com a Janela de Verão aberta!) e vai até Maio de ${
               europeSeasonYear + 1
@@ -3846,7 +3842,7 @@ export default function App() {
             } (com pausa de inverno), valendo vagas na Liga dos Campeões de Elite da AFC (32 clubes em Conferências Oeste e Leste) e no Mundial da FIFA!`
           : userWlMeta
           ? `Você assumiu o comando do ${userTeam?.name} na ${userWlMeta.name} (${userWlMeta.country})! Os melhores colocados garantem vaga nas copas continentais e na Champions Internacional FIFA, além de disputar o Mundial de Clubes / Copa Intercontinental FIFA em Dezembro!`
-          : `A temporada oficial CBF 2026 começa hoje, 11 de Janeiro, com a abertura dos Campeonatos Estaduais! Em 01 de Fevereiro teremos a Supercopa do Brasil, seguida da Recopa Sul-Americana, Brasileirão (com abertura em 28/01), Copa do Brasil, Libertadores e Sul-Americana até Dezembro (enquanto a Europa, Ásia e Rússia disputam o calendário Jul/Ago–Mai)!`,
+          : `A temporada oficial CBF ${saSeasonYear} começa hoje, ${startDateDisplay}, com a abertura dos Campeonatos Estaduais! Em Fevereiro teremos a Supercopa do Brasil, seguida da Recopa Sul-Americana, Brasileirão, Copa do Brasil, Libertadores e Sul-Americana até Dezembro (enquanto a Europa, Ásia e Rússia disputam o calendário Jul/Ago–Mai)!`,
         date: startDateDisplay,
         round: 1,
         read: false,

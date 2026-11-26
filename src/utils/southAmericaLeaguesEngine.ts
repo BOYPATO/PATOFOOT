@@ -8,7 +8,7 @@ import {
   Standing,
   TrophyRecord,
 } from '../types/game';
-import { getRoundDate } from './calendarUtils';
+import { assignVariedMatchDaySlot, getRoundDate, getSeasonStartDate } from './calendarUtils';
 import { generateInitialStandings } from '../data/initialData';
 import { getClubSectorRatings } from './clubRatingsEngine';
 
@@ -406,22 +406,28 @@ export function generateSouthAmericanLeagueSchedule(
   evenTeams.forEach((c) => clubMap.set(c.id, c));
 
   const fixtures: Fixture[] = [];
+  const minSeasonDate = getSeasonStartDate(seasonYear);
+  const maxSeasonDate = `${seasonYear}-12-20`;
+  const roundBaseDates: string[] = Array.from({ length: totalRounds }, (_, idx) => {
+    const rNum = idx + 1;
+    const slotIdx =
+      totalRounds <= 1
+        ? 1
+        : Math.max(1, Math.min(38, Math.round(1 + ((rNum - 1) * 37) / (totalRounds - 1))));
+    return getRoundDate(slotIdx, seasonYear).date;
+  });
 
   for (let round = 0; round < halfRounds; round++) {
     const firstHalfRound = round + 1;
     const secondHalfRound = round + 1 + halfRounds;
 
-    const firstSlot =
-      totalRounds <= 1
-        ? 1
-        : Math.max(1, Math.min(38, Math.round(1 + ((firstHalfRound - 1) * 37) / (totalRounds - 1))));
-    const secondSlot =
-      totalRounds <= 1
-        ? 38
-        : Math.max(1, Math.min(38, Math.round(1 + ((secondHalfRound - 1) * 37) / (totalRounds - 1))));
+    const firstBaseDate = roundBaseDates[firstHalfRound - 1];
+    const firstPrevDate = firstHalfRound > 1 ? roundBaseDates[firstHalfRound - 2] : undefined;
+    const firstNextDate = firstHalfRound < totalRounds ? roundBaseDates[firstHalfRound] : undefined;
 
-    const firstDateInfo = getRoundDate(firstSlot, seasonYear);
-    const secondDateInfo = getRoundDate(secondSlot, seasonYear);
+    const secondBaseDate = roundBaseDates[secondHalfRound - 1] || firstBaseDate;
+    const secondPrevDate = secondHalfRound > 1 ? roundBaseDates[secondHalfRound - 2] : undefined;
+    const secondNextDate = secondHalfRound < totalRounds ? roundBaseDates[secondHalfRound] : undefined;
 
     for (let match = 0; match < matchesPerRound; match++) {
       const homeIdx = (round + match) % (count - 1);
@@ -434,6 +440,22 @@ export function generateSouthAmericanLeagueSchedule(
       const t1 = isEvenRound ? teamIds[homeIdx] : teamIds[awayIdx];
       const t2 = isEvenRound ? teamIds[awayIdx] : teamIds[homeIdx];
 
+      const firstSlotInfo = assignVariedMatchDaySlot(
+        firstBaseDate,
+        match,
+        firstHalfRound,
+        totalRounds,
+        `${leagueId}_${seasonYear}`,
+        {
+          minDate: minSeasonDate,
+          maxDate: maxSeasonDate,
+          prevRoundBaseDate: firstPrevDate,
+          nextRoundBaseDate: firstNextDate,
+          region: 'south_america',
+          fallbackTime: match % 2 === 0 ? '18:30' : '21:00',
+        }
+      );
+
       fixtures.push({
         id: `${leagueId}_${seasonYear}_r${firstHalfRound}_m${match}`,
         round: firstHalfRound,
@@ -444,12 +466,28 @@ export function generateSouthAmericanLeagueSchedule(
         homeScore: null,
         awayScore: null,
         played: false,
-        date: firstDateInfo.date,
-        time: match % 2 === 0 ? '18:30' : '21:00',
+        date: firstSlotInfo.date,
+        time: firstSlotInfo.time,
         stadiumName: clubMap.get(t1)?.stadium.name,
       });
 
       if (!singleRoundOnly) {
+        const secondSlotInfo = assignVariedMatchDaySlot(
+          secondBaseDate,
+          match,
+          secondHalfRound,
+          totalRounds,
+          `${leagueId}_${seasonYear}`,
+          {
+            minDate: minSeasonDate,
+            maxDate: maxSeasonDate,
+            prevRoundBaseDate: secondPrevDate,
+            nextRoundBaseDate: secondNextDate,
+            region: 'south_america',
+            fallbackTime: match % 2 === 0 ? '18:30' : '21:00',
+          }
+        );
+
         fixtures.push({
           id: `${leagueId}_${seasonYear}_r${secondHalfRound}_m${match}`,
           round: secondHalfRound,
@@ -460,8 +498,8 @@ export function generateSouthAmericanLeagueSchedule(
           homeScore: null,
           awayScore: null,
           played: false,
-          date: secondDateInfo.date,
-          time: match % 2 === 0 ? '18:30' : '21:00',
+          date: secondSlotInfo.date,
+          time: secondSlotInfo.time,
           stadiumName: clubMap.get(t2)?.stadium.name,
         });
       }

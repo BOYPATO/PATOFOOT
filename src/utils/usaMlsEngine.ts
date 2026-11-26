@@ -5,8 +5,10 @@ import {
   MlsConference,
 } from '../data/usaMls2026Data';
 import {
+  assignVariedMatchDaySlot,
   getConmebolContinentalScheduleDates,
   getSeasonFifaBlockedDatesSet,
+  getSeasonStartDate,
 } from './calendarUtils';
 
 export const MLS_PLAYOFF_SLOT_LABELS: Record<string, string> = {
@@ -296,7 +298,29 @@ export function generateUsaMlsSeason(
       [eRound.byeTeamId, wRound.byeTeamId],
     ];
 
+    const minMlsDate = getSeasonStartDate(seasonYear);
+    const firstPrev = firstRound > 1 ? getMlsRegularRoundDate(firstRound - 1, seasonYear) : undefined;
+    const firstNext = getMlsRegularRoundDate(firstRound + 1, seasonYear);
+    const secondPrev = getMlsRegularRoundDate(secondRound - 1, seasonYear);
+    const secondNext = getMlsRegularRoundDate(secondRound + 1, seasonYear);
+
     firstHalfMatches.forEach(([homeId, awayId], idx) => {
+      const slot1 = assignVariedMatchDaySlot(
+        firstDate,
+        idx,
+        firstRound,
+        34,
+        `usa_mls_${seasonYear}`,
+        {
+          minDate: minMlsDate,
+          maxDate: `${seasonYear}-11-15`,
+          prevRoundBaseDate: firstPrev,
+          nextRoundBaseDate: firstNext,
+          region: 'south_america',
+          fallbackTime: idx % 3 === 0 ? '18:30' : idx % 3 === 1 ? '20:30' : '21:30',
+        }
+      );
+
       fixtures.push({
         id: `usa_mls_${seasonYear}_r${firstRound}_m${idx}`,
         round: firstRound,
@@ -307,10 +331,26 @@ export function generateUsaMlsSeason(
         homeScore: null,
         awayScore: null,
         played: false,
-        date: firstDate,
-        time: idx % 3 === 0 ? '18:30' : idx % 3 === 1 ? '20:30' : '21:30',
+        date: slot1.date,
+        time: slot1.time,
         stadiumName: clubMap.get(homeId)?.stadium.name,
       });
+
+      const slot2 = assignVariedMatchDaySlot(
+        secondDate,
+        idx,
+        secondRound,
+        34,
+        `usa_mls_${seasonYear}`,
+        {
+          minDate: minMlsDate,
+          maxDate: `${seasonYear}-11-15`,
+          prevRoundBaseDate: secondPrev,
+          nextRoundBaseDate: secondNext,
+          region: 'south_america',
+          fallbackTime: idx % 3 === 0 ? '18:30' : idx % 3 === 1 ? '20:30' : '21:30',
+        }
+      );
 
       fixtures.push({
         id: `usa_mls_${seasonYear}_r${secondRound}_m${idx}`,
@@ -322,8 +362,8 @@ export function generateUsaMlsSeason(
         homeScore: null,
         awayScore: null,
         played: false,
-        date: secondDate,
-        time: idx % 3 === 0 ? '18:30' : idx % 3 === 1 ? '20:30' : '21:30',
+        date: slot2.date,
+        time: slot2.time,
         stadiumName: clubMap.get(awayId)?.stadium.name,
       });
     });
@@ -337,8 +377,11 @@ export function generateUsaMlsSeason(
     { round: 34, offset: 4, eastHome: false },
   ];
 
+  const minMlsCrossDate = getSeasonStartDate(seasonYear);
   crossConfigs.forEach(({ round, offset, eastHome }) => {
     const rDate = getMlsRegularRoundDate(round, seasonYear);
+    const prevRDate = getMlsRegularRoundDate(round - 1, seasonYear);
+    const nextRDate = round < 34 ? getMlsRegularRoundDate(round + 1, seasonYear) : undefined;
     const isDecisionDay = round === 34;
 
     for (let i = 0; i < 15; i++) {
@@ -346,6 +389,17 @@ export function generateUsaMlsSeason(
       const wId = westIds[(i + offset) % 15];
       const homeId = eastHome ? eId : wId;
       const awayId = eastHome ? wId : eId;
+
+      const slot = isDecisionDay
+        ? { date: rDate, time: '19:00' }
+        : assignVariedMatchDaySlot(rDate, i, round, 34, `usa_mls_${seasonYear}`, {
+            minDate: minMlsCrossDate,
+            maxDate: `${seasonYear}-11-15`,
+            prevRoundBaseDate: prevRDate,
+            nextRoundBaseDate: nextRDate,
+            region: 'south_america',
+            fallbackTime: i % 2 === 0 ? '19:30' : '21:00',
+          });
 
       fixtures.push({
         id: `usa_mls_${seasonYear}_r${round}_m${i}`,
@@ -359,8 +413,8 @@ export function generateUsaMlsSeason(
         homeScore: null,
         awayScore: null,
         played: false,
-        date: rDate,
-        time: isDecisionDay ? '19:00' : i % 2 === 0 ? '19:30' : '21:00',
+        date: slot.date,
+        time: slot.time,
         stadiumName: clubMap.get(homeId)?.stadium.name,
       });
     }

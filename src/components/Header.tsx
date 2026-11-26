@@ -99,7 +99,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   totalRounds,
   seasonYear,
   europeSeasonYear,
-  currentDate = '2026-01-15',
+  currentDate = '2027-01-10',
   isTodayMatchDay = false,
   activeTab,
   setActiveTab,

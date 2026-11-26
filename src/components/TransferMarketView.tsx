@@ -221,7 +221,7 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
   allClubs,
   freeAgents,
   transferHistory = [],
-  currentSeasonYear = 2026,
+  currentSeasonYear = 2027,
   onSignPlayer,
   onBuyoutTransferClause,
   onSellPlayerToClub,
@@ -1003,7 +1003,7 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
 
     const banCheck = isClubUnderTransferBan(
       userClub,
-      gameState?.currentDate || '2026-01-15'
+      gameState?.currentDate || '2027-01-10'
     );
     if (banCheck.banned) {
       setNegotiationFeedback({

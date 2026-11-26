@@ -81,9 +81,9 @@ export function buildSaveSummary(key: CareerSaveKey, save: GameSave): SaveSlotSu
       text: '#ffffff',
     },
     managerName: save.managerName || 'Treinador',
-    currentSeasonYear: save.currentSeasonYear || 2026,
+    currentSeasonYear: save.currentSeasonYear || 2027,
     currentRound: save.currentRound || 1,
-    currentDate: save.currentDate || '2026-01-15',
+    currentDate: save.currentDate || '2027-01-10',
   };
 }
 
@@ -965,10 +965,10 @@ export function validateAndParseImportedSaveJson(rawText: string): {
   try {
     parsed = JSON.parse(rawText, (key, value) => (BLOCKED_JSON_KEYS.has(key) ? undefined : value));
   } catch {
-    return { ok: false, error: 'Formato JSON inválido. Selecione um backup .json do PATOFOOT 2026.' };
+    return { ok: false, error: 'Formato JSON inválido. Selecione um backup .json do PATOFOOT 2027.' };
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    return { ok: false, error: 'Estrutura do arquivo incompatível com o PATOFOOT 2026.' };
+    return { ok: false, error: 'Estrutura do arquivo incompatível com o PATOFOOT 2027.' };
   }
   const candidate = parsed as Partial<GameSave>;
   if (!Array.isArray(candidate.clubs) || candidate.clubs.length === 0 || candidate.clubs.length > 2500) {

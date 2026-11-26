@@ -8,9 +8,11 @@ import {
   SouthAmericanLeagueId,
 } from '../types/game';
 import {
+  assignVariedMatchDaySlot,
   getSupercopaDate,
   getRecopaDates,
   getMidweekCupDate,
+  getSeasonStartDate,
   getEstadualTournamentScheduleDates,
   getCopaNordesteScheduleDates,
   getContinentalFinalDates,
@@ -1956,10 +1958,28 @@ export function generateSerieDFixturesAndStandings(
 
     if (groupSlice.length < 6) continue;
 
+    const minSaDate = getSeasonStartDate(year);
     fullTenRoundsTemplate.forEach((pairs, rIdx) => {
       const roundNum = rIdx + 1;
       const roundDate = serieDDates[rIdx] || getRoundDate(roundNum, year).date;
+      const prevRoundDate = rIdx > 0 ? serieDDates[rIdx - 1] : undefined;
+      const nextRoundDate = rIdx + 1 < fullTenRoundsTemplate.length ? serieDDates[rIdx + 1] : undefined;
       pairs.forEach(([hIdx, aIdx], mIdx) => {
+        const slot = assignVariedMatchDaySlot(
+          roundDate,
+          mIdx + gIdx * 3,
+          roundNum,
+          fullTenRoundsTemplate.length,
+          `serie_d_${year}`,
+          {
+            minDate: minSaDate,
+            maxDate: `${year}-12-20`,
+            prevRoundBaseDate: prevRoundDate,
+            nextRoundBaseDate: nextRoundDate,
+            region: 'south_america',
+            fallbackTime: mIdx === 0 ? '16:00' : '15:00',
+          }
+        );
         fixtures.push({
           id: `sd_g${groupCode}_r${roundNum}_m${mIdx}`,
           round: roundNum,
@@ -1970,8 +1990,8 @@ export function generateSerieDFixturesAndStandings(
           homeScore: null,
           awayScore: null,
           played: false,
-          date: roundDate,
-          time: mIdx === 0 ? '16:00' : '15:00',
+          date: slot.date,
+          time: slot.time,
         });
       });
     });
@@ -2177,11 +2197,23 @@ export function generateCopaBrasilFixtures(
 
   const cdbDates = getCopaBrasilScheduleDates(year);
 
+  const minCdbDate = getSeasonStartDate(year);
+  const cdbSlot = (baseDate: string, matchIdx: number, roundNum: number, fallbackTime: string) =>
+    assignVariedMatchDaySlot(baseDate, matchIdx, roundNum, 99, `copa_brasil_${year}`, {
+      keepLastRoundSimultaneous: false,
+      allowFridayMonday: false,
+      minDate: minCdbDate,
+      maxDate: `${year}-12-15`,
+      region: 'south_america',
+      fallbackTime,
+    });
+
   // 1ª Fase — 14 single-leg ties (28 clubs)
   const f1Date = cdbDates.f1Date;
   for (let i = 0; i < 14; i++) {
     const higherSeed = phase1Clubs[i]?.id || 'tbd';
     const lowerSeed = phase1Clubs[27 - i]?.id || 'tbd';
+    const slot = cdbSlot(f1Date, i, 1, i % 2 === 0 ? '19:30' : '21:30');
     fixtures.push({
       id: `cdb_f1_m${i}`,
       round: 1,
@@ -2192,14 +2224,15 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: f1Date,
-      time: i % 2 === 0 ? '19:30' : '21:30',
+      date: slot.date,
+      time: slot.time,
     });
   }
 
   // 2ª Fase — 44 single-leg ties (74 phase2Seeds + 14 winners from 1ª Fase = 88 clubs)
   const f2Date = cdbDates.f2Date;
   for (let i = 0; i < 14; i++) {
+    const slot = cdbSlot(f2Date, i, 2, i % 2 === 0 ? '19:30' : '21:30');
     fixtures.push({
       id: `cdb_f2_m${i}`,
       round: 2,
@@ -2210,14 +2243,15 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: f2Date,
-      time: i % 2 === 0 ? '19:30' : '21:30',
+      date: slot.date,
+      time: slot.time,
     });
   }
   for (let j = 0; j < 30; j++) {
     const mIdx = 14 + j;
     const clubHome = phase2Seeds[73 - j]?.id || 'tbd';
     const clubAway = phase2Seeds[14 + j]?.id || 'tbd';
+    const slot = cdbSlot(f2Date, mIdx, 2, j % 2 === 0 ? '19:30' : '21:30');
     fixtures.push({
       id: `cdb_f2_m${mIdx}`,
       round: 2,
@@ -2228,14 +2262,15 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: f2Date,
-      time: j % 2 === 0 ? '19:30' : '21:30',
+      date: slot.date,
+      time: slot.time,
     });
   }
 
   // 3ª Fase — 24 single-leg ties (4 phase3Seeds + 44 winners from 2ª Fase = 48 clubs)
   const f3Date = cdbDates.f3Date;
   for (let i = 0; i < 4; i++) {
+    const slot = cdbSlot(f3Date, i, 3, '20:00');
     fixtures.push({
       id: `cdb_f3_m${i}`,
       round: 3,
@@ -2246,12 +2281,13 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: f3Date,
-      time: '20:00',
+      date: slot.date,
+      time: slot.time,
     });
   }
   for (let k = 0; k < 20; k++) {
     const mIdx = 4 + k;
+    const slot = cdbSlot(f3Date, mIdx, 3, k % 2 === 0 ? '19:30' : '21:30');
     fixtures.push({
       id: `cdb_f3_m${mIdx}`,
       round: 3,
@@ -2262,14 +2298,15 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: f3Date,
-      time: k % 2 === 0 ? '19:30' : '21:30',
+      date: slot.date,
+      time: slot.time,
     });
   }
 
   // 4ª Fase — 12 single-leg ties (24 winners from 3ª Fase)
   const f4Date = cdbDates.f4Date;
   for (let i = 0; i < 12; i++) {
+    const slot = cdbSlot(f4Date, i, 4, i % 2 === 0 ? '19:30' : '21:30');
     fixtures.push({
       id: `cdb_f4_m${i}`,
       round: 4,
@@ -2280,8 +2317,8 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: f4Date,
-      time: i % 2 === 0 ? '19:30' : '21:30',
+      date: slot.date,
+      time: slot.time,
     });
   }
 
@@ -2290,6 +2327,8 @@ export function generateCopaBrasilFixtures(
   const f5VoltaDate = cdbDates.f5VoltaDate;
   for (let i = 0; i < 12; i++) {
     const serieAClubId = serieASeeds[i]?.id || 'tbd';
+    const idaSlot = cdbSlot(f5IdaDate, i, 5, '21:30');
+    const voltaSlot = cdbSlot(f5VoltaDate, i, 6, '21:30');
     fixtures.push({
       id: `cdb_f5_m${i}_ida`,
       round: 5,
@@ -2301,8 +2340,8 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: f5IdaDate,
-      time: '21:30',
+      date: idaSlot.date,
+      time: idaSlot.time,
     });
     fixtures.push({
       id: `cdb_f5_m${i}_volta`,
@@ -2315,14 +2354,16 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: f5VoltaDate,
-      time: '21:30',
+      date: voltaSlot.date,
+      time: voltaSlot.time,
     });
   }
   for (let k = 0; k < 4; k++) {
     const mIdx = 12 + k;
     const clubPot1 = serieASeeds[12 + k]?.id || 'tbd';
     const clubPot2 = serieASeeds[19 - k]?.id || 'tbd';
+    const idaSlot = cdbSlot(f5IdaDate, mIdx, 5, '21:30');
+    const voltaSlot = cdbSlot(f5VoltaDate, mIdx, 6, '21:30');
     fixtures.push({
       id: `cdb_f5_m${mIdx}_ida`,
       round: 5,
@@ -2334,8 +2375,8 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: f5IdaDate,
-      time: '21:30',
+      date: idaSlot.date,
+      time: idaSlot.time,
     });
     fixtures.push({
       id: `cdb_f5_m${mIdx}_volta`,
@@ -2348,8 +2389,8 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: f5VoltaDate,
-      time: '21:30',
+      date: voltaSlot.date,
+      time: voltaSlot.time,
     });
   }
 
@@ -2357,6 +2398,8 @@ export function generateCopaBrasilFixtures(
   const oitavasIdaDate = cdbDates.oitavasIdaDate;
   const oitavasVoltaDate = cdbDates.oitavasVoltaDate;
   for (let i = 0; i < 8; i++) {
+    const idaSlot = cdbSlot(oitavasIdaDate, i, 7, '21:30');
+    const voltaSlot = cdbSlot(oitavasVoltaDate, i, 8, '21:30');
     fixtures.push({
       id: `cdb_oitavas_m${i}_ida`,
       round: 7,
@@ -2368,8 +2411,8 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: oitavasIdaDate,
-      time: '21:30',
+      date: idaSlot.date,
+      time: idaSlot.time,
     });
     fixtures.push({
       id: `cdb_oitavas_m${i}_volta`,
@@ -2382,8 +2425,8 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: oitavasVoltaDate,
-      time: '21:30',
+      date: voltaSlot.date,
+      time: voltaSlot.time,
     });
   }
 
@@ -2391,6 +2434,8 @@ export function generateCopaBrasilFixtures(
   const quartasIdaDate = cdbDates.quartasIdaDate;
   const quartasVoltaDate = cdbDates.quartasVoltaDate;
   for (let q = 0; q < 4; q++) {
+    const idaSlot = cdbSlot(quartasIdaDate, q, 9, '21:30');
+    const voltaSlot = cdbSlot(quartasVoltaDate, q, 10, '21:30');
     fixtures.push({
       id: `cdb_quartas_m${q}_ida`,
       round: 9,
@@ -2402,8 +2447,8 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: quartasIdaDate,
-      time: '21:30',
+      date: idaSlot.date,
+      time: idaSlot.time,
     });
     fixtures.push({
       id: `cdb_quartas_m${q}_volta`,
@@ -2416,8 +2461,8 @@ export function generateCopaBrasilFixtures(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: quartasVoltaDate,
-      time: '21:30',
+      date: voltaSlot.date,
+      time: voltaSlot.time,
     });
   }
 
@@ -2550,9 +2595,24 @@ export function build32ClubContinentalCompetition(
       ],
     ];
 
+    const groupLetterOffset = groupName.charCodeAt(groupName.length - 1) || 0;
     matchPairs.forEach((pairs, rIdx) => {
       const dStr = conmebolSched.groupDates[rIdx] || getMidweekCupDate(6 + rIdx * 2, year);
       pairs.forEach(([h, a], mIdx) => {
+        const slot = assignVariedMatchDaySlot(
+          dStr,
+          mIdx + groupLetterOffset,
+          rIdx + 1,
+          6,
+          `${competition}_${year}`,
+          {
+            keepLastRoundSimultaneous: true,
+            allowFridayMonday: false,
+            midweekDays: ['tue', 'wed', 'thu'],
+            region: 'south_america',
+            fallbackTime: defaultKickoffTime,
+          }
+        );
         fixtures.push({
           id: `${prefix}_${groupName}_r${rIdx + 1}_m${mIdx}`,
           round: rIdx + 1,
@@ -2563,17 +2623,28 @@ export function build32ClubContinentalCompetition(
           homeScore: null,
           awayScore: null,
           played: false,
-          date: dStr,
-          time: defaultKickoffTime,
+          date: slot.date,
+          time: slot.time,
         });
       });
     });
   });
 
+  const conmebolKoSlot = (baseDate: string, idx: number, roundNum: number, fallbackTime: string) =>
+    assignVariedMatchDaySlot(baseDate, idx, roundNum, 99, `${competition}_ko_${year}`, {
+      keepLastRoundSimultaneous: false,
+      allowFridayMonday: false,
+      midweekDays: ['tue', 'wed', 'thu'],
+      region: 'south_america',
+      fallbackTime,
+    });
+
   // Oitavas de Final — 8 two-legged ties (Top 2 from each of 8 groups = 16 clubs)
   const oitavasIdaDate = conmebolSched.oitavasIdaDate;
   const oitavasVoltaDate = conmebolSched.oitavasVoltaDate;
   for (let i = 0; i < 8; i++) {
+    const idaSlot = conmebolKoSlot(oitavasIdaDate, i, 7, '21:30');
+    const voltaSlot = conmebolKoSlot(oitavasVoltaDate, i, 8, '21:30');
     fixtures.push({
       id: `${prefix}_oitavas_m${i}_ida`,
       round: 7,
@@ -2585,8 +2656,8 @@ export function build32ClubContinentalCompetition(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: oitavasIdaDate,
-      time: '21:30',
+      date: idaSlot.date,
+      time: idaSlot.time,
     });
     fixtures.push({
       id: `${prefix}_oitavas_m${i}_volta`,
@@ -2599,8 +2670,8 @@ export function build32ClubContinentalCompetition(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: oitavasVoltaDate,
-      time: '21:30',
+      date: voltaSlot.date,
+      time: voltaSlot.time,
     });
   }
 
@@ -2608,6 +2679,8 @@ export function build32ClubContinentalCompetition(
   const quartasIdaDate = conmebolSched.quartasIdaDate;
   const quartasVoltaDate = conmebolSched.quartasVoltaDate;
   for (let q = 0; q < 4; q++) {
+    const idaSlot = conmebolKoSlot(quartasIdaDate, q, 9, '21:30');
+    const voltaSlot = conmebolKoSlot(quartasVoltaDate, q, 10, '21:30');
     fixtures.push({
       id: `${prefix}_quartas_m${q}_ida`,
       round: 9,
@@ -2619,8 +2692,8 @@ export function build32ClubContinentalCompetition(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: quartasIdaDate,
-      time: '21:30',
+      date: idaSlot.date,
+      time: idaSlot.time,
     });
     fixtures.push({
       id: `${prefix}_quartas_m${q}_volta`,
@@ -2633,8 +2706,8 @@ export function build32ClubContinentalCompetition(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: quartasVoltaDate,
-      time: '21:30',
+      date: voltaSlot.date,
+      time: voltaSlot.time,
     });
   }
 
@@ -2655,6 +2728,8 @@ export function build32ClubContinentalCompetition(
       : 'Semifinal da Conference League';
 
   for (let s = 0; s < 2; s++) {
+    const idaSlot = conmebolKoSlot(semiIdaDate, s, 11, defaultKickoffTime);
+    const voltaSlot = conmebolKoSlot(semiVoltaDate, s, 12, defaultKickoffTime);
     fixtures.push({
       id: `${prefix}_semi_${s + 1}_ida`,
       round: 11,
@@ -2666,8 +2741,8 @@ export function build32ClubContinentalCompetition(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: semiIdaDate,
-      time: defaultKickoffTime,
+      date: idaSlot.date,
+      time: idaSlot.time,
     });
     fixtures.push({
       id: `${prefix}_semi_${s + 1}_volta`,
@@ -2680,8 +2755,8 @@ export function build32ClubContinentalCompetition(
       homeScore: null,
       awayScore: null,
       played: false,
-      date: semiVoltaDate,
-      time: defaultKickoffTime,
+      date: voltaSlot.date,
+      time: voltaSlot.time,
     });
   }
 
@@ -3030,10 +3105,26 @@ export function build36ClubUefaLeagueCompetition(params: {
       roundPairings.push(pairs);
     }
 
+    const uefaMidDays: Array<'tue' | 'wed' | 'thu'> =
+      competition === 'champions_league' ? ['tue', 'wed'] : ['wed', 'thu'];
     roundPairings.forEach((pairs, rIdx) => {
       const roundNum = rIdx + 1;
       const dateStr = leagueDates[rIdx] || uefaCal.uclLeagueDates[0];
       pairs.forEach(([homeId, awayId], mIdx) => {
+        const slot = assignVariedMatchDaySlot(
+          dateStr,
+          mIdx,
+          roundNum,
+          roundPairings.length,
+          `${competition}_${year}`,
+          {
+            keepLastRoundSimultaneous: true,
+            allowFridayMonday: false,
+            midweekDays: uefaMidDays,
+            region: 'europe',
+            fallbackTime: defaultKickoffTime,
+          }
+        );
         fixtures.push({
           id: `${prefix}_liga_r${roundNum}_m${mIdx}`,
           round: roundNum,
@@ -3044,8 +3135,8 @@ export function build36ClubUefaLeagueCompetition(params: {
           homeScore: null,
           awayScore: null,
           played: false,
-          date: dateStr,
-          time: defaultKickoffTime,
+          date: slot.date,
+          time: slot.time,
         });
       });
     });
@@ -3093,6 +3184,20 @@ export function build36ClubUefaLeagueCompetition(params: {
       const roundNum = rIdx + 1;
       const dateStr = uefaCal.ueclLeagueDates[rIdx] || uefaCal.ueclLeagueDates[0];
       pairs.forEach(([homeId, awayId], mIdx) => {
+        const slot = assignVariedMatchDaySlot(
+          dateStr,
+          mIdx,
+          roundNum,
+          roundPairings.length,
+          `${competition}_${year}`,
+          {
+            keepLastRoundSimultaneous: true,
+            allowFridayMonday: false,
+            midweekDays: ['wed', 'thu'],
+            region: 'europe',
+            fallbackTime: defaultKickoffTime,
+          }
+        );
         fixtures.push({
           id: `${prefix}_liga_r${roundNum}_m${mIdx}`,
           round: roundNum,
@@ -3103,8 +3208,8 @@ export function build36ClubUefaLeagueCompetition(params: {
           homeScore: null,
           awayScore: null,
           played: false,
-          date: dateStr,
-          time: defaultKickoffTime,
+          date: slot.date,
+          time: slot.time,
         });
       });
     });
@@ -3549,10 +3654,29 @@ export function generateEstadualFixtures(clubs: Club[], year: number = 2026): {
       cfg.finalLegs
     );
 
+    const minEstDate = getSeasonStartDate(year);
     const pushFirstPhaseRound = (roundNum: number, pairs: Array<[string, string]>) => {
       const dStr =
         sched.groupDates[roundNum - 1] || sched.groupDates[sched.groupDates.length - 1];
+      const prevDate = roundNum > 1 ? sched.groupDates[roundNum - 2] : undefined;
+      const nextDate = roundNum < sched.groupDates.length ? sched.groupDates[roundNum] : undefined;
       pairs.forEach(([homeTeamId, awayTeamId], mIdx) => {
+        const slot = assignVariedMatchDaySlot(
+          dStr,
+          mIdx,
+          roundNum,
+          sched.groupDates.length,
+          `est_${key}_${year}`,
+          {
+            keepLastRoundSimultaneous: true,
+            minDate: minEstDate,
+            maxDate: `${year}-04-15`,
+            prevRoundBaseDate: prevDate,
+            nextRoundBaseDate: nextDate,
+            region: 'south_america',
+            fallbackTime: mIdx % 3 === 0 ? '16:00' : mIdx % 3 === 1 ? '18:30' : '20:30',
+          }
+        );
         fixtures.push({
           id: `est_${key}_r${roundNum}_m${mIdx}`,
           round: roundNum,
@@ -3564,8 +3688,8 @@ export function generateEstadualFixtures(clubs: Club[], year: number = 2026): {
           homeScore: null,
           awayScore: null,
           played: false,
-          date: dStr,
-          time: mIdx % 3 === 0 ? '16:00' : mIdx % 3 === 1 ? '18:30' : '20:30',
+          date: slot.date,
+          time: slot.time,
         });
       });
     };
@@ -3893,9 +4017,12 @@ function build16ClubRegionalCupCompetition(params: {
     const roundsCount = Math.min(regionalDates.groupDates.length, n - 1);
     const rotation = teams.slice(1);
 
+    const minRegDate = getSeasonStartDate(year);
     for (let r = 0; r < roundsCount; r++) {
       const roundNum = r + 1;
       const dStr = regionalDates.groupDates[r];
+      const prevDate = r > 0 ? regionalDates.groupDates[r - 1] : undefined;
+      const nextDate = r + 1 < roundsCount ? regionalDates.groupDates[r + 1] : undefined;
       const currentOrder = [teams[0], ...rotation];
 
       for (let m = 0; m < half; m++) {
@@ -3904,6 +4031,22 @@ function build16ClubRegionalCupCompetition(params: {
         if (t1 === '__BYE__' || t2 === '__BYE__') continue;
 
         const swapHome = (r + m) % 2 === 1;
+        const slot = assignVariedMatchDaySlot(
+          dStr,
+          m + (grpKey === 'gb' ? 4 : 0),
+          roundNum,
+          roundsCount,
+          `${prefix}_${year}`,
+          {
+            keepLastRoundSimultaneous: true,
+            minDate: minRegDate,
+            maxDate: `${year}-07-15`,
+            prevRoundBaseDate: prevDate,
+            nextRoundBaseDate: nextDate,
+            region: 'south_america',
+            fallbackTime: m % 2 === 0 ? '19:30' : '21:30',
+          }
+        );
         fixtures.push({
           id: `${prefix}_${grpKey}_r${roundNum}_m${m}`,
           round: roundNum,
@@ -3915,8 +4058,8 @@ function build16ClubRegionalCupCompetition(params: {
           homeScore: null,
           awayScore: null,
           played: false,
-          date: dStr,
-          time: m % 2 === 0 ? '19:30' : '21:30',
+          date: slot.date,
+          time: slot.time,
         });
       }
 

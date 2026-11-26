@@ -117,9 +117,9 @@ interface ChartMonthPoint {
 
 export const FinancesStadiumView: React.FC<FinancesStadiumViewProps> = ({
   club,
-  currentDate = '2026-01-15',
+  currentDate = '2027-01-10',
   currentRound = 1,
-  seasonYear = 2026,
+  seasonYear = 2027,
   fanConfidence = 68,
   scoutingWeeklyWages = 0,
   managerMonthlySalary = 45000,

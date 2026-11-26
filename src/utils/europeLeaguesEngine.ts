@@ -11,6 +11,7 @@ import {
 } from '../types/game';
 import {
   addDays,
+  assignVariedMatchDaySlot,
   formatEuropeanSeason,
   getEuropeanLeagueWeekendSundays,
   getEuropeanLeagueScheduleDates,
@@ -854,10 +855,21 @@ export function generateEuropeanLeagueSchedule(
   const totalRounds = halfSeasonRounds * 2;
   const matchesPerRound = n / 2;
 
+  const minEuDate = `${seasonYear}-08-01`;
+  const maxEuDate = `${seasonYear + 1}-06-15`;
+  const euRoundBaseSlots = Array.from({ length: totalRounds }, (_, idx) =>
+    getEuropeanRoundDate(idx + 1, totalRounds, seasonYear, leagueId)
+  );
+
   for (let round = 1; round <= halfSeasonRounds; round++) {
     const returnRound = round + halfSeasonRounds;
-    const round1Date = getEuropeanRoundDate(round, totalRounds, seasonYear, leagueId);
-    const round2Date = getEuropeanRoundDate(returnRound, totalRounds, seasonYear, leagueId);
+    const round1Date = euRoundBaseSlots[round - 1];
+    const round1Prev = round > 1 ? euRoundBaseSlots[round - 2]?.date : undefined;
+    const round1Next = round < totalRounds ? euRoundBaseSlots[round]?.date : undefined;
+
+    const round2Date = euRoundBaseSlots[returnRound - 1];
+    const round2Prev = returnRound > 1 ? euRoundBaseSlots[returnRound - 2]?.date : undefined;
+    const round2Next = returnRound < totalRounds ? euRoundBaseSlots[returnRound]?.date : undefined;
 
     for (let match = 0; match < matchesPerRound; match++) {
       const home = (round + match) % (n - 1);
@@ -869,6 +881,29 @@ export function generateEuropeanLeagueSchedule(
 
       if (homeTeam === '__BYE__' || awayTeam === '__BYE__') continue;
 
+      const slot1 = assignVariedMatchDaySlot(
+        round1Date.date,
+        match,
+        round,
+        totalRounds,
+        `${leagueId}_${seasonYear}`,
+        {
+          minDate: minEuDate,
+          maxDate: maxEuDate,
+          prevRoundBaseDate: round1Prev,
+          nextRoundBaseDate: round1Next,
+          region: 'europe',
+          fallbackTime: round1Date.time,
+        }
+      );
+
+      const isMarqueeOpener = Boolean(
+        marqueeSpec &&
+          round === 1 &&
+          homeTeam === marqueeSpec[0] &&
+          awayTeam === marqueeSpec[1]
+      );
+
       fixtures.push({
         id: `${leagueId}_r${round}_m${match}`,
         round,
@@ -878,15 +913,25 @@ export function generateEuropeanLeagueSchedule(
         homeScore: null,
         awayScore: null,
         played: false,
-        date: round1Date.date,
-        time:
-          marqueeSpec &&
-          round === 1 &&
-          homeTeam === marqueeSpec[0] &&
-          awayTeam === marqueeSpec[1]
-            ? marqueeSpec[2]
-            : round1Date.time,
+        date: slot1.date,
+        time: isMarqueeOpener && marqueeSpec ? marqueeSpec[2] : slot1.time,
       });
+
+      const slot2 = assignVariedMatchDaySlot(
+        round2Date.date,
+        match,
+        returnRound,
+        totalRounds,
+        `${leagueId}_${seasonYear}`,
+        {
+          minDate: minEuDate,
+          maxDate: maxEuDate,
+          prevRoundBaseDate: round2Prev,
+          nextRoundBaseDate: round2Next,
+          region: 'europe',
+          fallbackTime: round2Date.time,
+        }
+      );
 
       fixtures.push({
         id: `${leagueId}_r${returnRound}_m${match}`,
@@ -897,8 +942,8 @@ export function generateEuropeanLeagueSchedule(
         homeScore: null,
         awayScore: null,
         played: false,
-        date: round2Date.date,
-        time: round2Date.time,
+        date: slot2.date,
+        time: slot2.time,
       });
     }
   }

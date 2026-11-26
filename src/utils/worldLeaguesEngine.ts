@@ -9,10 +9,12 @@ import {
 } from '../types/game';
 import { generateInitialStandings } from '../data/initialData';
 import {
+  assignVariedMatchDaySlot,
   getJapanJ1LeagueScheduleDates,
   getRoundDate,
   getRussiaLeagueScheduleDates,
   getSaudiLeagueScheduleDates,
+  getSeasonStartDate,
 } from './calendarUtils';
 import { formatMoney } from './prizeEngine';
 import { generateUsaMlsSeason, resolveMlsCupChampionId } from './usaMlsEngine';
@@ -295,6 +297,29 @@ export function generateWorldLeagueSchedule(
       : null;
 
   const fixtures: Fixture[] = [];
+  const isSplitWl = isSplitYearWorldLeague(leagueId);
+  const minWlDate = isSplitWl
+    ? leagueId === 'rus_premier'
+      ? `${seasonYear}-07-24`
+      : `${seasonYear}-08-01`
+    : getSeasonStartDate(seasonYear);
+  const maxWlDate = isSplitWl ? `${seasonYear + 1}-06-15` : `${seasonYear}-12-20`;
+  const wlRegion: 'europe' | 'south_america' = isSplitWl ? 'europe' : 'south_america';
+
+  const wlRoundSlots: Array<{ date: string; time: string }> = Array.from(
+    { length: totalRounds },
+    (_, idx) => {
+      const rNum = idx + 1;
+      const splitSlot = splitDateSlots?.[idx];
+      if (splitSlot) return splitSlot;
+      const mappedSlot =
+        totalRounds <= 1
+          ? 1
+          : Math.max(1, Math.min(38, Math.round(1 + ((rNum - 1) * 37) / (totalRounds - 1))));
+      const info = getRoundDate(mappedSlot, seasonYear);
+      return { date: info.date, time: info.time };
+    }
+  );
 
   for (let cycle = 0; cycle < cycles; cycle++) {
     const cycleOffset = cycle * halfRounds * 2;
@@ -302,20 +327,13 @@ export function generateWorldLeagueSchedule(
       const firstHalfRound = cycleOffset + round + 1;
       const secondHalfRound = cycleOffset + round + 1 + halfRounds;
 
-      const firstSplitSlot = splitDateSlots?.[firstHalfRound - 1];
-      const secondSplitSlot = splitDateSlots?.[secondHalfRound - 1];
+      const firstDateInfo = wlRoundSlots[firstHalfRound - 1] || wlRoundSlots[0];
+      const firstPrevDate = firstHalfRound > 1 ? wlRoundSlots[firstHalfRound - 2]?.date : undefined;
+      const firstNextDate = firstHalfRound < totalRounds ? wlRoundSlots[firstHalfRound]?.date : undefined;
 
-      const firstSlot =
-        totalRounds <= 1
-          ? 1
-          : Math.max(1, Math.min(38, Math.round(1 + ((firstHalfRound - 1) * 37) / (totalRounds - 1))));
-      const secondSlot =
-        totalRounds <= 1
-          ? 38
-          : Math.max(1, Math.min(38, Math.round(1 + ((secondHalfRound - 1) * 37) / (totalRounds - 1))));
-
-      const firstDateInfo = firstSplitSlot || getRoundDate(firstSlot, seasonYear);
-      const secondDateInfo = secondSplitSlot || getRoundDate(secondSlot, seasonYear);
+      const secondDateInfo = wlRoundSlots[secondHalfRound - 1] || wlRoundSlots[wlRoundSlots.length - 1];
+      const secondPrevDate = secondHalfRound > 1 ? wlRoundSlots[secondHalfRound - 2]?.date : undefined;
+      const secondNextDate = secondHalfRound < totalRounds ? wlRoundSlots[secondHalfRound]?.date : undefined;
 
       for (let match = 0; match < matchesPerRound; match++) {
         const homeIdx = (round + match) % (count - 1);
@@ -328,6 +346,22 @@ export function generateWorldLeagueSchedule(
         const t1 = isEvenRound ? teamIds[homeIdx] : teamIds[awayIdx];
         const t2 = isEvenRound ? teamIds[awayIdx] : teamIds[homeIdx];
 
+        const firstSlotInfo = assignVariedMatchDaySlot(
+          firstDateInfo.date,
+          match,
+          firstHalfRound,
+          totalRounds,
+          `${leagueId}_${seasonYear}`,
+          {
+            minDate: minWlDate,
+            maxDate: maxWlDate,
+            prevRoundBaseDate: firstPrevDate,
+            nextRoundBaseDate: firstNextDate,
+            region: wlRegion,
+            fallbackTime: firstDateInfo.time,
+          }
+        );
+
         fixtures.push({
           id: `${leagueId}_${seasonYear}_r${firstHalfRound}_m${match}`,
           round: firstHalfRound,
@@ -338,10 +372,26 @@ export function generateWorldLeagueSchedule(
           homeScore: null,
           awayScore: null,
           played: false,
-          date: firstDateInfo.date,
-          time: firstSplitSlot ? firstSplitSlot.time : match % 2 === 0 ? '19:00' : '21:00',
+          date: firstSlotInfo.date,
+          time: firstSlotInfo.time,
           stadiumName: clubMap.get(t1)?.stadium.name,
         });
+
+        const secondSlotInfo = assignVariedMatchDaySlot(
+          secondDateInfo.date,
+          match,
+          secondHalfRound,
+          totalRounds,
+          `${leagueId}_${seasonYear}`,
+          {
+            minDate: minWlDate,
+            maxDate: maxWlDate,
+            prevRoundBaseDate: secondPrevDate,
+            nextRoundBaseDate: secondNextDate,
+            region: wlRegion,
+            fallbackTime: secondDateInfo.time,
+          }
+        );
 
         fixtures.push({
           id: `${leagueId}_${seasonYear}_r${secondHalfRound}_m${match}`,
@@ -353,8 +403,8 @@ export function generateWorldLeagueSchedule(
           homeScore: null,
           awayScore: null,
           played: false,
-          date: secondDateInfo.date,
-          time: secondSplitSlot ? secondSplitSlot.time : match % 2 === 0 ? '19:00' : '21:00',
+          date: secondSlotInfo.date,
+          time: secondSlotInfo.time,
           stadiumName: clubMap.get(t2)?.stadium.name,
         });
       }

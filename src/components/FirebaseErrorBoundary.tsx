@@ -75,7 +75,7 @@ export class FirebaseErrorBoundary extends React.Component<
               className="w-full py-2.5 px-4 rounded-xl bg-sky-400 hover:bg-sky-300 text-slate-950 font-black text-xs flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
             >
               <RotateCcw className="w-4 h-4 shrink-0" />
-              <span>Recarregar PATOFOOT 2026</span>
+              <span>Recarregar PATOFOOT 2027</span>
             </button>
           </div>
         </div>

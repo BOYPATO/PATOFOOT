@@ -2573,16 +2573,21 @@ export function getSimultaneousMatchdayFixtures(
     // Never auto-simulate another match of the user's own club!
     if (f.homeTeamId === state.userClubId || f.awayTeamId === state.userClubId) return false;
 
-    // Same competition & round as user's current match
-    if (f.competition === userFixture.competition && f.round === userFixture.round) {
+    // Same competition & round as user's current match (only fixtures scheduled on or before matchDate)
+    if (
+      f.competition === userFixture.competition &&
+      f.round === userFixture.round &&
+      (!f.date || f.date <= matchDate)
+    ) {
       return true;
     }
 
-    // If user is playing a 38-round National League round R, keep A/B/C synchronized up to R
+    // If user is playing a 38-round National League round R, keep A/B/C synchronized up to matchDate
     if (
       isUserMatchClassicLeague &&
       CLASSIC_LEAGUES_38.includes(f.competition) &&
-      f.round <= userFixture.round
+      f.round <= userFixture.round &&
+      (!f.date || f.date <= matchDate)
     ) {
       return true;
     }

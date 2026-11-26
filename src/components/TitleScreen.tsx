@@ -986,7 +986,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
         <div className="flex items-center gap-2 sm:gap-2.5 whitespace-nowrap shrink-0">
           <PatoLogo size={28} />
           <span className="text-sm sm:text-lg font-extrabold tracking-wider text-sky-400 font-display">
-            PATOFOOT <span className="text-white">2026</span>
+            PATOFOOT <span className="text-white">2027</span>
           </span>
         </div>
 
@@ -1140,7 +1140,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight text-white leading-none">
-                PATOFOOT <span className="text-sky-400">2026</span>
+                PATOFOOT <span className="text-sky-400">2027</span>
               </h1>
               <p className="mt-1 text-xs text-slate-400">
                 930+ clubes mundiais · 27 estaduais · Copa do Mundo · 5 espaços de carreira
@@ -1772,7 +1772,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
                       <>
                         <LogIn className="w-4 h-4 shrink-0" />
                         <span>
-                          {isSubmittingAuth ? 'Entrando no Jogo...' : 'Entrar no PATOFOOT 2026'}
+                          {isSubmittingAuth ? 'Entrando no Jogo...' : 'Entrar no PATOFOOT 2027'}
                         </span>
                       </>
                     ) : (
@@ -2121,7 +2121,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
       {/* Footer Strip */}
       <footer className="relative z-10 border-t border-slate-900 bg-black/80 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4 text-xs text-slate-500">
-          <span>PATOFOOT Edição 2026 · Simulador de Futebol Manager</span>
+          <span>PATOFOOT Edição 2027 · Simulador de Futebol Manager</span>
           <span>Calendário Completo · Lei Bosman · Olheiros · Seleção Brasileira</span>
         </div>
       </footer>
@@ -2246,7 +2246,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
             {/* Brazilian 27 State Championships Scrollable Bar */}
             {selectedDivision === 'EST' && (
               <CareerLeagueScrollBar
-                title="Campeonatos Estaduais do Brasil 2026 (27 Unidades Federativas)"
+                title="Campeonatos Estaduais do Brasil 2027 (27 Unidades Federativas)"
                 subtitle="Selecione qualquer estado para comandar um clube e disputar vagas na Série D, Copa do Brasil, Copa do Nordeste ou Copa Verde"
                 accentColor="emerald"
               >
@@ -2448,7 +2448,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
                   selectedDivision === 'NA'
                     ? 'Ligas da América do Norte (EUA, México & Canadá · Vagas Internacionais e Mundial)'
                     : selectedDivision === 'ASIA_RUS'
-                    ? 'Ligas da Ásia & Rússia (Arábia Saudita, Japão & Rússia · Atualizadas IA 2026)'
+                    ? 'Ligas da Ásia & Rússia (Arábia Saudita, Japão & Rússia · Temporada 2026/27)'
                     : 'Ligas da África (Egito & Marrocos · Vagas Internacionais e Mundial)';
                 const groupClubs = clubCatalogIndex.byDivision[selectedDivision];
                 const groupTotal = groupClubs.length;
@@ -2906,7 +2906,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
 
                     <div className="space-y-2 text-xs text-slate-300">
                       <div className="flex justify-between py-1.5 border-b border-slate-800">
-                        <span className="text-slate-400">Técnico Real (2026)</span>
+                        <span className="text-slate-400">Técnico Real (2027)</span>
                         <strong className="text-amber-300">{selectedClub.managerName}</strong>
                       </div>
                       <div className="flex justify-between py-1.5 border-b border-slate-800">

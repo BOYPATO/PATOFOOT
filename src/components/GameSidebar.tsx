@@ -219,7 +219,7 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
           >
             <PatoLogo size={28} />
             <span className="font-bold text-sm tracking-tight text-white group-hover:text-sky-300 transition-colors whitespace-nowrap">
-              PATOFOOT 2026
+              PATOFOOT 2027
             </span>
           </button>
         )}

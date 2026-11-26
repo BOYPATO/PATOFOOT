@@ -19,7 +19,9 @@ import {
   recalculatePlayerEconomics,
 } from '../utils/clubRatingsEngine';
 import {
+  assignVariedMatchDaySlot,
   getRoundDate,
+  getSeasonStartDate,
   getSerieBRoundDate,
   getSerieCRoundDate,
 } from '../utils/calendarUtils';
@@ -1476,16 +1478,41 @@ export function generateLeagueSchedule(
     rotating.unshift(last);
   }
 
+  const totalRounds = firstHalfRounds * 2;
+  const minSeasonDate = getSeasonStartDate(seasonYear);
+  const maxSeasonDate = `${seasonYear}-12-20`;
+  const roundBaseSlots: Array<{ date: string; time: string }> = Array.from(
+    { length: totalRounds },
+    (_, idx) => getScheduleSlotInfo(idx + 1)
+  );
+
   // Push Turno fixtures
   turnoPairsByRound.forEach((pairs, rIdx) => {
     const roundNum = rIdx + 1;
-    const { date, time } = getScheduleSlotInfo(roundNum);
+    const baseSlot = roundBaseSlots[roundNum - 1];
+    const prevBase = roundNum > 1 ? roundBaseSlots[roundNum - 2]?.date : undefined;
+    const nextBase = roundNum < totalRounds ? roundBaseSlots[roundNum]?.date : undefined;
     pairs.forEach(([homeId, awayId], mIdx) => {
+      const slot = assignVariedMatchDaySlot(
+        baseSlot.date,
+        mIdx,
+        roundNum,
+        totalRounds,
+        `${competition}_${seasonYear}`,
+        {
+          minDate: minSeasonDate,
+          maxDate: maxSeasonDate,
+          prevRoundBaseDate: prevBase,
+          nextRoundBaseDate: nextBase,
+          region: 'south_america',
+          fallbackTime: baseSlot.time,
+        }
+      );
       fixtures.push({
         id: `${competition}_${seasonYear}_r${roundNum}_m${mIdx + 1}`,
         round: roundNum,
-        date,
-        time,
+        date: slot.date,
+        time: slot.time,
         homeTeamId: homeId,
         awayTeamId: awayId,
         homeScore: null,
@@ -1500,13 +1527,30 @@ export function generateLeagueSchedule(
   // Push Returno fixtures (inverted home/away)
   turnoPairsByRound.forEach((pairs, rIdx) => {
     const roundNum = firstHalfRounds + rIdx + 1;
-    const { date, time } = getScheduleSlotInfo(roundNum);
+    const baseSlot = roundBaseSlots[roundNum - 1];
+    const prevBase = roundNum > 1 ? roundBaseSlots[roundNum - 2]?.date : undefined;
+    const nextBase = roundNum < totalRounds ? roundBaseSlots[roundNum]?.date : undefined;
     pairs.forEach(([homeId, awayId], mIdx) => {
+      const slot = assignVariedMatchDaySlot(
+        baseSlot.date,
+        mIdx,
+        roundNum,
+        totalRounds,
+        `${competition}_${seasonYear}`,
+        {
+          minDate: minSeasonDate,
+          maxDate: maxSeasonDate,
+          prevRoundBaseDate: prevBase,
+          nextRoundBaseDate: nextBase,
+          region: 'south_america',
+          fallbackTime: baseSlot.time,
+        }
+      );
       fixtures.push({
         id: `${competition}_${seasonYear}_r${roundNum}_m${mIdx + 1}`,
         round: roundNum,
-        date,
-        time,
+        date: slot.date,
+        time: slot.time,
         homeTeamId: awayId,
         awayTeamId: homeId,
         homeScore: null,

@@ -575,7 +575,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
   onGenerateCompetitionDraw,
   userClub,
   currentRound,
-  seasonYear = 2026,
+  seasonYear = 2027,
   europeSeasonYear,
   saSeasonYear,
   calibratingSaLeagueId = null,

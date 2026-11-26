@@ -2650,5 +2650,147 @@ export function resolveCupScheduleConflicts(
   });
 }
 
+export interface VariedMatchDayOptions {
+  keepLastRoundSimultaneous?: boolean;
+  allowFridayMonday?: boolean;
+  minDate?: string;
+  maxDate?: string;
+  prevRoundBaseDate?: string;
+  nextRoundBaseDate?: string;
+  region?: 'europe' | 'south_america' | 'all';
+  midweekDays?: Array<'tue' | 'wed' | 'thu'>;
+  fallbackTime?: string;
+}
 
+/**
+ * Distributes individual fixtures of a round across realistic days of the week instead of
+ * concentrating every match on Wednesday or Sunday:
+ * - Weekend rounds (Sat/Sun): Friday night (~10%), Saturday (~40%), Sunday (~40%), Monday night (~10%).
+ * - Midweek rounds (Tue/Wed/Thu): Tuesday (~20%), Wednesday (~45%), Thursday (~35%).
+ * Preserves simultaneous final rounds, min/max season bounds, and FIFA pause windows.
+ */
+export function assignVariedMatchDaySlot(
+  baseDate: string,
+  matchIndex: number,
+  roundNum: number,
+  totalRounds: number,
+  competitionSeed: string,
+  options?: VariedMatchDayOptions
+): { date: string; time: string } {
+  const keepLast = options?.keepLastRoundSimultaneous !== false;
+  const fallbackTime = options?.fallbackTime || '16:00';
+  if (!baseDate || !/^\d{4}-\d{2}-\d{2}$/.test(baseDate)) {
+    return { date: baseDate, time: fallbackTime };
+  }
 
+  if (keepLast && totalRounds > 1 && roundNum >= totalRounds) {
+    return { date: baseDate, time: '16:00' };
+  }
+
+  let seedHash = 0;
+  for (let i = 0; i < competitionSeed.length; i++) {
+    seedHash = (seedHash * 31 + competitionSeed.charCodeAt(i)) >>> 0;
+  }
+  const mix = (seedHash + roundNum * 17 + matchIndex * 13 + roundNum * matchIndex * 7) >>> 0;
+  const roll = mix % 20;
+  const timePick = (arr: string[]) => arr[(mix >>> 3) % arr.length];
+
+  const [y, m, d] = baseDate.split('-').map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); // 0=Sun..6=Sat
+
+  const baseInFifa = options?.region ? isDateInFifaPause(baseDate, options.region) : false;
+  const isSafeDate = (cand: string): boolean => {
+    if (options?.minDate && cand < options.minDate) return false;
+    if (options?.maxDate && cand > options.maxDate) return false;
+    if (options?.region && !baseInFifa && isDateInFifaPause(cand, options.region)) return false;
+    return true;
+  };
+  const hasPrevGap = (cand: string, minDays: number): boolean => {
+    if (!options?.prevRoundBaseDate) return true;
+    return diffDaysIso(cand, options.prevRoundBaseDate) >= minDays;
+  };
+  const hasNextGap = (cand: string, minDays: number): boolean => {
+    if (!options?.nextRoundBaseDate) return true;
+    return diffDaysIso(options.nextRoundBaseDate, cand) >= minDays;
+  };
+
+  // Weekend rounds (Sunday, Saturday, or Friday-anchored weekend)
+  if (dow === 0 || dow === 6 || dow === 5) {
+    const satDate = dow === 6 ? baseDate : dow === 0 ? addDays(baseDate, -1) : addDays(baseDate, 1);
+    const sunDate = addDays(satDate, 1);
+    const friDate = addDays(satDate, -1);
+    const monDate = addDays(sunDate, 1);
+
+    const allowFriMon = options?.allowFridayMonday !== false;
+    const canFri = allowFriMon && isSafeDate(friDate) && hasPrevGap(friDate, 3);
+    const canSat = isSafeDate(satDate) && hasPrevGap(satDate, 2);
+    const canSun = isSafeDate(sunDate);
+    const canMon = allowFriMon && isSafeDate(monDate) && hasNextGap(monDate, 3);
+
+    const friTimes = ['20:00', '21:00'];
+    const satTimes = ['16:00', '16:30', '18:30', '19:00', '21:00'];
+    const sunTimes = ['11:00', '16:00', '18:30', '20:00'];
+    const monTimes = ['20:00', '20:30'];
+
+    if (roll <= 1) {
+      if (canFri) return { date: friDate, time: timePick(friTimes) };
+      if (canSat) return { date: satDate, time: timePick(satTimes) };
+      if (canSun) return { date: sunDate, time: timePick(sunTimes) };
+    } else if (roll <= 9) {
+      if (canSat) return { date: satDate, time: timePick(satTimes) };
+      if (canSun) return { date: sunDate, time: timePick(sunTimes) };
+    } else if (roll <= 17) {
+      if (canSun) return { date: sunDate, time: timePick(sunTimes) };
+      if (canSat) return { date: satDate, time: timePick(satTimes) };
+    } else {
+      if (canMon) return { date: monDate, time: timePick(monTimes) };
+      if (canSun) return { date: sunDate, time: timePick(sunTimes) };
+      if (canSat) return { date: satDate, time: timePick(satTimes) };
+    }
+    return { date: baseDate, time: fallbackTime };
+  }
+
+  // Midweek rounds (Tuesday, Wednesday, Thursday)
+  if (dow === 2 || dow === 3 || dow === 4) {
+    const wedDate = dow === 3 ? baseDate : dow === 2 ? addDays(baseDate, 1) : addDays(baseDate, -1);
+    const tueDate = addDays(wedDate, -1);
+    const thuDate = addDays(wedDate, 1);
+
+    const allowed = options?.midweekDays || ['tue', 'wed', 'thu'];
+    const canTue = allowed.includes('tue') && isSafeDate(tueDate) && hasPrevGap(tueDate, 2);
+    const canWed = allowed.includes('wed') && isSafeDate(wedDate);
+    const canThu = allowed.includes('thu') && isSafeDate(thuDate) && hasNextGap(thuDate, 2);
+
+    const tueTimes = ['19:00', '19:30', '21:30'];
+    const wedTimes = ['19:00', '19:30', '20:00', '21:30'];
+    const thuTimes = ['19:00', '19:30', '20:00', '21:30'];
+
+    if (allowed.length === 2 && allowed.includes('tue') && allowed.includes('wed')) {
+      if (roll < 10 && canTue) return { date: tueDate, time: timePick(tueTimes) };
+      if (canWed) return { date: wedDate, time: timePick(wedTimes) };
+      if (canTue) return { date: tueDate, time: timePick(tueTimes) };
+    } else if (allowed.length === 2 && allowed.includes('wed') && allowed.includes('thu')) {
+      if (roll < 5 && canWed) return { date: wedDate, time: timePick(wedTimes) };
+      if (canThu) return { date: thuDate, time: timePick(thuTimes) };
+      if (canWed) return { date: wedDate, time: timePick(wedTimes) };
+    } else {
+      if (roll < 4) {
+        if (canTue) return { date: tueDate, time: timePick(tueTimes) };
+        if (canWed) return { date: wedDate, time: timePick(wedTimes) };
+        if (canThu) return { date: thuDate, time: timePick(thuTimes) };
+      } else if (roll < 13) {
+        if (canWed) return { date: wedDate, time: timePick(wedTimes) };
+        if (canThu) return { date: thuDate, time: timePick(thuTimes) };
+        if (canTue) return { date: tueDate, time: timePick(tueTimes) };
+      } else {
+        if (canThu) return { date: thuDate, time: timePick(thuTimes) };
+        if (canWed) return { date: wedDate, time: timePick(wedTimes) };
+        if (canTue) return { date: tueDate, time: timePick(tueTimes) };
+      }
+    }
+    return { date: baseDate, time: fallbackTime };
+  }
+
+  // Monday anchor
+  return { date: baseDate, time: options?.fallbackTime || '20:00' };
+}

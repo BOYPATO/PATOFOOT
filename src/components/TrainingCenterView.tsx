@@ -191,7 +191,7 @@ export const TrainingCenterView: React.FC<TrainingCenterViewProps> = ({
 
   const nextTryoutInfo = useMemo(() => {
     return calculateNextAutoTryoutDate(
-      gameState?.currentDate || '2026-01-15',
+      gameState?.currentDate || '2027-01-10',
       youthAcademy.lastAutoTryoutDate || youthAcademy.lastTryoutDate,
       autoFrequency
     );
@@ -336,7 +336,7 @@ export const TrainingCenterView: React.FC<TrainingCenterViewProps> = ({
           tier: autoTier,
           roleFocus: autoRoleFocus,
           ageGroup: autoAgeGroup,
-          currentDate: gameState?.currentDate || '2026-01-15',
+          currentDate: gameState?.currentDate || '2027-01-10',
           currentRound: gameState?.currentRound || 1,
         });
         if (res.success) {

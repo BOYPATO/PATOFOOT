@@ -97,7 +97,7 @@ export const SquadManagementView: React.FC<SquadManagementViewProps> = ({
         club: userClub,
         transferHistory,
         currentSeasonYear:
-          currentSeasonYear || Number((currentDate || '2026-01-01').slice(0, 4)) || 2026,
+          currentSeasonYear || Number((currentDate || '2027-01-01').slice(0, 4)) || 2027,
         saSeasonYear,
         europeSeasonYear,
       }),
