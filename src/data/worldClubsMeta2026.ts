@@ -46,150 +46,190 @@ export const BRAZIL_SERIES_A_B_C_META: NonEuClubMetaTuple[] = [
   ['cea', 'Ceará SC', 'Ceará', 'CEA', 'CE', 'B', null, 3, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Arena Castelão', 63903, 'Léo Condé'],
   ['spo', 'Sport Recife', 'Sport', 'SPO', 'PE', 'B', null, 3, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Ilha do Retiro', 26418, 'Pepa'],
   ['juv', 'EC Juventude', 'Juventude', 'JUV', 'RS', 'B', null, 3, 'Brasil', '#16a34a', '#ffffff', '#ffffff', 'Alfredo Jaconi', 19924, 'Fábio Matias'],
-  ['ame', 'América Mineiro', 'América-MG', 'AME', 'MG', 'B', null, 3, 'Brasil', '#15803d', '#111111', '#ffffff', 'Independência', 23018, 'William Batista'],
+  ['mga', 'Maringá FC', 'Maringá', 'MGA', 'PR', 'B', null, 3, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Willie Davids', 16226, 'Jorge Castilho'],
   ['goi', 'Goiás EC', 'Goiás', 'GOI', 'GO', 'B', null, 3, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Hailé Pinheiro', 14450, 'Jair Ventura'],
   ['cui', 'Cuiabá EC', 'Cuiabá', 'CUI', 'MT', 'B', null, 3, 'Brasil', '#eab308', '#15803d', '#0f172a', 'Arena Pantanal', 42968, 'Bernardo Franco'],
   ['cri', 'Criciúma EC', 'Criciúma', 'CRI', 'SC', 'B', null, 3, 'Brasil', '#facc15', '#111111', '#0f172a', 'Heriberto Hülse', 19225, 'Zé Ricardo'],
   ['acg', 'Atlético Goianiense', 'Atlético-GO', 'ACG', 'GO', 'B', null, 3, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Antônio Accioly', 12500, 'Rafael Guanaes'],
   ['nov', 'Grêmio Novorizontino', 'Novorizontino', 'NOV', 'SP', 'B', null, 3, 'Brasil', '#facc15', '#111111', '#0f172a', 'Jorjão', 12398, 'Eduardo Baptista'],
-  ['ava', 'Avaí FC', 'Avaí', 'AVA', 'SC', 'B', null, 3, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Ressacada', 17800, 'Enderson Moreira'],
+  ['afe', 'Ferroviária SP', 'Ferroviária', 'AFE', 'SP', 'B', null, 3, 'Brasil', '#7f1d1d', '#ffffff', '#ffffff', 'Fonte Luminosa', 20950, 'Vinícius Bergantin'],
   ['vil', 'Vila Nova FC', 'Vila Nova', 'VIL', 'GO', 'B', null, 3, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Onésio Brasileiro Alvarenga', 11788, 'Rafael Lacerda'],
   ['crb', 'CRB', 'CRB', 'CRB', 'AL', 'B', null, 3, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Rei Pelé', 17126, 'Umberto Louzer'],
   ['ope', 'Operário Ferroviário', 'Operário-PR', 'OPE', 'PR', 'B', null, 3, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Germano Krüger', 10632, 'Bruno Pivetti'],
-  ['pon', 'AA Ponte Preta', 'Ponte Preta', 'PON', 'SP', 'B', null, 3, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Moisés Lucarelli', 17728, 'Alberto Valentim'],
+  ['lim', 'AA Internacional de Limeira', 'Inter de Limeira', 'LIM', 'SP', 'B', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Limeirão', 18000, 'Felipe Conceição'],
   ['nau', 'Clube Náutico Capibaribe', 'Náutico', 'NAU', 'PE', 'B', null, 3, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Aflitos', 20856, 'Marquinhos Santos'],
-  ['lon', 'Londrina EC', 'Londrina', 'LON', 'PR', 'B', null, 2, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Estádio do Café', 30000, 'Claudinei Oliveira'],
+  ['stc', 'Santa Cruz FC', 'Santa Cruz', 'STC', 'PE', 'B', null, 3, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Arruda', 60044, 'Itamar Schülle'],
   ['bsp', 'Botafogo-SP', 'Botafogo-SP', 'BSP', 'SP', 'B', null, 2, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Santa Cruz', 29292, 'Márcio Zanardi'],
   ['sbe', 'São Bernardo FC', 'São Bernardo', 'SBE', 'SP', 'B', null, 2, 'Brasil', '#facc15', '#111111', '#0f172a', '1º de Maio', 15159, 'Ricardo Catalá'],
   ['ath', 'Athletic Club', 'Athletic-MG', 'ATH', 'MG', 'B', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Arena Sicredi', 6000, 'Roger Silva'],
 
-  // === SÉRIE C (20) ===
-  ['pay', 'Paysandu SC', 'Paysandu', 'PAY', 'PA', 'C', null, 3, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Curuzu', 16200, 'Luizinho Lopes'],
+  // === SÉRIE C (24 clubes — 46 rodadas + Playoff de Acesso 4º ao 7º) ===
+  ['ube', 'Uberlândia EC', 'Uberlândia', 'UBE', 'MG', 'C', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Parque do Sabiá', 53350, 'Paulo Roberto Santos'],
+  ['asa', 'ASA de Arapiraca', 'ASA', 'ASA', 'AL', 'C', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Fumeirão', 15332, 'Ranielle Ribeiro'],
+  ['abc', 'ABC FC', 'ABC', 'ABC', 'RN', 'C', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Frasqueirão', 18000, 'Evaristo Piza'],
+  ['gam', 'SE Gama', 'Gama', 'GAM', 'DF', 'C', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Bezerrão', 20310, 'Glauber Ramos'],
+  ['gtb', 'Goiatuba EC', 'Goiatuba', 'GTB', 'GO', 'C', null, 2, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Divino Garcia Rosa', 10000, 'Felipe Moreira'],
+  ['nam', 'Nacional FC', 'Nacional-AM', 'NAM', 'AM', 'C', null, 2, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Arena da Amazônia', 44000, 'Cléber Gaúcho'],
+  ['itu', 'Ituano FC', 'Ituano', 'ITU', 'SP', 'C', null, 2, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Novelli Júnior', 18560, 'Mazola Júnior'],
+  ['vre', 'Volta Redonda FC', 'Volta Redonda', 'VRE', 'RJ', 'C', null, 2, 'Brasil', '#facc15', '#111111', '#0f172a', 'Raulino de Oliveira', 18230, 'Rogério Corrêa'],
+  ['ypi', 'Ypiranga FC', 'Ypiranga-RS', 'YPI', 'RS', 'C', null, 2, 'Brasil', '#facc15', '#15803d', '#0f172a', 'Colosso da Lagoa', 22000, 'Matheus Costa'],
   ['gua', 'Guarani FC', 'Guarani', 'GUA', 'SP', 'C', null, 3, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Brinco de Ouro', 29130, 'Maurício Souza'],
   ['fig', 'Figueirense FC', 'Figueirense', 'FIG', 'SC', 'C', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Orlando Scarpelli', 19584, 'Thiago Carvalho'],
-  ['ama', 'Amazonas FC', 'Amazonas', 'AMA', 'AM', 'C', null, 2, 'Brasil', '#facc15', '#111111', '#0f172a', 'Arena da Amazônia', 44000, 'Aderbal Lana'],
-  ['stc', 'Santa Cruz FC', 'Santa Cruz', 'STC', 'PE', 'C', null, 3, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Arruda', 60044, 'Itamar Schülle'],
-  ['vre', 'Volta Redonda FC', 'Volta Redonda', 'VRE', 'RJ', 'C', null, 2, 'Brasil', '#facc15', '#111111', '#0f172a', 'Raulino de Oliveira', 18230, 'Rogério Corrêa'],
-  ['afe', 'Ferroviária SP', 'Ferroviária', 'AFE', 'SP', 'C', null, 2, 'Brasil', '#7f1d1d', '#ffffff', '#ffffff', 'Fonte Luminosa', 20950, 'Vinícius Bergantin'],
-  ['itu', 'Ituano FC', 'Ituano', 'ITU', 'SP', 'C', null, 2, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Novelli Júnior', 18560, 'Mazola Júnior'],
-  ['bru', 'Brusque FC', 'Brusque', 'BRU', 'SC', 'C', null, 2, 'Brasil', '#facc15', '#15803d', '#0f172a', 'Augusto Bauer', 5000, 'Filipe Gouveia'],
-  ['cax', 'SER Caxias do Sul', 'Caxias', 'CAX', 'RS', 'C', null, 2, 'Brasil', '#7f1d1d', '#1d4ed8', '#ffffff', 'Centenário', 22132, 'Luizinho Vieira'],
-  ['ypi', 'Ypiranga FC', 'Ypiranga-RS', 'YPI', 'RS', 'C', null, 2, 'Brasil', '#facc15', '#15803d', '#0f172a', 'Colosso da Lagoa', 22000, 'Matheus Costa'],
-  ['mga', 'Maringá FC', 'Maringá', 'MGA', 'PR', 'C', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Willie Davids', 16226, 'Jorge Castilho'],
-  ['bpb', 'Botafogo-PB', 'Botafogo-PB', 'BPB', 'PB', 'C', null, 2, 'Brasil', '#111111', '#dc2626', '#ffffff', 'Almeidão', 25770, 'João Burse'],
-  ['con', 'AD Confiança', 'Confiança', 'CON', 'SE', 'C', null, 2, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Batistão', 15575, 'Waguinho Dias'],
-  ['lim', 'AA Internacional de Limeira', 'Inter de Limeira', 'LIM', 'SP', 'C', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Limeirão', 18000, 'Felipe Conceição'],
-  ['flo', 'Floresta EC', 'Floresta', 'FLO', 'CE', 'C', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Presidente Vargas', 20262, 'Marcelo Chamusca'],
-  ['ana', 'Anápolis FC', 'Anápolis', 'ANA', 'GO', 'C', null, 2, 'Brasil', '#dc2626', '#1d4ed8', '#ffffff', 'Jonas Duarte', 14400, 'Ângelo Luiz'],
-  ['ita', 'AO Itabaiana', 'Itabaiana', 'ITA', 'SE', 'C', null, 2, 'Brasil', '#1d4ed8', '#dc2626', '#ffffff', 'Etelvino Mendonça', 10000, 'Roberto Cavalo'],
   ['mar', 'Maranhão AC', 'Maranhão', 'MAR', 'MA', 'C', null, 2, 'Brasil', '#1d4ed8', '#dc2626', '#ffffff', 'Castelão-MA', 40149, 'Flávio Araújo'],
+  ['ama', 'Amazonas FC', 'Amazonas', 'AMA', 'AM', 'C', null, 2, 'Brasil', '#facc15', '#111111', '#0f172a', 'Arena da Amazônia', 44000, 'Aderbal Lana'],
+  ['cax', 'SER Caxias do Sul', 'Caxias', 'CAX', 'RS', 'C', null, 2, 'Brasil', '#7f1d1d', '#1d4ed8', '#ffffff', 'Centenário', 22132, 'Luizinho Vieira'],
   ['bar', 'Barra FC', 'Barra-SC', 'BAR', 'SC', 'C', null, 2, 'Brasil', '#0284c7', '#111111', '#ffffff', 'Arena Barra', 6000, 'Eduardo Souza'],
+  ['ana', 'Anápolis FC', 'Anápolis', 'ANA', 'GO', 'C', null, 2, 'Brasil', '#dc2626', '#1d4ed8', '#ffffff', 'Jonas Duarte', 14400, 'Ângelo Luiz'],
+  ['bpb', 'Botafogo-PB', 'Botafogo-PB', 'BPB', 'PB', 'C', null, 2, 'Brasil', '#111111', '#dc2626', '#ffffff', 'Almeidão', 25770, 'João Burse'],
+  ['flo', 'Floresta EC', 'Floresta', 'FLO', 'CE', 'C', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Presidente Vargas', 20262, 'Marcelo Chamusca'],
+  ['pay', 'Paysandu SC', 'Paysandu', 'PAY', 'PA', 'C', null, 3, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Curuzu', 16200, 'Luizinho Lopes'],
+  ['bru', 'Brusque FC', 'Brusque', 'BRU', 'SC', 'C', null, 2, 'Brasil', '#facc15', '#15803d', '#0f172a', 'Augusto Bauer', 5000, 'Filipe Gouveia'],
+  ['pon', 'AA Ponte Preta', 'Ponte Preta', 'PON', 'SP', 'C', null, 3, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Moisés Lucarelli', 17728, 'Alberto Valentim'],
+  ['ame', 'América Mineiro', 'América-MG', 'AME', 'MG', 'C', null, 3, 'Brasil', '#15803d', '#111111', '#ffffff', 'Independência', 23018, 'William Batista'],
+  ['lon', 'Londrina EC', 'Londrina', 'LON', 'PR', 'C', null, 2, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Estádio do Café', 30000, 'Claudinei Oliveira'],
+  ['ava', 'Avaí FC', 'Avaí', 'AVA', 'SC', 'C', null, 3, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Ressacada', 17800, 'Enderson Moreira'],
 ];
 
 export const BRAZIL_SERIE_D_META: NonEuClubMetaTuple[] = [
-  ['tun', 'Tuna Luso / Fast AM', 'Tuna/Fast', 'TUN', 'AM', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Colina', 10451, 'Carlos Tozzi'],
+  // === NORTE (20 clubes oficiais CBF 2027) ===
+  // Acre (3)
+  ['est_ac_hum', 'SC Humaitá', 'Humaitá', 'HUM', 'AC', 'D', null, 1, 'Brasil', '#15803d', '#facc15', '#ffffff', 'Arena da Floresta', 13700, 'Kinho'],
+  ['rba', 'Rio Branco FC', 'Rio Branco-AC', 'RBA', 'AC', 'D', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Arena da Floresta', 13700, 'Vaguinho Santos'],
+  ['ac_scr', 'Santa Cruz EC-AC', 'Santa Cruz-AC', 'SCA', 'AC', 'D', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Arena da Floresta', 13700, 'Sandro Resende'],
+  // Rondônia (3)
+  ['est_ro_gua', 'Guaporé FC', 'Guaporé', 'GUA', 'RO', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Cassolão', 3000, 'Carlos'],
+  ['pve', 'Porto Velho EC', 'Porto Velho', 'PVE', 'RO', 'D', null, 1, 'Brasil', '#facc15', '#15803d', '#0f172a', 'Aluizão', 7000, 'Paulo Eduardo'],
+  ['est_ro_ari', 'Rondoniense SC', 'Rondoniense', 'RON', 'RO', 'D', null, 1, 'Brasil', '#0284c7', '#15803d', '#ffffff', 'Aluizão', 7000, 'Luciano'],
+  // Amazonas (2)
+  ['est_am_pri', 'Manauara EC', 'Manauara', 'MNR', 'AM', 'D', null, 2, 'Brasil', '#ea580c', '#111111', '#ffffff', 'Ismael Benigno', 10451, 'Marcelo Vilar'],
+  ['man', 'Manaus FC', 'Manaus', 'MAN', 'AM', 'D', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Arena da Amazônia', 44000, 'Júlio César Nunes'],
+  // Roraima (3)
+  ['est_rr_bar', 'Baré EC', 'Baré', 'BAR', 'RR', 'D', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Canarinho', 4556, 'Walter'],
+  ['est_rr_gas', 'GAS', 'GAS', 'GAS', 'RR', 'D', null, 1, 'Brasil', '#facc15', '#1d4ed8', '#0f172a', 'Canarinho', 4556, 'Emerson'],
+  ['srr', 'São Raimundo-RR', 'São Raimundo-RR', 'SRR', 'RR', 'D', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Canarinho', 4556, 'Chiquinho Viana'],
+  // Amapá (3)
+  ['est_ap_san', 'Santos-AP', 'Santos-AP', 'SAP', 'AP', 'D', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Zerão', 13680, 'Edson'],
+  ['ap_sjo', 'SE São José-AP', 'São José-AP', 'SJA', 'AP', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Zerão', 13680, 'Rodrigo Santos'],
+  ['est_ap_tre', 'Trem DC', 'Trem', 'TRE', 'AP', 'D', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Zerão', 13680, 'Sandro Macapá'],
+  // Pará (4)
   ['agm', 'Águia de Marabá FC', 'Águia de Marabá', 'AGM', 'PA', 'D', null, 2, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Zinho de Oliveira', 5000, 'Sílvio Criciúma'],
   ['cmt', 'Cametá SC', 'Cametá', 'CMT', 'PA', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Parque do Bacurau', 10230, 'Rodrigo Reis'],
   ['cst', 'Castanhal EC', 'Castanhal', 'CST', 'PA', 'D', null, 1, 'Brasil', '#facc15', '#111111', '#0f172a', 'Modelão', 7500, 'Cacaio'],
-  ['bpa', 'Paragominas FC', 'Paragominas', 'BPA', 'PA', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Arena Verde', 10000, 'Samuel Cândido'],
-  ['sfp', 'São Raimundo-PA', 'São Raimundo-PA', 'SFP', 'PA', 'D', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Colosso do Tapajós', 12000, 'Everton Goiano'],
-  ['ipa', 'Independente Tucuruí', 'Independente-PA', 'IPA', 'PA', 'D', null, 1, 'Brasil', '#0284c7', '#15803d', '#ffffff', 'Navegantão', 8200, 'Charles Guerreiro'],
-  ['tap', 'Princesa do Solimões', 'Princesa-AM', 'TAP', 'AM', 'D', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Gilbertão', 15000, 'Maurinho Fonseca'],
-  ['srs', 'Penarol AC', 'Penarol-AM', 'SRS', 'AM', 'D', null, 1, 'Brasil', '#1d4ed8', '#facc15', '#ffffff', 'Floro de Mendonça', 5000, 'Igor Cearense'],
-  ['cpo', 'Atlético Acreano', 'Atlético-AC', 'CPO', 'AC', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Arena da Floresta', 13700, 'Álvaro Miguéis'],
-  ['man', 'Manaus FC', 'Manaus', 'MAN', 'AM', 'D', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Arena da Amazônia', 44000, 'Júlio César Nunes'],
-  ['nam', 'Nacional FC', 'Nacional-AM', 'NAM', 'AM', 'D', null, 2, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Arena da Amazônia', 44000, 'Cléber Gaúcho'],
-  ['srr', 'São Raimundo-RR', 'São Raimundo-RR', 'SRR', 'RR', 'D', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Canarinho', 4556, 'Chiquinho Viana'],
-  ['pve', 'SC Genus / Porto Velho', 'Porto Velho', 'PVE', 'RO', 'D', null, 1, 'Brasil', '#facc15', '#15803d', '#0f172a', 'Aluizão', 7000, 'Paulo Eduardo'],
-  ['rba', 'Rio Branco FC', 'Rio Branco-AC', 'RBA', 'AC', 'D', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Arena da Floresta', 13700, 'Vaguinho Santos'],
-  ['toc', 'Tocantinópolis / Interporto', 'Tocantinópolis', 'TOC', 'TO', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Ribeirão', 8000, 'Jairo Nascimento'],
+  ['tun', 'Tuna Luso Brasileira', 'Tuna Luso', 'TUN', 'PA', 'D', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Souza', 6000, 'Ignácio Neto'],
+  // Tocantins (2)
+  ['toc', 'Tocantinópolis EC', 'Tocantinópolis', 'TOC', 'TO', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Ribeirão', 8000, 'Jairo Nascimento'],
+  ['est_to_uni', 'União Carmolandense', 'União-TO', 'UTO', 'TO', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Mirandão', 10000, 'Léo Goiano'],
+
+  // === NORDESTE (29 clubes oficiais CBF 2027) ===
+  // Maranhão (3)
+  ['est_ma_iad', 'IAPE', 'IAPE', 'IAP', 'MA', 'D', null, 1, 'Brasil', '#1d4ed8', '#facc15', '#ffffff', 'Castelão-MA', 40149, 'Arlindo'],
+  ['est_ma_imp', 'Imperatriz', 'Imperatriz', 'IMP', 'MA', 'D', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Frei Epifânio', 10000, 'Júnior Amorim'],
   ['sam', 'Sampaio Corrêa FC', 'Sampaio Corrêa', 'SAM', 'MA', 'D', null, 2, 'Brasil', '#15803d', '#dc2626', '#ffffff', 'Castelão-MA', 40149, 'Arlindo Maracanã'],
+  // Piauí (4)
   ['alt', 'AA Altos', 'Altos', 'ALT', 'PI', 'D', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Albertão', 44200, 'Francisco Diá'],
+  ['est_pi_cap', 'Atlético Piauiense', 'Atlético-PI', 'API', 'PI', 'D', null, 1, 'Brasil', '#facc15', '#111111', '#0f172a', 'Albertão', 44200, 'Washington Luiz'],
+  ['pi_flu', 'Fluminense EC-PI', 'Fluminense-PI', 'FPI', 'PI', 'D', null, 1, 'Brasil', '#7f1d1d', '#15803d', '#ffffff', 'Albertão', 44200, 'Marcinho Guerreiro'],
+  ['pi_pia', 'Piauí EC', 'Piauí', 'PIA', 'PI', 'D', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Albertão', 44200, 'Roberto Fernandes'],
+  // Ceará (4)
   ['fer', 'Ferroviário AC', 'Ferroviário', 'FER', 'CE', 'D', null, 2, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Presidente Vargas', 20262, 'Tiago Zorro'],
+  ['est_ce_hcr', 'Horizonte FC', 'Horizonte', 'HOR', 'CE', 'D', null, 1, 'Brasil', '#facc15', '#1d4ed8', '#0f172a', 'Domingão', 10500, 'Leandro Campos'],
   ['igu', 'AD Iguatu', 'Iguatu', 'IGU', 'CE', 'D', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Morenão', 3600, 'Dico Wooley'],
-  ['abc', 'ABC FC', 'ABC', 'ABC', 'RN', 'D', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Frasqueirão', 18000, 'Evaristo Piza'],
+  ['est_ce_mar', 'Maracanã EC', 'Maracanã-CE', 'MRC', 'CE', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Almir Dutra', 5000, 'Júnior Cearense'],
+  // Rio Grande do Norte (2)
   ['arn', 'América de Natal', 'América-RN', 'ARN', 'RN', 'D', null, 2, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Arena das Dunas', 31375, 'Moacir Júnior'],
-  ['trz', 'Treze FC', 'Treze', 'TRZ', 'PB', 'D', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Amigão', 19000, 'Marcelo Martelotte'],
-  ['sou', 'Sousa EC', 'Sousa', 'SOU', 'PB', 'D', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Marizão', 12400, 'Paulo Foiani'],
+  ['rn_pot', 'ACD Potiguar de Mossoró', 'Potiguar-M', 'POT', 'RN', 'D', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Nogueirão', 4000, 'Allan Frederico'],
+  // Paraíba (4)
   ['cmp', 'Campinense Clube', 'Campinense', 'CMP', 'PB', 'D', null, 2, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Amigão', 19000, 'Evandro Guimarães'],
-  ['csa', 'CSA', 'CSA', 'CSA', 'AL', 'D', null, 2, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Rei Pelé', 17126, 'Higo Magalhães'],
-  ['asa', 'ASA de Arapiraca', 'ASA', 'ASA', 'AL', 'D', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Fumeirão', 15332, 'Ranielle Ribeiro'],
-  ['ser', 'CS Sergipe', 'Sergipe', 'SER', 'SE', 'D', null, 2, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Batistão', 15575, 'Ailton Silva'],
-  ['ret', 'Retrô FC Brasil', 'Retrô', 'RET', 'PE', 'D', null, 2, 'Brasil', '#1e3a8a', '#facc15', '#ffffff', 'Arena Pernambuco', 44300, 'Evaristo Piza'],
-  ['cen', 'Central SC', 'Central-PE', 'CEN', 'PE', 'D', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Lacerdão', 19478, 'Rafael Jaques'],
-  ['pet', 'Petrolina SFC', 'Petrolina', 'PET', 'PE', 'D', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Paulo Coelho', 5000, 'Rui Scarpino'],
+  ['est_pb_ser', 'Serra Branca EC', 'Serra Branca', 'SBC', 'PB', 'D', null, 1, 'Brasil', '#0284c7', '#111111', '#ffffff', 'Amigão', 19000, 'Roberto Maschio'],
+  ['sou', 'Sousa EC', 'Sousa', 'SOU', 'PB', 'D', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Marizão', 12400, 'Paulo Foiani'],
+  ['trz', 'Treze FC', 'Treze', 'TRZ', 'PB', 'D', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Amigão', 19000, 'Marcelo Martelotte'],
+  // Pernambuco (3)
+  ['dec', 'Decisão FC', 'Decisão', 'DEC', 'PE', 'D', null, 1, 'Brasil', '#0284c7', '#111111', '#ffffff', 'Sesc Mendonça', 5000, 'Hélio Cabral'],
   ['mgy', 'AA Maguary', 'Maguary', 'MGY', 'PE', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Arthur Tavares', 4000, 'Sued Lima'],
-  ['afo', 'Afogados / América-PE', 'América-PE', 'AFO', 'PE', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Vianão', 3000, 'Pedro Manta'],
-  ['sal', 'Salgueiro AC', 'Salgueiro', 'SAL', 'PE', 'D', null, 1, 'Brasil', '#15803d', '#dc2626', '#ffffff', 'Cornélio de Barros', 12070, 'Daniel Neri'],
-  ['dec', 'Decisão / Belo Jardim', 'Decisão', 'DEC', 'PE', 'D', null, 1, 'Brasil', '#0284c7', '#111111', '#ffffff', 'Sesc Mendonça', 5000, 'Hélio Cabral'],
-  ['jua', 'SD Juazeirense', 'Juazeirense', 'JUA', 'BA', 'D', null, 2, 'Brasil', '#15803d', '#dc2626', '#ffffff', 'Adauto Moraes', 8000, 'Carlos Rabello'],
+  ['ret', 'Retrô FC Brasil', 'Retrô', 'RET', 'PE', 'D', null, 2, 'Brasil', '#1e3a8a', '#facc15', '#ffffff', 'Arena Pernambuco', 44300, 'Evaristo Piza'],
+  // Alagoas (2)
+  ['csa', 'CSA', 'CSA', 'CSA', 'AL', 'D', null, 2, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Rei Pelé', 17126, 'Higo Magalhães'],
+  ['est_al_mur', 'Murici FC', 'Murici', 'MUR', 'AL', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'José Gomes', 3500, 'Flávio Barros'],
+  // Sergipe (4)
+  ['con', 'AD Confiança', 'Confiança', 'CON', 'SE', 'D', null, 2, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Batistão', 15575, 'Waguinho Dias'],
+  ['se_des', 'AD Desportiva Aracaju', 'Desp. Aracaju', 'DAR', 'SE', 'D', null, 1, 'Brasil', '#1d4ed8', '#facc15', '#ffffff', 'Batistão', 15575, 'Elenilson Santos'],
+  ['ita', 'AO Itabaiana', 'Itabaiana', 'ITA', 'SE', 'D', null, 2, 'Brasil', '#1d4ed8', '#dc2626', '#ffffff', 'Etelvino Mendonça', 10000, 'Roberto Cavalo'],
+  ['ser', 'CS Sergipe', 'Sergipe', 'SER', 'SE', 'D', null, 2, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Batistão', 15575, 'Ailton Silva'],
+  // Bahia (3)
   ['jac', 'EC Jacuipense', 'Jacuipense', 'JAC', 'BA', 'D', null, 2, 'Brasil', '#7f1d1d', '#ffffff', '#ffffff', 'Valfredão', 5000, 'Rodrigo Ribeiro'],
-  ['aal', 'Atlético de Alagoinhas', 'Atlético-BA', 'AAL', 'BA', 'D', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Carneirão', 16000, 'Agnaldo Liz'],
-  ['bfe', 'Fluminense de Feira', 'Flu de Feira', 'BFE', 'BA', 'D', null, 1, 'Brasil', '#7f1d1d', '#15803d', '#ffffff', 'Joia da Princesa', 16274, 'Paulo Sales'],
-  ['jeq', 'AD Jequié / Feirense', 'Jequié', 'JEQ', 'BA', 'D', null, 1, 'Brasil', '#facc15', '#15803d', '#0f172a', 'Waldomiro Borges', 4000, 'Alyson Dantas'],
-  ['bil', 'Galícia EC', 'Galícia', 'BIL', 'BA', 'D', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Pituaçu', 32157, 'Sérgio Araújo'],
-  ['pba', 'Porto BA / Ypiranga', 'Porto-BA', 'PBA', 'BA', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Agnaldo Bento', 3000, 'Sandro Duarte'],
-  ['vco', 'ECPP Vitória da Conquista', 'Vit. da Conquista', 'VCO', 'BA', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Lomanto Júnior', 12500, 'Guilherme Silva'],
+  ['jeq', 'AD Jequié', 'Jequié', 'JEQ', 'BA', 'D', null, 1, 'Brasil', '#facc15', '#15803d', '#0f172a', 'Waldomiro Borges', 4000, 'Alyson Dantas'],
+  ['jua', 'SD Juazeirense', 'Juazeirense', 'JUA', 'BA', 'D', null, 2, 'Brasil', '#15803d', '#dc2626', '#ffffff', 'Adauto Moraes', 8000, 'Carlos Rabello'],
+
+  // === CENTRO-OESTE (14 clubes) ===
+  // Mato Grosso (2)
   ['luv', 'Luverdense EC', 'Luverdense', 'LUV', 'MT', 'D', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Passo das Emas', 10000, 'Wagner Lopes'],
-  ['mix', 'Mixto EC', 'Mixto', 'MIX', 'MT', 'D', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Arena Pantanal', 42968, 'Lucas Isotton'],
+  ['mix', 'Mixto EC', 'Mixto-MT', 'MIX', 'MT', 'D', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Arena Pantanal', 42968, 'Lucas Isotton'],
+  // Distrito Federal (4)
   ['bsb', 'Brasiliense FC', 'Brasiliense', 'BSB', 'DF', 'D', null, 2, 'Brasil', '#facc15', '#111111', '#0f172a', 'Serejão', 27000, 'Luís Carlos Winck'],
-  ['gam', 'SE Gama', 'Gama', 'GAM', 'DF', 'D', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Bezerrão', 20310, 'Glauber Ramos'],
+  ['est_df_cap', 'Capital CF', 'Capital-DF', 'CAP', 'DF', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'JK Paranoá', 6000, 'Marcelo Cabo'],
   ['cei', 'Ceilândia EC', 'Ceilândia', 'CEI', 'DF', 'D', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Abadião', 4000, 'Adelson de Almeida'],
-  ['oms', 'Operário FC-MS', 'Operário-MS', 'OMS', 'MS', 'D', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Morenão', 24000, 'Leocir Dall Astra'],
-  ['rbr', 'Rio Branco AC-ES', 'Rio Branco-ES', 'RBR', 'ES', 'D', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Kleber Andrade', 21000, 'Rodrigo Fonseca'],
-  ['des', 'Vitória / Desportiva ES', 'Desportiva-ES', 'DES', 'ES', 'D', null, 1, 'Brasil', '#7f1d1d', '#ffffff', '#ffffff', 'Engenheiro Araripe', 7700, 'Rafael Soriano'],
-  ['apa', 'AA Aparecidense', 'Aparecidense', 'APA', 'GO', 'D', null, 2, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Annibal Batista', 4800, 'Lúcio Flávio'],
-  ['gna', 'Goiânia EC', 'Goiânia', 'GNA', 'GO', 'D', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Olímpico', 13500, 'Luan Carlos'],
-  ['gtb', 'Iporá EC', 'Iporá', 'GTB', 'GO', 'D', null, 1, 'Brasil', '#1e3a8a', '#facc15', '#ffffff', 'Ferreirão', 3500, 'Edson Júnior'],
-  ['cra', 'CRAC', 'CRAC', 'CRA', 'GO', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Genervino da Fonseca', 8500, 'Alexandre Lopes'],
+  ['est_df_sob', 'Sobradinho EC', 'Sobradinho', 'SOB', 'DF', 'D', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Augustinho Lima', 15000, 'Léo Roquete'],
+  // Goiás (5)
+  ['abe', 'Agro FC', 'Agro FC', 'AGR', 'GO', 'D', null, 1, 'Brasil', '#15803d', '#facc15', '#ffffff', 'Luiz Benedito', 4000, 'Gabardo Júnior'],
   ['anp', 'AA Anapolina', 'Anapolina', 'ANP', 'GO', 'D', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Jonas Duarte', 14400, 'Alan George'],
-  ['jat', 'Goianésia EC', 'Goianésia', 'JAT', 'GO', 'D', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Valdeir José', 8110, 'Augusto Fassina'],
-  ['inh', 'Inhumas / Itumbiara', 'Inhumas', 'INH', 'GO', 'D', null, 1, 'Brasil', '#111111', '#facc15', '#ffffff', 'Zico Brandão', 4380, 'Daniel Franco'],
-  ['abe', 'Abecat / Grêmio Anápolis', 'Grêmio Anápolis', 'ABE', 'GO', 'D', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Jonas Duarte', 14400, 'Gabardo Júnior'],
-  ['tom', 'Tombense FC', 'Tombense', 'TOM', 'MG', 'D', null, 2, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Almeidão-MG', 6555, 'Raul Cabral'],
-  ['pou', 'Pouso Alegre FC', 'Pouso Alegre', 'POU', 'MG', 'D', null, 2, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Manduzão', 26000, 'Henrique Pacheco'],
-  ['ube', 'Uberlândia EC', 'Uberlândia', 'UBE', 'MG', 'D', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Parque do Sabiá', 53350, 'Paulo Roberto Santos'],
-  ['vnm', 'Villa Nova AC', 'Villa Nova-MG', 'VNM', 'MG', 'D', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Castor Cifuentes', 5160, 'Ricardo Drubscky'],
-  ['dgv', 'EC Democrata', 'Democrata-GV', 'DGV', 'MG', 'D', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Mamudão', 8674, 'Wladimir Araújo'],
+  ['apa', 'AA Aparecidense', 'Aparecidense', 'APA', 'GO', 'D', null, 2, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Annibal Batista', 4800, 'Lúcio Flávio'],
+  ['cra', 'CRAC', 'CRAC', 'CRA', 'GO', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Genervino da Fonseca', 8500, 'Alexandre Lopes'],
+  ['jat', 'AE Jataiense', 'Jataiense', 'JAT', 'GO', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Arapucão', 12000, 'Augusto Fassina'],
+  // Mato Grosso do Sul (3)
+  ['ms_bat', 'AA Bataguassu', 'Bataguassu', 'BAT', 'MS', 'D', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'João de Souza', 3500, 'Fábio Giuntini'],
+  ['est_ms_ivr', 'Ivinhema FC', 'Ivinhema', 'IVI', 'MS', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Saraivão', 5000, 'Douglas'],
+  ['oms', 'Operário FC-MS', 'Operário-MS', 'OMS', 'MS', 'D', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Morenão', 24000, 'Leocir Dall Astra'],
+
+  // === SUDESTE (18 clubes) ===
+  // Espírito Santo (2)
+  ['est_es_pno', 'Porto Vitória FC', 'Porto Vitória', 'PVI', 'ES', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Kleber Andrade', 21000, 'Rodrigo Chagas'],
+  ['est_es_lin', 'Rio Branco FC-VN', 'Rio Branco-VN', 'RVN', 'ES', 'D', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Olímpio Perim', 4000, 'Leandro'],
+  // Minas Gerais (5)
   ['bet', 'Betim Futebol', 'Betim', 'BET', 'MG', 'D', null, 1, 'Brasil', '#1d4ed8', '#dc2626', '#ffffff', 'Arena Vera Cruz', 5000, 'Alex Nascif'],
-  ['itb', 'Itabirito FC', 'Itabirito', 'ITB', 'MG', 'D', null, 1, 'Brasil', '#1e3a8a', '#facc15', '#ffffff', 'Independência', 23018, 'Cícero Júnior'],
+  ['mg_nor', 'North Esporte Clube', 'North', 'NOR', 'MG', 'D', null, 1, 'Brasil', '#0284c7', '#111111', '#ffffff', 'Arena Credinor', 6000, 'Paulão'],
+  ['pou', 'Pouso Alegre FC', 'Pouso Alegre', 'POU', 'MG', 'D', null, 2, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Manduzão', 26000, 'Henrique Pacheco'],
+  ['tom', 'Tombense FC', 'Tombense', 'TOM', 'MG', 'D', null, 2, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Almeidão-MG', 6555, 'Raul Cabral'],
   ['urt', 'URT', 'URT', 'URT', 'MG', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Zama Maciel', 4858, 'Gian Rodrigues'],
+  // Rio de Janeiro (5)
+  ['rj_ban', 'Bangu AC', 'Bangu', 'BAN', 'RJ', 'D', null, 2, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Moça Bonita', 9024, 'Junior Martins'],
+  ['boa', 'Boavista SC', 'Boavista-RJ', 'BOA', 'RJ', 'D', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Elcyr Resende', 4315, 'Caio Zanardi'],
+  ['mad', 'Madureira EC', 'Madureira', 'MAD', 'RJ', 'D', null, 2, 'Brasil', '#7f1d1d', '#facc15', '#ffffff', 'Conselheiro Galvão', 5062, 'Daniel Neri'],
   ['nig', 'Nova Iguaçu FC', 'Nova Iguaçu', 'NIG', 'RJ', 'D', null, 2, 'Brasil', '#ea580c', '#ffffff', '#ffffff', 'Laranjão', 1810, 'Carlos Vitor'],
   ['prj', 'AA Portuguesa-RJ', 'Portuguesa-RJ', 'PRJ', 'RJ', 'D', null, 2, 'Brasil', '#15803d', '#dc2626', '#ffffff', 'Luso Brasileiro', 5044, 'Douglas Ferreira'],
-  ['mad', 'Madureira EC', 'Madureira', 'MAD', 'RJ', 'D', null, 2, 'Brasil', '#7f1d1d', '#facc15', '#ffffff', 'Conselheiro Galvão', 5062, 'Daniel Neri'],
-  ['boa', 'Boavista SC', 'Boavista-RJ', 'BOA', 'RJ', 'D', null, 2, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Elcyr Resende', 4315, 'Caio Zanardi'],
-  ['rj_ban', 'Bangu AC', 'Bangu', 'BAN', 'RJ', 'D', null, 2, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Moça Bonita', 9024, 'Junior Martins'],
-  ['mrc', 'Maricá FC', 'Maricá', 'MRC', 'RJ', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'João Saldanha', 3000, 'Reinaldo'],
-  ['srj', 'Sampaio Corrêa-RJ', 'Sampaio-RJ', 'SRJ', 'RJ', 'D', null, 1, 'Brasil', '#0284c7', '#facc15', '#ffffff', 'Lourival Gomes', 1800, 'Alfredo Sampaio'],
+  // São Paulo (6)
+  ['sp_cap', 'Capivariano FC', 'Capivariano', 'CAP', 'SP', 'D', null, 2, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Arena Capivari', 14651, 'Élio Sizenando'],
   ['por', 'Associação Portuguesa', 'Portuguesa', 'POR', 'SP', 'D', null, 2, 'Brasil', '#dc2626', '#15803d', '#ffffff', 'Canindé', 21004, 'Cauan de Almeida'],
-  ['ags', 'EC Água Santa', 'Água Santa', 'AGS', 'SP', 'D', null, 2, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Distrital do Inamar', 10000, 'Pintado'],
-  ['prc', 'Paraná Clube', 'Paraná', 'PRC', 'PR', 'D', null, 2, 'Brasil', '#dc2626', '#1d4ed8', '#ffffff', 'Vila Capanema', 20083, 'Argel Fuchs'],
+  ['sp_pri', 'EC Primavera', 'Primavera-SP', 'PRI', 'SP', 'D', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Ítalo Mário Limongi', 7820, 'Fernando Marchiori'],
+  ['sp_sjo', 'São José EC', 'São José-SP', 'SJS', 'SP', 'D', null, 2, 'Brasil', '#1d4ed8', '#facc15', '#ffffff', 'Martins Pereira', 12234, 'Moacir Júnior'],
+  ['sp_vel', 'AE Velo Clube', 'Velo Clube', 'VEL', 'SP', 'D', null, 2, 'Brasil', '#dc2626', '#15803d', '#ffffff', 'Benitão', 8136, 'Guilherme Alves'],
+  ['sp_xvp', 'EC XV de Piracicaba', 'XV de Piracicaba', 'XVP', 'SP', 'D', null, 2, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Barão de Serra Negra', 18000, 'Moisés Egert'],
+
+  // === SUL (15 clubes) ===
+  // Paraná (5)
+  ['azu', 'Azuriz FC', 'Azuriz', 'AZU', 'PR', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Os Pioneiros', 1500, 'Emerson Cris'],
   ['cas', 'FC Cascavel', 'Cascavel', 'CAS', 'PR', 'D', null, 2, 'Brasil', '#facc15', '#111111', '#0f172a', 'Olímpico Regional', 28125, 'Silvinho Canuto'],
   ['cia', 'Cianorte FC', 'Cianorte', 'CIA', 'PR', 'D', null, 2, 'Brasil', '#1e3a8a', '#ffffff', '#ffffff', 'Albino Turbay', 4000, 'Jerson Testoni'],
-  ['azu', 'Azuriz FC', 'Azuriz', 'AZU', 'PR', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Os Pioneiros', 1500, 'Emerson Cris'],
+  ['pr_foz', 'Foz do Iguaçu FC', 'Foz do Iguaçu', 'FOZ', 'PR', 'D', null, 1, 'Brasil', '#1d4ed8', '#facc15', '#ffffff', 'Estádio do ABC', 6968, 'Negreiros'],
   ['sjs', 'Independente São Joseense', 'São Joseense', 'SJS', 'PR', 'D', null, 1, 'Brasil', '#1d4ed8', '#facc15', '#ffffff', 'Pinhão', 4047, 'Lucio Flávio'],
-  ['and', 'Clube Andraus Brasil', 'Andraus', 'AND', 'PR', 'D', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Vila Capanema', 20083, 'Claudemir Sturion'],
-  ['rbp', 'Rio Branco SC-PR', 'Rio Branco-PR', 'RBP', 'PR', 'D', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Estradinha', 4500, 'Fahel Júnior'],
+  // Santa Catarina (4)
+  ['cvg', 'Camboriú FC', 'Camboriú', 'CVG', 'SC', 'D', null, 1, 'Brasil', '#15803d', '#facc15', '#ffffff', 'Robertão', 3300, 'Kinho Forgiarini'],
   ['joi', 'Joinville EC', 'Joinville', 'JOI', 'SC', 'D', null, 2, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Arena Joinville', 22400, 'Hemerson Maria'],
   ['mdi', 'CN Marcílio Dias', 'Marcílio Dias', 'MDI', 'SC', 'D', null, 2, 'Brasil', '#1e3a8a', '#dc2626', '#ffffff', 'Gigantão das Avenidas', 6010, 'Waguinho Dias'],
-  ['hlu', 'Hercílio Luz FC', 'Hercílio Luz', 'HLU', 'SC', 'D', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Aníbal Costa', 3570, 'Paulo Baier'],
-  ['ccd', 'Concórdia AC', 'Concórdia', 'CCD', 'SC', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Domingos Machado', 5000, 'Jailson Zatta'],
-  ['cvg', 'Camboriú FC', 'Camboriú', 'CVG', 'SC', 'D', null, 1, 'Brasil', '#15803d', '#facc15', '#ffffff', 'Robertão', 3300, 'Kinho Forgiarini'],
-  ['sca', 'CA Metropolitano', 'Metropolitano', 'SCA', 'SC', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'SESI Blumenau', 3624, 'Isaque Pereira'],
-  ['bpe', 'GE Brasil de Pelotas', 'Brasil-RS', 'BPE', 'RS', 'D', null, 2, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Bento Freitas', 18000, 'William de Mattia'],
-  ['sjr', 'EC São José / Passo Fundo', 'São José-RS', 'SJR', 'RS', 'D', null, 2, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Passo d Areia', 14000, 'Gabardo Júnior'],
-  ['ave', 'EC Avenida', 'Avenida', 'AVE', 'RS', 'D', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Eucaliptos', 3600, 'Gabriel Dutra'],
-  ['pel', 'EC Pelotas', 'Pelotas', 'PEL', 'RS', 'D', null, 1, 'Brasil', '#facc15', '#1d4ed8', '#0f172a', 'Boca do Lobo', 23336, 'Ariel Lanzini'],
+  ['sca', 'Santa Catarina Clube', 'Santa Catarina', 'SCA', 'SC', 'D', null, 1, 'Brasil', '#dc2626', '#15803d', '#ffffff', 'Alfredo João Krieck', 4500, 'Ademir Fesan'],
+  // Rio Grande do Sul (6)
+  ['bpe', 'GE Brasil de Pelotas', 'Brasil de Pelotas', 'BPE', 'RS', 'D', null, 2, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Bento Freitas', 18000, 'William de Mattia'],
+  ['rs_gra', 'CE Gramadense', 'Gramadense', 'GRA', 'RS', 'D', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Vila Olímpica', 3000, 'Carlos Moraes'],
+  ['gba', 'Guarany FC de Bagé', 'Guarany de Bagé', 'GBA', 'RS', 'D', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Estrela d Alva', 10000, 'Márcio Nunes'],
   ['nha', 'EC Novo Hamburgo', 'Novo Hamburgo', 'NHA', 'RS', 'D', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Estádio do Vale', 5196, 'Lucas Isotton'],
+  ['sjr', 'EC São José', 'São José-RS', 'SJR', 'RS', 'D', null, 2, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Passo d Areia', 14000, 'Gabardo Júnior'],
   ['rs_slu', 'EC São Luiz', 'São Luiz', 'SLU', 'RS', 'D', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', '19 de Outubro', 5217, 'Iarley'],
-  ['gba', 'CE Aimoré', 'Aimoré', 'GBA', 'RS', 'D', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Cristo Rei', 10000, 'Arílson Costa'],
 ];
 
 export const BRAZIL_ESTADUAIS_EXTRA_META: NonEuClubMetaTuple[] = [
-  // === RN POTIGUAR (10 extra besides ABC & América-RN) ===
+  // === CLUBES ESTADUAIS / SEM DIVISÃO NACIONAL EM 2027 (mantêm IDs para Estaduais e RNC) ===
+  // RN POTIGUAR
   ['rn_scn', 'Santa Cruz de Natal', 'Santa Cruz-RN', 'SCN', 'RN', 'EST', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Frasqueirão', 18000, 'João Paulo Oliveira'],
   ['rn_lag', 'Clube Laguna', 'Laguna-RN', 'LAG', 'RN', 'EST', null, 1, 'Brasil', '#0284c7', '#111111', '#ffffff', 'Arena das Dunas', 31375, 'Gustavo Nabinger'],
-  ['rn_pot', 'ACD Potiguar de Mossoró', 'Potiguar-M', 'POT', 'RN', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Nogueirão', 4000, 'Allan Frederico'],
   ['rn_glo', 'Globo FC', 'Globo-RN', 'GLO', 'RN', 'EST', null, 1, 'Brasil', '#dc2626', '#facc15', '#ffffff', 'Barretão', 10000, 'André Caldas'],
   ['rn_brn', 'ACEC Baraúnas', 'Baraúnas', 'BRN', 'RN', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Nogueirão', 4000, 'Alexandre Dantas'],
   ['rn_qfc', 'QFC Natal', 'QFC', 'QFC', 'RN', 'EST', null, 1, 'Brasil', '#1e3a8a', '#facc15', '#ffffff', 'Arena das Dunas', 31375, 'Marcos Soares'],
@@ -199,33 +239,48 @@ export const BRAZIL_ESTADUAIS_EXTRA_META: NonEuClubMetaTuple[] = [
   ['rn_mos', 'Mossoró EC', 'Mossoró EC', 'MEC', 'RN', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Nogueirão', 4000, 'Edson Souza'],
 
   // === CEARÁ ===
-  ['est_ce_mar', 'Maracanã EC', 'Maracanã-CE', 'MRC', 'CE', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Almir Dutra', 5000, 'Júnior Cearense'],
   ['est_ce_cau', 'Caucaia EC', 'Caucaia', 'CAU', 'CE', 'EST', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Raimundão', 10000, 'Roberto Carlos'],
-  ['est_ce_hcr', 'Horizonte FC', 'Horizonte', 'HOR', 'CE', 'EST', null, 1, 'Brasil', '#facc15', '#1d4ed8', '#0f172a', 'Domingão', 10500, 'Leandro Campos'],
   ['est_ce_qui', 'Quixadá FC', 'Quixadá', 'QUI', 'CE', 'EST', null, 1, 'Brasil', '#facc15', '#111111', '#0f172a', 'Abilhão', 5000, 'Juranilson'],
   ['est_ce_tir', 'AE Tiradentes', 'Tiradentes-CE', 'TIR', 'CE', 'EST', null, 1, 'Brasil', '#facc15', '#111111', '#0f172a', 'Presidente Vargas', 20262, 'Danilo Augusto'],
 
   // === PARÁ ===
+  ['bpa', 'Paragominas FC', 'Paragominas', 'BPA', 'PA', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Arena Verde', 10000, 'Samuel Cândido'],
+  ['sfp', 'São Raimundo-PA', 'São Raimundo-PA', 'SFP', 'PA', 'EST', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Colosso do Tapajós', 12000, 'Everton Goiano'],
+  ['ipa', 'Independente Tucuruí', 'Independente-PA', 'IPA', 'PA', 'EST', null, 1, 'Brasil', '#0284c7', '#15803d', '#ffffff', 'Navegantão', 8200, 'Charles Guerreiro'],
   ['est_pa_bra', 'Bragantino Clube do Pará', 'Bragantino-PA', 'BRP', 'PA', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Diogão', 6000, 'Mathaus Sodré'],
   ['est_pa_cap', 'Capitão Poço EC', 'Capitão Poço', 'CPC', 'PA', 'EST', null, 1, 'Brasil', '#facc15', '#15803d', '#0f172a', 'Rufinão', 3000, 'Aldemir Costa'],
   ['est_pa_sfc', 'São Francisco FC', 'São Francisco-PA', 'SFC', 'PA', 'EST', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Colosso do Tapajós', 12000, 'Samuel Cândido'],
   ['est_pa_cam', 'Caeté / Santa Rosa PA', 'Santa Rosa-PA', 'SRO', 'PA', 'EST', null, 1, 'Brasil', '#dc2626', '#15803d', '#ffffff', 'Curuzu', 16200, 'Netão'],
 
   // === ALAGOAS ===
+  ['al_cru', 'EC Cruzeiro de Arapiraca', 'Cruzeiro-AL', 'CAL', 'AL', 'EST', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Coaracy da Mata', 12500, 'Bilú'],
   ['est_al_pen', 'SC Penedense', 'Penedense', 'PEN', 'AL', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Alfredo Leahy', 6000, 'Bebeto Moraes'],
-  ['est_al_mur', 'Murici FC', 'Murici', 'MUR', 'AL', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'José Gomes', 3500, 'Flávio Barros'],
   ['est_al_cse', 'CSE', 'CSE', 'CSE', 'AL', 'EST', null, 1, 'Brasil', '#dc2626', '#15803d', '#ffffff', 'Juca Sampaio', 7000, 'Paranhos'],
   ['est_al_cor', 'AA Coruripe', 'Coruripe', 'COR', 'AL', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Gerson Amaral', 7000, 'Gilmar Batista'],
   ['est_al_ceo', 'CEO', 'CEO', 'CEO', 'AL', 'EST', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Edson Matias', 3500, 'Ewerton Silva'],
 
   // === AMAZONAS ===
-  ['est_am_pri', 'Manauara EC', 'Manauara', 'MNR', 'AM', 'EST', null, 1, 'Brasil', '#ea580c', '#111111', '#ffffff', 'Ismael Benigno', 10451, 'Marcelo Vilar'],
+  ['am_fas', 'Nacional Fast Clube', 'Fast Clube', 'FAS', 'AM', 'EST', null, 1, 'Brasil', '#1d4ed8', '#dc2626', '#ffffff', 'Ismael Benigno', 10451, 'João Carlos Cavalo'],
+  ['tap', 'Princesa do Solimões', 'Princesa-AM', 'TAP', 'AM', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Gilbertão', 15000, 'Maurinho Fonseca'],
+  ['srs', 'Penarol AC', 'Penarol-AM', 'SRS', 'AM', 'EST', null, 1, 'Brasil', '#1d4ed8', '#facc15', '#ffffff', 'Floro de Mendonça', 5000, 'Igor Cearense'],
   ['est_am_rni', 'Atlético Rio Negro', 'Rio Negro-AM', 'RNM', 'AM', 'EST', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Ismael Benigno', 10451, 'Sidney Bento'],
+
+  // === PERNAMBUCO ===
+  ['cen', 'Central SC', 'Central-PE', 'CEN', 'PE', 'EST', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Lacerdão', 19478, 'Rafael Jaques'],
+  ['pet', 'Petrolina SFC', 'Petrolina', 'PET', 'PE', 'EST', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Paulo Coelho', 5000, 'Rui Scarpino'],
+  ['afo', 'Afogados / América-PE', 'América-PE', 'AFO', 'PE', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Vianão', 3000, 'Pedro Manta'],
+  ['sal', 'Salgueiro AC', 'Salgueiro', 'SAL', 'PE', 'EST', null, 1, 'Brasil', '#15803d', '#dc2626', '#ffffff', 'Cornélio de Barros', 12070, 'Daniel Neri'],
+
+  // === BAHIA ===
+  ['aal', 'Atlético de Alagoinhas', 'Atlético-BA', 'AAL', 'BA', 'EST', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Carneirão', 16000, 'Agnaldo Liz'],
+  ['bfe', 'Fluminense de Feira', 'Flu de Feira', 'BFE', 'BA', 'EST', null, 1, 'Brasil', '#7f1d1d', '#15803d', '#ffffff', 'Joia da Princesa', 16274, 'Paulo Sales'],
+  ['bil', 'Galícia EC', 'Galícia', 'BIL', 'BA', 'EST', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Pituaçu', 32157, 'Sérgio Araújo'],
+  ['pba', 'Porto BA / Ypiranga', 'Porto-BA', 'PBA', 'BA', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Agnaldo Bento', 3000, 'Sandro Duarte'],
+  ['vco', 'ECPP Vitória da Conquista', 'Vit. da Conquista', 'VCO', 'BA', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Lomanto Júnior', 12500, 'Guilherme Silva'],
 
   // === PARAÍBA ===
   ['est_pb_nac', 'Nacional de Patos', 'Nacional-PB', 'NAP', 'PB', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'José Cavalcanti', 5170, 'Michel Lima'],
   ['est_pb_atp', 'Atlético Cajazeirense', 'Atlético-PB', 'ATJ', 'PB', 'EST', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Perpetão', 7000, 'Ederson Araújo'],
-  ['est_pb_ser', 'Serra Branca EC', 'Serra Branca', 'SBC', 'PB', 'EST', null, 1, 'Brasil', '#0284c7', '#111111', '#ffffff', 'Amigão', 19000, 'Roberto Maschio'],
   ['est_pb_pob', 'Pombal EC', 'Pombal', 'POM', 'PB', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Pereirão', 3000, 'Adriano Souza'],
   ['est_pb_aut', 'Auto Esporte Clube', 'Auto Esporte', 'AUT', 'PB', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Almeidão', 25770, 'Ramiro Souza'],
   ['est_pb_esp', 'Esporte de Patos', 'Esporte-PB', 'ESP', 'PB', 'EST', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'José Cavalcanti', 5170, 'Júlio Cesar'],
@@ -241,10 +296,8 @@ export const BRAZIL_ESTADUAIS_EXTRA_META: NonEuClubMetaTuple[] = [
 
   // === MARANHÃO ===
   ['est_ma_mot', 'Moto Club de São Luís', 'Moto Club', 'MOT', 'MA', 'EST', null, 2, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Castelão-MA', 40149, 'Zé Augusto'],
-  ['est_ma_imp', 'Imperatriz', 'Imperatriz', 'IMP', 'MA', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Frei Epifânio', 10000, 'Júnior Amorim'],
   ['est_ma_cor', 'Cordino EC', 'Cordino', 'CRD', 'MA', 'EST', null, 1, 'Brasil', '#facc15', '#15803d', '#0f172a', 'Leandrão', 3000, 'Marlon Cutrim'],
   ['est_ma_pnh', 'Pinheiro AC', 'Pinheiro', 'PIN', 'MA', 'EST', null, 1, 'Brasil', '#facc15', '#111111', '#0f172a', 'Costa Rodrigues', 5000, 'Vagner'],
-  ['est_ma_iad', 'IAPE', 'IAPE', 'IAP', 'MA', 'EST', null, 1, 'Brasil', '#1d4ed8', '#facc15', '#ffffff', 'Castelão-MA', 40149, 'Arlindo'],
   ['est_ma_tnt', 'Tuntum EC', 'Tuntum', 'TNT', 'MA', 'EST', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Rafael Seabra', 3000, 'Danilo Brito'],
 
   // === PIAUÍ ===
@@ -253,7 +306,6 @@ export const BRAZIL_ESTADUAIS_EXTRA_META: NonEuClubMetaTuple[] = [
   ['est_pi_fla', 'EC Flamengo-PI', 'Flamengo-PI', 'FLP', 'PI', 'EST', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Lindolfo Monteiro', 5000, 'Jorge Saran'],
   ['est_pi_4de', '4 de Julho EC', '4 de Julho', '4DJ', 'PI', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Ytacoatiara', 8500, 'Emanoel Sacramento'],
   ['est_pi_oec', 'Oeirense', 'Oeirense', 'OEI', 'PI', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Gerson Campos', 4000, 'Carlos Alberto'],
-  ['est_pi_cap', 'Atlético Piauiense', 'Atlético-PI', 'API', 'PI', 'EST', null, 1, 'Brasil', '#facc15', '#111111', '#0f172a', 'Albertão', 44200, 'Washington Luiz'],
   ['est_pi_cor', 'AA Corisabbá', 'Corisabbá', 'CSB', 'PI', 'EST', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Tibério Nunes', 5000, 'Toninho Pesso'],
 
   // === MATO GROSSO ===
@@ -266,13 +318,15 @@ export const BRAZIL_ESTADUAIS_EXTRA_META: NonEuClubMetaTuple[] = [
   ['est_mt_opo', 'Primavera AC', 'Primavera-MT', 'PRI', 'MT', 'EST', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Cerradão', 3000, 'Gelson Conte'],
 
   // === DISTRITO FEDERAL ===
-  ['est_df_cap', 'Capital CF', 'Capital-DF', 'CAP', 'DF', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'JK Paranoá', 6000, 'Marcelo Cabo'],
   ['est_df_sam', 'Samambaia FC', 'Samambaia', 'SMB', 'DF', 'EST', null, 1, 'Brasil', '#dc2626', '#15803d', '#ffffff', 'Rorizão', 6000, 'Gabriel Teixeira'],
   ['est_df_par', 'Paranoá EC', 'Paranoá', 'PAR', 'DF', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'JK Paranoá', 6000, 'Klesio'],
   ['est_df_rea', 'Real Brasília FC', 'Real Brasília', 'RBR', 'DF', 'EST', null, 1, 'Brasil', '#facc15', '#1d4ed8', '#0f172a', 'Defelê', 1500, 'Kaká'],
-  ['est_df_bra', 'Sobradinho / Legião DF', 'Legião-DF', 'LEG', 'DF', 'EST', null, 1, 'Brasil', '#ea580c', '#111111', '#ffffff', 'Mané Garrincha', 72788, 'Marcus Vinicius'],
+  ['est_df_bra', 'Legião FC', 'Legião-DF', 'LEG', 'DF', 'EST', null, 1, 'Brasil', '#ea580c', '#111111', '#ffffff', 'Mané Garrincha', 72788, 'Marcus Vinicius'],
   ['est_df_cel', 'Ceilandense', 'Ceilandense', 'CEI', 'DF', 'EST', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Abadião', 4000, 'Mário Zan'],
-  ['est_df_sob', 'Sobradinho EC', 'Sobradinho', 'SOB', 'DF', 'EST', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Augustinho Lima', 15000, 'Léo Roquete'],
+
+  // === GOIÁS ===
+  ['gna', 'Goiânia EC', 'Goiânia', 'GNA', 'GO', 'EST', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Olímpico', 13500, 'Luan Carlos'],
+  ['inh', 'Inhumas EC', 'Inhumas', 'INH', 'GO', 'EST', null, 1, 'Brasil', '#111111', '#facc15', '#ffffff', 'Zico Brandão', 4380, 'Daniel Franco'],
 
   // === MATO GROSSO DO SUL ===
   ['est_ms_cos', 'Costa Rica EC', 'Costa Rica-MS', 'CRE', 'MS', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Laertão', 5000, 'Rodrigo Cascca'],
@@ -280,32 +334,47 @@ export const BRAZIL_ESTADUAIS_EXTRA_META: NonEuClubMetaTuple[] = [
   ['est_ms_agu', 'Águia Negra', 'Águia Negra', 'AGN', 'MS', 'EST', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Ninho da Águia', 5000, 'Rodrigo'],
   ['est_ms_cor', 'Corumbaense FC', 'Corumbaense', 'COR', 'MS', 'EST', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Arthur Marinho', 5000, 'Cláudio Roberto'],
   ['est_ms_nav', 'CE Naviraiense', 'Naviraiense', 'NAV', 'MS', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Virotão', 4000, 'Paulo'],
-  ['est_ms_ivr', 'Ivinhema FC', 'Ivinhema', 'IVI', 'MS', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Saraivão', 5000, 'Douglas'],
   ['est_ms_ppr', 'Aquidauanense FC', 'Aquidauanense', 'AQU', 'MS', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Noroeste', 5000, 'Mauro Marino'],
   ['est_ms_cra', 'Coxim AC', 'Coxim', 'COX', 'MS', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'André Borges', 3500, 'Edmilson'],
   ['est_ms_cem', 'EC Comercial-MS', 'Comercial-MS', 'CMS', 'MS', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Morenão', 24000, 'Tiago'],
 
   // === ESPÍRITO SANTO ===
+  ['rbr', 'Rio Branco AC-ES', 'Rio Branco-ES', 'RBR', 'ES', 'EST', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Kleber Andrade', 21000, 'Rodrigo Fonseca'],
+  ['des', 'Desportiva Ferroviária', 'Desportiva-ES', 'DES', 'ES', 'EST', null, 1, 'Brasil', '#7f1d1d', '#ffffff', '#ffffff', 'Engenheiro Araripe', 7700, 'Rafael Soriano'],
   ['est_es_ser', 'Serra FC', 'Serra', 'SER', 'ES', 'EST', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Robertão-ES', 2000, 'Ney Barreto'],
-  ['est_es_pno', 'Porto Vitória FC', 'Porto Vitória', 'PVI', 'ES', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Kleber Andrade', 21000, 'Rodrigo Chagas'],
   ['est_es_cap', 'Capixaba SC', 'Capixaba', 'CPX', 'ES', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Kleber Andrade', 21000, 'Eleomar'],
   ['est_es_nov', 'Nova Venécia FC', 'Nova Venécia', 'NVN', 'ES', 'EST', null, 1, 'Brasil', '#facc15', '#15803d', '#0f172a', 'Zenor Pedrosa', 2000, 'Cássio Barros'],
   ['est_es_rea', 'Real Noroeste', 'Real Noroeste', 'RNO', 'ES', 'EST', null, 1, 'Brasil', '#0284c7', '#facc15', '#ffffff', 'José Olímpio', 3500, 'Duzinho Reis'],
   ['est_es_vil', 'Vilavelhense FC', 'Vilavelhense', 'VLV', 'ES', 'EST', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Kleber Andrade', 21000, 'Zé Humberto'],
   ['est_es_est', 'Estrela do Norte', 'Estrela-ES', 'EST', 'ES', 'EST', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Sumaré', 6000, 'Vladimir'],
-  ['est_es_lin', 'Jaguaré / Rio Branco-VN', 'Rio Branco-VN', 'RVN', 'ES', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Olímpio Perim', 4000, 'Leandro'],
+
+  // === MINAS GERAIS / RIO DE JANEIRO / SÃO PAULO ===
+  ['vnm', 'Villa Nova AC', 'Villa Nova-MG', 'VNM', 'MG', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Castor Cifuentes', 5160, 'Ricardo Drubscky'],
+  ['dgv', 'EC Democrata', 'Democrata-GV', 'DGV', 'MG', 'EST', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Mamudão', 8674, 'Wladimir Araújo'],
+  ['itb', 'Itabirito FC', 'Itabirito', 'ITB', 'MG', 'EST', null, 1, 'Brasil', '#1e3a8a', '#facc15', '#ffffff', 'Independência', 23018, 'Cícero Júnior'],
+  ['mrc', 'Maricá FC', 'Maricá', 'MRC', 'RJ', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'João Saldanha', 3000, 'Reinaldo'],
+  ['srj', 'Sampaio Corrêa-RJ', 'Sampaio-RJ', 'SRJ', 'RJ', 'EST', null, 1, 'Brasil', '#0284c7', '#facc15', '#ffffff', 'Lourival Gomes', 1800, 'Alfredo Sampaio'],
+  ['ags', 'EC Água Santa', 'Água Santa', 'AGS', 'SP', 'EST', null, 2, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Distrital do Inamar', 10000, 'Pintado'],
+
+  // === PARANÁ / SANTA CATARINA / RIO GRANDE DO SUL ===
+  ['prc', 'Paraná Clube', 'Paraná', 'PRC', 'PR', 'EST', null, 2, 'Brasil', '#dc2626', '#1d4ed8', '#ffffff', 'Vila Capanema', 20083, 'Argel Fuchs'],
+  ['and', 'Clube Andraus Brasil', 'Andraus', 'AND', 'PR', 'EST', null, 1, 'Brasil', '#1d4ed8', '#ffffff', '#ffffff', 'Vila Capanema', 20083, 'Claudemir Sturion'],
+  ['rbp', 'Rio Branco SC-PR', 'Rio Branco-PR', 'RBP', 'PR', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Estradinha', 4500, 'Fahel Júnior'],
+  ['hlu', 'Hercílio Luz FC', 'Hercílio Luz', 'HLU', 'SC', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Aníbal Costa', 3570, 'Paulo Baier'],
+  ['ccd', 'Concórdia AC', 'Concórdia', 'CCD', 'SC', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Domingos Machado', 5000, 'Jailson Zatta'],
+  ['ave', 'EC Avenida', 'Avenida', 'AVE', 'RS', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Eucaliptos', 3600, 'Gabriel Dutra'],
+  ['pel', 'EC Pelotas', 'Pelotas', 'PEL', 'RS', 'EST', null, 1, 'Brasil', '#facc15', '#1d4ed8', '#0f172a', 'Boca do Lobo', 23336, 'Ariel Lanzini'],
 
   // === TOCANTINS ===
   ['est_to_arc', 'Araguaína FR', 'Araguaína', 'ARA', 'TO', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Mirandão', 10000, 'Célio Ivan'],
   ['est_to_pal', 'Palmas FR', 'Palmas', 'PLM', 'TO', 'EST', null, 1, 'Brasil', '#0284c7', '#facc15', '#ffffff', 'Nilton Santos-TO', 12000, 'Robson'],
-  ['est_to_uni', 'União Carmolandense', 'União-TO', 'UTO', 'TO', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Mirandão', 10000, 'Léo Goiano'],
   ['est_to_gup', 'Gurupi EC', 'Gurupi', 'GUR', 'TO', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Resendão', 5000, 'Wladimir'],
   ['est_to_cap', 'Capital FC-TO', 'Capital-TO', 'CTO', 'TO', 'EST', null, 1, 'Brasil', '#111111', '#facc15', '#ffffff', 'Nilton Santos-TO', 12000, 'Fabricio'],
   ['est_to_bel', 'Bela Vista-TO', 'Bela Vista', 'BVI', 'TO', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Batistão-TO', 3000, 'Eder'],
   ['est_to_bat', 'Batalhão FC', 'Batalhão', 'BAT', 'TO', 'EST', null, 1, 'Brasil', '#1e3a8a', '#ffffff', '#ffffff', 'Nilton Santos-TO', 12000, 'Marcos'],
 
   // === ACRE ===
-  ['est_ac_hum', 'SC Humaitá', 'Humaitá', 'HUM', 'AC', 'EST', null, 1, 'Brasil', '#15803d', '#facc15', '#ffffff', 'Arena da Floresta', 13700, 'Kinho'],
+  ['cpo', 'Atlético Acreano', 'Atlético-AC', 'CPO', 'AC', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Arena da Floresta', 13700, 'Álvaro Miguéis'],
   ['est_ac_gal', 'Galvez EC', 'Galvez', 'GAL', 'AC', 'EST', null, 1, 'Brasil', '#1e3a8a', '#facc15', '#ffffff', 'Arena da Floresta', 13700, 'Maurício'],
   ['est_ac_ind', 'Independência FC', 'Independência', 'IND', 'AC', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Arena da Floresta', 13700, 'Ivan Mazzuia'],
   ['est_ac_pld', 'Plácido de Castro FC', 'Plácido', 'PLA', 'AC', 'EST', null, 1, 'Brasil', '#dc2626', '#15803d', '#ffffff', 'Ferreirão-AC', 3000, 'Célio'],
@@ -318,22 +387,16 @@ export const BRAZIL_ESTADUAIS_EXTRA_META: NonEuClubMetaTuple[] = [
   ['est_ro_ji', 'Ji-Paraná FC', 'Ji-Paraná', 'JPR', 'RO', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Biancão', 5000, 'Omar Feitosa'],
   ['est_ro_bar', 'Barcelona de Rondônia', 'Barcelona-RO', 'BRO', 'RO', 'EST', null, 1, 'Brasil', '#dc2626', '#1d4ed8', '#ffffff', 'Aluizão', 7000, 'Christian'],
   ['est_ro_vil', 'Vilhenense', 'Vilhenense', 'VLH', 'RO', 'EST', null, 1, 'Brasil', '#facc15', '#15803d', '#0f172a', 'Portal da Amazônia', 5000, 'Felipe'],
-  ['est_ro_gua', 'Guaporé FC', 'Guaporé', 'GUA', 'RO', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Cassolão', 3000, 'Carlos'],
-  ['est_ro_ari', 'Rondoniense SC', 'Rondoniense', 'RON', 'RO', 'EST', null, 1, 'Brasil', '#0284c7', '#15803d', '#ffffff', 'Aluizão', 7000, 'Luciano'],
 
   // === RORAIMA ===
-  ['est_rr_gas', 'GAS', 'GAS', 'GAS', 'RR', 'EST', null, 1, 'Brasil', '#facc15', '#1d4ed8', '#0f172a', 'Canarinho', 4556, 'Emerson'],
   ['est_rr_mon', 'Monte Roraima FC', 'Monte Roraima', 'MRR', 'RR', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Canarinho', 4556, 'Paulo Morgado'],
   ['est_rr_san', 'Real RR', 'Real-RR', 'RRR', 'RR', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Canarinho', 4556, 'Cássio'],
   ['est_rr_atl', 'Atlético Roraima', 'Atlético-RR', 'ARR', 'RR', 'EST', null, 1, 'Brasil', '#1d4ed8', '#dc2626', '#ffffff', 'Canarinho', 4556, 'Rodrigo'],
-  ['est_rr_bar', 'Baré EC', 'Baré', 'BAR', 'RR', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Canarinho', 4556, 'Walter'],
   ['est_rr_rio', 'Rio Negro-RR', 'Rio Negro-RR', 'RNR', 'RR', 'EST', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Canarinho', 4556, 'Jonas'],
   ['est_rr_nau', 'Náutico-RR', 'Náutico-RR', 'NRR', 'RR', 'EST', null, 1, 'Brasil', '#dc2626', '#ffffff', '#ffffff', 'Canarinho', 4556, 'Marcelo'],
 
   // === AMAPÁ ===
-  ['est_ap_tre', 'Trem DC', 'Trem', 'TRE', 'AP', 'EST', null, 1, 'Brasil', '#dc2626', '#111111', '#ffffff', 'Zerão', 13680, 'Sandro Macapá'],
   ['est_ap_ind', 'Independente EC', 'Independente-AP', 'IAP', 'AP', 'EST', null, 1, 'Brasil', '#15803d', '#ffffff', '#ffffff', 'Zerão', 13680, 'Carlos'],
-  ['est_ap_san', 'Santos-AP', 'Santos-AP', 'SAP', 'AP', 'EST', null, 1, 'Brasil', '#111111', '#ffffff', '#ffffff', 'Zerão', 13680, 'Edson'],
   ['est_ap_mac', 'EC Macapá', 'Macapá', 'MAC', 'AP', 'EST', null, 1, 'Brasil', '#0284c7', '#ffffff', '#ffffff', 'Zerão', 13680, 'Júlio'],
   ['est_ap_ora', 'Oratório RC', 'Oratório', 'ORA', 'AP', 'EST', null, 1, 'Brasil', '#15803d', '#facc15', '#ffffff', 'Zerão', 13680, 'Renato'],
   ['est_ap_ypi', 'Ypiranga Clube', 'Ypiranga-AP', 'YAP', 'AP', 'EST', null, 1, 'Brasil', '#1d4ed8', '#111111', '#ffffff', 'Zerão', 13680, 'Vitor'],

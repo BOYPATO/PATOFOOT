@@ -529,8 +529,67 @@ export function generateBoardSeasonGoals(
         currentProgressText: 'Início do Estadual',
       });
     }
+  } else if (div === 'C') {
+    const scale = 0.42;
+    if (powerRank <= 3) {
+      goals.push({
+        id: `goal_${seasonYear}_${club.id}_league`,
+        category: 'LEAGUE',
+        competitionLabel: 'Brasileirão Série C',
+        title: 'Brigar pelo Título e Acesso Direto (G-3 da Série C)',
+        description:
+          'Somos favoritos na Série C (24 clubes · 46 rodadas): terminar no G-3 para subir direto à Série B.',
+        targetPositionMax: 3,
+        rewardBonus: Math.round(2_500_000 * scale),
+        priority: 'Principal',
+        status: 'ON_TRACK',
+        currentProgressText: 'Início de campeonato',
+      });
+    } else if (powerRank <= 8) {
+      goals.push({
+        id: `goal_${seasonYear}_${club.id}_league`,
+        category: 'LEAGUE',
+        competitionLabel: 'Brasileirão Série C',
+        title: 'Acesso Direto ou Playoff de Acesso (Top 7 da Série C)',
+        description:
+          'Terminar entre os 7 primeiros ao fim das 46 rodadas (G-3 sobe direto; 4º ao 7º disputam o Playoff de Acesso).',
+        targetPositionMax: 7,
+        rewardBonus: Math.round(1_900_000 * scale),
+        priority: 'Principal',
+        status: 'ON_TRACK',
+        currentProgressText: 'Início de campeonato',
+      });
+    } else if (powerRank <= 15) {
+      goals.push({
+        id: `goal_${seasonYear}_${club.id}_league`,
+        category: 'LEAGUE',
+        competitionLabel: 'Brasileirão Série C',
+        title: 'Terminar na Metade Superior (Top 12)',
+        description:
+          'Consolidar o elenco sem sustos figurando entre os 12 primeiros da Série C de 24 clubes.',
+        targetPositionMax: 12,
+        rewardBonus: Math.round(1_000_000 * scale),
+        priority: 'Principal',
+        status: 'ON_TRACK',
+        currentProgressText: 'Início de campeonato',
+      });
+    } else {
+      goals.push({
+        id: `goal_${seasonYear}_${club.id}_league`,
+        category: 'LEAGUE',
+        competitionLabel: 'Brasileirão Série C',
+        title: 'Evitar o Rebaixamento na Série C',
+        description:
+          'Ficar fora do Z-4 (20º ou melhor entre 24 clubes) ao final das 46 rodadas para permanecer na Série C.',
+        targetPositionMax: 20,
+        rewardBonus: Math.round(750_000 * scale),
+        priority: 'Principal',
+        status: 'ON_TRACK',
+        currentProgressText: 'Início de campeonato',
+      });
+    }
   } else {
-    const scale = div === 'B' ? 1 : div === 'C' ? 0.42 : 0.22;
+    const scale = div === 'B' ? 1 : 0.22;
     if (powerRank <= 3) {
       goals.push({
         id: `goal_${seasonYear}_${club.id}_league`,

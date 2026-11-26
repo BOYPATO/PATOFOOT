@@ -584,7 +584,7 @@ export const SWEDEN_LEAGUE_2026: SwedenClubData[] = [
       ["Nahom Girmai Netabay", "MEI", 68, 32, 22, "Eritreia"],
       ["Robin Dzabic", "MEI", 68, 25, 23, "Suécia"],
       ["Bilal Hussein", "MEI", 68, 26, 8, "Suécia"],
-      ["Sebastian Ohlsson", "MEI", 73, 33, 16, "Suécia"],
+      ["Rasmus Örqvist", "MEI", 70, 27, 16, "Suécia"],
       ["Elias Barsoum", "MEI", 68, 24, 20, "Suécia"],
       ["Gideon Yiriyon", "MEI", 68, 19, 13, "Gana"],
       ["Noel Milleskog", "ATA", 75, 24, 10, "Suécia"],

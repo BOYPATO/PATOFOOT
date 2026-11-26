@@ -14,9 +14,9 @@ import {
   Smartphone,
   WifiOff,
 } from 'lucide-react';
-import heroStadiumImg from '../assets/images/launch_hero_stadium_1795557645142.jpg';
-import tacticsBoardImg from '../assets/images/launch_tactics_board_1795557647795.jpg';
-import tunnelPitchImg from '../assets/images/launch_tunnel_pitch_1795557646780.jpg';
+import heroStadiumImg from '../assets/images/launch_hero_stadium_1795557645142.webp';
+import tacticsBoardImg from '../assets/images/launch_tactics_board_1795557647795.webp';
+import tunnelPitchImg from '../assets/images/launch_tunnel_pitch_1795557646780.webp';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { soundEngine } from '../services/soundEngine';
 

@@ -2,9 +2,11 @@ import { Club, CompetitionType, Fixture, GameSave, Standing } from '../types/gam
 import {
   build32ClubContinentalCompetition,
   build36ClubUefaLeagueCompetition,
+  buildSerieDRegionalizedGroups,
   COMPETITIONS_CATALOG,
 } from './competitionsEngine';
 import {
+  assignVariedMatchDaySlot,
   getAfcChampionsCalendarDates,
   getContinentalFinalDates,
   getRoundDate,
@@ -162,63 +164,14 @@ function resolveClubDrawSeedOrder(
 
 function seedSerieDGroupsWithShuffle(clubIds: string[], clubs: Club[]): string[][] {
   const clubMap = new Map(clubs.map((c) => [c.id, c]));
-  const unique96 = Array.from(new Set(clubIds))
-    .filter((id) => clubMap.has(id))
+  const unique96Clubs = Array.from(new Set(clubIds))
+    .map((id) => clubMap.get(id))
+    .filter((c): c is Club => Boolean(c))
     .slice(0, 96);
 
-  const ranked = [...unique96].sort((a, b) => {
-    const ca = clubMap.get(a)!;
-    const cb = clubMap.get(b)!;
-    const oa = getClubSectorRatings(ca).overall;
-    const ob = getClubSectorRatings(cb).overall;
-    if (ob !== oa) return ob - oa;
-    return cb.reputation - ca.reputation;
-  });
-
-  // 6 pots of 16 clubs -> 16 groups of 6
-  const pots: string[][] = Array.from({ length: 6 }, (_, p) =>
-    shuffleArray(ranked.slice(p * 16, (p + 1) * 16))
+  return buildSerieDRegionalizedGroups(unique96Clubs, { shuffleWithinRegion: true }).map((grp) =>
+    grp.map((c) => c.id)
   );
-
-  const groups: string[][] = Array.from({ length: 16 }, () => []);
-  const getState = (id: string) => clubMap.get(id)?.state || '';
-
-  for (let p = 0; p < 6; p++) {
-    const potClubs = pots[p] || [];
-    const usedGroups = new Set<number>();
-    for (const cid of potClubs) {
-      const uf = getState(cid);
-      let chosen = -1;
-      // Prefer a group with at most 1 club from the same state
-      for (let g = 0; g < 16; g++) {
-        if (usedGroups.has(g)) continue;
-        const sameUfCount = groups[g].filter((m) => getState(m) === uf).length;
-        if (sameUfCount === 0) {
-          chosen = g;
-          break;
-        }
-      }
-      if (chosen === -1) {
-        for (let g = 0; g < 16; g++) {
-          if (usedGroups.has(g)) continue;
-          const sameUfCount = groups[g].filter((m) => getState(m) === uf).length;
-          if (sameUfCount <= 1) {
-            chosen = g;
-            break;
-          }
-        }
-      }
-      if (chosen === -1) {
-        chosen = Array.from({ length: 16 }, (_, idx) => idx).find((g) => !usedGroups.has(g)) ?? -1;
-      }
-      if (chosen !== -1) {
-        groups[chosen].push(cid);
-        usedGroups.add(chosen);
-      }
-    }
-  }
-
-  return groups;
 }
 
 function buildSerieDFromGroups(
@@ -258,6 +211,8 @@ function buildSerieDFromGroups(
   ];
 
   const serieDDates = getSerieDScheduleDates(year);
+  const firstOfficialDate = serieDDates[0] || `${year}-04-04`;
+  const finalOfficialDate = serieDDates[serieDDates.length - 1] || `${year}-09-12`;
   const fixtures: Fixture[] = [];
   const standings: Standing[] = [];
 
@@ -288,7 +243,24 @@ function buildSerieDFromGroups(
     fullTenRoundsTemplate.forEach((pairs, rIdx) => {
       const roundNum = rIdx + 1;
       const roundDate = serieDDates[rIdx] || getRoundDate(roundNum, year).date;
+      const prevRoundDate = rIdx > 0 ? serieDDates[rIdx - 1] : undefined;
+      const nextRoundDate = rIdx + 1 < fullTenRoundsTemplate.length ? serieDDates[rIdx + 1] : undefined;
       pairs.forEach(([hIdx, aIdx], mIdx) => {
+        const slot = assignVariedMatchDaySlot(
+          roundDate,
+          mIdx + gIdx * 3,
+          roundNum,
+          fullTenRoundsTemplate.length,
+          `serie_d_${year}`,
+          {
+            minDate: firstOfficialDate,
+            maxDate: finalOfficialDate,
+            prevRoundBaseDate: prevRoundDate,
+            nextRoundBaseDate: nextRoundDate,
+            region: 'south_america',
+            fallbackTime: mIdx === 0 ? '16:00' : '15:00',
+          }
+        );
         fixtures.push({
           id: `sd_g${groupCode}_r${roundNum}_m${mIdx}`,
           round: roundNum,
@@ -299,8 +271,8 @@ function buildSerieDFromGroups(
           homeScore: null,
           awayScore: null,
           played: false,
-          date: roundDate,
-          time: mIdx === 0 ? '16:00' : '15:00',
+          date: slot.date,
+          time: slot.time,
         });
       });
     });

@@ -23,6 +23,7 @@ import {
   getRoundDate,
   getSeasonStartDate,
   getSerieBRoundDate,
+  getSerieCPlayoffDates,
   getSerieCRoundDate,
 } from '../utils/calendarUtils';
 import { resolvePlayerNationality } from '../utils/nationalityUtils';
@@ -68,7 +69,7 @@ export const CURRENT_FLAMENGO_ROSTER_VERSION = 2;
 export const CURRENT_PALMEIRAS_ROSTER_VERSION = 2;
 export const CURRENT_SERIE_A_2026_ROSTER_VERSION = 3;
 export const CURRENT_SERIE_B_2026_ROSTER_VERSION = 2;
-export const CURRENT_SERIE_C_2026_ROSTER_VERSION = 2;
+export const CURRENT_SERIE_C_2026_ROSTER_VERSION = 3;
 export const CURRENT_POTIGUAR_2026_ROSTER_VERSION = 3;
 export const CURRENT_ESTADUAIS_2026_VERSION = 2;
 export const CURRENT_ECUADOR_2026_ROSTER_VERSION = 2;
@@ -1083,13 +1084,13 @@ function resolveNonEuCuratedRoster(
   division: Division,
   subLeagueId: SouthAmericanLeagueId | WorldLeagueId | null
 ): { tag: string; tuples: CuratedPlayerTuple[] } | null {
-  if (division === 'A' && BRAZIL_CURATED_ROSTERS_2026.serieA?.[clubId]) {
+  if (BRAZIL_CURATED_ROSTERS_2026.serieA?.[clubId]) {
     return { tag: 'sa26', tuples: BRAZIL_CURATED_ROSTERS_2026.serieA[clubId] };
   }
-  if (division === 'B' && BRAZIL_CURATED_ROSTERS_2026.serieB?.[clubId]) {
+  if (BRAZIL_CURATED_ROSTERS_2026.serieB?.[clubId]) {
     return { tag: 'sb26', tuples: BRAZIL_CURATED_ROSTERS_2026.serieB[clubId] };
   }
-  if (division === 'C' && BRAZIL_CURATED_ROSTERS_2026.serieC?.[clubId]) {
+  if (BRAZIL_CURATED_ROSTERS_2026.serieC?.[clubId]) {
     return { tag: 'sc26', tuples: BRAZIL_CURATED_ROSTERS_2026.serieC[clubId] };
   }
   if (BRAZIL_CURATED_ROSTERS_2026.potiguar?.[clubId]) {
@@ -1480,7 +1481,8 @@ export function generateLeagueSchedule(
 
   const totalRounds = firstHalfRounds * 2;
   const minSeasonDate = getSeasonStartDate(seasonYear);
-  const maxSeasonDate = `${seasonYear}-12-20`;
+  const serieCPlayoffDates = competition === 'serie_c' ? getSerieCPlayoffDates(seasonYear) : null;
+  const maxSeasonDate = serieCPlayoffDates ? serieCPlayoffDates.regularEndDate : `${seasonYear}-12-20`;
   const roundBaseSlots: Array<{ date: string; time: string }> = Array.from(
     { length: totalRounds },
     (_, idx) => getScheduleSlotInfo(idx + 1)
@@ -1561,6 +1563,90 @@ export function generateLeagueSchedule(
       });
     });
   });
+
+  // Série C (24 clubes · 46 rodadas): Playoff de Acesso (4º x 7º e 5º x 6º Ida/Volta + Final Jogo Único em Novembro)
+  if (competition === 'serie_c' && serieCPlayoffDates) {
+    const semiIdaRound = totalRounds + 1;
+    const semiVoltaRound = totalRounds + 2;
+    const finalRound = totalRounds + 3;
+
+    fixtures.push(
+      {
+        id: 'serie_c_playoff_semi1_ida',
+        round: semiIdaRound,
+        date: serieCPlayoffDates.semiIdaDate,
+        time: '19:30',
+        homeTeamId: 'TBD_SC_7TH',
+        awayTeamId: 'TBD_SC_4TH',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        competition: 'serie_c',
+        cupPhase: 'Playoff de Acesso - Semifinal (Ida)',
+        leg: 1,
+        events: [],
+      },
+      {
+        id: 'serie_c_playoff_semi1_volta',
+        round: semiVoltaRound,
+        date: serieCPlayoffDates.semiVoltaDate,
+        time: '16:00',
+        homeTeamId: 'TBD_SC_4TH',
+        awayTeamId: 'TBD_SC_7TH',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        competition: 'serie_c',
+        cupPhase: 'Playoff de Acesso - Semifinal (Volta)',
+        leg: 2,
+        events: [],
+      },
+      {
+        id: 'serie_c_playoff_semi2_ida',
+        round: semiIdaRound,
+        date: serieCPlayoffDates.semiIdaDate,
+        time: '21:30',
+        homeTeamId: 'TBD_SC_6TH',
+        awayTeamId: 'TBD_SC_5TH',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        competition: 'serie_c',
+        cupPhase: 'Playoff de Acesso - Semifinal (Ida)',
+        leg: 1,
+        events: [],
+      },
+      {
+        id: 'serie_c_playoff_semi2_volta',
+        round: semiVoltaRound,
+        date: serieCPlayoffDates.semiVoltaDate,
+        time: '18:30',
+        homeTeamId: 'TBD_SC_5TH',
+        awayTeamId: 'TBD_SC_6TH',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        competition: 'serie_c',
+        cupPhase: 'Playoff de Acesso - Semifinal (Volta)',
+        leg: 2,
+        events: [],
+      },
+      {
+        id: 'serie_c_playoff_final',
+        round: finalRound,
+        date: serieCPlayoffDates.finalDate,
+        time: '16:00',
+        homeTeamId: 'TBD_SC_WIN1',
+        awayTeamId: 'TBD_SC_WIN2',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        competition: 'serie_c',
+        cupPhase: 'Playoff de Acesso - Final (Jogo Único)',
+        events: [],
+      }
+    );
+  }
 
   return fixtures;
 }

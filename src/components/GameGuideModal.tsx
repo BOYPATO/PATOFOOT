@@ -57,8 +57,8 @@ const GUIDE_SECTIONS = [
     accent: 'text-violet-400 bg-violet-500/10 border-violet-500/30',
     title: '4. Estaduais, Ligas Mundiais e Copa do Mundo',
     points: [
-      'Dispute os 27 campeonatos estaduais, Séries A/B/C/D, Libertadores, Sul-Americana, 20 ligas europeias, ligas das Américas, Ásia e África.',
-      'Aumente sua reputação para receber convites de Seleções Nacionais e disputar Eliminatórias, Copa América, Eurocopa e a Copa do Mundo de 48 seleções (2026–2038).',
+      'Dispute os 27 campeonatos estaduais, Séries A/B/C (24 clubes · 46 rodadas + Playoff 4º–7º) e Série D (96 clubes), Libertadores, Sul-Americana, 20 ligas europeias, ligas das Américas, Ásia e África.',
+      'Aumente sua reputação para receber convites de Seleções Nacionais e disputar Eliminatórias, Copa América, Eurocopa e a Copa do Mundo de 48 seleções (ciclos 2027–2038).',
     ],
   },
   {
@@ -74,12 +74,12 @@ const GUIDE_SECTIONS = [
 ];
 
 const RELEASE_HIGHLIGHTS = [
-  'Base mundial completa com 930 clubes, 27 Estaduais brasileiros, Séries A/B/C/D, 20 ligas europeias, América do Sul, MLS, Liga MX, Arábia Saudita, Japão, Rússia e África.',
-  'Ciclo internacional completo de Seleções e Copa do Mundo de 48 seleções (2026, 2030, 2034 e 2038) com calendários FIFA e critérios oficiais de vagas.',
+  'Base mundial completa com 946 clubes, 27 Estaduais brasileiros, Séries A/B, Série C (24 clubes · 46 rodadas + Playoff 4º–7º), Série D (96 clubes), 20 ligas europeias, América do Sul, MLS, Liga MX, Arábia Saudita, Japão, Rússia e África.',
+  'Temporada inicial 2027 na América do Sul e 2026/27 na Europa, além de ciclo completo de Seleções e Copa do Mundo de 48 seleções (2030, 2034 e 2038) com calendários FIFA.',
   'Simulador de Partidas 2D ao vivo com layout lado a lado (campo fixo à esquerda + narração, placar e substituições à direita).',
   'Painel de Finanças & Estádio com gráfico de linha do histórico mensal do saldo nos últimos 6 meses, DRE detalhado, Sócio-Torcedor e Fair Play Financeiro.',
   'Retrospectiva Completa da Temporada comparando desempenho real do elenco com as metas da diretoria em 4 abas.',
-  'PWA instalável (mobile e desktop) com suporte offline, saves em nuvem e backup em JSON.',
+  'PWA instalável (mobile e desktop) com suporte offline, saves comprimidos em IndexedDB/nuvem e backup em JSON.',
 ];
 
 export const GameGuideModal: React.FC<GameGuideModalProps> = ({

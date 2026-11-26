@@ -63,6 +63,7 @@ import {
   resolveAllEstaduaisFinalClassifications,
   resolveCupChampionId,
   resolvePotiguarFinalClassification,
+  resolveSerieCPromotedIds,
   resolveSerieDPromotedIds,
   simulateCpuFixturesUpToDate,
 } from './multiLeagueEngine';
@@ -537,7 +538,7 @@ export function syncOffContinentCalendarRollover(state: GameSave): GameSave {
     const relegatedA = state.standingsA.slice(-4).map((s) => s.teamId);
     const promotedB = state.standingsB.slice(0, 4).map((s) => s.teamId);
     const relegatedB = state.standingsB.slice(-4).map((s) => s.teamId);
-    const promotedC = (state.standingsC || []).slice(0, 4).map((s) => s.teamId);
+    const promotedC = resolveSerieCPromotedIds(state.standingsC, state.fixturesC);
     const relegatedC = (state.standingsC || []).slice(-4).map((s) => s.teamId);
     const promotedD = resolveSerieDPromotedIds(state.fixturesD, state.standingsD);
 
@@ -568,7 +569,8 @@ export function syncOffContinentCalendarRollover(state: GameSave): GameSave {
       allEstaduais,
       state.standingsD,
       relegatedC,
-      stateWithBallonDor.userClubId
+      stateWithBallonDor.userClubId,
+      state.fixturesD
     );
     const regionalTrophies = buildRegionalCupTrophyRecords(
       brAdjustedClubs,

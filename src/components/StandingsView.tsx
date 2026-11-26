@@ -31,6 +31,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  Search,
+  ListOrdered,
 } from 'lucide-react';
 import { soundEngine } from '../services/soundEngine';
 import { formatCalendarDate, formatEuropeanSeason } from '../utils/calendarUtils';
@@ -39,6 +41,8 @@ import { ClubCrest, CompetitionCrest } from './ClubCrest';
 import { ScrollableTabStrip } from './ScrollableTabStrip';
 import { computeCompetitionPlayerStats, buildTeamOfTheRound } from '../utils/statsCentralEngine';
 import {
+  computeSerieDOverallCampaignMap,
+  resolveAllEstaduaisFinalClassifications,
   resolveCupChampionId,
   resolveCupRunnerUpId,
   resolveEstadualClassificationForConfig,
@@ -49,6 +53,7 @@ import {
   EstadualCompetitionConfig,
   getClubEstadualConfig,
   getEstadualConfigByName,
+  getEstadualConfigByUf,
 } from '../data/estaduais2026Config';
 import {
   SOUTH_AMERICAN_LEAGUES_META,
@@ -753,6 +758,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
 
   const [activeTab, setActiveTab] = useState<
     | 'table'
+    | 'overall_ranking'
     | 'stats'
     | 'totw'
     | 'fixtures'
@@ -767,6 +773,11 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
   const [selectedEstadualGroup, setSelectedEstadualGroup] = useState<string>(userEstadualGroup);
   const [estadualMacroRegion, setEstadualMacroRegion] = useState<'ALL' | BrazilianMacroRegion>('ALL');
   const [estadualTableMode, setEstadualTableMode] = useState<'GROUPS' | 'OVERALL'>('GROUPS');
+  const [overallRankingMode, setOverallRankingMode] = useState<'serie_d' | 'estaduais'>('serie_d');
+  const [overallRegionFilter, setOverallRegionFilter] = useState<'ALL' | BrazilianMacroRegion>('ALL');
+  const [overallStateFilter, setOverallStateFilter] = useState<string>('ALL');
+  const [overallSearch, setOverallSearch] = useState<string>('');
+  const [overallSortBy, setOverallSortBy] = useState<'points' | 'efficiency'>('points');
   const [selectedBracketPhase, setSelectedBracketPhase] = useState<string>('ALL');
   const [mlsTableView, setMlsTableView] = useState<'conferences' | 'overall'>('conferences');
   const [isDrawModalOpen, setIsDrawModalOpen] = useState<boolean>(false);
@@ -1207,6 +1218,316 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
       clubs
     );
   }, [selectedComp, activeEstadualCfg, fixturesEstadual, standingsEstadual, clubs]);
+
+  // Tabela Agregada Geral da Série D (96 clubes — campanha acumulada em 1ª Fase + Mata-Mata, critério oficial CBF)
+  const serieDAggregatedRanking = useMemo(() => {
+    const clubMap = new Map(clubs.map((c) => [c.id, c]));
+    const campaignMap = computeSerieDOverallCampaignMap(fixturesD, standingsD);
+
+    // Track group & position inside each group (A01..A16)
+    const groupPosByTeam = new Map<string, { group: string; groupPos: number }>();
+    const groupCounters = new Map<string, number>();
+    standingsD.forEach((st) => {
+      const grp = st.group || 'Série D';
+      const nextPos = (groupCounters.get(grp) || 0) + 1;
+      groupCounters.set(grp, nextPos);
+      groupPosByTeam.set(st.teamId, { group: grp, groupPos: nextPos });
+    });
+
+    // Track highest knockout stage reached per club
+    const stageRank = new Map<string, { rank: number; label: string; tone: string }>();
+    const setStage = (teamId: string, rank: number, label: string, tone: string) => {
+      if (!teamId || teamId === 'tbd') return;
+      const cur = stageRank.get(teamId);
+      if (!cur || rank > cur.rank) {
+        stageRank.set(teamId, { rank, label, tone });
+      }
+    };
+
+    const champId = resolveCupChampionId(fixturesD);
+    const runnerUpId = resolveCupRunnerUpId(fixturesD);
+    if (champId) setStage(champId, 10, 'Campeão · Acesso C + 3ª Fase CdB', 'amber');
+    if (runnerUpId) setStage(runnerUpId, 9, 'Vice · Acesso à Série C', 'emerald');
+
+    fixturesD.forEach((f) => {
+      const ids = [f.homeTeamId, f.awayTeamId];
+      if (f.id.startsWith('sd_final')) {
+        ids.forEach((id) => setStage(id, 8, 'Finalista · Acesso C', 'emerald'));
+      } else if (f.id.startsWith('sd_semi_')) {
+        ids.forEach((id) => setStage(id, 7, 'Semifinal · Acesso C', 'emerald'));
+      } else if (f.id.startsWith('sd_quartas_')) {
+        ids.forEach((id) => setStage(id, 6, 'Quartas (5ª Fase)', 'sky'));
+      } else if (f.id.startsWith('sd_oitavas_')) {
+        ids.forEach((id) => setStage(id, 5, 'Oitavas (4ª Fase)', 'sky'));
+      } else if (f.id.startsWith('sd_f3_')) {
+        ids.forEach((id) => setStage(id, 4, '3ª Fase · Vaga D Garantida', 'indigo'));
+      } else if (f.id.startsWith('sd_f2_')) {
+        ids.forEach((id) => setStage(id, 3, '2ª Fase (64)', 'slate'));
+      }
+    });
+
+    // Tally full W/D/L/GF/GA across all played Série D fixtures (1ª fase + mata-mata)
+    const fullStats = new Map<
+      string,
+      { played: number; won: number; drawn: number; lost: number; goalsFor: number; goalsAgainst: number; points: number }
+    >();
+    const ensureFull = (id: string) => {
+      let row = fullStats.get(id);
+      if (!row) {
+        row = { played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0 };
+        fullStats.set(id, row);
+      }
+      return row;
+    };
+
+    let playedMatchesCount = 0;
+    fixturesD.forEach((f) => {
+      if (!f.played || f.homeScore === null || f.awayScore === null) return;
+      if (!f.homeTeamId || f.homeTeamId === 'tbd' || !f.awayTeamId || f.awayTeamId === 'tbd') return;
+      playedMatchesCount++;
+      const h = ensureFull(f.homeTeamId);
+      const a = ensureFull(f.awayTeamId);
+      h.played++;
+      a.played++;
+      h.goalsFor += f.homeScore;
+      h.goalsAgainst += f.awayScore;
+      a.goalsFor += f.awayScore;
+      a.goalsAgainst += f.homeScore;
+      if (f.homeScore > f.awayScore) {
+        h.won++;
+        h.points += 3;
+        a.lost++;
+      } else if (f.awayScore > f.homeScore) {
+        a.won++;
+        a.points += 3;
+        h.lost++;
+      } else {
+        h.drawn++;
+        a.drawn++;
+        h.points += 1;
+        a.points += 1;
+      }
+    });
+
+    const teamIds =
+      standingsD.length > 0
+        ? Array.from(new Set(standingsD.map((s) => s.teamId)))
+        : clubs.filter((c) => c.division === 'D').map((c) => c.id);
+
+    const rows = teamIds
+      .map((teamId) => {
+        const club = clubMap.get(teamId);
+        if (!club) return null;
+        const stFallback = standingsD.find((s) => s.teamId === teamId);
+        const fStat = fullStats.get(teamId);
+        const camp = campaignMap.get(teamId);
+
+        const played = fStat ? fStat.played : stFallback?.played ?? camp?.played ?? 0;
+        const won = fStat ? fStat.won : stFallback?.won ?? camp?.won ?? 0;
+        const drawn = fStat ? fStat.drawn : stFallback?.drawn ?? 0;
+        const lost = fStat ? fStat.lost : stFallback?.lost ?? 0;
+        const goalsFor = fStat ? fStat.goalsFor : stFallback?.goalsFor ?? camp?.goalsFor ?? 0;
+        const goalsAgainst = fStat ? fStat.goalsAgainst : stFallback?.goalsAgainst ?? 0;
+        const goalDifference = goalsFor - goalsAgainst;
+        const points = fStat ? fStat.points : stFallback?.points ?? camp?.points ?? 0;
+        const efficiency = played > 0 ? (points / (played * 3)) * 100 : 0;
+
+        const grpInfo = groupPosByTeam.get(teamId);
+        const ufCfg = getEstadualConfigByUf(club.state);
+        const koStage = stageRank.get(teamId);
+        const statusLabel = koStage
+          ? koStage.label
+          : grpInfo && grpInfo.groupPos <= 4
+          ? `G-4 (${grpInfo.group.replace('Grupo ', '')})`
+          : '1ª Fase';
+        const statusTone = koStage
+          ? koStage.tone
+          : grpInfo && grpInfo.groupPos <= 4
+          ? 'emerald'
+          : 'slate';
+
+        return {
+          club,
+          group: grpInfo?.group || 'Série D',
+          groupShort: (grpInfo?.group || 'Série D').replace('Grupo ', ''),
+          groupPos: grpInfo?.groupPos ?? 6,
+          region: ufCfg?.region || ('Sudeste' as BrazilianMacroRegion),
+          played,
+          won,
+          drawn,
+          lost,
+          goalsFor,
+          goalsAgainst,
+          goalDifference,
+          points,
+          efficiency,
+          stageRank: koStage?.rank ?? (grpInfo && grpInfo.groupPos <= 4 ? 2 : 1),
+          statusLabel,
+          statusTone,
+        };
+      })
+      .filter((r): r is NonNullable<typeof r> => Boolean(r));
+
+    rows.sort((a, b) => {
+      if (overallSortBy === 'efficiency') {
+        if (Math.abs(b.efficiency - a.efficiency) > 0.01) return b.efficiency - a.efficiency;
+      }
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.won !== a.won) return b.won - a.won;
+      if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
+      if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+      if (b.club.reputation !== a.club.reputation) return b.club.reputation - a.club.reputation;
+      return a.club.name.localeCompare(b.club.name);
+    });
+
+    return {
+      rows,
+      playedMatchesCount,
+    };
+  }, [clubs, fixturesD, standingsD, overallSortBy]);
+
+  // Ranking Geral Consolidado dos 27 Campeonatos Estaduais do Brasil
+  const estaduaisOverallRanking = useMemo(() => {
+    const clubMap = new Map(clubs.map((c) => [c.id, c]));
+    const allEstSummary = resolveAllEstaduaisFinalClassifications(
+      fixturesEstadual,
+      standingsEstadual,
+      clubs
+    );
+
+    const serieDQualifiedSet = new Set(allEstSummary.allSerieDQualifiedIds);
+    const cdbQualifiedSet = new Set(allEstSummary.allCopaBrasilQualifiedIds);
+    const cneQualifiedSet = new Set(allEstSummary.allCopaNordesteQualifiedIds);
+    const cvQualifiedSet = new Set(allEstSummary.allCopaVerdeQualifiedIds);
+
+    const championStateByClubId = new Map<string, string>();
+    const runnerUpStateByClubId = new Map<string, string>();
+    let definedChampionsCount = 0;
+
+    ESTADUAIS_2026_CONFIG.forEach((cfg) => {
+      const st = allEstSummary.byUf[cfg.uf];
+      // Check if the state championship actually finished its final fixture
+      const finalPlayed = fixturesEstadual.some(
+        (f) => f.played && f.id.startsWith(`est_${cfg.key}_final`)
+      );
+      if (finalPlayed && st?.championId) {
+        definedChampionsCount++;
+        championStateByClubId.set(st.championId, cfg.shortName);
+        if (st.runnerUpId) runnerUpStateByClubId.set(st.runnerUpId, cfg.shortName);
+      }
+    });
+
+    // Aggregate all played Estadual fixtures (1ª fase + mata-mata) per club
+    const fullStats = new Map<
+      string,
+      { played: number; won: number; drawn: number; lost: number; goalsFor: number; goalsAgainst: number; points: number }
+    >();
+    const ensureFull = (id: string) => {
+      let row = fullStats.get(id);
+      if (!row) {
+        row = { played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0 };
+        fullStats.set(id, row);
+      }
+      return row;
+    };
+
+    let playedMatchesCount = 0;
+    fixturesEstadual.forEach((f) => {
+      if (!f.played || f.homeScore === null || f.awayScore === null) return;
+      if (!f.homeTeamId || f.homeTeamId === 'tbd' || !f.awayTeamId || f.awayTeamId === 'tbd') return;
+      playedMatchesCount++;
+      const h = ensureFull(f.homeTeamId);
+      const a = ensureFull(f.awayTeamId);
+      h.played++;
+      a.played++;
+      h.goalsFor += f.homeScore;
+      h.goalsAgainst += f.awayScore;
+      a.goalsFor += f.awayScore;
+      a.goalsAgainst += f.homeScore;
+      if (f.homeScore > f.awayScore) {
+        h.won++;
+        h.points += 3;
+        a.lost++;
+      } else if (f.awayScore > f.homeScore) {
+        a.won++;
+        a.points += 3;
+        h.lost++;
+      } else {
+        h.drawn++;
+        a.drawn++;
+        h.points += 1;
+        a.points += 1;
+      }
+    });
+
+    const standingByTeam = new Map<string, Standing>();
+    standingsEstadual.forEach((st) => {
+      if (!standingByTeam.has(st.teamId)) standingByTeam.set(st.teamId, st);
+    });
+
+    const rows = Array.from(standingByTeam.entries())
+      .map(([teamId, st]) => {
+        const club = clubMap.get(teamId);
+        if (!club) return null;
+        const cfg = getEstadualConfigByName(st.group) || getEstadualConfigByUf(club.state);
+        const fStat = fullStats.get(teamId);
+
+        const played = fStat ? fStat.played : st.played;
+        const won = fStat ? fStat.won : st.won;
+        const drawn = fStat ? fStat.drawn : st.drawn;
+        const lost = fStat ? fStat.lost : st.lost;
+        const goalsFor = fStat ? fStat.goalsFor : st.goalsFor;
+        const goalsAgainst = fStat ? fStat.goalsAgainst : st.goalsAgainst;
+        const goalDifference = goalsFor - goalsAgainst;
+        const points = fStat ? fStat.points : st.points;
+        const efficiency = played > 0 ? (points / (played * 3)) * 100 : 0;
+
+        return {
+          club,
+          estadualName: cfg?.shortName || st.group || club.state,
+          uf: cfg?.uf || club.state,
+          region: cfg?.region || ('Sudeste' as BrazilianMacroRegion),
+          played,
+          won,
+          drawn,
+          lost,
+          goalsFor,
+          goalsAgainst,
+          goalDifference,
+          points,
+          efficiency,
+          isChampion: championStateByClubId.has(teamId),
+          isRunnerUp: runnerUpStateByClubId.has(teamId),
+          isSerieDQualified: serieDQualifiedSet.has(teamId),
+          isCopaBrasil: cdbQualifiedSet.has(teamId),
+          isNordeste: cneQualifiedSet.has(teamId),
+          isCopaVerde: cvQualifiedSet.has(teamId),
+        };
+      })
+      .filter((r): r is NonNullable<typeof r> => Boolean(r));
+
+    rows.sort((a, b) => {
+      if (overallSortBy === 'efficiency') {
+        if (Math.abs(b.efficiency - a.efficiency) > 0.01) return b.efficiency - a.efficiency;
+        if (b.points !== a.points) return b.points - a.points;
+      } else {
+        if (b.points !== a.points) return b.points - a.points;
+        if (Math.abs(b.efficiency - a.efficiency) > 0.01) return b.efficiency - a.efficiency;
+      }
+      if (b.won !== a.won) return b.won - a.won;
+      if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
+      if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+      if (b.club.reputation !== a.club.reputation) return b.club.reputation - a.club.reputation;
+      return a.club.name.localeCompare(b.club.name);
+    });
+
+    return {
+      rows,
+      playedMatchesCount,
+      definedChampionsCount,
+      totalSerieDSpots: ESTADUAIS_2026_CONFIG.reduce((sum, cfg) => sum + cfg.serieDSpots, 0),
+    };
+  }, [clubs, fixturesEstadual, standingsEstadual, overallSortBy]);
 
   const orderedEstadualConfigs = useMemo(() => {
     const presentGroups = new Set(Object.keys(groupedStandings));
@@ -1946,6 +2267,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                         cKey !== 'eng_championship' &&
                         cKey !== 'eng_league_two' &&
                         cKey !== 'eng_league_one' &&
+                        cKey !== 'serie_c' &&
                         cKey !== 'usa_mls'
                       ) {
                         setActiveTab('table');
@@ -2259,6 +2581,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                 selectedComp === 'eng_championship' ||
                 selectedComp === 'eng_league_two' ||
                 selectedComp === 'eng_league_one' ||
+                selectedComp === 'serie_c' ||
                 selectedComp === 'usa_mls') && (
                 <button
                   onClick={() => {
@@ -2275,7 +2598,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                   <span>
                     {selectedComp === 'eng_championship'
                       ? 'Playoffs (3º–8º)'
-                      : selectedComp === 'eng_league_two'
+                      : selectedComp === 'eng_league_two' || selectedComp === 'serie_c'
                       ? 'Playoffs (4º–7º)'
                       : selectedComp === 'eng_league_one'
                       ? 'Playoffs (3º–6º)'
@@ -2285,6 +2608,26 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                   </span>
                 </button>
               )}
+
+              <button
+                onClick={() => {
+                  soundEngine.playClick();
+                  if (selectedComp === 'estadual') {
+                    setOverallRankingMode('estaduais');
+                  } else if (selectedComp === 'serie_d') {
+                    setOverallRankingMode('serie_d');
+                  }
+                  setActiveTab('overall_ranking');
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'overall_ranking'
+                    ? 'bg-rose-400 text-slate-950 font-black shadow'
+                    : 'text-rose-300/90 hover:text-rose-200'
+                }`}
+              >
+                <ListOrdered className="w-3.5 h-3.5" />
+                <span>Classificação Geral</span>
+              </button>
 
               <button
                 onClick={() => {
@@ -2590,7 +2933,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                       : 4;
                   const overallLabel =
                     estCfg.uf === 'RN'
-                      ? '12 clubes · 11 rodadas · Top 8 Quartas (Ida e Volta) · Top 3 Série D & CdB · Top 2 Nordestão'
+                      ? '12 clubes · 11 rodadas · Top 8 Quartas (Ida e Volta) · Top 2 Série D & Nordestão · Top 3 CdB'
                       : `${groupSts.length} clubes · ${estCfg.firstPhaseRounds} rodadas · Top ${overallQualify} avançam ao Mata-Mata`;
                   tablePanels.push({
                     panelKey: groupName,
@@ -2614,7 +2957,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                       : selectedComp === 'copa_nordeste' || selectedComp === 'copa_verde'
                       ? '8 clubes · Top 4 avançam às Quartas (Ida e Volta)'
                       : selectedComp === 'serie_d'
-                      ? '6 clubes · Top 4 avançam (64 no Mata-Mata)'
+                      ? '6 clubes (máx. 3/UF) · 10 rodadas · Top 4 avançam'
                       : '4 clubes · Top 2 avançam às Oitavas';
                   tablePanels.push({
                     panelKey: groupName,
@@ -2750,7 +3093,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                                           )}
                                           {isPotiguar && pos === 3 && (
                                             <span className="hidden sm:inline text-[10px] font-semibold text-sky-300/90 shrink-0">
-                                              · G-3 Série D + CdB
+                                              · G-3 Copa do Brasil
                                             </span>
                                           )}
                                         </button>
@@ -2793,6 +3136,39 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                       );
                     })}
                   </div>
+
+                  {selectedComp === 'serie_d' && (
+                    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 text-xs text-slate-300 space-y-2.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">
+                        <span className="font-black text-white text-sm">
+                          🏅 Regulamento Oficial · Brasileirão Série D ({saSeasonYear ?? seasonYear})
+                        </span>
+                        <span className="text-[11px] font-mono text-rose-300">
+                          96 Clubes · 16 Grupos A01–A16 · 04/04 a 12/09 · 4 Acessos à Série C
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px] leading-relaxed">
+                        <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800/80">
+                          <div className="font-bold text-white mb-1">1. Grupos Regionalizados (Norte → Sul)</div>
+                          <p className="text-slate-400">
+                            16 grupos de 6 equipes (A01–A16) em turno e returno (10 rodadas), respeitando proximidade geográfica e limite máximo de 3 clubes do mesmo estado por chave. Os 4 melhores avançam (64 classificados).
+                          </p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800/80">
+                          <div className="font-bold text-white mb-1">2. Mata-Mata &amp; Re-ranqueamento Geral</div>
+                          <p className="text-slate-400">
+                            2ª Fase com cruzamento olímpico entre grupos vizinhos (A01×A02..A15×A16). 3ª Fase (32 clubes garantem vaga no ano seguinte) e Oitavas em chave fixa. Quartas (1º×8º..4º×5º) e Semifinais (1º×4º, 2º×3º) re-ranqueadas pela campanha geral acumulada.
+                          </p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800/80">
+                          <div className="font-bold text-white mb-1">3. Acesso, Copa do Brasil &amp; Vagas (96)</div>
+                          <p className="text-slate-400">
+                            Os 4 semifinalistas sobem à Série C e o campeão entra direto na 3ª Fase da Copa do Brasil. Vagas anuais: 4 rebaixados da Série C + 64 via Estaduais (SP: 4; RJ/MG/RS/PR/CE/GO/SC/BA: 3; demais 18 UFs: 2) + 26 da 3ª Fase anterior + 2 pelo RNC.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {selectedComp === 'afc_champions' && (
                     <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 text-xs text-slate-300 space-y-2.5">
@@ -3656,6 +4032,21 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                             <span>Rebaixamento (23º–24º)</span>
                           </span>
                         </>
+                      ) : selectedComp === 'serie_c' ? (
+                        <>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-emerald-400" />
+                            <span>Acesso Direto à Série B (1º–3º)</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-sky-400" />
+                            <span>Playoff de Acesso (4º–7º · 4ºx7º e 5ºx6º Ida/Volta + Final Jogo Único)</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-rose-500" />
+                            <span>Rebaixamento à Série D (21º–24º)</span>
+                          </span>
+                        </>
                       ) : selectedEuMeta ? (
                         <>
                           {promotionCount > 0 && (
@@ -3819,7 +4210,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                               zoneBadge =
                                 'text-rose-200 bg-rose-950 font-bold border border-rose-700/50';
                             }
-                          } else if (selectedComp === 'eng_league_two') {
+                          } else if (selectedComp === 'eng_league_two' || selectedComp === 'serie_c') {
                             if (pos <= 3) {
                               zoneBadge = 'text-slate-950 bg-emerald-400 font-black';
                             } else if (pos <= 7) {
@@ -3894,6 +4285,14 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                               : pos === 7
                               ? 'border-b-2 border-sky-500/50'
                               : pos === orderedTableStandings.length - 2
+                              ? 'border-b border-rose-500/50'
+                              : ''
+                            : selectedComp === 'serie_c'
+                            ? pos === 3
+                              ? 'border-b-2 border-emerald-500/50'
+                              : pos === 7
+                              ? 'border-b-2 border-sky-500/50'
+                              : pos === orderedTableStandings.length - 4
                               ? 'border-b border-rose-500/50'
                               : ''
                             : '';
@@ -4090,6 +4489,594 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
           )}
         </div>
       )}
+
+      {/* TAB: Classificação Geral (Alternar entre Tabela Agregada da Série D e Ranking dos Estaduais) */}
+      {activeTab === 'overall_ranking' && (() => {
+        const searchNorm = overallSearch.trim().toLowerCase();
+        const regionOptions: Array<{ id: 'ALL' | BrazilianMacroRegion; label: string }> = [
+          { id: 'ALL', label: 'Todas Regiões' },
+          { id: 'Norte', label: 'Norte' },
+          { id: 'Nordeste', label: 'Nordeste' },
+          { id: 'Centro-Oeste', label: 'Centro-Oeste' },
+          { id: 'Sudeste', label: 'Sudeste' },
+          { id: 'Sul', label: 'Sul' },
+        ];
+
+        const filteredSerieDRows = serieDAggregatedRanking.rows
+          .map((row, idx) => ({ ...row, overallPos: idx + 1 }))
+          .filter((row) => {
+            if (overallRegionFilter !== 'ALL' && row.region !== overallRegionFilter) return false;
+            if (overallStateFilter !== 'ALL' && row.club.state !== overallStateFilter) return false;
+            if (searchNorm) {
+              const hay = `${row.club.name} ${row.club.shortName} ${row.club.state} ${row.group} ${row.statusLabel}`.toLowerCase();
+              if (!hay.includes(searchNorm)) return false;
+            }
+            return true;
+          });
+
+        const filteredEstaduaisRows = estaduaisOverallRanking.rows
+          .map((row, idx) => ({ ...row, overallPos: idx + 1 }))
+          .filter((row) => {
+            if (overallRegionFilter !== 'ALL' && row.region !== overallRegionFilter) return false;
+            if (overallStateFilter !== 'ALL' && row.uf !== overallStateFilter) return false;
+            if (searchNorm) {
+              const hay = `${row.club.name} ${row.club.shortName} ${row.uf} ${row.estadualName}`.toLowerCase();
+              if (!hay.includes(searchNorm)) return false;
+            }
+            return true;
+          });
+
+        const serieDLeader = serieDAggregatedRanking.rows[0];
+        const estadualLeader = estaduaisOverallRanking.rows[0];
+
+        return (
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xl space-y-5">
+            {/* Header + Primary Mode Toggle */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+              <div>
+                <div className="text-xs text-rose-400 font-bold font-mono">
+                  CBF · Classificação Geral Consolidada ({saSeasonYear ?? seasonYear})
+                </div>
+                <h2 className="text-lg sm:text-xl font-black text-white mt-0.5">
+                  {overallRankingMode === 'serie_d'
+                    ? 'Tabela Agregada · Brasileirão Série D (96 Clubes)'
+                    : 'Ranking Geral · 27 Campeonatos Estaduais'}
+                </h2>
+                <p className="text-xs text-slate-400 mt-1 max-w-3xl">
+                  {overallRankingMode === 'serie_d'
+                    ? 'Campanha geral acumulada (1ª Fase + Mata-Mata) de todos os 96 clubes da Série D — usada oficialmente pela CBF para o re-ranqueamento nas Quartas (1º×8º ao 4º×5º), Semifinais (1º×4º e 2º×3º) e mando de campo da volta.'
+                    : 'Ranking unificado com o desempenho acumulado de todos os clubes participantes dos 27 Campeonatos Estaduais do Brasil, incluindo líderes, campeões e vagas CBF para a Série D (64 vagas RNF) e Copa do Brasil.'}
+                </p>
+              </div>
+
+              {/* Switcher between Série D Aggregated Table and Estaduais Ranking */}
+              <div className="inline-flex items-center gap-1.5 p-1.5 rounded-xl bg-slate-900 border border-slate-800 self-start shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    setOverallRankingMode('serie_d');
+                  }}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
+                    overallRankingMode === 'serie_d'
+                      ? 'bg-rose-400 text-slate-950 shadow'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <Trophy className="w-3.5 h-3.5" />
+                  <span>Tabela Agregada · Série D</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    setOverallRankingMode('estaduais');
+                  }}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
+                    overallRankingMode === 'estaduais'
+                      ? 'bg-emerald-400 text-slate-950 shadow'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <Award className="w-3.5 h-3.5" />
+                  <span>Ranking dos Estaduais</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Summary KPI Cards */}
+            {overallRankingMode === 'serie_d' ? (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                  <div className="text-[10px] font-bold uppercase text-slate-400">Participantes</div>
+                  <div className="text-lg font-black text-white font-mono tabular-nums mt-0.5">
+                    {serieDAggregatedRanking.rows.length} clubes
+                  </div>
+                  <div className="text-[11px] text-slate-400">16 grupos (A01–A16)</div>
+                </div>
+                <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                  <div className="text-[10px] font-bold uppercase text-slate-400">Jogos Disputados</div>
+                  <div className="text-lg font-black text-sky-400 font-mono tabular-nums mt-0.5">
+                    {serieDAggregatedRanking.playedMatchesCount}
+                  </div>
+                  <div className="text-[11px] text-slate-400">1ª Fase + Mata-Mata</div>
+                </div>
+                <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                  <div className="text-[10px] font-bold uppercase text-slate-400">Melhor Campanha</div>
+                  {serieDLeader ? (
+                    <div className="flex items-center gap-2 mt-1 min-w-0">
+                      <ClubCrest club={serieDLeader.club} size="xs" rounded="md" />
+                      <div className="min-w-0">
+                        <div className="text-xs font-black text-white truncate">
+                          {serieDLeader.club.shortName}
+                        </div>
+                        <div className="text-[11px] text-emerald-400 font-mono tabular-nums">
+                          {serieDLeader.points} pts · {serieDLeader.efficiency.toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-slate-500 mt-1">Aguardando jogos</div>
+                  )}
+                </div>
+                <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                  <div className="text-[10px] font-bold uppercase text-slate-400">Critério CBF</div>
+                  <div className="text-xs font-bold text-rose-300 mt-1">
+                    4 Acessos · 3ª Fase = Vaga D
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Re-ranqueamento Quartas &amp; Semis
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                  <div className="text-[10px] font-bold uppercase text-slate-400">Clubes Ranqueados</div>
+                  <div className="text-lg font-black text-white font-mono tabular-nums mt-0.5">
+                    {estaduaisOverallRanking.rows.length} clubes
+                  </div>
+                  <div className="text-[11px] text-slate-400">27 Federações Estaduais</div>
+                </div>
+                <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                  <div className="text-[10px] font-bold uppercase text-slate-400">Campeões Definidos</div>
+                  <div className="text-lg font-black text-amber-400 font-mono tabular-nums mt-0.5">
+                    {estaduaisOverallRanking.definedChampionsCount} / 27
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    {estaduaisOverallRanking.playedMatchesCount} jogos disputados
+                  </div>
+                </div>
+                <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                  <div className="text-[10px] font-bold uppercase text-slate-400">Líder dos Estaduais</div>
+                  {estadualLeader ? (
+                    <div className="flex items-center gap-2 mt-1 min-w-0">
+                      <ClubCrest club={estadualLeader.club} size="xs" rounded="md" />
+                      <div className="min-w-0">
+                        <div className="text-xs font-black text-white truncate">
+                          {estadualLeader.club.shortName} ({estadualLeader.uf})
+                        </div>
+                        <div className="text-[11px] text-emerald-400 font-mono tabular-nums">
+                          {estadualLeader.points} pts · {estadualLeader.efficiency.toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-slate-500 mt-1">Aguardando jogos</div>
+                  )}
+                </div>
+                <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                  <div className="text-[10px] font-bold uppercase text-slate-400">Vagas Série D (RNF)</div>
+                  <div className="text-lg font-black text-emerald-400 font-mono tabular-nums mt-0.5">
+                    {estaduaisOverallRanking.totalSerieDSpots} vagas
+                  </div>
+                  <div className="text-[11px] text-slate-400">SP: 4 · 8 UFs: 3 · 18 UFs: 2</div>
+                </div>
+              </div>
+            )}
+
+            {/* Filters & Sort Controls */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-slate-900/60 border border-slate-800/90 rounded-xl p-3">
+              {/* Region filter strip */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {regionOptions.map((reg) => (
+                  <button
+                    key={reg.id}
+                    type="button"
+                    onClick={() => {
+                      soundEngine.playClick();
+                      setOverallRegionFilter(reg.id);
+                      if (reg.id !== 'ALL') setOverallStateFilter('ALL');
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
+                      overallRegionFilter === reg.id
+                        ? 'bg-sky-400 text-slate-950 font-black'
+                        : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                    }`}
+                  >
+                    {reg.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Right controls: State dropdown + Sort toggle + Search */}
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={overallStateFilter}
+                  onChange={(e) => setOverallStateFilter(e.target.value)}
+                  aria-label="Filtrar por Estado (UF)"
+                  className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-semibold focus:outline-none focus:border-sky-400"
+                >
+                  <option value="ALL">Todos os Estados (27)</option>
+                  {ESTADUAIS_2026_CONFIG.map((cfg) => (
+                    <option key={cfg.uf} value={cfg.uf}>
+                      {cfg.uf} · {cfg.shortName}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="inline-flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setOverallSortBy('points')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold cursor-pointer transition-colors ${
+                      overallSortBy === 'points'
+                        ? 'bg-sky-400 text-slate-950 font-black'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Pontos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOverallSortBy('efficiency')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold cursor-pointer transition-colors ${
+                      overallSortBy === 'efficiency'
+                        ? 'bg-sky-400 text-slate-950 font-black'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Apr. %
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={overallSearch}
+                    onChange={(e) => setOverallSearch(e.target.value)}
+                    placeholder="Buscar clube, UF ou grupo..."
+                    className="bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 w-48 sm:w-56"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Table Content */}
+            {overallRankingMode === 'serie_d' ? (
+              <div className="bg-black/40 border border-slate-800 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto max-h-[68vh] overflow-y-auto">
+                  <table className="w-full text-left text-xs min-w-[760px]">
+                    <thead className="sticky top-0 z-10 bg-black text-slate-400 text-[10px] uppercase font-bold border-b border-slate-800">
+                      <tr>
+                        <th className="py-3 px-3 w-10 text-center">#</th>
+                        <th className="py-3 px-3">Clube</th>
+                        <th className="py-3 px-2.5 text-center">Grupo</th>
+                        <th className="py-3 px-2.5">Situação / Fase</th>
+                        <th className="py-3 px-2 text-center text-sky-400 font-black">P</th>
+                        <th className="py-3 px-2 text-center">J</th>
+                        <th className="py-3 px-2 text-center">V</th>
+                        <th className="py-3 px-2 text-center">E</th>
+                        <th className="py-3 px-2 text-center">D</th>
+                        <th className="py-3 px-2 text-center">GP</th>
+                        <th className="py-3 px-2 text-center">GC</th>
+                        <th className="py-3 px-2 text-center">SG</th>
+                        <th className="py-3 px-3 text-right">Apr.%</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {filteredSerieDRows.map((row) => {
+                        const posBadge =
+                          row.overallPos <= 4
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            : row.overallPos <= 8
+                            ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
+                            : row.overallPos <= 32
+                            ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                            : row.overallPos <= 64
+                            ? 'bg-slate-800 text-slate-200 border border-slate-700'
+                            : 'text-slate-500';
+                        const statusColor =
+                          row.statusTone === 'amber'
+                            ? 'text-amber-300'
+                            : row.statusTone === 'emerald'
+                            ? 'text-emerald-400'
+                            : row.statusTone === 'sky'
+                            ? 'text-sky-300'
+                            : row.statusTone === 'indigo'
+                            ? 'text-indigo-300'
+                            : 'text-slate-400';
+
+                        return (
+                          <tr
+                            key={row.club.id}
+                            className={`transition-colors ${
+                              row.club.id === userClub.id
+                                ? 'bg-sky-500/15'
+                                : 'hover:bg-slate-900/50'
+                            }`}
+                          >
+                            <td className="py-2.5 px-3 text-center">
+                              <span
+                                className={`inline-flex min-w-[24px] h-6 px-1 rounded-md items-center justify-center text-[10px] font-black font-mono tabular-nums ${posBadge}`}
+                              >
+                                {row.overallPos}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (onInspectClub) {
+                                    soundEngine.playClick();
+                                    onInspectClub(row.club.id);
+                                  }
+                                }}
+                                className={`flex items-center gap-2 text-left group ${
+                                  onInspectClub ? 'cursor-pointer' : ''
+                                }`}
+                              >
+                                <ClubCrest club={row.club} size="xs" rounded="md" />
+                                <span
+                                  className={`font-bold truncate ${
+                                    row.club.id === userClub.id
+                                      ? 'text-sky-300'
+                                      : 'text-white group-hover:text-sky-300 transition-colors'
+                                  }`}
+                                >
+                                  {row.club.name}
+                                </span>
+                                <span className="text-[10px] text-slate-500 font-mono shrink-0">
+                                  {row.club.state}
+                                </span>
+                              </button>
+                            </td>
+                            <td className="py-2.5 px-2.5 text-center font-mono text-[11px] font-bold text-slate-300">
+                              {row.groupShort}
+                            </td>
+                            <td className={`py-2.5 px-2.5 text-[11px] font-bold whitespace-nowrap ${statusColor}`}>
+                              {row.statusLabel}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-black text-sky-400 font-mono tabular-nums">
+                              {row.points}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-mono tabular-nums text-slate-300">
+                              {row.played}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-mono tabular-nums text-slate-400">
+                              {row.won}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-mono tabular-nums text-slate-400">
+                              {row.drawn}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-mono tabular-nums text-slate-400">
+                              {row.lost}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-mono tabular-nums text-slate-400">
+                              {row.goalsFor}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-mono tabular-nums text-slate-400">
+                              {row.goalsAgainst}
+                            </td>
+                            <td
+                              className={`py-2.5 px-2 text-center font-mono tabular-nums font-bold ${
+                                row.goalDifference > 0
+                                  ? 'text-emerald-400'
+                                  : row.goalDifference < 0
+                                  ? 'text-rose-400'
+                                  : 'text-slate-400'
+                              }`}
+                            >
+                              {row.goalDifference > 0
+                                ? `+${row.goalDifference}`
+                                : row.goalDifference}
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-mono tabular-nums text-slate-300 font-semibold">
+                              {row.efficiency.toFixed(1)}%
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {filteredSerieDRows.length === 0 && (
+                        <tr>
+                          <td colSpan={13} className="py-8 text-center text-slate-500 text-xs">
+                            Nenhum clube da Série D encontrado com os filtros atuais.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="px-4 py-2.5 bg-slate-900/80 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-emerald-400 font-semibold">● 1º–4º G-4 Geral / Acesso</span>
+                    <span className="text-sky-300 font-semibold">● 5º–8º Zona de Quartas</span>
+                    <span className="text-indigo-300 font-semibold">● 9º–32º Faixa 3ª Fase (Vaga D)</span>
+                  </div>
+                  <span className="font-mono tabular-nums">
+                    Exibindo {filteredSerieDRows.length} de {serieDAggregatedRanking.rows.length} clubes
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-black/40 border border-slate-800 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto max-h-[68vh] overflow-y-auto">
+                  <table className="w-full text-left text-xs min-w-[780px]">
+                    <thead className="sticky top-0 z-10 bg-black text-slate-400 text-[10px] uppercase font-bold border-b border-slate-800">
+                      <tr>
+                        <th className="py-3 px-3 w-10 text-center">#</th>
+                        <th className="py-3 px-3">Clube</th>
+                        <th className="py-3 px-2.5">Estadual</th>
+                        <th className="py-3 px-2.5">Status / Vagas CBF</th>
+                        <th className="py-3 px-2 text-center text-sky-400 font-black">P</th>
+                        <th className="py-3 px-2 text-center">J</th>
+                        <th className="py-3 px-2 text-center">V</th>
+                        <th className="py-3 px-2 text-center">E</th>
+                        <th className="py-3 px-2 text-center">D</th>
+                        <th className="py-3 px-2 text-center">GP</th>
+                        <th className="py-3 px-2 text-center">GC</th>
+                        <th className="py-3 px-2 text-center">SG</th>
+                        <th className="py-3 px-3 text-right">Apr.%</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {filteredEstaduaisRows.map((row) => {
+                        const posBadge = row.isChampion
+                          ? 'bg-amber-400/20 text-amber-300 border border-amber-400/50'
+                          : row.overallPos <= 10
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                          : 'text-slate-400';
+
+                        const tags: Array<{ text: string; cls: string }> = [];
+                        if (row.isChampion) tags.push({ text: 'Campeão', cls: 'text-amber-300 font-black' });
+                        else if (row.isRunnerUp) tags.push({ text: 'Vice', cls: 'text-slate-200 font-bold' });
+                        if (row.isSerieDQualified) tags.push({ text: 'Série D', cls: 'text-sky-300 font-bold' });
+                        if (row.isCopaBrasil) tags.push({ text: 'CdB', cls: 'text-emerald-400 font-bold' });
+                        if (row.isNordeste) tags.push({ text: 'Nordestão', cls: 'text-orange-300 font-semibold' });
+                        if (row.isCopaVerde) tags.push({ text: 'Copa Verde', cls: 'text-teal-300 font-semibold' });
+
+                        return (
+                          <tr
+                            key={`${row.club.id}_${row.uf}`}
+                            className={`transition-colors ${
+                              row.club.id === userClub.id
+                                ? 'bg-sky-500/15'
+                                : 'hover:bg-slate-900/50'
+                            }`}
+                          >
+                            <td className="py-2.5 px-3 text-center">
+                              <span
+                                className={`inline-flex min-w-[24px] h-6 px-1 rounded-md items-center justify-center text-[10px] font-black font-mono tabular-nums ${posBadge}`}
+                              >
+                                {row.overallPos}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (onInspectClub) {
+                                    soundEngine.playClick();
+                                    onInspectClub(row.club.id);
+                                  }
+                                }}
+                                className={`flex items-center gap-2 text-left group ${
+                                  onInspectClub ? 'cursor-pointer' : ''
+                                }`}
+                              >
+                                <ClubCrest club={row.club} size="xs" rounded="md" />
+                                <span
+                                  className={`font-bold truncate ${
+                                    row.club.id === userClub.id
+                                      ? 'text-sky-300'
+                                      : 'text-white group-hover:text-sky-300 transition-colors'
+                                  }`}
+                                >
+                                  {row.club.name}
+                                </span>
+                                <span className="text-[10px] text-slate-500 font-mono shrink-0">
+                                  {row.club.division === 'EST'
+                                    ? 'Estadual'
+                                    : `Série ${row.club.division}`}
+                                </span>
+                              </button>
+                            </td>
+                            <td className="py-2.5 px-2.5 whitespace-nowrap">
+                              <span className="font-bold text-slate-200">{row.estadualName}</span>
+                              <span className="text-[10px] text-slate-500 font-mono ml-1.5">
+                                {row.uf}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-2.5 text-[11px] whitespace-nowrap">
+                              {tags.length > 0 ? (
+                                <span className="inline-flex flex-wrap items-center gap-1.5">
+                                  {tags.map((t, tIdx) => (
+                                    <span key={t.text} className={t.cls}>
+                                      {tIdx > 0 ? '· ' : ''}
+                                      {t.text}
+                                    </span>
+                                  ))}
+                                </span>
+                              ) : (
+                                <span className="text-slate-500">—</span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-black text-sky-400 font-mono tabular-nums">
+                              {row.points}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-mono tabular-nums text-slate-300">
+                              {row.played}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-mono tabular-nums text-slate-400">
+                              {row.won}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-mono tabular-nums text-slate-400">
+                              {row.drawn}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-mono tabular-nums text-slate-400">
+                              {row.lost}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-mono tabular-nums text-slate-400">
+                              {row.goalsFor}
+                            </td>
+                            <td className="py-2.5 px-2 text-center font-mono tabular-nums text-slate-400">
+                              {row.goalsAgainst}
+                            </td>
+                            <td
+                              className={`py-2.5 px-2 text-center font-mono tabular-nums font-bold ${
+                                row.goalDifference > 0
+                                  ? 'text-emerald-400'
+                                  : row.goalDifference < 0
+                                  ? 'text-rose-400'
+                                  : 'text-slate-400'
+                              }`}
+                            >
+                              {row.goalDifference > 0
+                                ? `+${row.goalDifference}`
+                                : row.goalDifference}
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-mono tabular-nums text-slate-300 font-semibold">
+                              {row.efficiency.toFixed(1)}%
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {filteredEstaduaisRows.length === 0 && (
+                        <tr>
+                          <td colSpan={13} className="py-8 text-center text-slate-500 text-xs">
+                            Nenhum clube estadual encontrado com os filtros atuais.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="px-4 py-2.5 bg-slate-900/80 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-amber-300 font-semibold">● Campeão Estadual</span>
+                    <span className="text-sky-300 font-semibold">● Vaga Série D (64 via RNF)</span>
+                    <span className="text-emerald-400 font-semibold">● Vaga Copa do Brasil</span>
+                  </div>
+                  <span className="font-mono tabular-nums">
+                    Exibindo {filteredEstaduaisRows.length} de {estaduaisOverallRanking.rows.length} clubes
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* TAB: Mapa Oficial de Vagas das Ligas Continentais & Mundial de Clubes FIFA */}
       {activeTab === 'world_spots' && (
@@ -4977,6 +5964,8 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
             const bracketSource =
               selectedComp === 'usa_mls'
                 ? bracketPool.filter((f) => isMlsPlayoffFixture(f))
+                : selectedComp === 'serie_c'
+                ? bracketPool.filter((f) => f.id.startsWith('serie_c_playoff_'))
                 : isPureKnockoutComp(selectedComp)
                 ? bracketPool
                 : bracketPool.filter((f) => !(f.cupPhase || '').includes('Rodada '));
@@ -5009,6 +5998,8 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                           ? `EFL League Two · Playoffs de Acesso (4º ao 7º) ${seasonYear}`
                           : selectedComp === 'eng_league_one'
                           ? `EFL League One · Playoffs de Acesso (3º ao 6º) ${seasonYear}`
+                          : selectedComp === 'serie_c'
+                          ? `Brasileirão Série C · Playoff de Acesso (4º ao 7º) ${seasonYear}`
                           : selectedComp === 'eng_community_shield'
                           ? `FA Community Shield · Wembley Stadium ${seasonYear}`
                           : selectedComp === 'uefa_supercup'
@@ -5038,6 +6029,19 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                     <span>{bracketSource.length} partidas eliminatórias</span>
                   </div>
                 </div>
+
+                {selectedComp === 'serie_c' && (
+                  <div className="rounded-xl bg-sky-500/10 border border-sky-500/30 p-3.5 text-xs text-sky-100/90 flex flex-wrap items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="font-black text-sky-300">
+                        🏆 Regulamento Oficial · Brasileirão Série C ({seasonYear})
+                      </div>
+                      <p className="text-[11px] text-slate-300">
+                        24 clubes em turno e returno (46 rodadas, encerramento em Novembro). 1º ao 3º sobem direto para a Série B; 4º x 7º e 5º x 6º disputam Semifinais em Ida e Volta (melhor campanha decide em casa), e os vencedores fazem a Final em Jogo Único pela 4ª vaga de acesso. 21º ao 24º caem para a Série D.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {selectedComp === 'concacaf_champions' && (
                   <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3.5 text-xs text-amber-100/90 flex flex-wrap items-center justify-between gap-2">

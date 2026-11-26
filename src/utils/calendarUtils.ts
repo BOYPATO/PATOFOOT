@@ -1252,47 +1252,101 @@ export function getSerieBRoundDate(round: number, baseYear: number = 2026): { da
 }
 
 /**
- * Brasileirão Série C schedule (starts 1st Sunday of April — 05/04/2026 — and does NOT pause for World Cup).
+ * Datas dos Playoffs de Acesso da Série C (4º x 7º e 5º x 6º em Ida e Volta; Final em Jogo Único),
+ * encerrando a competição em novembro.
  */
-export function getSerieCRoundDate(round: number, baseYear: number = 2026): { date: string; time: string; dayOfWeek: string } {
-  const startSun = baseYear === 2026 ? '2026-04-05' : getNthWeekdayOfMonth(baseYear, 3, 0, 1);
-  const endSun = getLastSundayOfNovember(baseYear);
+export function getSerieCPlayoffDates(baseYear: number = 2027): {
+  regularEndDate: string;
+  semiIdaDate: string;
+  semiVoltaDate: string;
+  finalDate: string;
+} {
+  // 2º domingo de novembro (entre 08/11 e 14/11) encerra as 46 rodadas da fase regular
+  const regularEndDate = getNthWeekdayOfMonth(baseYear, 10, 0, 2);
+  // Semifinais Ida (Quinta, +4d) e Volta (Domingo, +7d) -> Final Jogo Único no último domingo de Nov (+14d, entre 22/11 e 28/11)
+  const semiIdaDate = addDays(regularEndDate, 4);
+  const semiVoltaDate = addDays(regularEndDate, 7);
+  const finalDate = addDays(regularEndDate, 14);
+  return { regularEndDate, semiIdaDate, semiVoltaDate, finalDate };
+}
 
-  const dates: string[] = [];
+/**
+ * Brasileirão Série C 2027+ schedule:
+ * 24 clubes em turno e returno = 46 rodadas (início no 1º domingo de abril até 2º domingo de novembro),
+ * seguidas pelos Playoffs de Acesso (4º–7º) encerrando em novembro.
+ */
+export function getSerieCRoundDate(
+  round: number,
+  baseYear: number = 2027
+): { date: string; time: string; dayOfWeek: string } {
+  const playoffDates = getSerieCPlayoffDates(baseYear);
+  if (round === 47) return buildDayTimeInfo(playoffDates.semiIdaDate, 47, 49);
+  if (round === 48) return buildDayTimeInfo(playoffDates.semiVoltaDate, 48, 49);
+  if (round >= 49) return buildDayTimeInfo(playoffDates.finalDate, 49, 49);
+
+  const startSun = getNthWeekdayOfMonth(baseYear, 3, 0, 1);
+  const endSun = playoffDates.regularEndDate;
+
+  const sundays: string[] = [];
   let cur = startSun;
   while (cur <= endSun) {
-    dates.push(cur);
+    sundays.push(cur);
     cur = addDays(cur, 7);
   }
 
-  // Insert a few non-colliding Wednesdays so 38 double-round-robin rounds fit cleanly between Apr 05 and late Nov
-  if (dates.length < 38) {
-    const needed = 38 - dates.length;
-    const midCandidates = [
-      addDays(startSun, 31),
-      addDays(startSun, 59),
-      addDays(startSun, 94),
-      addDays(startSun, 122),
-      addDays(startSun, 157),
-      addDays(startSun, 185),
-    ];
-    for (const mw of midCandidates) {
-      if (dates.length >= 38 || mw >= endSun) break;
-      if (!dates.includes(mw)) dates.push(mw);
+  const dates: string[] = [...sundays];
+  const neededMidweeks = Math.max(0, 46 - dates.length);
+  if (neededMidweeks > 0 && sundays.length > 1) {
+    // Distribui as rodadas de meio de semana (quarta-feira) de forma uniforme ao longo das semanas
+    const availableWeeks = sundays.length - 1;
+    const chosenWeeks = new Set<number>();
+    for (let i = 0; i < neededMidweeks; i++) {
+      let w = Math.floor(((i + 0.5) * availableWeeks) / neededMidweeks);
+      w = Math.max(0, Math.min(availableWeeks - 1, w));
+      while (chosenWeeks.has(w) && w < availableWeeks - 1) w++;
+      while (chosenWeeks.has(w) && w > 0) w--;
+      chosenWeeks.add(w);
     }
+    Array.from(chosenWeeks)
+      .sort((a, b) => a - b)
+      .forEach((w) => {
+        const mw = addDays(sundays[w], 3); // Quarta-feira
+        if (mw < endSun && !dates.includes(mw)) {
+          dates.push(mw);
+        }
+      });
     dates.sort((a, b) => a.localeCompare(b));
-    void needed;
   }
 
   const idx = Math.max(0, Math.min(dates.length - 1, round - 1));
-  return buildDayTimeInfo(dates[idx] || endSun, round, 38);
+  return buildDayTimeInfo(dates[idx] || endSun, round, 46);
 }
 
 /**
  * Brasileirão Série D 2026/2027+ schedule (22 datas: 10 rodadas de grupos + 12 datas de mata-mata).
- * - CBF 2026 PDF: Início 05/04/2026, contínuo durante Junho/Julho, Final em 13/09/2026!
+ * - CBF 2027: Início em 04/04/2027 e encerramento em 12/09/2027!
  */
-export function getSerieDScheduleDates(year: number = 2026): string[] {
+export function getSerieDScheduleDates(year: number = 2027): string[] {
+  if (year === 2027) {
+    return [
+      // 10 Rodadas Fase de Grupos (04/04/2027 a 06/06/2027)
+      '2027-04-04', '2027-04-11', '2027-04-18', '2027-04-25', '2027-05-02',
+      '2027-05-09', '2027-05-16', '2027-05-23', '2027-05-30', '2027-06-06',
+      // 2ª Fase (Ida/Volta — 64 clubes)
+      '2027-06-20', '2027-06-27',
+      // 3ª Fase / 16-avos (Ida/Volta — 32 clubes, garante vaga na Série D seguinte)
+      '2027-07-04', '2027-07-11',
+      // 4ª Fase / Oitavas (Ida/Volta — 16 clubes)
+      '2027-07-18', '2027-07-25',
+      // 5ª Fase / Quartas de Final - Valendo Acesso (Ida/Volta — 8 clubes, ranqueados 1ºx8º..4ºx5º)
+      '2027-08-08', '2027-08-15',
+      // Semifinal (Ida/Volta — 4 clubes promovidos, ranqueados 1ºx4º e 2ºx3º)
+      '2027-08-22', '2027-08-29',
+      // Grande Final (Ida/Volta — encerramento oficial em 12/09/2027!)
+      '2027-09-05', '2027-09-12',
+    ];
+  }
+
   if (year === 2026) {
     return [
       // 10 Rodadas Fase de Grupos
@@ -1316,7 +1370,9 @@ export function getSerieDScheduleDates(year: number = 2026): string[] {
   const startSun = getNthWeekdayOfMonth(year, 3, 0, 1);
   const dates: string[] = [];
   for (let i = 0; i < 22; i++) {
-    dates.push(addDays(startSun, i * 7));
+    // Include 1-week breaks after group stage (idx 10) and after Round of 16 (idx 16)
+    const breakWeeks = i >= 16 ? 2 : i >= 10 ? 1 : 0;
+    dates.push(addDays(startSun, (i + breakWeeks) * 7));
   }
   return dates;
 }

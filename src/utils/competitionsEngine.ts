@@ -108,22 +108,22 @@ export const COMPETITIONS_CATALOG: Record<CompetitionType, CompetitionMeta> = {
     name: 'Campeonato Brasileiro Série C',
     shortName: 'Série C',
     description:
-      'Os 20 clubes oficiais da Terceirona 2026 em disputa intensa pelo acesso à Série B e permanência nacional.',
+      'Regulamento 2027 com 24 clubes em turno e returno (46 rodadas até novembro). Os 3 primeiros sobem direto à Série B, do 4º ao 7º disputam Playoff de Acesso (4ºx7º e 5ºx6º ida e volta + Final em jogo único) pela 4ª vaga e os 4 últimos (21º–24º) caem à Série D.',
     badgeEmoji: '🥉',
     logoUrl: SOCCERWIKI_COMPETITION_LOGOS.serie_c,
     primaryColor: '#8b5cf6',
     secondaryColor: '#6d28d9',
     isCup: false,
     category: 'national',
-    officialClubsCount: 20,
-    formatSummary: '20 clubes · 38 rodadas · G-4 sobe à Série B',
+    officialClubsCount: 24,
+    formatSummary: '24 clubes · 46 rodadas · 1º–3º Acesso Direto · 4º–7º Playoff · Z-4 cai à Série D',
   },
   serie_d: {
     id: 'serie_d',
     name: 'Campeonato Brasileiro Série D',
     shortName: 'Série D',
     description:
-      'Novo formato expandido CBF 2026 com 96 clubes divididos em 16 grupos regionalizados de 6 equipes (A01–A16), classificando 64 ao mata-mata pelos 4 acessos à Série C!',
+      'Regulamento oficial CBF 2027 com 96 clubes em 16 grupos regionalizados de 6 equipes (A01–A16, máx. 3 por estado), cruzamento olímpico na 2ª fase, re-ranqueamento geral nas Quartas e Semis, 4 acessos à Série C e campeão direto na 3ª fase da Copa do Brasil!',
     badgeEmoji: '🏅',
     logoUrl: SOCCERWIKI_COMPETITION_LOGOS.serie_d,
     primaryColor: '#f43f5e',
@@ -131,7 +131,7 @@ export const COMPETITIONS_CATALOG: Record<CompetitionType, CompetitionMeta> = {
     isCup: true,
     category: 'national',
     officialClubsCount: 96,
-    formatSummary: '96 clubes · 16 grupos de 6 + Mata-Mata (64 clubes)',
+    formatSummary: '96 clubes · 16 grupos regionalizados (máx. 3/UF) · 64 no Mata-Mata · 4 acessos',
   },
   copa_brasil: {
     id: 'copa_brasil',
@@ -1657,13 +1657,15 @@ const OFFICIAL_SULAMERICANA_2026_GROUPS: Record<string, string[]> = {
 
 function getRegionalOrderIndex(stateCode: string): number {
   const order: Record<string, number> = {
-    PA: 1,
-    AM: 2,
-    RR: 3,
-    RO: 4,
-    AC: 5,
-    AP: 6,
+    // Norte (A01..)
+    AC: 1,
+    RO: 2,
+    AM: 3,
+    RR: 4,
+    AP: 5,
+    PA: 6,
     TO: 7,
+    // Nordeste
     MA: 10,
     PI: 11,
     CE: 12,
@@ -1673,19 +1675,129 @@ function getRegionalOrderIndex(stateCode: string): number {
     AL: 16,
     SE: 17,
     BA: 18,
+    // Centro-Oeste
     MT: 20,
     DF: 21,
-    MS: 22,
-    GO: 23,
-    ES: 24,
-    MG: 30,
-    RJ: 31,
-    SP: 32,
-    PR: 40,
-    SC: 41,
-    RS: 42,
+    GO: 22,
+    MS: 23,
+    // Sudeste
+    ES: 28,
+    MG: 29,
+    RJ: 30,
+    SP: 31,
+    // Sul (..A16)
+    PR: 38,
+    SC: 39,
+    RS: 40,
   };
   return order[stateCode] ?? 50;
+}
+
+/**
+ * Monta os 16 grupos regionalizados da Série D (Grupo A01 a Grupo A16, 6 clubes cada):
+ * - Ordenação geográfica de Norte a Sul (Região Norte em A01 até Região Sul em A16).
+ * - Proximidade geográfica entre estados limítrofes quando blocos não fecham múltiplos de 6.
+ * - Regra obrigatória CBF: máximo de 3 clubes da mesma federação estadual (UF) por grupo!
+ */
+export function buildSerieDRegionalizedGroups(
+  clubs: Club[],
+  options?: { shuffleWithinRegion?: boolean }
+): Club[][] {
+  const MAX_PER_STATE = 3;
+  const GROUPS_COUNT = 16;
+  const GROUP_SIZE = 6;
+
+  const pool = [...clubs].slice(0, GROUPS_COUNT * GROUP_SIZE);
+  if (pool.length === 0) return [];
+
+  const jitter = new Map<string, number>();
+  if (options?.shuffleWithinRegion) {
+    pool.forEach((c) => jitter.set(c.id, Math.random()));
+  }
+
+  pool.sort((a, b) => {
+    const geoDiff = getRegionalOrderIndex(a.state) - getRegionalOrderIndex(b.state);
+    if (geoDiff !== 0) return geoDiff;
+    if (options?.shuffleWithinRegion) {
+      return (jitter.get(a.id) ?? 0) - (jitter.get(b.id) ?? 0);
+    }
+    if (b.reputation !== a.reputation) return b.reputation - a.reputation;
+    return a.name.localeCompare(b.name);
+  });
+
+  const groups: Club[][] = [];
+  for (let g = 0; g < GROUPS_COUNT; g++) {
+    const slice = pool.slice(g * GROUP_SIZE, g * GROUP_SIZE + GROUP_SIZE);
+    if (slice.length > 0) groups.push(slice);
+  }
+
+  const countState = (grp: Club[], uf: string) => grp.filter((c) => c.state === uf).length;
+  const avgGeo = (grp: Club[]) =>
+    grp.length === 0
+      ? 0
+      : grp.reduce((acc, c) => acc + getRegionalOrderIndex(c.state), 0) / grp.length;
+
+  // Enforce hard CBF limit: max 3 clubs from the same state per group by swapping with closest neighboring group
+  for (let pass = 0; pass < 96; pass++) {
+    let fixedAny = false;
+    for (let g = 0; g < groups.length; g++) {
+      const grp = groups[g];
+      const stateCounts = new Map<string, number>();
+      grp.forEach((c) => stateCounts.set(c.state, (stateCounts.get(c.state) || 0) + 1));
+
+      let overflowUf: string | null = null;
+      for (const [uf, cnt] of stateCounts.entries()) {
+        if (cnt > MAX_PER_STATE) {
+          overflowUf = uf;
+          break;
+        }
+      }
+      if (!overflowUf) continue;
+
+      const idxInG = grp.findIndex((c) => c.state === overflowUf);
+      if (idxInG === -1) continue;
+
+      const gAvg = avgGeo(grp);
+      // Search neighboring groups sorted by distance |h - g|
+      const candidateGroupIndices = Array.from({ length: groups.length }, (_, idx) => idx)
+        .filter((h) => h !== g && countState(groups[h], overflowUf!) < MAX_PER_STATE)
+        .sort((h1, h2) => Math.abs(h1 - g) - Math.abs(h2 - g));
+
+      let swapped = false;
+      for (const h of candidateGroupIndices) {
+        const targetGrp = groups[h];
+        // Pick the club in targetGrp that keeps geographic cohesion best and doesn't violate max-3 in group g
+        let bestIdxInH = -1;
+        let bestGeoDist = Infinity;
+        for (let k = 0; k < targetGrp.length; k++) {
+          const cand = targetGrp[k];
+          if (cand.state === overflowUf) continue;
+          if (countState(grp, cand.state) >= MAX_PER_STATE) continue;
+          const dist = Math.abs(getRegionalOrderIndex(cand.state) - gAvg);
+          if (dist < bestGeoDist) {
+            bestGeoDist = dist;
+            bestIdxInH = k;
+          }
+        }
+        if (bestIdxInH !== -1) {
+          const temp = grp[idxInG];
+          grp[idxInG] = targetGrp[bestIdxInH];
+          targetGrp[bestIdxInH] = temp;
+          swapped = true;
+          fixedAny = true;
+          break;
+        }
+      }
+
+      if (!swapped) {
+        // Fallback: allow any valid swap in furthest groups if direct neighbors were saturated
+        break;
+      }
+    }
+    if (!fixedAny) break;
+  }
+
+  return groups;
 }
 
 /**
@@ -1873,31 +1985,24 @@ export function generateRecopaFixtures(
 }
 
 /**
- * Generates Brasileirão Série D 2026 (96 clubes):
- * - 16 regionalized groups of 6 clubs (Grupo A01 .. Grupo A16) in 10 double round-robin rounds
- * - Top 4 of each group (64 clubs) qualify for two-legged knockout rounds:
- *   2ª Fase (32 ties) -> 3ª Fase (16 ties) -> Oitavas (8 ties) -> Quartas / Jogo do Acesso (4 ties) -> Semifinal (2 ties) -> Grande Final (1 tie)
+ * Generates Brasileirão Série D 2027+ (96 clubes — Regulamento Oficial CBF):
+ * - 16 grupos regionalizados de 6 clubes (Grupo A01 .. Grupo A16, Norte -> Sul, máx. 3 clubes por UF)
+ * - 10 rodadas (turno e returno), Top 4 de cada grupo (64 clubes) avançam ao mata-mata em ida e volta:
+ *   2ª Fase (cruzamento olímpico vizinho) -> 3ª Fase (32 clubes garantem Série D seguinte) -> Oitavas (16) ->
+ *   Quartas / Valendo Acesso (re-ranqueamento 1ºx8º..4ºx5º) -> Semifinal (re-ranqueamento 1ºx4º, 2ºx3º) -> Final (campeão na 3ª fase da CdB)
  */
 export function generateSerieDFixturesAndStandings(
   clubs: Club[],
-  year: number = 2026
+  year: number = 2027
 ): {
   fixtures: Fixture[];
   standings: Standing[];
 } {
-  const serieDClubs = clubs
-    .filter((c) => c.division === 'D')
-    .sort((a, b) => {
-      if (year === 2026) return 0; // Preserve curated regional seed order in 2026
-      return getRegionalOrderIndex(a.state) - getRegionalOrderIndex(b.state);
-    })
-    .slice(0, 96);
+  const serieDClubs = clubs.filter((c) => c.division === 'D').slice(0, 96);
+  const regionalGroups = buildSerieDRegionalizedGroups(serieDClubs);
 
   const fixtures: Fixture[] = [];
   const standings: Standing[] = [];
-
-  // 10 group rounds scheduled across League Sundays 1..19
-  const groupSundayRounds = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
 
   // Berger pairings for 6 teams (indices 0..5): 5 first-half rounds + 5 mirror return rounds
   const firstHalfTemplate: Array<Array<[number, number]>> = [
@@ -1933,11 +2038,13 @@ export function generateSerieDFixturesAndStandings(
   ];
 
   const serieDDates = getSerieDScheduleDates(year);
+  const firstOfficialDate = serieDDates[0] || getSeasonStartDate(year);
+  const finalOfficialDate = serieDDates[serieDDates.length - 1] || `${year}-09-15`;
 
-  for (let gIdx = 0; gIdx < 16; gIdx++) {
+  for (let gIdx = 0; gIdx < regionalGroups.length; gIdx++) {
     const groupCode = String(gIdx + 1).padStart(2, '0');
     const groupName = `Grupo A${groupCode}`;
-    const groupSlice = serieDClubs.slice(gIdx * 6, gIdx * 6 + 6);
+    const groupSlice = regionalGroups[gIdx];
     if (groupSlice.length === 0) continue;
 
     groupSlice.forEach((club) => {
@@ -1958,7 +2065,6 @@ export function generateSerieDFixturesAndStandings(
 
     if (groupSlice.length < 6) continue;
 
-    const minSaDate = getSeasonStartDate(year);
     fullTenRoundsTemplate.forEach((pairs, rIdx) => {
       const roundNum = rIdx + 1;
       const roundDate = serieDDates[rIdx] || getRoundDate(roundNum, year).date;
@@ -1972,8 +2078,8 @@ export function generateSerieDFixturesAndStandings(
           fullTenRoundsTemplate.length,
           `serie_d_${year}`,
           {
-            minDate: minSaDate,
-            maxDate: `${year}-12-20`,
+            minDate: firstOfficialDate,
+            maxDate: finalOfficialDate,
             prevRoundBaseDate: prevRoundDate,
             nextRoundBaseDate: nextRoundDate,
             region: 'south_america',
@@ -2009,10 +2115,35 @@ export function generateSerieDFixturesAndStandings(
   ) => {
     const idaDate = serieDDates[idaSlotIdx] || getRoundDate(idaRound, year).date;
     const voltaDate = serieDDates[voltaSlotIdx] || getRoundDate(voltaRound, year).date;
+    const prevIdaDate = idaSlotIdx > 0 ? serieDDates[idaSlotIdx - 1] : undefined;
+    const nextVoltaDate = voltaSlotIdx + 1 < serieDDates.length ? serieDDates[voltaSlotIdx + 1] : undefined;
 
     for (let i = 0; i < tiesCount; i++) {
       const idaId = tiesCount === 1 ? `${stagePrefix}_ida` : `${stagePrefix}_m${i}_ida`;
       const voltaId = tiesCount === 1 ? `${stagePrefix}_volta` : `${stagePrefix}_m${i}_volta`;
+      const idaSlot =
+        tiesCount === 1
+          ? { date: idaDate, time: '16:00' }
+          : assignVariedMatchDaySlot(idaDate, i, idaRound, 22, `serie_d_ko_${year}`, {
+              minDate: firstOfficialDate,
+              maxDate: finalOfficialDate,
+              prevRoundBaseDate: prevIdaDate,
+              nextRoundBaseDate: voltaDate,
+              region: 'south_america',
+              fallbackTime: '16:00',
+            });
+      const voltaSlot =
+        tiesCount === 1
+          ? { date: voltaDate, time: '16:00' }
+          : assignVariedMatchDaySlot(voltaDate, i, voltaRound, 22, `serie_d_ko_${year}`, {
+              minDate: firstOfficialDate,
+              maxDate: finalOfficialDate,
+              prevRoundBaseDate: idaDate,
+              nextRoundBaseDate: nextVoltaDate,
+              region: 'south_america',
+              fallbackTime: '16:00',
+            });
+
       fixtures.push({
         id: idaId,
         round: idaRound,
@@ -2024,8 +2155,8 @@ export function generateSerieDFixturesAndStandings(
         homeScore: null,
         awayScore: null,
         played: false,
-        date: idaDate,
-        time: '16:00',
+        date: idaSlot.date,
+        time: idaSlot.time,
       });
       fixtures.push({
         id: voltaId,
@@ -2038,8 +2169,8 @@ export function generateSerieDFixturesAndStandings(
         homeScore: null,
         awayScore: null,
         played: false,
-        date: voltaDate,
-        time: '16:00',
+        date: voltaSlot.date,
+        time: voltaSlot.time,
       });
     }
   };

@@ -297,6 +297,7 @@ import {
   getRoundDate,
   getSerieBRoundDate,
   getSerieCRoundDate,
+  getSerieCPlayoffDates,
   daysBetween,
   getUpcomingClubFixture,
   getSeasonStartDate,
@@ -404,6 +405,7 @@ import {
   simulateCpuFixturesUpToDate,
   resolveCupChampionId,
   resolveCupRunnerUpId,
+  resolveSerieCPromotedIds,
   resolveSerieDPromotedIds,
   resolvePotiguarFinalClassification,
   applyPotiguarQualificationsAndRebalanceSerieD,
@@ -755,6 +757,8 @@ function alignCareerStateAfterClubSwitch(rawState: GameSave): GameSave {
     ? SOUTH_AMERICAN_LEAGUES_META[saId].totalRounds
     : wlId
     ? WORLD_LEAGUES_META[wlId].totalRounds
+    : newClub.division === 'C'
+    ? 46
     : newClub.division === 'EST'
     ? getEstadualTotalRounds(getClubEstadualConfig(newClub))
     : 38;
@@ -805,6 +809,8 @@ function alignCareerStateAfterClubSwitch(rawState: GameSave): GameSave {
 }
 
 const CURRENT_SHAKHTAR_SP1_VERSION = 1;
+const CURRENT_SERIE_D_2027_PARTICIPANTS_VERSION = 1;
+const CURRENT_SERIE_C_2027_FORMAT_VERSION = 1;
 
 function sanitizeSave(save: GameSave): GameSave {
   const initialClubs = generateInitialClubs();
@@ -997,11 +1003,38 @@ function sanitizeSave(save: GameSave): GameSave {
     (save.potiguar2026RosterVersion ?? 0) < CURRENT_POTIGUAR_2026_ROSTER_VERSION;
   const needsEstaduais2026Migration =
     (save.estaduais2026Version ?? 0) < CURRENT_ESTADUAIS_2026_VERSION;
+  const needsSerieD2027ParticipantsMigration =
+    (save.serieD2027ParticipantsVersion ?? 0) < CURRENT_SERIE_D_2027_PARTICIPANTS_VERSION &&
+    saSeasonYear <= 2027;
+  const needsSerieC2027FormatMigration =
+    (save.serieC2027FormatVersion ?? 0) < CURRENT_SERIE_C_2027_FORMAT_VERSION &&
+    saSeasonYear <= 2027;
 
   const sanitizedClubs = fullClubs.map((club) => {
     const templateClub = initialClubById.get(club.id);
+    const shouldSyncSerieD2027Division =
+      needsSerieD2027ParticipantsMigration &&
+      Boolean(templateClub) &&
+      (club.division === 'C' || club.division === 'D' || club.division === 'EST') &&
+      (templateClub!.division === 'C' ||
+        templateClub!.division === 'D' ||
+        templateClub!.division === 'EST');
+    const shouldSyncSerieC2027Division =
+      needsSerieC2027FormatMigration &&
+      Boolean(templateClub) &&
+      (club.division === 'B' ||
+        club.division === 'C' ||
+        club.division === 'D' ||
+        club.division === 'EST') &&
+      (templateClub!.division === 'B' ||
+        templateClub!.division === 'C' ||
+        templateClub!.division === 'D' ||
+        templateClub!.division === 'EST');
     const resolvedDivision =
-      needsCalendarMigration && templateClub ? templateClub.division : club.division;
+      (needsCalendarMigration || shouldSyncSerieD2027Division || shouldSyncSerieC2027Division) &&
+      templateClub
+        ? templateClub.division
+        : club.division;
     const clubCountry = club.country || templateClub?.country || 'Brasil';
 
     let clubWorking = club;
@@ -1028,7 +1061,17 @@ function sanitizeSave(save: GameSave): GameSave {
         },
         true
       );
-    } else if (SERIE_C_2026_CURATED_CLUB_IDS.has(club.id) && needsSerieC2026RosterMigration) {
+    } else if (
+      SERIE_C_2026_CURATED_CLUB_IDS.has(club.id) &&
+      needsSerieC2026RosterMigration &&
+      ((save.serieC2026RosterVersion ?? 0) < 2 ||
+        club.id === 'abc' ||
+        club.id === 'gam' ||
+        club.id === 'ube' ||
+        club.id === 'gtb' ||
+        club.id === 'nam' ||
+        club.id === 'asa')
+    ) {
       clubWorking = applyOfficialSerieC2026RosterToClub(
         {
           ...club,
@@ -1311,10 +1354,30 @@ function sanitizeSave(save: GameSave): GameSave {
             sanitizedSquad.length > MAX_SQUAD_SIZE
           )
     ).map((p) => ensurePlayerContractFields(p, clubCountry));
+    const shouldSyncGoiatubaMeta =
+      needsSerieC2027FormatMigration && Boolean(templateClub) && clubWorking.id === 'gtb';
     const baseClub: Club = {
       ...clubWorking,
+      name:
+        (shouldSyncSerieD2027Division &&
+          templateClub &&
+          (clubWorking.id === 'abe' || clubWorking.id === 'bpe')) ||
+        shouldSyncGoiatubaMeta
+          ? templateClub!.name
+          : clubWorking.name,
+      shortName:
+        (shouldSyncSerieD2027Division &&
+          templateClub &&
+          (clubWorking.id === 'abe' || clubWorking.id === 'bpe')) ||
+        shouldSyncGoiatubaMeta
+          ? templateClub!.shortName
+          : clubWorking.shortName,
+      colors: shouldSyncGoiatubaMeta && templateClub?.colors ? templateClub.colors : clubWorking.colors,
+      stadium: shouldSyncGoiatubaMeta && templateClub?.stadium ? templateClub.stadium : clubWorking.stadium,
       managerName:
-        !save.coachingCarousel && clubWorking.id !== resolvedSaveUserClubId && templateClub?.managerName
+        (!save.coachingCarousel || shouldSyncGoiatubaMeta) &&
+        clubWorking.id !== resolvedSaveUserClubId &&
+        templateClub?.managerName
           ? templateClub.managerName
           : clubWorking.managerName,
       division: resolvedDivision,
@@ -1341,11 +1404,24 @@ function sanitizeSave(save: GameSave): GameSave {
       : withYouth;
   });
 
+  const serieCPlayoffDatesForSanitize = getSerieCPlayoffDates(saSeasonYear);
   const sanitizeLeagueFixtures = (
     fixturesList: Fixture[] = [],
     comp: CompetitionType = 'serie_a'
   ) => {
     return fixturesList.map((f) => {
+      if (comp === 'serie_c' && f.id.startsWith('serie_c_playoff_')) {
+        const playoffDate = f.id.includes('_ida')
+          ? serieCPlayoffDatesForSanitize.semiIdaDate
+          : f.id.includes('_volta')
+          ? serieCPlayoffDatesForSanitize.semiVoltaDate
+          : serieCPlayoffDatesForSanitize.finalDate;
+        const playoffTime = f.time || (f.id.includes('_ida') ? '19:30' : '16:00');
+        if (needsCalendarMigration) {
+          return { ...f, date: playoffDate, time: playoffTime };
+        }
+        return f.date && f.time ? f : { ...f, date: f.date || playoffDate, time: playoffTime };
+      }
       const dateInfo =
         comp === 'serie_b'
           ? getSerieBRoundDate(f.round, saSeasonYear)
@@ -1403,17 +1479,58 @@ function sanitizeSave(save: GameSave): GameSave {
   const serieBClubs = sanitizedClubs.filter((c) => c.division === 'B').map((c) => c.id);
   const serieCClubs = sanitizedClubs.filter((c) => c.division === 'C').map((c) => c.id);
 
+  const hasPlayedSerieBMatches = (save.fixturesB || []).some((f) => f.played);
+  const remapSerieB2027ClubId = (id: string): string => {
+    if (id === 'pon') return 'mga';
+    if (id === 'ame') return 'afe';
+    if (id === 'lon') return 'lim';
+    if (id === 'ava') return 'stc';
+    return id;
+  };
   const fixturesA =
     needsCalendarMigration || (save.standingsA || []).length < 20
       ? generateLeagueSchedule(serieAClubs, 'serie_a', saSeasonYear)
       : sanitizeLeagueFixtures(save.fixturesA, 'serie_a');
   const fixturesB =
-    needsCalendarMigration || (save.standingsB || []).length < 20
+    needsCalendarMigration ||
+    (save.standingsB || []).length < 20 ||
+    (needsSerieC2027FormatMigration && !hasPlayedSerieBMatches)
       ? generateLeagueSchedule(serieBClubs, 'serie_b', saSeasonYear)
+      : needsSerieC2027FormatMigration
+      ? sanitizeLeagueFixtures(
+          (save.fixturesB || []).map((f) => ({
+            ...f,
+            homeTeamId: remapSerieB2027ClubId(f.homeTeamId),
+            awayTeamId: remapSerieB2027ClubId(f.awayTeamId),
+          })),
+          'serie_b'
+        )
       : sanitizeLeagueFixtures(save.fixturesB, 'serie_b');
+  const hasPlayedSerieCMatches = (save.fixturesC || []).some((f) => f.played);
+  const hasSerieCPlayoffFinal = (save.fixturesC || []).some(
+    (f) => f.id === 'serie_c_playoff_final'
+  );
+  const remapSerieC2027ClubId = (id: string): string => {
+    if (id === 'con') return 'ube';
+    if (id === 'ita') return 'asa';
+    return id;
+  };
   const fixturesC =
-    needsCalendarMigration || (save.standingsC || []).length < 20
+    needsCalendarMigration ||
+    needsSerieC2027FormatMigration ||
+    (save.standingsC || []).length < 24 ||
+    !hasSerieCPlayoffFinal ||
+    (needsSerieD2027ParticipantsMigration && !hasPlayedSerieCMatches)
       ? generateLeagueSchedule(serieCClubs, 'serie_c', saSeasonYear)
+      : needsSerieD2027ParticipantsMigration
+      ? sanitizeLeagueFixtures(
+          (save.fixturesC || []).map((f) => ({
+            ...f,
+            homeTeamId: remapSerieC2027ClubId(f.homeTeamId),
+            awayTeamId: remapSerieC2027ClubId(f.awayTeamId),
+          })),
+          'serie_c'
+        )
       : sanitizeLeagueFixtures(
           save.fixturesC || generateLeagueSchedule(serieCClubs, 'serie_c', saSeasonYear),
           'serie_c'
@@ -1421,25 +1538,42 @@ function sanitizeSave(save: GameSave): GameSave {
 
   const serieDTemplate = generateSerieDFixturesAndStandings(sanitizedClubs, saSeasonYear);
   const hasGroupedSerieD = Boolean((save.standingsD || [])[0]?.group);
-  const fixturesD =
-    needsCalendarMigration || !hasGroupedSerieD
-      ? mergeCupTemplateWithPlayed(serieDTemplate.fixtures, save.fixturesD)
-      : save.fixturesD || serieDTemplate.fixtures;
+  const fixturesD = needsSerieD2027ParticipantsMigration
+    ? serieDTemplate.fixtures
+    : needsCalendarMigration || !hasGroupedSerieD
+    ? mergeCupTemplateWithPlayed(serieDTemplate.fixtures, save.fixturesD)
+    : save.fixturesD || serieDTemplate.fixtures;
 
   const standingsA =
     needsCalendarMigration || (save.standingsA || []).length < 20
       ? generateInitialStandings(serieAClubs)
       : save.standingsA;
   const standingsB =
-    needsCalendarMigration || (save.standingsB || []).length < 20
+    needsCalendarMigration ||
+    (save.standingsB || []).length < 20 ||
+    (needsSerieC2027FormatMigration && !hasPlayedSerieBMatches)
       ? generateInitialStandings(serieBClubs)
+      : needsSerieC2027FormatMigration
+      ? (save.standingsB || []).map((s) => ({
+          ...s,
+          teamId: remapSerieB2027ClubId(s.teamId),
+        }))
       : save.standingsB;
   const standingsC =
-    needsCalendarMigration || (save.standingsC || []).length < 20
+    needsCalendarMigration ||
+    needsSerieC2027FormatMigration ||
+    (save.standingsC || []).length < 24 ||
+    !hasSerieCPlayoffFinal ||
+    (needsSerieD2027ParticipantsMigration && !hasPlayedSerieCMatches)
       ? generateInitialStandings(serieCClubs)
+      : needsSerieD2027ParticipantsMigration
+      ? (save.standingsC || []).map((s) => ({
+          ...s,
+          teamId: remapSerieC2027ClubId(s.teamId),
+        }))
       : save.standingsC || generateInitialStandings(serieCClubs);
   const standingsD =
-    needsCalendarMigration || !hasGroupedSerieD
+    needsSerieD2027ParticipantsMigration || needsCalendarMigration || !hasGroupedSerieD
       ? serieDTemplate.standings
       : save.standingsD || serieDTemplate.standings;
 
@@ -2138,6 +2272,8 @@ function sanitizeSave(save: GameSave): GameSave {
     ? SOUTH_AMERICAN_LEAGUES_META[hydratedSaId].totalRounds
     : hydratedWlId
     ? WORLD_LEAGUES_META[hydratedWlId].totalRounds
+    : hydratedUserClub?.division === 'C'
+    ? 46
     : hydratedUserClub?.division === 'EST'
     ? getEstadualTotalRounds(getClubEstadualConfig(hydratedUserClub))
     : save.totalRounds || 38;
@@ -2155,6 +2291,8 @@ function sanitizeSave(save: GameSave): GameSave {
     serieC2026RosterVersion: CURRENT_SERIE_C_2026_ROSTER_VERSION,
     potiguar2026RosterVersion: CURRENT_POTIGUAR_2026_ROSTER_VERSION,
     estaduais2026Version: CURRENT_ESTADUAIS_2026_VERSION,
+    serieD2027ParticipantsVersion: CURRENT_SERIE_D_2027_PARTICIPANTS_VERSION,
+    serieC2027FormatVersion: CURRENT_SERIE_C_2027_FORMAT_VERSION,
     ecuador2026RosterVersion: CURRENT_ECUADOR_2026_ROSTER_VERSION,
     colombia2026RosterVersion: CURRENT_COLOMBIA_2026_ROSTER_VERSION,
     uruguay2026RosterVersion: CURRENT_URUGUAY_2026_ROSTER_VERSION,
@@ -3815,6 +3953,8 @@ export default function App() {
       ? userSaMeta.totalRounds
       : userWlMeta
       ? userWlMeta.totalRounds
+      : userTeam?.division === 'C'
+      ? 46
       : userTeam?.division === 'EST'
       ? getEstadualTotalRounds(getClubEstadualConfig(userTeam))
       : 38;
@@ -3908,6 +4048,8 @@ export default function App() {
       serieC2026RosterVersion: CURRENT_SERIE_C_2026_ROSTER_VERSION,
       potiguar2026RosterVersion: CURRENT_POTIGUAR_2026_ROSTER_VERSION,
       estaduais2026Version: CURRENT_ESTADUAIS_2026_VERSION,
+      serieD2027ParticipantsVersion: CURRENT_SERIE_D_2027_PARTICIPANTS_VERSION,
+      serieC2027FormatVersion: CURRENT_SERIE_C_2027_FORMAT_VERSION,
       ecuador2026RosterVersion: CURRENT_ECUADOR_2026_ROSTER_VERSION,
       colombia2026RosterVersion: CURRENT_COLOMBIA_2026_ROSTER_VERSION,
       uruguay2026RosterVersion: CURRENT_URUGUAY_2026_ROSTER_VERSION,
@@ -7077,6 +7219,7 @@ export default function App() {
         fixturesLibertadores: mergedFixtures.fixturesLibertadores,
         fixturesSulamericana: mergedFixtures.fixturesSulamericana,
         fixturesEstadual: mergedFixtures.fixturesEstadual,
+        fixturesC: mergedFixtures.fixturesC,
         fixturesD: mergedFixtures.fixturesD,
         fixturesIntercontinental: mergedFixtures.fixturesIntercontinental,
         fixturesConcacafChampions: mergedFixtures.fixturesConcacafChampions,
@@ -7099,6 +7242,7 @@ export default function App() {
         standingsEstadual: recomputedStandings.standingsEstadual,
         standingsCopaNordeste: recomputedStandings.standingsCopaNordeste,
         standingsCopaVerde: recomputedStandings.standingsCopaVerde,
+        standingsC: recomputedStandings.standingsC,
         standingsD: recomputedStandings.standingsD,
         standingsChampionsLeague: recomputedStandings.standingsChampionsLeague,
         standingsEuropaLeague: recomputedStandings.standingsEuropaLeague,
@@ -7112,7 +7256,7 @@ export default function App() {
 
       const fA = mergedFixtures.fixturesA;
       const fB = mergedFixtures.fixturesB;
-      const fC = mergedFixtures.fixturesC;
+      const fC = syncedBrackets.fixturesC || mergedFixtures.fixturesC;
       const fD = syncedBrackets.fixturesD;
       const fSuper = mergedFixtures.fixturesSupercopa;
       const fRecopa = mergedFixtures.fixturesRecopa;
@@ -7188,7 +7332,8 @@ export default function App() {
       const isDecidingLeg = userFixture.leg !== 1;
       const isCupTitleMatch = Boolean(
         isDecidingLeg &&
-          (comp === 'supercopa_brasil' ||
+          (userFixture.id === 'serie_c_playoff_final' ||
+            comp === 'supercopa_brasil' ||
             comp === 'recopa_sulamericana' ||
             comp === 'uefa_supercup' ||
             comp === 'eng_community_shield' ||
@@ -7215,7 +7360,11 @@ export default function App() {
           ? userFixture.round === WORLD_LEAGUES_META.usa_mls.totalRounds &&
             !isMlsPlayoffFixture(userFixture)
           : userFixture.round >= WORLD_LEAGUES_META[comp].totalRounds
-        : Boolean(isClassic38League && userFixture.round >= prev.totalRounds);
+        : Boolean(
+            isClassic38League &&
+              userFixture.round === prev.totalRounds &&
+              !userFixture.id.includes('playoff')
+          );
 
       if (isCupTitleMatch || isLeagueFinalRound) {
         let userWon = false;
@@ -7275,7 +7424,9 @@ export default function App() {
             year: trophyYear,
             seasonLabel: isEuCompTitle ? formatEuropeanSeason(trophyYear) : undefined,
             competition:
-              comp === 'estadual' && userFixture.groupName
+              userFixture.id === 'serie_c_playoff_final'
+                ? 'Playoff de Acesso · Brasileirão Série C (Promoção à Série B)'
+                : comp === 'estadual' && userFixture.groupName
                 ? userFixture.groupName
                 : comp === 'usa_mls' && isLeagueFinalRound
                 ? "MLS Supporters' Shield (Temporada Regular)"
@@ -8701,6 +8852,10 @@ export default function App() {
           ? SOUTH_AMERICAN_LEAGUES_META[nextSaId].totalRounds
           : nextWlId
           ? WORLD_LEAGUES_META[nextWlId].totalRounds
+          : nextUserClubObj?.division === 'C'
+          ? 46
+          : nextUserClubObj?.division === 'EST'
+          ? getEstadualTotalRounds(getClubEstadualConfig(nextUserClubObj))
           : 38;
 
         const newSeasonMsg: InboxMessage = {
@@ -8884,11 +9039,11 @@ export default function App() {
       const sulamericanaChampId = resolveCupChampionId(completedPrev.fixturesSulamericana);
       const copaInternacionalChampId = resolveCupChampionId(completedPrev.fixturesCopaInternacional);
 
-      // Promotion & Relegation across Série A (20) <-> B (20), B (20) <-> C (20), C (20) <-> D (96)
+      // Promotion & Relegation across Série A (20) <-> B (20), B (20) <-> C (24), C (24) <-> D (96)
       const relegatedA = completedPrev.standingsA.slice(-4).map((s) => s.teamId);
       const promotedB = completedPrev.standingsB.slice(0, 4).map((s) => s.teamId);
       const relegatedB = completedPrev.standingsB.slice(-4).map((s) => s.teamId);
-      const promotedC = (completedPrev.standingsC || []).slice(0, 4).map((s) => s.teamId);
+      const promotedC = resolveSerieCPromotedIds(completedPrev.standingsC, completedPrev.fixturesC);
       const relegatedC = (completedPrev.standingsC || []).slice(-4).map((s) => s.teamId);
       const promotedD = resolveSerieDPromotedIds(completedPrev.fixturesD, completedPrev.standingsD);
 
@@ -8928,7 +9083,8 @@ export default function App() {
         allEstClass,
         completedPrev.standingsD,
         relegatedC,
-        completedPrev.userClubId
+        completedPrev.userClubId,
+        completedPrev.fixturesD
       );
       const regionalTrophies = buildRegionalCupTrophyRecords(
         brDivisionAdjustedClubs,
@@ -9299,6 +9455,8 @@ export default function App() {
         ? SOUTH_AMERICAN_LEAGUES_META[nextSaId].totalRounds
         : nextWlId
         ? WORLD_LEAGUES_META[nextWlId].totalRounds
+        : nextUserClubObj?.division === 'C'
+        ? 46
         : nextUserClubObj?.division === 'EST'
         ? getEstadualTotalRounds(getClubEstadualConfig(nextUserClubObj))
         : 38;
@@ -9323,6 +9481,8 @@ export default function App() {
         settledPrizeSeasonKeys: completedPrevSettledSa.settledPrizeSeasonKeys,
         calendarVersion: 6,
         estaduais2026Version: CURRENT_ESTADUAIS_2026_VERSION,
+        serieD2027ParticipantsVersion: CURRENT_SERIE_D_2027_PARTICIPANTS_VERSION,
+        serieC2027FormatVersion: CURRENT_SERIE_C_2027_FORMAT_VERSION,
         ecuador2026RosterVersion: CURRENT_ECUADOR_2026_ROSTER_VERSION,
         colombia2026RosterVersion: CURRENT_COLOMBIA_2026_ROSTER_VERSION,
         uruguay2026RosterVersion: CURRENT_URUGUAY_2026_ROSTER_VERSION,

@@ -178,6 +178,10 @@ export const BR_SERIE_C_POSITION_MERIT: Record<number, number> = {
   18: 280_000,
   19: 260_000,
   20: 240_000,
+  21: 220_000,
+  22: 200_000,
+  23: 180_000,
+  24: 160_000,
 };
 
 export const BR_SERIE_D_PARTICIPATION = 450_000;
@@ -286,9 +290,9 @@ export function getClubLeaguePrizePreview(club: Club): LeaguePrizeTablePreview {
     };
   }
   if (club.division === 'C') {
-    const rows: LeaguePrizeRow[] = Array.from({ length: 20 }, (_, i) => {
+    const rows: LeaguePrizeRow[] = Array.from({ length: 24 }, (_, i) => {
       const pos = i + 1;
-      const merit = BR_SERIE_C_POSITION_MERIT[pos] || 240_000;
+      const merit = BR_SERIE_C_POSITION_MERIT[pos] || 160_000;
       return {
         position: pos,
         participation: BR_SERIE_C_PARTICIPATION,
@@ -303,7 +307,7 @@ export function getClubLeaguePrizePreview(club: Club): LeaguePrizeTablePreview {
       participationQuota: BR_SERIE_C_PARTICIPATION,
       championTotal: rows[0].total,
       runnerUpTotal: rows[1].total,
-      lastPlaceTotal: rows[19].total,
+      lastPlaceTotal: rows[23].total,
       rows,
     };
   }
@@ -837,11 +841,11 @@ export function settleAllSeasonEndPrizes(
       });
     }
 
-    // 3. Brasileirão Série C (1º ao 20º: Participação R$ 1,2M + Posição)
+    // 3. Brasileirão Série C (1º ao 24º: Participação R$ 1,2M + Posição + Bônus Campeão do Playoff de Acesso)
     if (state.standingsC && state.standingsC.length > 0) {
       sortStandings(state.standingsC).forEach((st, idx) => {
         const pos = idx + 1;
-        const positionBonus = BR_SERIE_C_POSITION_MERIT[pos] ?? 240_000;
+        const positionBonus = BR_SERIE_C_POSITION_MERIT[pos] ?? 160_000;
         addClubPrizeLine(prizeBucket, st.teamId, {
           competitionId: 'serie_c',
           competitionName: 'Brasileirão Série C',
@@ -852,6 +856,32 @@ export function settleAllSeasonEndPrizes(
           totalAmount: BR_SERIE_C_PARTICIPATION + positionBonus,
         });
       });
+
+      const poFinal = (state.fixturesC || []).find(
+        (f) => f.id === 'serie_c_playoff_final' && f.played
+      );
+      if (poFinal) {
+        const poWinnerId =
+          poFinal.aggregateWinnerId ||
+          (poFinal.penaltiesHome !== undefined && poFinal.penaltiesAway !== undefined
+            ? poFinal.penaltiesHome >= poFinal.penaltiesAway
+              ? poFinal.homeTeamId
+              : poFinal.awayTeamId
+            : (poFinal.homeScore ?? 0) >= (poFinal.awayScore ?? 0)
+            ? poFinal.homeTeamId
+            : poFinal.awayTeamId);
+        if (poWinnerId && poWinnerId !== 'tbd' && !poWinnerId.startsWith('TBD')) {
+          addClubPrizeLine(prizeBucket, poWinnerId, {
+            competitionId: 'serie_c',
+            competitionName: 'Playoff de Acesso · Série C',
+            category: 'LEAGUE',
+            positionOrStageLabel: 'Vencedor do Playoff (Acesso à Série B)',
+            participationAmount: 0,
+            positionBonusAmount: 650_000,
+            totalAmount: 650_000,
+          });
+        }
+      }
     }
 
     // 4. Brasileirão Série D (Todos os clubes participantes: Participação CBF + Posição na classificação)

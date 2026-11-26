@@ -1,4 +1,4 @@
-import soccerWikiEnglandRaw from '../../public/assets/aistudio/SoccerWiki_2026-11-02_-_Inglaterra_1793625170_cd1eb153.json';
+import soccerWikiEnglandRaw from '../data/soccerWikiInglaterra.json';
 import { Club, GameSave, Player } from '../types/game';
 import {
   PickedSoccerWikiPlayer,

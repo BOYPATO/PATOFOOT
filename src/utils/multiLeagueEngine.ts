@@ -916,98 +916,199 @@ export function resolvePotiguarFinalClassification(
   };
 }
 
+interface SerieDCampaignStats {
+  teamId: string;
+  points: number;
+  won: number;
+  goalDifference: number;
+  goalsFor: number;
+  played: number;
+}
+
 /**
- * Applies Série D qualification berths from ALL 27 State Championships (promoting qualified 'EST'
- * clubs to 'D' and demoting non-qualified clubs as needed) so total `division === 'D'` clubs across
- * Brazil equals exactly 96 (16 regional groups of 6).
+ * Computes accumulated overall campaign across ALL played Brasileirão Série D matches
+ * (1ª Fase + Mata-Mata) used by CBF for Quarterfinals (5ª Fase), Semifinals and Final seeding.
+ */
+export function computeSerieDOverallCampaignMap(
+  fixturesD: Fixture[] = [],
+  standingsD: Standing[] = []
+): Map<string, SerieDCampaignStats> {
+  const map = new Map<string, SerieDCampaignStats>();
+  const ensure = (id: string): SerieDCampaignStats => {
+    let cur = map.get(id);
+    if (!cur) {
+      cur = { teamId: id, points: 0, won: 0, goalDifference: 0, goalsFor: 0, played: 0 };
+      map.set(id, cur);
+    }
+    return cur;
+  };
+
+  let playedMatches = 0;
+  for (const f of fixturesD) {
+    if (!f.played || f.homeScore === null || f.awayScore === null) continue;
+    if (!f.homeTeamId || f.homeTeamId === 'tbd' || !f.awayTeamId || f.awayTeamId === 'tbd') continue;
+    playedMatches++;
+    const h = ensure(f.homeTeamId);
+    const a = ensure(f.awayTeamId);
+    h.played++;
+    a.played++;
+    h.goalsFor += f.homeScore;
+    a.goalsFor += f.awayScore;
+    h.goalDifference += f.homeScore - f.awayScore;
+    a.goalDifference += f.awayScore - f.homeScore;
+    if (f.homeScore > f.awayScore) {
+      h.points += 3;
+      h.won += 1;
+    } else if (f.awayScore > f.homeScore) {
+      a.points += 3;
+      a.won += 1;
+    } else {
+      h.points += 1;
+      a.points += 1;
+    }
+  }
+
+  // Fallback to standingsD if fixturesD wasn't populated
+  if (playedMatches === 0) {
+    for (const st of standingsD) {
+      map.set(st.teamId, {
+        teamId: st.teamId,
+        points: st.points,
+        won: st.won,
+        goalDifference: st.goalDifference,
+        goalsFor: st.goalsFor,
+        played: st.played,
+      });
+    }
+  }
+
+  return map;
+}
+
+function compareSerieDCampaign(
+  aId: string,
+  bId: string,
+  campaignMap: Map<string, SerieDCampaignStats>
+): number {
+  const a = campaignMap.get(aId) || { points: 0, won: 0, goalDifference: 0, goalsFor: 0 };
+  const b = campaignMap.get(bId) || { points: 0, won: 0, goalDifference: 0, goalsFor: 0 };
+  if (b.points !== a.points) return b.points - a.points;
+  if (b.won !== a.won) return b.won - a.won;
+  if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
+  if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+  return aId.localeCompare(bId);
+}
+
+/**
+ * Extracts all clubs that reached the 3ª Fase (16-avos de final — 32 clubs) of the previous Série D.
+ * Under official CBF regulation, reaching the 3ª Fase guarantees a berth in next season's Série D
+ * if the club does not earn promotion to Série C.
+ */
+export function resolveSerieDThirdPhaseParticipantIds(
+  fixturesD: Fixture[] = [],
+  standingsD: Standing[] = []
+): string[] {
+  const participantSet = new Set<string>();
+  for (const f of fixturesD) {
+    if (!f.id.startsWith('sd_f3_m')) continue;
+    if (f.homeTeamId && f.homeTeamId !== 'tbd') participantSet.add(f.homeTeamId);
+    if (f.awayTeamId && f.awayTeamId !== 'tbd') participantSet.add(f.awayTeamId);
+  }
+
+  const campaignMap = computeSerieDOverallCampaignMap(fixturesD, standingsD);
+  if (participantSet.size > 0) {
+    return Array.from(participantSet).sort((a, b) => compareSerieDCampaign(a, b, campaignMap));
+  }
+
+  // Fallback if knockout didn't populate 3ª Fase yet: top 32 overall campaigns from standingsD
+  return [...standingsD]
+    .sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.won !== a.won) return b.won - a.won;
+      if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
+      return b.goalsFor - a.goalsFor;
+    })
+    .slice(0, 32)
+    .map((s) => s.teamId);
+}
+
+/**
+ * Applies official CBF Série D 96-club qualification criteria for the upcoming season:
+ * 1. 4 rebaixados da Série C
+ * 2. 64 vagas via Campeonatos Estaduais (cotas RNF: SP=4; RJ/MG/RS/PR/CE/GO/SC/BA=3; demais 18 UFs=2, pulando clubes em A/B/C)
+ * 3. Até 26 vagas para clubes que alcançaram a 3ª Fase da Série D anterior (sem acesso e sem duplicidade)
+ * 4. Vagas restantes (mínimo 2 + eventuais remanejamentos de sobreposição) preenchidas pelo Ranking Nacional de Clubes (RNC)
  */
 export function applyAllEstaduaisQualificationsAndRebalanceSerieD(
   clubs: Club[],
   allEstaduais: AllEstaduaisClassificationSummary,
   standingsD: Standing[] = [],
   relegatedFromCIds: string[] = [],
-  userClubId?: string
+  _userClubId?: string,
+  fixturesD: Fixture[] = []
 ): Club[] {
-  const qualifiedDSet = new Set(allEstaduais.allSerieDQualifiedIds);
-  const rnQualifiedDSet = new Set(allEstaduais.byUf.RN?.serieDQualifiedIds || []);
-
-  // Step 1: Promote all 27-state qualifiers from 'EST' to 'D', and enforce RN's strict Top 3 Série D rule
-  let adjusted = clubs.map((c) => {
-    if (c.state === 'RN' && (c.division === 'D' || c.division === 'EST')) {
-      return {
-        ...c,
-        division: rnQualifiedDSet.has(c.id) ? ('D' as const) : ('EST' as const),
-      };
-    }
-    if (c.division === 'EST' && qualifiedDSet.has(c.id)) {
-      return { ...c, division: 'D' as const };
-    }
-    return c;
-  });
-
   const TARGET_SERIE_D_CLUBS = 96;
-  const dClubs = adjusted.filter((c) => c.division === 'D');
-  if (dClubs.length === TARGET_SERIE_D_CLUBS) {
-    return adjusted;
-  }
+  const eligibleClubs = clubs.filter(
+    (c) => (c.division === 'D' || c.division === 'EST') && (!c.country || c.country === 'Brasil')
+  );
+  const eligibleSet = new Set(eligibleClubs.map((c) => c.id));
 
-  const standingsPointsById = new Map<string, number>();
-  const standingsGdById = new Map<string, number>();
-  standingsD.forEach((st) => {
-    standingsPointsById.set(st.teamId, st.points);
-    standingsGdById.set(st.teamId, st.goalDifference);
-  });
-
-  const getSquadAvgOvr = (club: Club) => {
-    if (!club.squad || club.squad.length === 0) return 60;
-    const top11 = [...club.squad].sort((a, b) => b.overall - a.overall).slice(0, 11);
-    return top11.reduce((acc, p) => acc + p.overall, 0) / top11.length;
+  const selectedIds: string[] = [];
+  const selectedSet = new Set<string>();
+  const addSlot = (id: string) => {
+    if (selectedIds.length >= TARGET_SERIE_D_CLUBS) return false;
+    if (!id || !eligibleSet.has(id) || selectedSet.has(id)) return false;
+    selectedSet.add(id);
+    selectedIds.push(id);
+    return true;
   };
 
-  if (dClubs.length > TARGET_SERIE_D_CLUBS) {
-    const excess = dClubs.length - TARGET_SERIE_D_CLUBS;
-    const protectedSet = new Set<string>([
-      ...relegatedFromCIds,
-      ...allEstaduais.allSerieDQualifiedIds,
-      ...(userClubId ? [userClubId] : []),
-    ]);
+  // Critério 1: 4 rebaixados da Série C
+  relegatedFromCIds.forEach((id) => addSlot(id));
 
-    const demotionCandidates = dClubs
-      .filter((c) => !protectedSet.has(c.id))
-      .sort((a, b) => {
-        const ptsA = standingsPointsById.get(a.id) ?? 0;
-        const ptsB = standingsPointsById.get(b.id) ?? 0;
-        if (ptsA !== ptsB) return ptsA - ptsB;
-        const gdA = standingsGdById.get(a.id) ?? 0;
-        const gdB = standingsGdById.get(b.id) ?? 0;
-        if (gdA !== gdB) return gdA - gdB;
-        if (a.reputation !== b.reputation) return a.reputation - b.reputation;
-        return getSquadAvgOvr(a) - getSquadAvgOvr(b);
-      });
+  // Critério 2: 64 vagas via campeonatos estaduais (cotas RNF 4/3/2 já pulando clubes de A/B/C)
+  allEstaduais.allSerieDQualifiedIds.forEach((id) => addSlot(id));
 
-    const demoteIds = new Set(demotionCandidates.slice(0, excess).map((c) => c.id));
-    adjusted = adjusted.map((c) =>
-      demoteIds.has(c.id) ? { ...c, division: 'EST' as const } : c
-    );
-  } else if (dClubs.length < TARGET_SERIE_D_CLUBS) {
-    const needed = TARGET_SERIE_D_CLUBS - dClubs.length;
-    const estCandidates = adjusted
-      .filter((c) => c.division === 'EST')
-      .sort((a, b) => {
-        const isRnA = a.state === 'RN' ? 1 : 0;
-        const isRnB = b.state === 'RN' ? 1 : 0;
-        if (isRnA !== isRnB) return isRnA - isRnB;
-        if (b.reputation !== a.reputation) return b.reputation - a.reputation;
-        return getSquadAvgOvr(b) - getSquadAvgOvr(a);
-      });
-
-    const promoteIds = new Set(estCandidates.slice(0, needed).map((c) => c.id));
-    adjusted = adjusted.map((c) =>
-      promoteIds.has(c.id) ? { ...c, division: 'D' as const } : c
-    );
+  // Critério 3: Até 26 vagas para clubes que chegaram à 3ª fase da Série D anterior (sem acesso)
+  const thirdPhaseIds = resolveSerieDThirdPhaseParticipantIds(fixturesD, standingsD);
+  let addedFromThirdPhase = 0;
+  for (const id of thirdPhaseIds) {
+    if (addedFromThirdPhase >= 26 || selectedIds.length >= TARGET_SERIE_D_CLUBS) break;
+    if (addSlot(id)) {
+      addedFromThirdPhase++;
+    }
   }
 
-  return adjusted;
+  // Critério 4: Vagas restantes (2 + remanejamentos de sobreposição) pelo RNC (reputação + força do elenco + estádio)
+  if (selectedIds.length < TARGET_SERIE_D_CLUBS) {
+    const getSquadAvgOvr = (club: Club) => {
+      if (!club.squad || club.squad.length === 0) return 60;
+      const top11 = [...club.squad].sort((a, b) => b.overall - a.overall).slice(0, 11);
+      return top11.reduce((acc, p) => acc + p.overall, 0) / top11.length;
+    };
+
+    const rncCandidates = eligibleClubs
+      .filter((c) => !selectedSet.has(c.id))
+      .sort((a, b) => {
+        if (b.reputation !== a.reputation) return b.reputation - a.reputation;
+        const ovrDiff = getSquadAvgOvr(b) - getSquadAvgOvr(a);
+        if (Math.abs(ovrDiff) > 0.05) return ovrDiff;
+        return (b.stadium?.capacity || 0) - (a.stadium?.capacity || 0);
+      });
+
+    for (const c of rncCandidates) {
+      if (selectedIds.length >= TARGET_SERIE_D_CLUBS) break;
+      addSlot(c.id);
+    }
+  }
+
+  return clubs.map((c) => {
+    if (!eligibleSet.has(c.id)) return c;
+    return {
+      ...c,
+      division: selectedSet.has(c.id) ? ('D' as const) : ('EST' as const),
+    };
+  });
 }
 
 /**
@@ -1019,7 +1120,8 @@ export function applyPotiguarQualificationsAndRebalanceSerieD(
   standingsD: Standing[] = [],
   relegatedFromCIds: string[] = [],
   userClubId?: string,
-  allEstaduais?: AllEstaduaisClassificationSummary
+  allEstaduais?: AllEstaduaisClassificationSummary,
+  fixturesD: Fixture[] = []
 ): Club[] {
   if (allEstaduais) {
     return applyAllEstaduaisQualificationsAndRebalanceSerieD(
@@ -1027,7 +1129,8 @@ export function applyPotiguarQualificationsAndRebalanceSerieD(
       allEstaduais,
       standingsD,
       relegatedFromCIds,
-      userClubId
+      userClubId,
+      fixturesD
     );
   }
   const minimalSummary: AllEstaduaisClassificationSummary = {
@@ -1055,7 +1158,8 @@ export function applyPotiguarQualificationsAndRebalanceSerieD(
     minimalSummary,
     standingsD,
     relegatedFromCIds,
-    userClubId
+    userClubId,
+    fixturesD
   );
 }
 
@@ -1730,8 +1834,121 @@ function syncLeagueTwoPlayoffBracket(
 }
 
 /**
+ * Sincroniza o Playoff de Acesso do Brasileirão Série C (24 clubes · 46 rodadas):
+ * - 1º ao 3º colocados sobem direto à Série B
+ * - 4º colocado vs 7º colocado (Semifinal 1 em Ida e Volta - 4º decide em casa)
+ * - 5º colocado vs 6º colocado (Semifinal 2 em Ida e Volta - 5º decide em casa)
+ * - Vencedor Semi 1 vs Vencedor Semi 2 (Final em Jogo Único, mando da melhor campanha)
+ * - Campeão do Playoff garante a 4ª vaga de acesso à Série B!
+ */
+function syncSerieCPlayoffBracket(
+  fixtures: Fixture[],
+  standings?: Standing[]
+): Fixture[] {
+  const hasPlayoffs = fixtures.some((f) => f.id === 'serie_c_playoff_semi1_ida');
+  if (!hasPlayoffs) return fixtures;
+
+  let list = [...fixtures];
+  const getFix = (id: string) => list.find((f) => f.id === id);
+
+  const regularGames = list.filter((f) => isStandingsFixture(f));
+  const regularDone = regularGames.length > 0 && regularGames.every((f) => f.played);
+
+  if (regularDone && standings && standings.length >= 7) {
+    const ordered = [...standings].sort(
+      (a, b) =>
+        b.points - a.points ||
+        b.won - a.won ||
+        b.goalDifference - a.goalDifference ||
+        b.goalsFor - a.goalsFor
+    );
+    const rankIndex = new Map<string, number>();
+    ordered.forEach((s, idx) => rankIndex.set(s.teamId, idx));
+
+    const team4 = ordered[3]?.teamId;
+    const team5 = ordered[4]?.teamId;
+    const team6 = ordered[5]?.teamId;
+    const team7 = ordered[6]?.teamId;
+
+    // Semifinal 1: 4º vs 7º (7º manda a Ida, 4º decide a Volta em casa)
+    list = assignTwoLeggedSlots(
+      list,
+      'serie_c_playoff_semi1_ida',
+      'serie_c_playoff_semi1_volta',
+      team7,
+      team4
+    );
+
+    // Semifinal 2: 5º vs 6º (6º manda a Ida, 5º decide a Volta em casa)
+    list = assignTwoLeggedSlots(
+      list,
+      'serie_c_playoff_semi2_ida',
+      'serie_c_playoff_semi2_volta',
+      team6,
+      team5
+    );
+
+    const semi1Winner = resolveTieWinner(
+      getFix('serie_c_playoff_semi1_ida'),
+      getFix('serie_c_playoff_semi1_volta')
+    );
+    const semi2Winner = resolveTieWinner(
+      getFix('serie_c_playoff_semi2_ida'),
+      getFix('serie_c_playoff_semi2_volta')
+    );
+
+    if (semi1Winner || semi2Winner) {
+      let finalHome = semi1Winner || undefined;
+      let finalAway = semi2Winner || undefined;
+      if (semi1Winner && semi2Winner) {
+        const r1 = rankIndex.get(semi1Winner) ?? 99;
+        const r2 = rankIndex.get(semi2Winner) ?? 99;
+        if (r2 < r1) {
+          finalHome = semi2Winner;
+          finalAway = semi1Winner;
+        }
+      }
+      list = assignSingleLegSlots(
+        list,
+        'serie_c_playoff_final',
+        finalHome,
+        finalAway
+      );
+    }
+  }
+
+  return list;
+}
+
+/**
+ * Resolve os 4 clubes promovidos da Série C para a Série B:
+ * - 1º, 2º e 3º colocados da fase regular (acesso direto)
+ * - Campeão do Playoff de Acesso (4º ao 7º) na 4ª vaga (fallback: 4º colocado)
+ */
+export function resolveSerieCPromotedIds(
+  standingsC?: Standing[],
+  fixturesC?: Fixture[]
+): string[] {
+  const ordered = [...(standingsC || [])].sort(
+    (a, b) =>
+      b.points - a.points ||
+      b.won - a.won ||
+      b.goalDifference - a.goalDifference ||
+      b.goalsFor - a.goalsFor
+  );
+  const direct = ordered.slice(0, 3).map((s) => s.teamId);
+  const finalFix = (fixturesC || []).find((f) => f.id === 'serie_c_playoff_final');
+  const playoffWinner = resolveTieWinner(undefined, finalFix);
+  const fourthSpot =
+    playoffWinner && !direct.includes(playoffWinner)
+      ? playoffWinner
+      : ordered[3]?.teamId;
+  return fourthSpot ? [...direct, fourthSpot] : direct;
+}
+
+/**
  * Updates unplayed knockout fixtures in Copa do Brasil (9 phases), Libertadores (32 clubs),
- * Sul-Americana (32 clubs), Brasileirão Série D (96 clubs -> 64 knockout), and 12 Estaduais!
+ * Sul-Americana (32 clubs), Brasileirão Série C (playoff 4º-7º), Série D (96 clubs -> 64 knockout), and 27 Estaduais!
  */
 export function syncDynamicKnockoutBrackets(state: {
   clubs?: Club[];
@@ -1742,6 +1959,7 @@ export function syncDynamicKnockoutBrackets(state: {
   fixturesEstadual: Fixture[];
   fixturesCopaNordeste?: Fixture[];
   fixturesCopaVerde?: Fixture[];
+  fixturesC?: Fixture[];
   fixturesD?: Fixture[];
   fixturesIntercontinental?: Fixture[];
   fixturesChampionsLeague?: Fixture[];
@@ -1764,6 +1982,7 @@ export function syncDynamicKnockoutBrackets(state: {
   standingsEstadual: Standing[];
   standingsCopaNordeste?: Standing[];
   standingsCopaVerde?: Standing[];
+  standingsC?: Standing[];
   standingsD?: Standing[];
   standingsChampionsLeague?: Standing[];
   standingsEuropaLeague?: Standing[];
@@ -1879,7 +2098,8 @@ export function syncDynamicKnockoutBrackets(state: {
     'sula_final'
   );
 
-  // 4. Brasileirão Série D 2026 (16 groups A01–A16 -> Top 4 each = 64 clubs -> 2ª Fase -> 3ª Fase -> Oitavas -> Quartas -> Semi -> Final)
+  // 4. Brasileirão Série D 2027 (16 grupos A01–A16 -> Top 4 = 64 clubes -> 2ª Fase cruzamento olímpico ->
+  //    3ª Fase -> Oitavas -> Quartas re-ranqueadas 1ºx8º..4ºx5º -> Semis re-ranqueadas 1ºx4º & 2ºx3º -> Final)
   let serieD = [...(state.fixturesD || [])];
   const standingsD = state.standingsD || [];
   const hasSerieDKnockout = serieD.some((f) => f.id === 'sd_f2_m0_ida');
@@ -1894,7 +2114,7 @@ export function syncDynamicKnockoutBrackets(state: {
         const g1 = standingsD.filter((s) => s.group === g1Name);
         const g2 = standingsD.filter((s) => s.group === g2Name);
 
-        // 4 regionalized cross-over ties between adjacent groups
+        // Cruzamento olímpico regionalizado entre grupos vizinhos (melhor colocado decide a volta em casa)
         serieD = assignTwoLeggedSlots(
           serieD,
           `sd_f2_m${p * 4 + 0}_ida`,
@@ -1926,7 +2146,17 @@ export function syncDynamicKnockoutBrackets(state: {
       }
     }
 
-    // 2ª Fase (32) -> 3ª Fase (16)
+    const campaignMap = computeSerieDOverallCampaignMap(serieD, standingsD);
+    const orderPairByCampaign = (
+      t1?: string | null,
+      t2?: string | null
+    ): [string | null | undefined, string | null | undefined] => {
+      if (!t1 || !t2) return [t1, t2];
+      // Better campaign plays the 2nd leg (volta) at home -> placed as 2nd parameter (idaAwayId)
+      return compareSerieDCampaign(t1, t2, campaignMap) <= 0 ? [t2, t1] : [t1, t2];
+    };
+
+    // 2ª Fase (32) -> 3ª Fase / 16-avos (16 confrontos em chave pré-definida; melhor campanha decide em casa)
     for (let i = 0; i < 16; i++) {
       const w1 = resolveTieWinner(
         getFix(serieD, `sd_f2_m${i * 2}_ida`),
@@ -1936,10 +2166,11 @@ export function syncDynamicKnockoutBrackets(state: {
         getFix(serieD, `sd_f2_m${i * 2 + 1}_ida`),
         getFix(serieD, `sd_f2_m${i * 2 + 1}_volta`)
       );
-      serieD = assignTwoLeggedSlots(serieD, `sd_f3_m${i}_ida`, `sd_f3_m${i}_volta`, w1, w2);
+      const [idaHome, voltaHome] = orderPairByCampaign(w1, w2);
+      serieD = assignTwoLeggedSlots(serieD, `sd_f3_m${i}_ida`, `sd_f3_m${i}_volta`, idaHome, voltaHome);
     }
 
-    // 3ª Fase (16) -> Oitavas (8)
+    // 3ª Fase (16) -> 4ª Fase / Oitavas de Final (8 confrontos em chave pré-definida)
     for (let i = 0; i < 8; i++) {
       const w1 = resolveTieWinner(
         getFix(serieD, `sd_f3_m${i * 2}_ida`),
@@ -1949,51 +2180,66 @@ export function syncDynamicKnockoutBrackets(state: {
         getFix(serieD, `sd_f3_m${i * 2 + 1}_ida`),
         getFix(serieD, `sd_f3_m${i * 2 + 1}_volta`)
       );
+      const [idaHome, voltaHome] = orderPairByCampaign(w1, w2);
       serieD = assignTwoLeggedSlots(
         serieD,
         `sd_oitavas_m${i}_ida`,
         `sd_oitavas_m${i}_volta`,
-        w1,
-        w2
+        idaHome,
+        voltaHome
       );
     }
 
-    // Oitavas (8) -> Quartas / Jogo do Acesso (4)
+    // 4ª Fase / Oitavas (8) -> 5ª Fase / Quartas de Final (Valendo Acesso):
+    // Regra oficial CBF: re-ranqueamento geral (1ª+2ª+3ª+4ª fases) -> 1ºx8º, 2ºx7º, 3ºx6º, 4ºx5º!
+    const oitavasWinners: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      const w = resolveTieWinner(
+        getFix(serieD, `sd_oitavas_m${i}_ida`),
+        getFix(serieD, `sd_oitavas_m${i}_volta`)
+      );
+      if (w && w !== 'tbd') oitavasWinners.push(w);
+    }
+    if (oitavasWinners.length === 8) {
+      const ranked8 = [...oitavasWinners].sort((a, b) => compareSerieDCampaign(a, b, campaignMap));
+      const qfPairs: Array<[string, string]> = [
+        [ranked8[7], ranked8[0]], // 8º (ida) x 1º (volta)
+        [ranked8[6], ranked8[1]], // 7º (ida) x 2º (volta)
+        [ranked8[5], ranked8[2]], // 6º (ida) x 3º (volta)
+        [ranked8[4], ranked8[3]], // 5º (ida) x 4º (volta)
+      ];
+      qfPairs.forEach(([idaHome, voltaHome], i) => {
+        serieD = assignTwoLeggedSlots(
+          serieD,
+          `sd_quartas_m${i}_ida`,
+          `sd_quartas_m${i}_volta`,
+          idaHome,
+          voltaHome
+        );
+      });
+    }
+
+    // 5ª Fase / Quartas (4) -> Semifinais (4 clubes promovidos à Série C):
+    // Regra oficial CBF: novo re-ranqueamento geral acumulado -> 1ºx4º e 2ºx3º!
+    const quartasWinners: string[] = [];
     for (let i = 0; i < 4; i++) {
-      const w1 = resolveTieWinner(
-        getFix(serieD, `sd_oitavas_m${i * 2}_ida`),
-        getFix(serieD, `sd_oitavas_m${i * 2}_volta`)
+      const w = resolveTieWinner(
+        getFix(serieD, `sd_quartas_m${i}_ida`),
+        getFix(serieD, `sd_quartas_m${i}_volta`)
       );
-      const w2 = resolveTieWinner(
-        getFix(serieD, `sd_oitavas_m${i * 2 + 1}_ida`),
-        getFix(serieD, `sd_oitavas_m${i * 2 + 1}_volta`)
-      );
-      serieD = assignTwoLeggedSlots(
-        serieD,
-        `sd_quartas_m${i}_ida`,
-        `sd_quartas_m${i}_volta`,
-        w1,
-        w2
-      );
+      if (w && w !== 'tbd') quartasWinners.push(w);
+    }
+    if (quartasWinners.length === 4) {
+      const ranked4 = [...quartasWinners].sort((a, b) => compareSerieDCampaign(a, b, campaignMap));
+      serieD = assignTwoLeggedSlots(serieD, 'sd_semi_m0_ida', 'sd_semi_m0_volta', ranked4[3], ranked4[0]);
+      serieD = assignTwoLeggedSlots(serieD, 'sd_semi_m1_ida', 'sd_semi_m1_volta', ranked4[2], ranked4[1]);
     }
 
-    // Quartas (4) -> Semifinal (2)
-    for (let i = 0; i < 2; i++) {
-      const w1 = resolveTieWinner(
-        getFix(serieD, `sd_quartas_m${i * 2}_ida`),
-        getFix(serieD, `sd_quartas_m${i * 2}_volta`)
-      );
-      const w2 = resolveTieWinner(
-        getFix(serieD, `sd_quartas_m${i * 2 + 1}_ida`),
-        getFix(serieD, `sd_quartas_m${i * 2 + 1}_volta`)
-      );
-      serieD = assignTwoLeggedSlots(serieD, `sd_semi_m${i}_ida`, `sd_semi_m${i}_volta`, w1, w2);
-    }
-
-    // Semifinal (2) -> Grande Final da Série D (1)
+    // Semifinal (2) -> Grande Final da Série D (melhor campanha geral decide a volta em casa!)
     const sdFin1 = resolveTieWinner(getFix(serieD, 'sd_semi_m0_ida'), getFix(serieD, 'sd_semi_m0_volta'));
     const sdFin2 = resolveTieWinner(getFix(serieD, 'sd_semi_m1_ida'), getFix(serieD, 'sd_semi_m1_volta'));
-    serieD = assignTwoLeggedSlots(serieD, 'sd_final_ida', 'sd_final_volta', sdFin1, sdFin2);
+    const [finalIdaHome, finalVoltaHome] = orderPairByCampaign(sdFin1, sdFin2);
+    serieD = assignTwoLeggedSlots(serieD, 'sd_final_ida', 'sd_final_volta', finalIdaHome, finalVoltaHome);
   }
 
   // 5. Campeonatos Estaduais 2026 (Todos os 27 Estados + formatos oficiais de mata-mata 1 ou 2 jogos + byes)
@@ -2489,6 +2735,11 @@ export function syncDynamicKnockoutBrackets(state: {
     clubs: state.clubs,
   });
 
+  // 14. Brasileirão Série C · Playoff de Acesso (4º ao 7º)
+  const serieC = state.fixturesC
+    ? syncSerieCPlayoffBracket(state.fixturesC, state.standingsC)
+    : undefined;
+
   return {
     fixturesCopaBrasil: cdb,
     fixturesLibertadores: lib,
@@ -2496,6 +2747,7 @@ export function syncDynamicKnockoutBrackets(state: {
     fixturesEstadual: est,
     fixturesCopaNordeste: cne,
     fixturesCopaVerde: cv,
+    ...(serieC ? { fixturesC: serieC } : {}),
     fixturesD: serieD,
     fixturesIntercontinental: intercont,
     fixturesChampionsLeague: ucl,
@@ -2858,6 +3110,7 @@ export function simulateCpuFixturesUpToDate(
     f.competition === 'eng_community_shield' ||
     f.competition === 'eng_fa_cup' ||
     f.competition === 'eng_efl_cup' ||
+    f.id.startsWith('serie_c_playoff_') ||
     isMlsPlayoffFixture(f) ||
     isEuropeanCup(f.competition) ||
     isSouthAmericanCup(f.competition) ||
@@ -2898,55 +3151,60 @@ export function simulateCpuFixturesUpToDate(
 
   // Up to 300 chronological waves, batching pure round-robin league games up to the next cup matchday
   for (let pass = 0; pass < 300; pass++) {
-    // Sync standings and brackets before scanning due fixtures so newly unlocked knockout slots are ready
-    const preStandings = recomputeAllStandings(workingState);
-    const preBrackets = syncDynamicKnockoutBrackets({
-      clubs: workingState.clubs,
-      currentDate: effectiveCutoffDate,
-      fixturesCopaBrasil: workingState.fixturesCopaBrasil || [],
-      fixturesLibertadores: workingState.fixturesLibertadores || [],
-      fixturesSulamericana: workingState.fixturesSulamericana || [],
-      fixturesEstadual: workingState.fixturesEstadual || [],
-      fixturesCopaNordeste: workingState.fixturesCopaNordeste || [],
-      fixturesCopaVerde: workingState.fixturesCopaVerde || [],
-      fixturesD: workingState.fixturesD || [],
-      fixturesIntercontinental: workingState.fixturesIntercontinental || [],
-      fixturesChampionsLeague: workingState.fixturesChampionsLeague || [],
-      fixturesEuropaLeague: workingState.fixturesEuropaLeague || [],
-      fixturesConferenceLeague: workingState.fixturesConferenceLeague || [],
-      fixturesCopaInternacional: workingState.fixturesCopaInternacional || [],
-      fixturesConcacafChampions: workingState.fixturesConcacafChampions || [],
-      fixturesAfcChampions: workingState.fixturesAfcChampions || [],
-      fixturesSuperMundial: workingState.fixturesSuperMundial || [],
-      fixturesEngCommunityShield: workingState.fixturesEngCommunityShield,
-      fixturesEngEflCup: workingState.fixturesEngEflCup,
-      fixturesEngFaCup: workingState.fixturesEngFaCup,
-      fixturesEuropeanCups: workingState.fixturesEuropeanCups,
-      fixturesSouthAmericanCups: workingState.fixturesSouthAmericanCups,
-      fixturesEurope: workingState.fixturesEurope,
-      fixturesWorldLeagues: workingState.fixturesWorldLeagues,
-      fixturesWorldCups: workingState.fixturesWorldCups,
-      standingsLibertadores: preStandings.standingsLibertadores,
-      standingsSulamericana: preStandings.standingsSulamericana,
-      standingsEstadual: preStandings.standingsEstadual,
-      standingsCopaNordeste: preStandings.standingsCopaNordeste,
-      standingsCopaVerde: preStandings.standingsCopaVerde,
-      standingsD: preStandings.standingsD,
-      standingsChampionsLeague: preStandings.standingsChampionsLeague,
-      standingsEuropaLeague: preStandings.standingsEuropaLeague,
-      standingsConferenceLeague: preStandings.standingsConferenceLeague,
-      standingsCopaInternacional: preStandings.standingsCopaInternacional,
-      standingsAfcChampions: preStandings.standingsAfcChampions,
-      standingsSuperMundial: preStandings.standingsSuperMundial,
-      standingsEurope: preStandings.standingsEurope,
-      standingsWorldLeagues: preStandings.standingsWorldLeagues,
-    });
+    // On pass 0, sync standings, brackets, and schedule conflicts once before scanning due fixtures;
+    // subsequent passes already receive fresh standings, brackets, and resolved conflicts from the end of the previous wave.
+    if (pass === 0) {
+      const preStandings = recomputeAllStandings(workingState);
+      const preBrackets = syncDynamicKnockoutBrackets({
+        clubs: workingState.clubs,
+        currentDate: effectiveCutoffDate,
+        fixturesCopaBrasil: workingState.fixturesCopaBrasil || [],
+        fixturesLibertadores: workingState.fixturesLibertadores || [],
+        fixturesSulamericana: workingState.fixturesSulamericana || [],
+        fixturesEstadual: workingState.fixturesEstadual || [],
+        fixturesCopaNordeste: workingState.fixturesCopaNordeste || [],
+        fixturesCopaVerde: workingState.fixturesCopaVerde || [],
+        fixturesC: workingState.fixturesC || [],
+        fixturesD: workingState.fixturesD || [],
+        fixturesIntercontinental: workingState.fixturesIntercontinental || [],
+        fixturesChampionsLeague: workingState.fixturesChampionsLeague || [],
+        fixturesEuropaLeague: workingState.fixturesEuropaLeague || [],
+        fixturesConferenceLeague: workingState.fixturesConferenceLeague || [],
+        fixturesCopaInternacional: workingState.fixturesCopaInternacional || [],
+        fixturesConcacafChampions: workingState.fixturesConcacafChampions || [],
+        fixturesAfcChampions: workingState.fixturesAfcChampions || [],
+        fixturesSuperMundial: workingState.fixturesSuperMundial || [],
+        fixturesEngCommunityShield: workingState.fixturesEngCommunityShield,
+        fixturesEngEflCup: workingState.fixturesEngEflCup,
+        fixturesEngFaCup: workingState.fixturesEngFaCup,
+        fixturesEuropeanCups: workingState.fixturesEuropeanCups,
+        fixturesSouthAmericanCups: workingState.fixturesSouthAmericanCups,
+        fixturesEurope: workingState.fixturesEurope,
+        fixturesWorldLeagues: workingState.fixturesWorldLeagues,
+        fixturesWorldCups: workingState.fixturesWorldCups,
+        standingsLibertadores: preStandings.standingsLibertadores,
+        standingsSulamericana: preStandings.standingsSulamericana,
+        standingsEstadual: preStandings.standingsEstadual,
+        standingsCopaNordeste: preStandings.standingsCopaNordeste,
+        standingsCopaVerde: preStandings.standingsCopaVerde,
+        standingsC: preStandings.standingsC,
+        standingsD: preStandings.standingsD,
+        standingsChampionsLeague: preStandings.standingsChampionsLeague,
+        standingsEuropaLeague: preStandings.standingsEuropaLeague,
+        standingsConferenceLeague: preStandings.standingsConferenceLeague,
+        standingsCopaInternacional: preStandings.standingsCopaInternacional,
+        standingsAfcChampions: preStandings.standingsAfcChampions,
+        standingsSuperMundial: preStandings.standingsSuperMundial,
+        standingsEurope: preStandings.standingsEurope,
+        standingsWorldLeagues: preStandings.standingsWorldLeagues,
+      });
 
-    workingState = resolveCrossCompetitionScheduleConflicts({
-      ...workingState,
-      ...preStandings,
-      ...preBrackets,
-    });
+      workingState = resolveCrossCompetitionScheduleConflicts({
+        ...workingState,
+        ...preStandings,
+        ...preBrackets,
+      });
+    }
 
     const allPools = collectAllPools(workingState);
 
@@ -3042,10 +3300,11 @@ export function simulateCpuFixturesUpToDate(
           ? allPools.find(
               (prev) =>
                 prev.competition === f.competition &&
-                prev.cupPhase === f.cupPhase &&
                 prev.leg === 1 &&
-                ((prev.homeTeamId === f.awayTeamId && prev.awayTeamId === f.homeTeamId) ||
-                  prev.id === f.id.replace('_volta', '_ida'))
+                (prev.id === f.id.replace('_volta', '_ida') ||
+                  (prev.cupPhase === f.cupPhase &&
+                    prev.homeTeamId === f.awayTeamId &&
+                    prev.awayTeamId === f.homeTeamId))
             )
           : undefined;
       return simulateQuickMatch(h, a, f, leg1);
@@ -3072,6 +3331,7 @@ export function simulateCpuFixturesUpToDate(
       fixturesEstadual: mergedFixtures.fixturesEstadual,
       fixturesCopaNordeste: mergedFixtures.fixturesCopaNordeste,
       fixturesCopaVerde: mergedFixtures.fixturesCopaVerde,
+      fixturesC: mergedFixtures.fixturesC,
       fixturesD: mergedFixtures.fixturesD,
       fixturesIntercontinental: mergedFixtures.fixturesIntercontinental,
       fixturesChampionsLeague: mergedFixtures.fixturesChampionsLeague,
@@ -3094,6 +3354,7 @@ export function simulateCpuFixturesUpToDate(
       standingsEstadual: passStandings.standingsEstadual,
       standingsCopaNordeste: passStandings.standingsCopaNordeste,
       standingsCopaVerde: passStandings.standingsCopaVerde,
+      standingsC: passStandings.standingsC,
       standingsD: passStandings.standingsD,
       standingsChampionsLeague: passStandings.standingsChampionsLeague,
       standingsEuropaLeague: passStandings.standingsEuropaLeague,

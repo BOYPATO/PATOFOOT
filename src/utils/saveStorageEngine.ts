@@ -131,7 +131,14 @@ function compactFixtureList(
   const keepRichReportIds = new Set<string>(playedUserFixtureIds);
 
   return fixtures.map((f) => {
-    if (!f.played) return f;
+    if (!f.played) {
+      if (f.events && f.events.length === 0) {
+        const slim: Fixture = { ...f };
+        delete slim.events;
+        return slim;
+      }
+      return f;
+    }
     const isUserMatch = f.homeTeamId === userClubId || f.awayTeamId === userClubId;
     if (isUserMatch && keepRichReportIds.has(f.id)) {
       return f;
@@ -449,12 +456,62 @@ function openSaveDatabase(): Promise<IDBDatabase | null> {
   return dbInstancePromise;
 }
 
-function idbPutSave(db: IDBDatabase, key: CareerSaveKey, save: GameSave): Promise<boolean> {
+interface GzippedSaveRecord {
+  __pfGzipV1: true;
+  payload: Uint8Array;
+}
+
+function isGzippedSaveRecord(val: unknown): val is GzippedSaveRecord {
+  return (
+    typeof val === 'object' &&
+    val !== null &&
+    (val as GzippedSaveRecord).__pfGzipV1 === true &&
+    (val as GzippedSaveRecord).payload instanceof Uint8Array
+  );
+}
+
+export async function compressSaveToGzipBytes(save: GameSave): Promise<Uint8Array | null> {
+  if (typeof CompressionStream === 'undefined' || typeof Response === 'undefined') {
+    return null;
+  }
+  try {
+    const jsonBytes = new TextEncoder().encode(JSON.stringify(save));
+    const stream = new Blob([jsonBytes]).stream().pipeThrough(new CompressionStream('gzip'));
+    const buffer = await new Response(stream).arrayBuffer();
+    return new Uint8Array(buffer);
+  } catch {
+    return null;
+  }
+}
+
+export async function decompressGzipBytesToSave(bytes: Uint8Array): Promise<GameSave | null> {
+  if (typeof DecompressionStream === 'undefined' || typeof Response === 'undefined') {
+    return null;
+  }
+  try {
+    const copy = new Uint8Array(bytes.byteLength);
+    copy.set(bytes);
+    const stream = new Blob([copy]).stream().pipeThrough(new DecompressionStream('gzip'));
+    const text = await new Response(stream).text();
+    const parsed = JSON.parse(text) as GameSave;
+    return parsed && parsed.clubs && parsed.userClubId ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+async function idbPutSave(db: IDBDatabase, key: CareerSaveKey, save: GameSave): Promise<boolean> {
+  // Compress BEFORE opening the IndexedDB transaction (an async await inside an open IDB transaction auto-commits it)
+  const compressedBytes = await compressSaveToGzipBytes(save);
+  const recordToStore: GameSave | GzippedSaveRecord = compressedBytes
+    ? { __pfGzipV1: true, payload: compressedBytes }
+    : save;
+
   return new Promise<boolean>((resolve) => {
     try {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
-      store.put(save, key);
+      store.put(recordToStore, key);
       tx.oncomplete = () => resolve(true);
       tx.onerror = () => resolve(false);
       tx.onabort = () => resolve(false);
@@ -464,21 +521,25 @@ function idbPutSave(db: IDBDatabase, key: CareerSaveKey, save: GameSave): Promis
   });
 }
 
-function idbGetSave(db: IDBDatabase, key: CareerSaveKey): Promise<GameSave | null> {
-  return new Promise<GameSave | null>((resolve) => {
+async function idbGetSave(db: IDBDatabase, key: CareerSaveKey): Promise<GameSave | null> {
+  const raw = await new Promise<unknown>((resolve) => {
     try {
       const tx = db.transaction(STORE_NAME, 'readonly');
       const store = tx.objectStore(STORE_NAME);
       const req = store.get(key);
-      req.onsuccess = () => {
-        const val = req.result as GameSave | undefined;
-        resolve(val && val.clubs && val.userClubId ? val : null);
-      };
+      req.onsuccess = () => resolve(req.result);
       req.onerror = () => resolve(null);
     } catch {
       resolve(null);
     }
   });
+
+  if (!raw) return null;
+  if (isGzippedSaveRecord(raw)) {
+    return decompressGzipBytesToSave(raw.payload);
+  }
+  const val = raw as GameSave | undefined;
+  return val && val.clubs && val.userClubId ? val : null;
 }
 
 function idbDeleteSave(db: IDBDatabase, key: CareerSaveKey): Promise<void> {

@@ -1055,7 +1055,27 @@ export function buildContinentSeasonArchive(
         userClubId: state.userClubId,
         forceDecided: !isLivePreview,
       });
-      if (serieCArc) competitions.push(serieCArc);
+      if (serieCArc) {
+        const poFinal = state.fixturesC.find(
+          (f) => f.id === 'serie_c_playoff_final' && f.played
+        );
+        if (poFinal) {
+          const poWinnerId =
+            poFinal.aggregateWinnerId ||
+            (poFinal.penaltiesHome !== undefined && poFinal.penaltiesAway !== undefined
+              ? poFinal.penaltiesHome >= poFinal.penaltiesAway
+                ? poFinal.homeTeamId
+                : poFinal.awayTeamId
+              : (poFinal.homeScore ?? 0) >= (poFinal.awayScore ?? 0)
+              ? poFinal.homeTeamId
+              : poFinal.awayTeamId);
+          const poWinnerClub = poWinnerId ? clubsMap.get(poWinnerId) : undefined;
+          if (poWinnerClub) {
+            serieCArc.campaignSummary = `${serieCArc.campaignSummary} · Playoff de Acesso: ${poWinnerClub.shortName}`;
+          }
+        }
+        competitions.push(serieCArc);
+      }
     }
 
     if (state.fixturesD && state.fixturesD.length > 0) {

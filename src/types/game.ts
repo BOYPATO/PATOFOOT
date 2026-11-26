@@ -1825,6 +1825,8 @@ export interface GameSave {
   serieC2026RosterVersion?: number;
   potiguar2026RosterVersion?: number;
   estaduais2026Version?: number;
+  serieD2027ParticipantsVersion?: number;
+  serieC2027FormatVersion?: number;
   ecuador2026RosterVersion?: number;
   colombia2026RosterVersion?: number;
   uruguay2026RosterVersion?: number;

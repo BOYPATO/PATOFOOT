@@ -1,4 +1,4 @@
-import soccerWikiRaw from '../../public/assets/aistudio/SoccerWiki_2026-11-02_-_Brasil_1793621877_70461a65.json';
+import soccerWikiRaw from '../data/soccerWikiBrasil.json';
 import { Club, GameSave, Player } from '../types/game';
 
 export const CURRENT_SOCCERWIKI_BRASIL_VERSION = 1;
