@@ -869,6 +869,22 @@ export interface TransferOffer {
   counterCount?: number;
 }
 
+export interface FreeAgentMarketBid {
+  id: string;
+  playerId: string;
+  playerName: string;
+  playerRole: DetailedRole;
+  playerOverall: number;
+  playerAge: number;
+  clubId: string;
+  clubName: string;
+  clubShortName: string;
+  offeredWage: number;
+  contractYears: number;
+  submittedDate: string; // YYYY-MM-DD
+  expiresDate: string; // YYYY-MM-DD
+}
+
 export interface MedicalReportData {
   playerId: string;
   playerName: string;
@@ -1926,6 +1942,8 @@ export interface GameSave {
   inbox: InboxMessage[];
   transferMarket: Player[]; // Free agents
   freeAgents2026Version?: number;
+  freeAgentBids?: FreeAgentMarketBid[]; // Active CPU proposals for free agents during the season
+  lastAiMarketSyncDate?: string; // Last YYYY-MM-DD the autonomous world transfer market ran
   transferOffers: TransferOffer[];
   transferHistory?: TransferHistoryRecord[];
   pendingTransfers?: PendingTransferDeal[];

@@ -10,8 +10,8 @@ import { recordFinanceLedgerMutation } from './financialFairPlayEngine';
 import { isSplitCalendarClub } from './worldLeaguesEngine';
 import { evaluatePlayerClubWillingness } from './transferWillingnessEngine';
 
-export const MAX_SEASON_LOANS_IN = 3;
-export const MAX_SEASON_LOANS_OUT = 6;
+export const MAX_SEASON_LOANS_IN = 5;
+export const MAX_SEASON_LOANS_OUT = 8;
 
 export interface ClubSeasonLoanCounts {
   seasonYear: number;
@@ -603,16 +603,20 @@ export function processRoundLoans(
     club.squad.forEach((player) => {
       if (player.isLoan && player.loanRoundsRemaining !== undefined) {
         const newRoundsRemaining = player.loanRoundsRemaining - 1;
+        const parentId = player.loanParentClubId;
+        const isUserOwnedLoan = parentId === userClubId && clubId !== userClubId;
+        const isCpuToCpuLoan = Boolean(parentId && parentId !== userClubId && clubId !== userClubId);
 
-        // Simulate game time and evolution for players loaned out by the user to other CPU clubs
-        if (player.loanParentClubId === userClubId && clubId !== userClubId) {
-          const playedThisWeek = Math.random() < 0.85;
+        // Simulate game time and evolution for players loaned out to CPU clubs (user-owned AND CPU-to-CPU)
+        if (isUserOwnedLoan || isCpuToCpuLoan) {
+          const playedThisWeek = Math.random() < (player.isStarter ? 0.9 : 0.72);
           const scoredGoal =
-            player.position === 'FW'
-              ? Math.random() < 0.35
+            playedThisWeek &&
+            (player.position === 'FW'
+              ? Math.random() < 0.34
               : player.position === 'MF'
-              ? Math.random() < 0.15
-              : false;
+              ? Math.random() < 0.14
+              : false);
           const newMatches = player.matches + (playedThisWeek ? 1 : 0);
           const newGoals = player.goals + (scoredGoal ? 1 : 0);
 
@@ -623,15 +627,17 @@ export function processRoundLoans(
             newOverall += 1;
             newEvolutions += 1;
             newProgress = 0;
-            loanNotifications.push({
-              id: `msg_loan_evolve_${player.id}_${currentRound}`,
-              title: `⭐ Evolução no Empréstimo: ${player.name}`,
-              message: `Emprestado ao ${club.name}, ${player.name} ganhou rodagem em campo e evoluiu sua força para OVR ${newOverall}!`,
-              date: currentDate,
-              round: currentRound,
-              read: false,
-              type: 'LOAN',
-            });
+            if (isUserOwnedLoan) {
+              loanNotifications.push({
+                id: `msg_loan_evolve_${player.id}_${currentRound}`,
+                title: `⭐ Evolução no Empréstimo: ${player.name}`,
+                message: `Emprestado ao ${club.name}, ${player.name} ganhou rodagem em campo e evoluiu sua força para OVR ${newOverall}!`,
+                date: currentDate,
+                round: currentRound,
+                read: false,
+                type: 'LOAN',
+              });
+            }
           }
 
           player = {
@@ -645,23 +651,35 @@ export function processRoundLoans(
         }
 
         if (newRoundsRemaining <= 0) {
-          const parentId = player.loanParentClubId || userClubId;
+          const parentClubObj = parentId ? clubsMap.get(parentId) : undefined;
           const fixedBuyout = player.loanBuyOptionFee;
 
-          // Check if CPU borrowing club exercises active fixed buyout option on user's loaned-out player!
+          // Check if CPU borrowing club exercises active fixed buyout option at loan end (for user OR CPU parent clubs)
           const cpuExercisesBuyout =
-            parentId === userClubId &&
+            Boolean(parentId && parentClubObj) &&
             clubId !== userClubId &&
             fixedBuyout !== undefined &&
             fixedBuyout > 0 &&
-            club.finances.balance - clubBuyoutExpense >= fixedBuyout * 0.75 &&
+            club.finances.balance - clubBuyoutExpense >= fixedBuyout * (parentId === userClubId ? 0.75 : 1.15) &&
             (player.matches >= 5 || (player.evolutionsCount || 0) >= 1) &&
-            Math.random() < 0.65;
+            Math.random() < (parentId === userClubId ? 0.65 : 0.38);
 
-          if (cpuExercisesBuyout && fixedBuyout) {
+          if (cpuExercisesBuyout && fixedBuyout && parentId && parentClubObj) {
             const fullWage = resolvePlayerFullMonthlyWage(player);
             clubBuyoutExpense += fixedBuyout;
-            userBuyoutIncomeEarned += fixedBuyout;
+            if (parentId === userClubId) {
+              userBuyoutIncomeEarned += fixedBuyout;
+            } else {
+              // Credit CPU parent club for the buyout fee
+              clubsMap.set(parentId, {
+                ...parentClubObj,
+                finances: {
+                  ...parentClubObj.finances,
+                  balance: parentClubObj.finances.balance + fixedBuyout,
+                  totalIncomeSeason: parentClubObj.finances.totalIncomeSeason + fixedBuyout,
+                },
+              });
+            }
 
             const permanentlyBoughtByCpu: Player = {
               ...player,
@@ -679,15 +697,17 @@ export function processRoundLoans(
             };
             updatedSquad.push(permanentlyBoughtByCpu);
 
-            loanNotifications.push({
-              id: `msg_cpu_buyout_${player.id}_${currentRound}`,
-              title: `💰 Opção de Compra Exercida pelo ${club.shortName}: ${player.name}!`,
-              message: `Ao término do empréstimo, o ${club.name} acionou oficialmente a cláusula de opção de compra fixada em ${formatMoney(fixedBuyout)} e adquiriu ${player.name} (${player.detailedRole}, OVR ${player.overall}) em definitivo! O valor já entrou nos cofres do ${userClubInit?.name || 'seu clube'}.`,
-              date: currentDate,
-              round: currentRound,
-              read: false,
-              type: 'TRANSFER',
-            });
+            if (parentId === userClubId) {
+              loanNotifications.push({
+                id: `msg_cpu_buyout_${player.id}_${currentRound}`,
+                title: `💰 Opção de Compra Exercida pelo ${club.shortName}: ${player.name}!`,
+                message: `Ao término do empréstimo, o ${club.name} acionou oficialmente a cláusula de opção de compra fixada em ${formatMoney(fixedBuyout)} e adquiriu ${player.name} (${player.detailedRole}, OVR ${player.overall}) em definitivo! O valor já entrou nos cofres do ${userClubInit?.name || 'seu clube'}.`,
+                date: currentDate,
+                round: currentRound,
+                read: false,
+                type: 'TRANSFER',
+              });
+            }
 
             buyoutTransferRecords.push({
               id: `tr_cpu_buyout_${Date.now()}_${player.id}`,
@@ -696,20 +716,20 @@ export function processRoundLoans(
               playerRole: player.detailedRole,
               playerOverall: player.overall,
               playerAge: player.age,
-              fromClubId: userClubId,
-              fromClubName: userClubInit?.name || 'Seu Clube',
+              fromClubId: parentId,
+              fromClubName: parentId === userClubId ? userClubInit?.name || 'Seu Clube' : parentClubObj.name,
               toClubId: club.id,
               toClubName: club.name,
               fee: fixedBuyout,
               wage: fullWage,
               date: currentDate,
               round: currentRound,
-              seasonYear: currentSeasonYear || Number(currentDate.slice(0, 4)) || 2026,
+              seasonYear: currentSeasonYear || Number(currentDate.slice(0, 4)) || 2027,
               category: 'BUY_OPTION',
-              direction: 'OUT',
+              direction: parentId === userClubId ? 'OUT' : 'CPU',
               notes: `Opção de compra exercida pelo ${club.shortName}`,
             });
-          } else {
+          } else if (parentId && parentClubObj) {
             // Loan expired without buyout -> return to parent club with full wage restored
             const fullWage = resolvePlayerFullMonthlyWage(player);
             returningPlayersToParent.push({
@@ -733,11 +753,10 @@ export function processRoundLoans(
             });
 
             if (clubId === userClubId) {
-              const parentClub = allClubs.find((c) => c.id === parentId);
               loanNotifications.push({
                 id: `msg_loan_exp_borrowed_${player.id}_${currentRound}`,
                 title: `📅 Fim de Empréstimo: ${player.name}`,
-                message: `O contrato de empréstimo de ${player.name} com o ${userClubInit?.name || 'seu clube'} chegou ao fim. O jogador retornou ao elenco do ${parentClub?.name || 'clube de origem'}.`,
+                message: `O contrato de empréstimo de ${player.name} com o ${userClubInit?.name || 'seu clube'} chegou ao fim. O jogador retornou ao elenco do ${parentClubObj.name}.`,
                 date: currentDate,
                 round: currentRound,
                 read: false,
@@ -754,6 +773,21 @@ export function processRoundLoans(
                 type: 'LOAN',
               });
             }
+          } else {
+            // Safety fallback if parent club no longer exists: keep as permanent player
+            updatedSquad.push({
+              ...player,
+              wage: resolvePlayerFullMonthlyWage(player),
+              isLoan: false,
+              loanParentClubId: undefined,
+              loanCurrentClubId: undefined,
+              loanRoundsRemaining: undefined,
+              loanDurationMonths: undefined,
+              loanWageContributionPct: undefined,
+              loanOriginalWage: undefined,
+              loanBuyOptionFee: undefined,
+              loanFeePaid: undefined,
+            });
           }
         } else {
           updatedSquad.push({
@@ -766,6 +800,37 @@ export function processRoundLoans(
       }
     });
 
+    // If a departing loaned starter left this club with < 11 starters, promote best available reserve
+    let balancedSquad = updatedSquad;
+    const starterCount = balancedSquad.filter((p) => p.isStarter).length;
+    if (starterCount < 11 && balancedSquad.length >= 11) {
+      const usedSlots = new Set(
+        balancedSquad.filter((p) => p.isStarter && p.pitchSlot !== undefined).map((p) => p.pitchSlot as number)
+      );
+      const freeSlots: number[] = [];
+      for (let s = 0; s < 11; s++) {
+        if (!usedSlots.has(s)) freeSlots.push(s);
+      }
+      const needCount = 11 - starterCount;
+      const hasGkStarter = balancedSquad.some((p) => p.isStarter && p.position === 'GK');
+      const candidates = [...balancedSquad]
+        .filter((p) => !p.isStarter)
+        .sort((a, b) => {
+          if (!hasGkStarter && a.position === 'GK' && b.position !== 'GK') return -1;
+          if (!hasGkStarter && b.position === 'GK' && a.position !== 'GK') return 1;
+          return b.overall - a.overall;
+        })
+        .slice(0, needCount);
+      const promoMap = new Map<string, number>();
+      candidates.forEach((cand, idx) => promoMap.set(cand.id, freeSlots[idx] ?? idx));
+      balancedSquad = balancedSquad.map((p) => {
+        const slot = promoMap.get(p.id);
+        return slot !== undefined
+          ? { ...p, isStarter: true, isSubstitute: false, pitchSlot: slot }
+          : p;
+      });
+    }
+
     clubsMap.set(clubId, {
       ...club,
       finances:
@@ -776,7 +841,7 @@ export function processRoundLoans(
               totalExpensesSeason: club.finances.totalExpensesSeason + clubBuyoutExpense,
             }
           : club.finances,
-      squad: updatedSquad,
+      squad: balancedSquad,
     });
   });
 

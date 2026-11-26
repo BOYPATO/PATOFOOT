@@ -2,6 +2,7 @@ import {
   Club,
   DetailedRole,
   Division,
+  FreeAgentMarketBid,
   GameSave,
   InboxMessage,
   MAX_SQUAD_SIZE,
@@ -10,19 +11,25 @@ import {
   TransferHistoryRecord,
   TransferOffer,
 } from '../types/game';
-import { formatShortDate } from './calendarUtils';
+import { addDays, formatShortDate } from './calendarUtils';
 import { formatCurrency } from './individualAwardsEngine';
 import {
   findPendingTransferForPlayer,
   getTransferWindowStatus,
 } from './transferWindowEngine';
 import { getClubOverdraftLimit } from './financialFairPlayEngine';
-import { getClubEconomyProfile } from './clubEconomyScale';
-import { evaluatePlayerClubWillingness } from './transferWillingnessEngine';
+import { ClubEconomyProfile, getClubEconomyProfile } from './clubEconomyScale';
+import {
+  evaluatePlayerClubWillingness,
+  getClubEffectiveLevelOvr,
+} from './transferWillingnessEngine';
+import { computeDefaultReleaseClause } from './contractLifecycleEngine';
 import {
   getClubSeasonLoanCounts,
+  MAX_SEASON_LOANS_IN,
   MAX_SEASON_LOANS_OUT,
   resolveClubActiveSeasonYear,
+  resolveLoanDurationMonths,
 } from './loanEngine';
 
 const IDEAL_ROLE_DEPTH: Record<DetailedRole, number> = {
@@ -573,15 +580,21 @@ function executeSaleFromUserToCpu(
 
   if (isLoanDeal) {
     const duration = offer.loanDurationRounds || 19;
+    const durationMonths = resolveLoanDurationMonths(duration);
     const sharePct = offer.loanWageSharePct || 75;
+    const sharedWage = Math.max(1_000, Math.round((player.wage * sharePct) / 100));
     const loanedCopy: Player = {
       ...player,
+      wage: sharedWage,
+      loanOriginalWage: player.wage,
       isLoan: true,
       loanParentClubId: userClub.id,
       loanCurrentClubId: buyerClub.id,
       loanRoundsRemaining: duration,
+      loanDurationMonths: durationMonths,
       loanWageContributionPct: sharePct,
       loanBuyOptionFee: offer.loanBuyOptionFee || Math.round(player.marketValue * 1.15),
+      loanFeePaid: finalFee,
       isStarter: false,
       isSubstitute: true,
       isListedForLoan: false,
@@ -1125,252 +1138,883 @@ export function shopPlayerViaAiDirector(
   };
 }
 
-/**
- * Motor autônomo de transferências por rodada:
- * 1) Clubes da CPU analisam carências do elenco e compram/vendem/emprestam jogadores entre si e livres;
- * 2) Clubes da CPU enviam propostas oficiais de compra/empréstimo por jogadores do usuário;
- * 3) Se `aiDirectorAutoNegotiate` estiver ativo, negocia vendas automáticas vantajosas de atletas listados.
- */
-export function processRoundAiTransferMarket(
-  state: GameSave,
-  matchDate: string
-): GameSave {
-  let clubs = [...state.clubs];
-  let freeAgents = [...(state.transferMarket || [])];
-  let offers = [...(state.transferOffers || [])];
-  const newDeals: TransferHistoryRecord[] = [];
-  const newInbox: InboxMessage[] = [];
+export function isClubRegionTransferWindowOpen(club: Club, dateStr?: string): boolean {
+  const safeDate =
+    dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? dateStr : '2027-01-15';
+  const [, month, day] = safeDate.split('-').map(Number);
 
-  // -------------------------------------------------------------------------
-  // PARTE 1: Movimentações imediatas entre clubes da CPU (somente Jan-Fev e Jul-Ago)
-  // -------------------------------------------------------------------------
-  const marketWindow = getTransferWindowStatus(matchDate);
-  const activeDivisions: Division[] = ['A', 'B', 'C', 'D', 'EST', 'SA', 'EU', 'WL'];
-  const cpuBuyersPool = clubs.filter(
-    (c) =>
-      c.id !== state.userClubId &&
-      activeDivisions.includes(c.division) &&
-      c.squad.length <= MAX_SQUAD_SIZE &&
-      c.finances.balance >= 120_000
-  );
+  if (club.division === 'EU') {
+    // Jan 1 - Feb 2 (winter) & Jul 1 - Sep 1 (summer)
+    return (
+      month === 1 ||
+      (month === 2 && day <= 2) ||
+      month === 7 ||
+      month === 8 ||
+      (month === 9 && day <= 1)
+    );
+  }
+  if (club.division === 'WL') {
+    // Jan 1 - Mar 15 & Jul 1 - Sep 15
+    return (
+      month === 1 ||
+      month === 2 ||
+      (month === 3 && day <= 15) ||
+      month === 7 ||
+      month === 8 ||
+      (month === 9 && day <= 15)
+    );
+  }
+  return getTransferWindowStatus(safeDate).isOpen;
+}
 
-  const dealsCount = marketWindow.isOpen
-    ? Math.random() < 0.72
-      ? Math.random() < 0.35
-        ? 2
-        : 1
-      : 0
-    : 0;
+function trimTransferHistory(
+  history: TransferHistoryRecord[],
+  maxEntries: number = 650
+): TransferHistoryRecord[] {
+  if (history.length <= maxEntries) return history;
+  const userDeals: TransferHistoryRecord[] = [];
+  const cpuDeals: TransferHistoryRecord[] = [];
+  for (const item of history) {
+    if (item.direction === 'IN' || item.direction === 'OUT') {
+      userDeals.push(item);
+    } else {
+      cpuDeals.push(item);
+    }
+  }
+  const cpuBudget = Math.max(120, maxEntries - userDeals.length);
+  const keptCpu = new Set(cpuDeals.slice(0, cpuBudget).map((i) => i.id));
+  return history.filter((item) => item.direction !== 'CPU' || keptCpu.has(item.id));
+}
 
-  for (let d = 0; d < dealsCount && cpuBuyersPool.length > 0; d++) {
-    const buyer = cpuBuyersPool[Math.floor(Math.random() * cpuBuyersPool.length)];
-    const currentBuyer = clubs.find((c) => c.id === buyer.id);
-    if (!currentBuyer) continue;
-
-    const diag = diagnoseClubSquadNeeds(currentBuyer);
-    // Avoid positional hoarding: pick the weakest role that isn't already overcrowded (and cap GKs at 3 unless urgent)
-    const allRoles: DetailedRole[] = ['GOL', 'ZAG', 'LAT', 'VOL', 'MEI', 'ATA'];
-    const nonHoardedRoles = allRoles.filter((r) => {
-      const cnt = diag.roleStats[r]?.count || 0;
-      if (r === 'GOL') return cnt < 3 || (cnt === 3 && diag.roleStats.GOL.bestOvr < diag.avgStarterOverall - 4);
-      return cnt < IDEAL_ROLE_DEPTH[r] + 2;
-    });
-    const targetRole = nonHoardedRoles.includes(diag.weakestRole)
-      ? diag.weakestRole
-      : nonHoardedRoles.sort(
-          (a, b) => (diag.roleStats[a]?.starterAvgOvr || 65) - (diag.roleStats[b]?.starterAvgOvr || 65)
-        )[0] || diag.weakestRole;
-    const minNeededOvr = (diag.roleStats[targetRole]?.starterAvgOvr || diag.weakestRoleAvgOvr) + 1;
-    const maxBudget = diag.safeTransferBudget;
-
-    // First check Free Agents for a smart zero-fee pickup
-    const freeMatch = freeAgents
+function rebalanceCpuStartersAfterDeparture(squad: Player[], departed: Player): Player[] {
+  if (!departed.isStarter || squad.filter((p) => p.isStarter).length >= 11) {
+    return squad;
+  }
+  const replacement =
+    squad
+      .filter((p) => !p.isStarter && p.position === departed.position && p.injuryWeeks === 0)
+      .sort((a, b) => b.overall - a.overall)[0] ||
+    squad
+      .filter((p) => !p.isStarter && p.position === departed.position)
+      .sort((a, b) => b.overall - a.overall)[0] ||
+    squad
       .filter(
         (p) =>
-          p.detailedRole === targetRole &&
-          p.overall >= minNeededOvr - 1 &&
-          p.overall <= diag.avgStarterOverall + 6 &&
-          currentBuyer.finances.balance >= p.wage * 6 &&
-          evaluatePlayerClubWillingness(currentBuyer, p, { dealType: 'FREE_AGENT' }).willing
+          !p.isStarter &&
+          (departed.position === 'GK' ? p.position === 'GK' : p.position !== 'GK')
       )
       .sort((a, b) => b.overall - a.overall)[0];
 
-    if (freeMatch && Math.random() < 0.35) {
-      freeAgents = freeAgents.filter((p) => p.id !== freeMatch.id);
-      clubs = clubs.map((c) =>
-        c.id === currentBuyer.id
-          ? {
-              ...c,
-              squad: assignBestSquadRoleOnArrival(c.squad, freeMatch),
-            }
-          : c
+  if (!replacement) return squad;
+  return squad.map((p) =>
+    p.id === replacement.id
+      ? { ...p, isStarter: true, isSubstitute: false, pitchSlot: departed.pitchSlot }
+      : p
+  );
+}
+
+interface ClubMarketSnapshot {
+  club: Club;
+  clubLevelOvr: number;
+  economy: ClubEconomyProfile;
+  diag: ClubSquadDiagnosis;
+  gkCount: number;
+  loansInCount: number;
+  loansOutCount: number;
+  windowOpen: boolean;
+  safeBudget: number;
+}
+
+function sampleSubset<T>(arr: T[], maxCount: number): T[] {
+  if (arr.length <= maxCount) return [...arr];
+  const copy = [...arr];
+  for (let i = 0; i < maxCount; i++) {
+    const j = i + Math.floor(Math.random() * (copy.length - i));
+    const tmp = copy[i];
+    copy[i] = copy[j];
+    copy[j] = tmp;
+  }
+  return copy.slice(0, maxCount);
+}
+
+function pickWeightedRoleForClub(diag: ClubSquadDiagnosis): DetailedRole {
+  const allRoles: DetailedRole[] = ['GOL', 'ZAG', 'LAT', 'VOL', 'MEI', 'ATA'];
+  const nonHoardedRoles = allRoles.filter((r) => {
+    const cnt = diag.roleStats[r]?.count || 0;
+    if (r === 'GOL') {
+      return cnt < 3 || (cnt === 3 && diag.roleStats.GOL.bestOvr < diag.avgStarterOverall - 4);
+    }
+    return cnt < IDEAL_ROLE_DEPTH[r] + 2;
+  });
+
+  if (nonHoardedRoles.length === 0) return diag.weakestRole;
+  const urgentShortages = diag.shortageRoles.filter((r) => nonHoardedRoles.includes(r));
+  if (urgentShortages.length > 0 && Math.random() < 0.65) {
+    return urgentShortages[Math.floor(Math.random() * urgentShortages.length)];
+  }
+  if (nonHoardedRoles.includes(diag.weakestRole) && Math.random() < 0.72) {
+    return diag.weakestRole;
+  }
+  return nonHoardedRoles[Math.floor(Math.random() * nonHoardedRoles.length)];
+}
+
+/**
+ * Motor autônomo de transferências, empréstimos e jogadores livres por rodada/calendário:
+ * 1A) Jogadores livres recebem propostas reais de clubes do seu nível durante TODA a temporada e assinam;
+ * 1B) Clubes da CPU de todas as divisões compram e vendem dentro da realidade esportiva e financeira de cada clube;
+ * 1C) Clubes da CPU emprestam e pegam emprestado entre si em todas as prateleiras (com divisão salarial e opção de compra);
+ * 2) Clubes da CPU enviam propostas oficiais de compra/empréstimo por atletas do clube do usuário.
+ */
+export function processRoundAiTransferMarket(
+  state: GameSave,
+  matchDate: string,
+  options?: { isCalendarSkip?: boolean }
+): GameSave {
+  const isCalendarSkip = Boolean(options?.isCalendarSkip);
+  let clubs = state.clubs.map((c) => ({ ...c, finances: { ...c.finances }, squad: [...c.squad] }));
+  let freeAgents = [...(state.transferMarket || [])];
+  let offers = [...(state.transferOffers || [])];
+  let freeAgentBids: FreeAgentMarketBid[] = [...(state.freeAgentBids || [])];
+  const newDeals: TransferHistoryRecord[] = [];
+  const newInbox: InboxMessage[] = [];
+
+  const clubsById = new Map<string, Club>(clubs.map((c) => [c.id, c]));
+  const userClubRef = clubsById.get(state.userClubId);
+  const userDivision = userClubRef?.division || 'A';
+  const watchlistIds = new Set((state.watchlist || []).map((w) => w.playerId));
+
+  // Pre-count season loans in/out for every club in a single O(H) pass
+  const seasonLoansIn = new Map<string, number>();
+  const seasonLoansOut = new Map<string, number>();
+  for (const rec of state.transferHistory || []) {
+    if (rec.category === 'LOAN_IN' && rec.toClubId) {
+      const targetClub = clubsById.get(rec.toClubId);
+      if (targetClub && rec.seasonYear === resolveClubActiveSeasonYear(targetClub, state)) {
+        seasonLoansIn.set(rec.toClubId, (seasonLoansIn.get(rec.toClubId) || 0) + 1);
+      }
+    } else if (rec.category === 'LOAN_OUT' && rec.fromClubId) {
+      const srcClub = clubsById.get(rec.fromClubId);
+      if (srcClub && rec.seasonYear === resolveClubActiveSeasonYear(srcClub, state)) {
+        seasonLoansOut.set(rec.fromClubId, (seasonLoansOut.get(rec.fromClubId) || 0) + 1);
+      }
+    }
+  }
+
+  // Fast snapshot cache per club (rebuilt lazily only for clubs mutated during this tick)
+  const activeDivisions = new Set<Division>(['A', 'B', 'C', 'D', 'EST', 'SA', 'EU', 'WL']);
+  const snapshots = new Map<string, ClubMarketSnapshot>();
+
+  const buildSnapshot = (club: Club): ClubMarketSnapshot => {
+    const economy = getClubEconomyProfile(club);
+    const diag = diagnoseClubSquadNeeds(club);
+    const clubLevelOvr = getClubEffectiveLevelOvr(club);
+    const gkCount = club.squad.filter((p) => p.position === 'GK').length;
+    const windowOpen = isClubRegionTransferWindowOpen(club, matchDate);
+    return {
+      club,
+      clubLevelOvr,
+      economy,
+      diag,
+      gkCount,
+      loansInCount: seasonLoansIn.get(club.id) || 0,
+      loansOutCount: seasonLoansOut.get(club.id) || 0,
+      windowOpen,
+      safeBudget: Math.max(0, Math.round(club.finances.balance * 0.58)),
+    };
+  };
+
+  for (const club of clubs) {
+    if (club.id !== state.userClubId && activeDivisions.has(club.division)) {
+      snapshots.set(club.id, buildSnapshot(club));
+    }
+  }
+
+  const updateClubRecord = (updatedClub: Club) => {
+    clubsById.set(updatedClub.id, updatedClub);
+    if (updatedClub.id !== state.userClubId && activeDivisions.has(updatedClub.division)) {
+      snapshots.set(updatedClub.id, buildSnapshot(updatedClub));
+    }
+  };
+
+  const cpuSnapshotsList = (): ClubMarketSnapshot[] => Array.from(snapshots.values());
+  const movedPlayerIdsThisTick = new Set<string>();
+  const sellerDeparturesThisTick = new Map<string, number>();
+
+  // -------------------------------------------------------------------------
+  // PARTE 1A: JOGADORES LIVRES — Propostas reais e contratações durante TODA a temporada
+  // -------------------------------------------------------------------------
+  const freeAgentsById = new Map<string, Player>(freeAgents.map((p) => [p.id, p]));
+  // Prune bids for players no longer free or clubs no longer active
+  freeAgentBids = freeAgentBids.filter(
+    (b) => freeAgentsById.has(b.playerId) && snapshots.has(b.clubId)
+  );
+
+  // Step 1A.1: Resolve mature free-agent bids (expiresDate <= matchDate)
+  const bidsByPlayer = new Map<string, FreeAgentMarketBid[]>();
+  for (const bid of freeAgentBids) {
+    const list = bidsByPlayer.get(bid.playerId) || [];
+    list.push(bid);
+    bidsByPlayer.set(bid.playerId, list);
+  }
+
+  const resolvedFreeAgentIds = new Set<string>();
+  bidsByPlayer.forEach((playerBids, playerId) => {
+    const hasMatureBid = playerBids.some((b) => b.expiresDate <= matchDate);
+    if (!hasMatureBid) return;
+
+    const freePlayer = freeAgentsById.get(playerId);
+    if (!freePlayer) {
+      resolvedFreeAgentIds.add(playerId);
+      return;
+    }
+
+    // Score competing clubs by realistic sporting fit + offered wage
+    const validRanked = playerBids
+      .map((bid) => {
+        const snap = snapshots.get(bid.clubId);
+        if (!snap || snap.club.squad.length >= MAX_SQUAD_SIZE) return null;
+        if (freePlayer.position === 'GK' && snap.gkCount >= 3) return null;
+        const levelDiff = Math.abs(freePlayer.overall - snap.clubLevelOvr);
+        const wageScore = (bid.offeredWage / Math.max(1_000, freePlayer.wage)) * 22;
+        const needBonus =
+          snap.diag.weakestRole === freePlayer.detailedRole
+            ? 12
+            : snap.diag.shortageRoles.includes(freePlayer.detailedRole)
+            ? 7
+            : 0;
+        const score = 50 - levelDiff * 3 + wageScore + needBonus + Math.random() * 8;
+        return { bid, snap, score };
+      })
+      .filter((x): x is { bid: FreeAgentMarketBid; snap: ClubMarketSnapshot; score: number } =>
+        Boolean(x)
+      )
+      .sort((a, b) => b.score - a.score);
+
+    resolvedFreeAgentIds.add(playerId);
+    const winner = validRanked[0];
+    if (!winner) return;
+
+    const { bid, snap } = winner;
+    const signedFreeAgent: Player = {
+      ...freePlayer,
+      wage: bid.offeredWage,
+      contractYears: bid.contractYears,
+      releaseClause: computeDefaultReleaseClause(
+        { ...freePlayer, wage: bid.offeredWage, contractYears: bid.contractYears },
+        snap.club
+      ),
+      isLoan: false,
+      isListedForSale: false,
+      isListedForLoan: false,
+      morale: 'Boa',
+    };
+
+    const updatedBuyer: Club = {
+      ...snap.club,
+      squad: assignBestSquadRoleOnArrival(snap.club.squad, signedFreeAgent),
+    };
+    updateClubRecord(updatedBuyer);
+    freeAgentsById.delete(playerId);
+    movedPlayerIdsThisTick.add(playerId);
+
+    newDeals.push({
+      id: `tr_cpu_free_${Date.now()}_${Math.floor(Math.random() * 9999)}_${freePlayer.id}`,
+      playerId: freePlayer.id,
+      playerName: freePlayer.name,
+      playerRole: freePlayer.detailedRole,
+      playerOverall: freePlayer.overall,
+      playerAge: freePlayer.age,
+      fromClubName: 'Sem Clube (Livre)',
+      toClubId: updatedBuyer.id,
+      toClubName: updatedBuyer.name,
+      fee: 0,
+      wage: bid.offeredWage,
+      date: matchDate,
+      round: state.currentRound,
+      seasonYear: resolveClubActiveSeasonYear(updatedBuyer, state),
+      category: 'FREE_AGENT',
+      direction: 'CPU',
+      notes:
+        playerBids.length > 1
+          ? `Livre · Venceu disputa c/ ${playerBids.length - 1} clube(s) · Contrato ${bid.contractYears}a`
+          : `Livre no mercado · Contrato de ${bid.contractYears} ${bid.contractYears === 1 ? 'ano' : 'anos'}`,
+    });
+
+    if (watchlistIds.has(freePlayer.id)) {
+      newInbox.push({
+        id: `msg_wl_fa_signed_${freePlayer.id}_${Date.now()}`,
+        title: `Alvo Livre Assinou: ${freePlayer.name} fechou com o ${updatedBuyer.shortName}`,
+        message: `O atleta livre ${freePlayer.name} (${freePlayer.detailedRole}, OVR ${freePlayer.overall}), que estava na sua Lista de Observação, aceitou proposta do ${updatedBuyer.name} (${formatCurrency(
+          bid.offeredWage
+        )}/mês por ${bid.contractYears} ${bid.contractYears === 1 ? 'ano' : 'anos'}).`,
+        date: formatShortDate(matchDate),
+        round: state.currentRound,
+        read: false,
+        type: 'TRANSFER',
+      });
+    }
+  });
+
+  if (resolvedFreeAgentIds.size > 0) {
+    freeAgents = freeAgents.filter((p) => !resolvedFreeAgentIds.has(p.id));
+    freeAgentBids = freeAgentBids.filter((b) => !resolvedFreeAgentIds.has(b.playerId));
+  }
+
+  // Step 1A.2: Generate new realistic CPU proposals for free agents all season long
+  const anyWindowOpen =
+    getTransferWindowStatus(matchDate).isOpen ||
+    cpuSnapshotsList().some((s) => s.windowOpen);
+  const newFreeAgentBidsTarget = isCalendarSkip
+    ? anyWindowOpen
+      ? 4
+      : 2
+    : anyWindowOpen
+    ? 6
+    : 3;
+
+  if (freeAgents.length > 0 && newFreeAgentBidsTarget > 0) {
+    const activeBidCounts = new Map<string, number>();
+    const activeBidPairs = new Set<string>();
+    for (const b of freeAgentBids) {
+      activeBidCounts.set(b.playerId, (activeBidCounts.get(b.playerId) || 0) + 1);
+      activeBidPairs.add(`${b.playerId}__${b.clubId}`);
+    }
+
+    const eligibleFreeAgents = freeAgents.filter(
+      (p) =>
+        (activeBidCounts.get(p.id) || 0) < 2 &&
+        !findPendingTransferForPlayer(state.pendingTransfers, p.id)
+    );
+
+    // Stratify selection across OVR tiers so lower, mid, and elite free agents all receive offers
+    const topBand = eligibleFreeAgents.filter((p) => p.overall >= 74);
+    const midBand = eligibleFreeAgents.filter((p) => p.overall >= 66 && p.overall < 74);
+    const lowBand = eligibleFreeAgents.filter((p) => p.overall < 66);
+    const chosenFreeCandidates: Player[] = [
+      ...sampleSubset(topBand, Math.max(1, Math.ceil(newFreeAgentBidsTarget * 0.35))),
+      ...sampleSubset(midBand, Math.max(1, Math.ceil(newFreeAgentBidsTarget * 0.4))),
+      ...sampleSubset(lowBand, Math.max(1, Math.ceil(newFreeAgentBidsTarget * 0.35))),
+    ].slice(0, newFreeAgentBidsTarget);
+
+    const allCpuSnaps = cpuSnapshotsList().filter((s) => s.club.squad.length < MAX_SQUAD_SIZE);
+    const sameDivSnaps = allCpuSnaps.filter((s) => s.club.division === userDivision);
+
+    for (const faPlayer of chosenFreeCandidates) {
+      const probePool = [
+        ...sampleSubset(sameDivSnaps, 16),
+        ...sampleSubset(allCpuSnaps, 44),
+      ];
+      const seenClubs = new Set<string>();
+      const clubMatches: Array<{ snap: ClubMarketSnapshot; fitScore: number; offeredWage: number }> =
+        [];
+
+      for (const snap of probePool) {
+        if (seenClubs.has(snap.club.id)) continue;
+        seenClubs.add(snap.club.id);
+        if (activeBidPairs.has(`${faPlayer.id}__${snap.club.id}`)) continue;
+        if (snap.club.squad.length >= MAX_SQUAD_SIZE) continue;
+        if (faPlayer.position === 'GK' && snap.gkCount >= 3) continue;
+
+        // Enforce realistic club level match (neither too high nor way too low!)
+        const minClubFloor = Math.round(snap.clubLevelOvr) - 5;
+        if (faPlayer.overall < minClubFloor) continue;
+        if (
+          !evaluatePlayerClubWillingness(snap.club, faPlayer, { dealType: 'FREE_AGENT' }).willing
+        ) {
+          continue;
+        }
+
+        const roleStats = snap.diag.roleStats[faPlayer.detailedRole];
+        const roleStarterAvg = roleStats?.starterAvgOvr || snap.diag.avgStarterOverall - 2;
+        const ovrDiff = faPlayer.overall - roleStarterAvg;
+        const needsRole =
+          snap.diag.weakestRole === faPlayer.detailedRole ||
+          snap.diag.shortageRoles.includes(faPlayer.detailedRole);
+
+        if (!needsRole && ovrDiff < -1) continue;
+
+        const wageStep = faPlayer.wage < 15_000 ? 500 : 1_000;
+        const rawWage = Math.round(
+          (faPlayer.wage * (0.92 + Math.random() * 0.22)) / wageStep
+        ) * wageStep;
+        const offeredWage = Math.max(snap.economy.playerWageFloor, rawWage);
+        const overdraft = getClubOverdraftLimit(snap.club);
+        const canCoverWage =
+          snap.club.finances.balance >= offeredWage * 3 ||
+          (snap.club.finances.balance > -overdraft * 0.35 &&
+            offeredWage <= snap.economy.playerWageFloor * 8);
+        if (!canCoverWage) continue;
+
+        const levelTightness = Math.max(0, 12 - Math.abs(faPlayer.overall - snap.clubLevelOvr) * 2);
+        const fitScore =
+          40 +
+          levelTightness +
+          ovrDiff * 4 +
+          (snap.diag.weakestRole === faPlayer.detailedRole ? 18 : 0) +
+          (snap.diag.shortageRoles.includes(faPlayer.detailedRole) ? 12 : 0);
+
+        clubMatches.push({ snap, fitScore, offeredWage });
+      }
+
+      clubMatches.sort((a, b) => b.fitScore - a.fitScore);
+      // 1 club normally, or 2 competing clubs (~30% chance) for hot free agents!
+      const biddersToCreate =
+        clubMatches.length >= 2 && Math.random() < 0.32
+          ? clubMatches.slice(0, 2)
+          : clubMatches.slice(0, 1);
+
+      for (const match of biddersToCreate) {
+        const contractYears =
+          faPlayer.age >= 34 ? 1 : faPlayer.age >= 30 ? (Math.random() < 0.55 ? 1 : 2) : Math.random() < 0.5 ? 2 : 3;
+        const decisionDays = 3 + Math.floor(Math.random() * 4);
+        const bid: FreeAgentMarketBid = {
+          id: `fab_${match.snap.club.id}_${faPlayer.id}_${Date.now()}_${Math.floor(Math.random() * 999)}`,
+          playerId: faPlayer.id,
+          playerName: faPlayer.name,
+          playerRole: faPlayer.detailedRole,
+          playerOverall: faPlayer.overall,
+          playerAge: faPlayer.age,
+          clubId: match.snap.club.id,
+          clubName: match.snap.club.name,
+          clubShortName: match.snap.club.shortName,
+          offeredWage: match.offeredWage,
+          contractYears,
+          submittedDate: matchDate,
+          expiresDate: addDays(matchDate, decisionDays),
+        };
+        freeAgentBids.push(bid);
+        activeBidPairs.add(`${faPlayer.id}__${match.snap.club.id}`);
+      }
+    }
+  }
+
+  // Keep active bids bounded cleanly
+  if (freeAgentBids.length > 48) {
+    freeAgentBids = freeAgentBids.slice(-48);
+  }
+
+  // -------------------------------------------------------------------------
+  // PARTE 1B: COMPRAS E VENDAS REALISTAS ENTRE TODOS OS CLUBES DA CPU (janelas regionais abertas)
+  // -------------------------------------------------------------------------
+  const openWindowBuyers = cpuSnapshotsList().filter(
+    (s) =>
+      s.windowOpen &&
+      s.club.squad.length < MAX_SQUAD_SIZE &&
+      s.safeBudget >= s.economy.playerValueFloor
+  );
+  const openUserDivBuyers = openWindowBuyers.filter((s) => s.club.division === userDivision);
+
+  const permanentDealsTarget =
+    openWindowBuyers.length === 0
+      ? 0
+      : isCalendarSkip
+      ? 4 + Math.floor(Math.random() * 3) // 4..6
+      : 6 + Math.floor(Math.random() * 5); // 6..10
+
+  const allCpuOpenSellers = () =>
+    cpuSnapshotsList().filter(
+      (s) =>
+        s.club.squad.length >= 20 &&
+        (sellerDeparturesThisTick.get(s.club.id) || 0) < 2
+    );
+
+  for (let d = 0; d < permanentDealsTarget && openWindowBuyers.length > 0; d++) {
+    // 38% of deals focus on the user's division so their league is visibly dynamic
+    const useUserDivPool = openUserDivBuyers.length > 0 && Math.random() < 0.38;
+    const pool = useUserDivPool ? openUserDivBuyers : openWindowBuyers;
+    const pickedBuyerSnap = pool[Math.floor(Math.random() * pool.length)];
+    const buyerSnap = snapshots.get(pickedBuyerSnap.club.id);
+    if (!buyerSnap || buyerSnap.club.squad.length >= MAX_SQUAD_SIZE) continue;
+    if (buyerSnap.safeBudget < buyerSnap.economy.playerValueFloor) continue;
+
+    const targetRole = pickWeightedRoleForClub(buyerSnap.diag);
+    const roleStarterAvg =
+      buyerSnap.diag.roleStats[targetRole]?.starterAvgOvr || buyerSnap.diag.weakestRoleAvgOvr;
+    const minNeededOvr = Math.max(50, roleStarterAvg - (buyerSnap.diag.shortageRoles.includes(targetRole) ? 1 : 0));
+    const maxWantedOvr = Math.round(buyerSnap.clubLevelOvr) + 6;
+
+    const sellerPool = allCpuOpenSellers().filter((s) => s.club.id !== buyerSnap.club.id);
+    // Prefer sellers from same country/division or adjacent sporting tiers
+    const sameCountrySellers = sellerPool.filter(
+      (s) =>
+        s.club.country === buyerSnap.club.country ||
+        s.club.division === buyerSnap.club.division
+    );
+    const sampledSellers = [
+      ...sampleSubset(sameCountrySellers, 26),
+      ...sampleSubset(sellerPool, 26),
+    ];
+    const seenSellerIds = new Set<string>();
+
+    let bestPurchase:
+      | { sellerSnap: ClubMarketSnapshot; player: Player; fee: number; wage: number; score: number }
+      | undefined;
+
+    for (const sellerSnap of sampledSellers) {
+      if (seenSellerIds.has(sellerSnap.club.id)) continue;
+      seenSellerIds.add(sellerSnap.club.id);
+      if (sellerSnap.club.squad.length < 20) continue;
+
+      for (const p of sellerSnap.club.squad) {
+        if (p.isLoan || p.retiringAtSeasonEnd || movedPlayerIdsThisTick.has(p.id)) continue;
+        if (p.detailedRole !== targetRole) continue;
+        if (p.position === 'GK' && sellerSnap.gkCount <= 2) continue;
+        if (p.overall < minNeededOvr || p.overall > maxWantedOvr) continue;
+
+        // Starter protection: same/higher-reputation clubs only sell starters for a premium
+        const buyerIsStronger =
+          buyerSnap.club.reputation > sellerSnap.club.reputation ||
+          buyerSnap.clubLevelOvr >= sellerSnap.clubLevelOvr + 3;
+        if (p.isStarter && !buyerIsStronger && !p.isListedForSale && Math.random() < 0.78) {
+          continue;
+        }
+
+        const feeStep = p.marketValue < 250_000 ? 10_000 : 50_000;
+        const priceMult = p.isListedForSale
+          ? 0.88 + Math.random() * 0.14
+          : p.isStarter
+          ? 1.08 + Math.random() * 0.2
+          : 0.92 + Math.random() * 0.16;
+        const fee = Math.max(
+          buyerSnap.economy.playerValueFloor,
+          Math.round((p.marketValue * priceMult) / feeStep) * feeStep
+        );
+        if (fee > buyerSnap.safeBudget) continue;
+
+        const wageStep = p.wage < 15_000 ? 500 : 1_000;
+        const offeredWage = Math.max(
+          buyerSnap.economy.playerWageFloor,
+          Math.round((p.wage * (1.05 + Math.random() * 0.14)) / wageStep) * wageStep
+        );
+        if (buyerSnap.club.finances.balance - fee < offeredWage * 3) continue;
+
+        if (
+          !evaluatePlayerClubWillingness(buyerSnap.club, p, {
+            dealType: 'PURCHASE',
+            sellerClub: sellerSnap.club,
+          }).willing
+        ) {
+          continue;
+        }
+
+        const upgradeDelta = p.overall - roleStarterAvg;
+        const ageBonus = p.age <= 24 ? 6 : p.age >= 32 ? -4 : 2;
+        const score = upgradeDelta * 6 + ageBonus + (p.isListedForSale ? 5 : 0) + Math.random() * 5;
+
+        if (!bestPurchase || score > bestPurchase.score) {
+          bestPurchase = { sellerSnap, player: p, fee, wage: offeredWage, score };
+        }
+      }
+    }
+
+    if (bestPurchase) {
+      const { sellerSnap, player: tradedPlayer, fee, wage } = bestPurchase;
+      const contractYears =
+        tradedPlayer.age >= 33 ? 2 : tradedPlayer.age <= 24 ? 4 : 3;
+
+      const updatedSellerSquad = rebalanceCpuStartersAfterDeparture(
+        sellerSnap.club.squad.filter((p) => p.id !== tradedPlayer.id),
+        tradedPlayer
+      );
+      const updatedSeller: Club = {
+        ...sellerSnap.club,
+        finances: {
+          ...sellerSnap.club.finances,
+          balance: sellerSnap.club.finances.balance + fee,
+          totalIncomeSeason: sellerSnap.club.finances.totalIncomeSeason + fee,
+        },
+        squad: updatedSellerSquad,
+      };
+
+      const arrivingPlayer: Player = {
+        ...tradedPlayer,
+        wage,
+        contractYears,
+        releaseClause: computeDefaultReleaseClause(
+          { ...tradedPlayer, wage, contractYears },
+          buyerSnap.club
+        ),
+        isLoan: false,
+        isListedForSale: false,
+        isListedForLoan: false,
+        askingPrice: undefined,
+      };
+
+      const updatedBuyer: Club = {
+        ...buyerSnap.club,
+        finances: {
+          ...buyerSnap.club.finances,
+          balance: Math.max(0, buyerSnap.club.finances.balance - fee),
+          totalExpensesSeason: buyerSnap.club.finances.totalExpensesSeason + fee,
+        },
+        squad: assignBestSquadRoleOnArrival(buyerSnap.club.squad, arrivingPlayer),
+      };
+
+      updateClubRecord(updatedSeller);
+      updateClubRecord(updatedBuyer);
+      movedPlayerIdsThisTick.add(tradedPlayer.id);
+      sellerDeparturesThisTick.set(
+        sellerSnap.club.id,
+        (sellerDeparturesThisTick.get(sellerSnap.club.id) || 0) + 1
       );
 
       newDeals.push({
-        id: `tr_cpu_free_${Date.now()}_${freeMatch.id}`,
-        playerId: freeMatch.id,
-        playerName: freeMatch.name,
-        playerRole: freeMatch.detailedRole,
-        playerOverall: freeMatch.overall,
-        playerAge: freeMatch.age,
-        fromClubName: 'Sem Clube (Livre)',
-        toClubId: currentBuyer.id,
-        toClubName: currentBuyer.name,
-        fee: 0,
-        wage: freeMatch.wage,
-        date: matchDate,
-        round: state.currentRound,
-        seasonYear: resolveClubActiveSeasonYear(currentBuyer, state),
-        category: 'FREE_AGENT',
-        direction: 'CPU',
-        notes: `IA de Mercado · Reforço para ${targetRole}`,
-      });
-      continue;
-    }
-
-    // Otherwise scan CPU seller clubs with healthy squad depth
-    const sellerMatches: Array<{ seller: Club; player: Player; fee: number; isLoan: boolean }> =
-      [];
-
-    for (const seller of clubs) {
-      if (
-        seller.id === state.userClubId ||
-        seller.id === currentBuyer.id ||
-        seller.squad.length <= 20
-      ) {
-        continue;
-      }
-
-      const sellerGkCount = seller.squad.filter((sp) => sp.position === 'GK').length;
-      for (const p of seller.squad) {
-        if (p.isLoan || p.detailedRole !== targetRole) continue;
-        // Never strip a seller club below 2 goalkeepers
-        if (p.position === 'GK' && sellerGkCount <= 2) continue;
-        // Prefer reserves or non-essential starters from smaller clubs
-        if (p.isStarter && seller.reputation >= currentBuyer.reputation) continue;
-        if (p.overall < minNeededOvr || p.overall > diag.avgStarterOverall + 5) continue;
-
-        const feeStep = p.marketValue < 250_000 ? 10_000 : 50_000;
-        const fee = Math.round((p.marketValue * (0.94 + Math.random() * 0.16)) / feeStep) * feeStep;
-        if (
-          fee <= maxBudget &&
-          evaluatePlayerClubWillingness(currentBuyer, p, {
-            dealType: 'PURCHASE',
-            sellerClub: seller,
-          }).willing
-        ) {
-          sellerMatches.push({ seller, player: p, fee, isLoan: false });
-        } else if (
-          p.age <= 23 &&
-          !p.isStarter &&
-          currentBuyer.division !== 'A' &&
-          seller.division === 'A' &&
-          evaluatePlayerClubWillingness(currentBuyer, p, {
-            dealType: 'LOAN',
-            sellerClub: seller,
-          }).willing
-        ) {
-          sellerMatches.push({ seller, player: p, fee: 0, isLoan: true });
-        }
-      }
-    }
-
-    if (sellerMatches.length > 0) {
-      sellerMatches.sort((a, b) => b.player.overall - a.player.overall);
-      const chosen = sellerMatches[0];
-      const { seller, player: tradedPlayer, fee, isLoan } = chosen;
-
-      const arrivingPlayer: Player = isLoan
-        ? {
-            ...tradedPlayer,
-            isLoan: true,
-            loanParentClubId: seller.id,
-            loanCurrentClubId: currentBuyer.id,
-            loanRoundsRemaining: 19,
-            loanWageContributionPct: 70,
-            loanBuyOptionFee: Math.round(tradedPlayer.marketValue * 1.15),
-          }
-        : {
-            ...tradedPlayer,
-            contractYears: 3,
-          };
-
-      clubs = clubs.map((c) => {
-        if (c.id === seller.id) {
-          let remainingSquad = c.squad.filter((p) => p.id !== tradedPlayer.id);
-          // If a starter was sold, promote the best reserve so seller always has 11 starters (1 GK)
-          if (tradedPlayer.isStarter && remainingSquad.filter((p) => p.isStarter).length < 11) {
-            const replacement =
-              remainingSquad
-                .filter((p) => !p.isStarter && p.position === tradedPlayer.position)
-                .sort((a, b) => b.overall - a.overall)[0] ||
-              remainingSquad
-                .filter((p) => !p.isStarter && (tradedPlayer.position === 'GK' ? p.position === 'GK' : p.position !== 'GK'))
-                .sort((a, b) => b.overall - a.overall)[0];
-            if (replacement) {
-              remainingSquad = remainingSquad.map((p) =>
-                p.id === replacement.id
-                  ? { ...p, isStarter: true, isSubstitute: false, pitchSlot: tradedPlayer.pitchSlot }
-                  : p
-              );
-            }
-          }
-          return {
-            ...c,
-            finances: {
-              ...c.finances,
-              balance: c.finances.balance + fee,
-              totalIncomeSeason: c.finances.totalIncomeSeason + fee,
-            },
-            squad: remainingSquad,
-          };
-        }
-        if (c.id === currentBuyer.id) {
-          return {
-            ...c,
-            finances: {
-              ...c.finances,
-              balance: Math.max(0, c.finances.balance - fee),
-              totalExpensesSeason: c.finances.totalExpensesSeason + fee,
-            },
-            squad: assignBestSquadRoleOnArrival(c.squad, arrivingPlayer),
-          };
-        }
-        return c;
-      });
-
-      newDeals.push({
-        id: `tr_cpu_ai_${Date.now()}_${d}_${tradedPlayer.id}`,
+        id: `tr_cpu_buy_${Date.now()}_${d}_${tradedPlayer.id}`,
         playerId: tradedPlayer.id,
         playerName: tradedPlayer.name,
         playerRole: tradedPlayer.detailedRole,
         playerOverall: tradedPlayer.overall,
         playerAge: tradedPlayer.age,
-        fromClubId: seller.id,
-        fromClubName: seller.name,
-        toClubId: currentBuyer.id,
-        toClubName: currentBuyer.name,
+        fromClubId: updatedSeller.id,
+        fromClubName: updatedSeller.name,
+        toClubId: updatedBuyer.id,
+        toClubName: updatedBuyer.name,
         fee,
-        wage: tradedPlayer.wage,
+        wage,
         date: matchDate,
         round: state.currentRound,
-        seasonYear: resolveClubActiveSeasonYear(currentBuyer, state),
-        category: isLoan ? 'LOAN_IN' : 'PURCHASE',
+        seasonYear: resolveClubActiveSeasonYear(updatedBuyer, state),
+        category: 'PURCHASE',
         direction: 'CPU',
-        notes: isLoan
-          ? `IA de Mercado · Empréstimo para ${targetRole}`
-          : `IA de Mercado · Suprir carência em ${targetRole}`,
+        notes: `Mercado da Bola · Reforço para ${targetRole} (${contractYears}a)`,
       });
     }
   }
 
   // -------------------------------------------------------------------------
-  // PARTE 2: Clubes da CPU enviam propostas por atletas do clube do usuário
+  // PARTE 1C: EMPRÉSTIMOS REALISTAS ENTRE TODOS OS CLUBES DA CPU (todas as divisões!)
+  // -------------------------------------------------------------------------
+  const openLoanBorrowers = cpuSnapshotsList().filter(
+    (s) =>
+      s.windowOpen &&
+      s.club.squad.length < MAX_SQUAD_SIZE &&
+      s.loansInCount < MAX_SEASON_LOANS_IN
+  );
+  const openUserDivBorrowers = openLoanBorrowers.filter((s) => s.club.division === userDivision);
+
+  const loanDealsTarget =
+    openLoanBorrowers.length === 0
+      ? 0
+      : isCalendarSkip
+      ? 2 + Math.floor(Math.random() * 3) // 2..4
+      : 4 + Math.floor(Math.random() * 4); // 4..7
+
+  for (let l = 0; l < loanDealsTarget && openLoanBorrowers.length > 0; l++) {
+    const useUserDiv = openUserDivBorrowers.length > 0 && Math.random() < 0.38;
+    const bPool = useUserDiv ? openUserDivBorrowers : openLoanBorrowers;
+    const pickedBorrower = bPool[Math.floor(Math.random() * bPool.length)];
+    const borrowerSnap = snapshots.get(pickedBorrower.club.id);
+    if (
+      !borrowerSnap ||
+      borrowerSnap.club.squad.length >= MAX_SQUAD_SIZE ||
+      borrowerSnap.loansInCount >= MAX_SEASON_LOANS_IN
+    ) {
+      continue;
+    }
+
+    const targetRole = pickWeightedRoleForClub(borrowerSnap.diag);
+    const roleStarterAvg =
+      borrowerSnap.diag.roleStats[targetRole]?.starterAvgOvr || borrowerSnap.diag.weakestRoleAvgOvr;
+
+    const lenderCandidates = cpuSnapshotsList().filter(
+      (s) =>
+        s.club.id !== borrowerSnap.club.id &&
+        s.club.squad.length >= 21 &&
+        s.loansOutCount < MAX_SEASON_LOANS_OUT &&
+        (sellerDeparturesThisTick.get(s.club.id) || 0) < 2 &&
+        // Lenders are typically equal or higher sporting level than the borrower
+        s.clubLevelOvr >= borrowerSnap.clubLevelOvr - 2
+    );
+    const sameCountryLenders = lenderCandidates.filter(
+      (s) => s.club.country === borrowerSnap.club.country
+    );
+    const sampledLenders = [
+      ...sampleSubset(sameCountryLenders, 24),
+      ...sampleSubset(lenderCandidates, 24),
+    ];
+    const seenLenders = new Set<string>();
+
+    let bestLoan:
+      | {
+          lenderSnap: ClubMarketSnapshot;
+          player: Player;
+          durationRounds: 19 | 38;
+          wageSharePct: number;
+          loanFee: number;
+          buyOptionFee?: number;
+          score: number;
+        }
+      | undefined;
+
+    for (const lenderSnap of sampledLenders) {
+      if (seenLenders.has(lenderSnap.club.id)) continue;
+      seenLenders.add(lenderSnap.club.id);
+
+      const lenderRoleCount = lenderSnap.diag.roleStats[targetRole]?.count || 0;
+      for (const p of lenderSnap.club.squad) {
+        if (p.isLoan || p.isStarter || p.retiringAtSeasonEnd || movedPlayerIdsThisTick.has(p.id)) {
+          continue;
+        }
+        if (p.detailedRole !== targetRole) continue;
+        if (p.position === 'GK' && lenderSnap.gkCount <= 2) continue;
+
+        // Eligible for loan: young prospect (<= 24) seeking minutes OR surplus reserve (<= 31)
+        const isYouthLoan = p.age <= 24;
+        const isSurplusLoan =
+          p.isListedForLoan || (p.age <= 31 && lenderRoleCount >= IDEAL_ROLE_DEPTH[targetRole]);
+        if (!isYouthLoan && !isSurplusLoan) continue;
+
+        // Realistic level match (not way below borrower, not above what player accepts)
+        if (p.overall < Math.round(borrowerSnap.clubLevelOvr) - 4) continue;
+        if (p.overall < roleStarterAvg - 2) continue;
+        if (
+          !evaluatePlayerClubWillingness(borrowerSnap.club, p, {
+            dealType: 'LOAN',
+            sellerClub: lenderSnap.club,
+          }).willing
+        ) {
+          continue;
+        }
+
+        // Realistic wage split & optional loan fee tailored to borrower's finances
+        const wageRatio = borrowerSnap.club.finances.balance / Math.max(1_000, p.wage);
+        if (wageRatio < 2.5) continue;
+        const wageSharePct =
+          wageRatio >= 18
+            ? 100
+            : wageRatio >= 10
+            ? 80
+            : wageRatio >= 6
+            ? 65
+            : 50;
+        const sharedWage = Math.max(1_000, Math.round((p.wage * wageSharePct) / 100));
+        if (sharedWage > borrowerSnap.economy.playerWageFloor * 38 && wageRatio < 12) {
+          continue;
+        }
+
+        const durationRounds: 19 | 38 =
+          isYouthLoan && Math.random() < 0.55 ? 38 : 19;
+        const feeStep = p.marketValue < 250_000 ? 10_000 : 50_000;
+        const loanFee =
+          p.overall >= 74 && borrowerSnap.safeBudget >= p.marketValue * 0.25 && Math.random() < 0.45
+            ? Math.max(feeStep, Math.round((p.marketValue * 0.06) / feeStep) * feeStep)
+            : 0;
+        const buyOptionFee =
+          Math.random() < 0.72
+            ? Math.max(feeStep * 2, Math.round((p.marketValue * 1.15) / feeStep) * feeStep)
+            : undefined;
+
+        const upgradeDelta = p.overall - roleStarterAvg;
+        const score =
+          upgradeDelta * 5 +
+          (isYouthLoan ? 7 : 3) +
+          (lenderSnap.club.country === borrowerSnap.club.country ? 6 : 0) +
+          Math.random() * 5;
+
+        if (!bestLoan || score > bestLoan.score) {
+          bestLoan = {
+            lenderSnap,
+            player: p,
+            durationRounds,
+            wageSharePct,
+            loanFee,
+            buyOptionFee,
+            score,
+          };
+        }
+      }
+    }
+
+    if (bestLoan) {
+      const { lenderSnap, player: loanPlayer, durationRounds, wageSharePct, loanFee, buyOptionFee } =
+        bestLoan;
+      const durationMonths = resolveLoanDurationMonths(durationRounds);
+      const sharedWage = Math.max(1_000, Math.round((loanPlayer.wage * wageSharePct) / 100));
+
+      const loanedCopy: Player = {
+        ...loanPlayer,
+        wage: sharedWage,
+        loanOriginalWage: loanPlayer.wage,
+        isLoan: true,
+        loanParentClubId: lenderSnap.club.id,
+        loanCurrentClubId: borrowerSnap.club.id,
+        loanRoundsRemaining: durationRounds,
+        loanDurationMonths: durationMonths,
+        loanWageContributionPct: wageSharePct,
+        loanBuyOptionFee: buyOptionFee,
+        loanFeePaid: loanFee,
+        isListedForSale: false,
+        isListedForLoan: false,
+      };
+
+      const updatedLender: Club = {
+        ...lenderSnap.club,
+        finances: {
+          ...lenderSnap.club.finances,
+          balance: lenderSnap.club.finances.balance + loanFee,
+          totalIncomeSeason: lenderSnap.club.finances.totalIncomeSeason + loanFee,
+        },
+        squad: lenderSnap.club.squad.filter((p) => p.id !== loanPlayer.id),
+      };
+
+      const updatedBorrower: Club = {
+        ...borrowerSnap.club,
+        finances: {
+          ...borrowerSnap.club.finances,
+          balance: Math.max(0, borrowerSnap.club.finances.balance - loanFee),
+          totalExpensesSeason: borrowerSnap.club.finances.totalExpensesSeason + loanFee,
+        },
+        squad: assignBestSquadRoleOnArrival(borrowerSnap.club.squad, loanedCopy),
+      };
+
+      seasonLoansOut.set(updatedLender.id, (seasonLoansOut.get(updatedLender.id) || 0) + 1);
+      seasonLoansIn.set(updatedBorrower.id, (seasonLoansIn.get(updatedBorrower.id) || 0) + 1);
+      updateClubRecord(updatedLender);
+      updateClubRecord(updatedBorrower);
+      movedPlayerIdsThisTick.add(loanPlayer.id);
+      sellerDeparturesThisTick.set(
+        updatedLender.id,
+        (sellerDeparturesThisTick.get(updatedLender.id) || 0) + 1
+      );
+
+      const termLabel = durationMonths === 6 ? '6 meses' : '1 ano';
+      newDeals.push({
+        id: `tr_cpu_loan_${Date.now()}_${l}_${loanPlayer.id}`,
+        playerId: loanPlayer.id,
+        playerName: loanPlayer.name,
+        playerRole: loanPlayer.detailedRole,
+        playerOverall: loanPlayer.overall,
+        playerAge: loanPlayer.age,
+        fromClubId: updatedLender.id,
+        fromClubName: updatedLender.name,
+        toClubId: updatedBorrower.id,
+        toClubName: updatedBorrower.name,
+        fee: loanFee,
+        wage: sharedWage,
+        date: matchDate,
+        round: state.currentRound,
+        seasonYear: resolveClubActiveSeasonYear(updatedBorrower, state),
+        category: 'LOAN_IN',
+        direction: 'CPU',
+        notes: `Empréstimo ${termLabel} (${wageSharePct}% sal.)${
+          buyOptionFee ? ` · Opção ${formatCurrency(buyOptionFee)}` : ''
+        }`,
+      });
+    }
+  }
+
+  // Re-materialize clubs array from updated map before Part 2 (user club offers)
+  clubs = state.clubs.map((c) => clubsById.get(c.id) || c);
+
+  // -------------------------------------------------------------------------
+  // PARTE 2: Clubes da CPU enviam propostas de compra ou empréstimo por atletas do usuário
   // -------------------------------------------------------------------------
   const userClub = clubs.find((c) => c.id === state.userClubId);
   const pendingUserOffers = offers.filter((o) => o.status === 'PENDING');
+  const userWindowOpen = userClub ? isClubRegionTransferWindowOpen(userClub, matchDate) : false;
+  const maxPendingOffers = userWindowOpen ? 4 : 3;
 
-  if (userClub && userClub.squad.length >= 18 && pendingUserOffers.length < 3) {
+  if (userClub && userClub.squad.length >= 18 && pendingUserOffers.length < maxPendingOffers) {
     const listedPlayers = userClub.squad.filter(
       (p) =>
         (p.isListedForSale || p.isListedForLoan) &&
@@ -1383,8 +2027,8 @@ export function processRoundAiTransferMarket(
         !p.isStarter &&
         !p.isListedForSale &&
         p.age <= 23 &&
-        p.matches <= 4 &&
-        p.overall >= 62 &&
+        p.matches <= 5 &&
+        p.overall >= 58 &&
         p.injuryWeeks === 0 &&
         !findPendingTransferForPlayer(state.pendingTransfers, p.id)
     );
@@ -1393,21 +2037,25 @@ export function processRoundAiTransferMarket(
         !p.isLoan &&
         !p.isListedForSale &&
         !findPendingTransferForPlayer(state.pendingTransfers, p.id) &&
-        (p.goals >= 4 || p.ratingAverage >= 7.25 || (p.age <= 22 && p.overall >= 74))
+        (p.goals >= 4 || p.ratingAverage >= 7.2 || (p.age <= 22 && p.overall >= 72))
     );
 
     let targetPlayer: Player | undefined;
     let isListedBid = false;
     let isProactiveLoanBid = false;
 
-    if (listedPlayers.length > 0 && Math.random() < 0.52) {
+    const listedChance = userWindowOpen ? 0.65 : 0.45;
+    const loanChance = userWindowOpen ? 0.42 : 0.25;
+    const standoutChance = userWindowOpen ? 0.34 : 0.2;
+
+    if (listedPlayers.length > 0 && Math.random() < listedChance) {
       targetPlayer = listedPlayers[Math.floor(Math.random() * listedPlayers.length)];
       isListedBid = true;
-    } else if (lowMinuteU23Candidates.length > 0 && Math.random() < 0.34) {
+    } else if (lowMinuteU23Candidates.length > 0 && Math.random() < loanChance) {
       targetPlayer =
         lowMinuteU23Candidates[Math.floor(Math.random() * lowMinuteU23Candidates.length)];
       isProactiveLoanBid = true;
-    } else if (standoutTargets.length > 0 && Math.random() < 0.24) {
+    } else if (standoutTargets.length > 0 && Math.random() < standoutChance) {
       targetPlayer = standoutTargets[Math.floor(Math.random() * standoutTargets.length)];
     }
 
@@ -1428,9 +2076,11 @@ export function processRoundAiTransferMarket(
       const loanQuotaBlocked = wantLoanOnly && userLoanCounts.loansOutCount >= MAX_SEASON_LOANS_OUT;
       const interestedClubs = loanQuotaBlocked
         ? []
-        : clubs
-            .filter((c) => {
-              if (c.id === userClub.id) return false;
+        : cpuSnapshotsList()
+            .filter((snap) => {
+              const c = snap.club;
+              if (c.id === userClub.id || c.squad.length >= MAX_SQUAD_SIZE) return false;
+              if (wantLoanOnly && snap.loansInCount >= MAX_SEASON_LOANS_IN) return false;
               if (
                 !evaluatePlayerClubWillingness(c, targetPlayer!, {
                   dealType: wantLoanOnly ? 'LOAN' : 'PURCHASE',
@@ -1439,30 +2089,43 @@ export function processRoundAiTransferMarket(
               ) {
                 return false;
               }
-              if (wantLoanOnly) return c.finances.balance >= targetPlayer!.wage * 4;
-              return c.finances.balance >= targetPlayer!.marketValue * 0.95;
+              if (wantLoanOnly) {
+                return (
+                  targetPlayer!.overall >= Math.round(snap.clubLevelOvr) - 4 &&
+                  c.finances.balance >= targetPlayer!.wage * 3
+                );
+              }
+              return c.finances.balance >= targetPlayer!.marketValue * 0.92;
             })
-            .map((c) => {
-              const diag = diagnoseClubSquadNeeds(c);
-              const roleAvg = diag.roleStats[targetPlayer!.detailedRole]?.starterAvgOvr || 68;
+            .map((snap) => {
+              const roleAvg = snap.diag.roleStats[targetPlayer!.detailedRole]?.starterAvgOvr || 66;
               const fit =
-                (diag.weakestRole === targetPlayer!.detailedRole ? 25 : 0) +
+                (snap.diag.weakestRole === targetPlayer!.detailedRole ? 25 : 0) +
+                (snap.diag.shortageRoles.includes(targetPlayer!.detailedRole) ? 12 : 0) +
                 (targetPlayer!.overall - roleAvg) * 5;
-              return { club: c, fit };
+              return { club: snap.club, fit };
             })
-            .filter((x) => x.fit >= -5)
+            .filter((x) => x.fit >= -4)
             .sort((a, b) => b.fit - a.fit);
 
       const chosenBuyer = interestedClubs[0]?.club;
       if (chosenBuyer) {
         const basePrice = targetPlayer.askingPrice || targetPlayer.marketValue;
-        const mult = isListedBid ? 0.96 + Math.random() * 0.12 : 1.05 + Math.random() * 0.18;
+        const feeStep = basePrice < 250_000 ? 10_000 : 50_000;
+        const mult = isListedBid ? 0.96 + Math.random() * 0.14 : 1.06 + Math.random() * 0.2;
         const rawFee = wantLoanOnly
           ? 0
-          : Math.round((basePrice * mult) / 50_000) * 50_000;
+          : Math.round((basePrice * mult) / feeStep) * feeStep;
         const finalOfferFee = wantLoanOnly
-          ? 0
+          ? chosenBuyer.finances.balance >= basePrice * 0.6 && targetPlayer.overall >= 74
+            ? Math.round((basePrice * 0.05) / feeStep) * feeStep
+            : 0
           : Math.min(rawFee, Math.round(chosenBuyer.finances.balance * 0.72));
+
+        const loanDuration: 19 | 38 = targetPlayer.age <= 22 && Math.random() < 0.45 ? 38 : 19;
+        const loanWageSharePct =
+          chosenBuyer.finances.balance >= targetPlayer.wage * 12 ? 90 : 75;
+        const wageStep = targetPlayer.wage < 15_000 ? 500 : 1_000;
 
         const newOffer: TransferOffer = {
           id: `toff_cpu_r${state.currentRound}_${chosenBuyer.id}_${targetPlayer.id}`,
@@ -1476,19 +2139,21 @@ export function processRoundAiTransferMarket(
           toClubId: userClub.id,
           toClubName: userClub.name,
           transferFee: finalOfferFee,
-          offeredWage: Math.round((targetPlayer.wage * 1.15) / 1000) * 1000,
+          offeredWage: Math.round((targetPlayer.wage * 1.15) / wageStep) * wageStep,
           status: 'PENDING',
           date: formatShortDate(matchDate),
           offerType: wantLoanOnly ? 'LOAN' : 'PERMANENT',
-          loanWageSharePct: wantLoanOnly ? 80 : undefined,
-          loanDurationRounds: wantLoanOnly ? 19 : undefined,
+          loanWageSharePct: wantLoanOnly ? loanWageSharePct : undefined,
+          loanDurationRounds: wantLoanOnly ? loanDuration : undefined,
           loanBuyOptionFee: wantLoanOnly
-            ? Math.round(targetPlayer.marketValue * 1.15)
+            ? Math.round((targetPlayer.marketValue * 1.15) / feeStep) * feeStep
             : undefined,
           reason: isListedBid
             ? `Interesse oficial após listagem no mercado (${targetPlayer.detailedRole})`
+            : wantLoanOnly
+            ? `Busca rodagem por empréstimo (${loanDuration === 38 ? '1 ano' : '6 meses'}) em ${targetPlayer.detailedRole}`
             : `Destaque na temporada chamou atenção dos olheiros do ${chosenBuyer.shortName}`,
-          aiRecommendedPrice: Math.round((targetPlayer.marketValue * 1.1) / 50_000) * 50_000,
+          aiRecommendedPrice: Math.round((targetPlayer.marketValue * 1.1) / feeStep) * feeStep,
           counterCount: 0,
         };
 
@@ -1501,15 +2166,20 @@ export function processRoundAiTransferMarket(
           finalOfferFee >= targetPlayer.marketValue * 0.95
         ) {
           const negotiatedAutoFee = Math.min(
-            Math.round((finalOfferFee * 1.08) / 50_000) * 50_000,
+            Math.round((finalOfferFee * 1.08) / feeStep) * feeStep,
             Math.round(chosenBuyer.finances.balance * 0.8)
           );
           const tempStateWithOffer: GameSave = {
             ...state,
             clubs,
             transferMarket: freeAgents,
+            freeAgentBids,
+            lastAiMarketSyncDate: matchDate,
             transferOffers: [newOffer, ...offers],
-            transferHistory: [...newDeals, ...(state.transferHistory || [])],
+            transferHistory: trimTransferHistory([
+              ...newDeals,
+              ...(state.transferHistory || []),
+            ]),
           };
           const autoSoldState = executeSaleFromUserToCpu(
             tempStateWithOffer,
@@ -1548,7 +2218,11 @@ export function processRoundAiTransferMarket(
                 )} por ${targetPlayer.name}`,
           message:
             newOffer.offerType === 'LOAN'
-              ? `O ${chosenBuyer.name} enviou proposta formal para ter ${targetPlayer.name} (${targetPlayer.detailedRole}, OVR ${targetPlayer.overall}) por empréstimo de 19 rodadas pagando 80% do salário. Abra o Mercado da Bola > Central IA & Propostas para responder!`
+              ? `O ${chosenBuyer.name} enviou proposta formal para ter ${targetPlayer.name} (${targetPlayer.detailedRole}, OVR ${targetPlayer.overall}) por empréstimo de ${
+                  loanDuration === 38 ? '1 ano (38 rodadas)' : '6 meses (19 rodadas)'
+                } pagando ${loanWageSharePct}% do salário${
+                  finalOfferFee > 0 ? ` mais taxa à vista de ${formatCurrency(finalOfferFee)}` : ''
+                }. Abra o Mercado da Bola > Central IA & Propostas para responder!`
               : `O ${chosenBuyer.name} formalizou proposta oficial de ${formatCurrency(
                   finalOfferFee
                 )} à vista para comprar ${targetPlayer.name} (${targetPlayer.detailedRole}, OVR ${
@@ -1568,8 +2242,10 @@ export function processRoundAiTransferMarket(
     ...state,
     clubs,
     transferMarket: freeAgents,
+    freeAgentBids,
+    lastAiMarketSyncDate: matchDate,
     transferOffers: offers,
-    transferHistory: [...newDeals, ...(state.transferHistory || [])],
+    transferHistory: trimTransferHistory([...newDeals, ...(state.transferHistory || [])]),
     inbox: [...newInbox, ...state.inbox],
   };
 }

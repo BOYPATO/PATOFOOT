@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   Club,
+  FreeAgentMarketBid,
   GameSave,
   MAX_SQUAD_SIZE,
   PendingTransferDeal,
@@ -310,7 +311,10 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
     'ALL' | WatchlistAvailabilityKind
   >('ALL');
   const [confirmClearWatchlist, setConfirmClearWatchlist] = useState<boolean>(false);
-  const [historyFilter, setHistoryFilter] = useState<'ALL' | 'MY_CLUB' | 'SIGNINGS' | 'SALES' | 'LOANS'>('ALL');
+  const [freeOnlyWithBids, setFreeOnlyWithBids] = useState<boolean>(false);
+  const [historyFilter, setHistoryFilter] = useState<
+    'ALL' | 'MY_CLUB' | 'CPU_WORLD' | 'SIGNINGS' | 'SALES' | 'LOANS' | 'FREE_AGENTS'
+  >('ALL');
   const [historySearch, setHistorySearch] = useState<string>('');
   const userClubCountry = userClub.country || 'Brasil';
 
@@ -592,10 +596,33 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
     return `${d}/${m}/${y}`;
   };
 
-  // Current season completed negotiations
+  // Active CPU proposals for free agents indexed by playerId
+  const freeAgentBidsByPlayerId = useMemo(() => {
+    const map = new Map<string, FreeAgentMarketBid[]>();
+    for (const bid of gameState?.freeAgentBids || []) {
+      const list = map.get(bid.playerId) || [];
+      list.push(bid);
+      map.set(bid.playerId, list);
+    }
+    return map;
+  }, [gameState?.freeAgentBids]);
+
+  const freeAgentsWithBidsCount = useMemo(
+    () => freeAgents.filter((p) => (freeAgentBidsByPlayerId.get(p.id)?.length || 0) > 0).length,
+    [freeAgents, freeAgentBidsByPlayerId]
+  );
+
+  // Current season completed negotiations (includes both active hemisphere years so global CPU deals always appear)
+  const activeSeasonYearsSet = useMemo(() => {
+    const s = new Set<number>([currentSeasonYear]);
+    if (gameState?.saSeasonYear) s.add(gameState.saSeasonYear);
+    if (gameState?.europeSeasonYear) s.add(gameState.europeSeasonYear);
+    return s;
+  }, [currentSeasonYear, gameState?.saSeasonYear, gameState?.europeSeasonYear]);
+
   const seasonHistory = useMemo(
-    () => transferHistory.filter((item) => item.seasonYear === currentSeasonYear),
-    [transferHistory, currentSeasonYear]
+    () => transferHistory.filter((item) => activeSeasonYearsSet.has(item.seasonYear)),
+    [transferHistory, activeSeasonYearsSet]
   );
 
   const userSigningsTotal = useMemo(
@@ -619,13 +646,15 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
       if (historyFilter === 'MY_CLUB' && item.fromClubId !== userClub.id && item.toClubId !== userClub.id) {
         return false;
       }
+      if (historyFilter === 'CPU_WORLD' && item.direction !== 'CPU') {
+        return false;
+      }
       if (historyFilter === 'SIGNINGS') {
         const isSigning =
           item.category === 'PURCHASE' ||
           item.category === 'SWAP' ||
           item.category === 'RELEASE_CLAUSE' ||
           item.category === 'PRE_CONTRACT' ||
-          item.category === 'FREE_AGENT' ||
           item.category === 'BUY_OPTION';
         if (!isSigning) return false;
       }
@@ -633,6 +662,9 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
         return false;
       }
       if (historyFilter === 'LOANS' && item.category !== 'LOAN_IN' && item.category !== 'LOAN_OUT') {
+        return false;
+      }
+      if (historyFilter === 'FREE_AGENTS' && item.category !== 'FREE_AGENT') {
         return false;
       }
       if (historySearch.trim()) {
@@ -738,6 +770,7 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
   const filteredFreeAgents = [...freeAgents]
     .filter((p) => {
       if (onlyWatchlisted && !watchlistIdSet.has(p.id)) return false;
+      if (freeOnlyWithBids && (freeAgentBidsByPlayerId.get(p.id)?.length || 0) === 0) return false;
       const pNat = resolvePlayerNationality(p, 'Brasil');
       if (selectedRole !== 'ALL' && p.detailedRole !== selectedRole) return false;
       if (!matchesNationalityFilter(p, 'Brasil')) return false;
@@ -1075,9 +1108,7 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
           confetti({ particleCount: 70, spread: 70 });
           setNegotiationFeedback({
             success: true,
-            msg: windowStatus.isOpen
-              ? `Proposta aceita! ${player.name} assinou por ${yearsLabel} e já foi inscrito no ${userClub.name}!`
-              : `Pré-acordo assinado! ${player.name} fechou contrato de ${yearsLabel} com o ${userClub.name} e se apresenta na abertura da janela em ${windowStatus.nextOpenDisplay}!`,
+            msg: `Proposta aceita! ${player.name} (livre no mercado) assinou por ${yearsLabel} e já foi inscrito imediatamente no ${userClub.name}!`,
           });
           setTimeout(() => {
             setNegotiatingPlayer(null);
@@ -3847,13 +3878,46 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
       {/* TAB 2: FREE AGENTS (LIVRES) */}
       {activeTab === 'free' && (
         <div className="space-y-4">
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Mercado de Jogadores Livres — Contratação Imediata o Ano Todo</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Atletas sem contrato podem ser inscritos imediatamente mesmo fora da janela e recebem propostas reais de clubes do seu nível durante toda a temporada.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  soundEngine.playClick();
+                  setFreeOnlyWithBids((prev) => !prev);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap tabular-nums border ${
+                  freeOnlyWithBids
+                    ? 'bg-amber-400 text-slate-950 border-amber-300'
+                    : 'bg-slate-900 text-amber-300 border-amber-500/35 hover:bg-slate-800'
+                }`}
+              >
+                Com Propostas Ativas ({freeAgentsWithBidsCount})
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {filteredFreeAgents.map((player) => {
               const pendingDeal = findPendingTransferForPlayer(pendingTransfers, player.id);
+              const activeBids = freeAgentBidsByPlayerId.get(player.id) || [];
               return (
                 <div
                   key={player.id}
-                  className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition-all shadow-md"
+                  className={`bg-slate-950 border rounded-xl p-4 flex flex-col justify-between transition-all shadow-md ${
+                    activeBids.length > 0
+                      ? 'border-amber-500/40 hover:border-amber-400/60'
+                      : 'border-slate-800 hover:border-slate-700'
+                  }`}
                 >
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -3898,6 +3962,41 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
                         {renderWatchlistButton(player.id, true)}
                       </div>
                     </div>
+
+                    {activeBids.length > 0 && (
+                      <div className="mb-3 rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 space-y-1.5">
+                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                          <span className="flex items-center gap-1">
+                            <Flame className="w-3 h-3 shrink-0" />
+                            <span>
+                              {activeBids.length > 1
+                                ? `Disputado por ${activeBids.length} clubes`
+                                : 'Proposta em andamento'}
+                            </span>
+                          </span>
+                          <span className="font-mono text-amber-200/80 tabular-nums">
+                            até {formatDateShortBR(activeBids[0].expiresDate).slice(0, 5)}
+                          </span>
+                        </div>
+                        {activeBids.map((bid) => {
+                          const bidClub = allClubs.find((c) => c.id === bid.clubId);
+                          return (
+                            <div
+                              key={bid.id}
+                              className="flex items-center justify-between gap-2 text-[11px] text-slate-200"
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {bidClub && <ClubCrest club={bidClub} size="xs" rounded="md" />}
+                                <span className="font-semibold truncate">{bid.clubShortName}</span>
+                              </div>
+                              <span className="font-mono text-amber-200 tabular-nums shrink-0">
+                                {formatCurrency(bid.offeredWage)}/mês · {bid.contractYears}a
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {pendingDeal ? (
@@ -3911,9 +4010,9 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>
-                        {windowStatus.isOpen
-                          ? 'Contratar a Custo Zero'
-                          : `Assinar p/ Janela (${windowStatus.nextOpenDisplay})`}
+                        {activeBids.length > 0
+                          ? 'Entrar na Disputa (Imediato)'
+                          : 'Contratar Livre (Imediato)'}
                       </span>
                     </button>
                   )}
@@ -4753,14 +4852,28 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
                     })`,
                   },
                   {
+                    id: 'CPU_WORLD',
+                    label: `Mercado Mundial (${
+                      seasonHistory.filter((i) => i.direction === 'CPU').length
+                    })`,
+                  },
+                  {
                     id: 'SIGNINGS',
-                    label: `Contratações (${
+                    label: `Compras (${
                       seasonHistory.filter(
                         (i) =>
                           i.category === 'PURCHASE' ||
-                          i.category === 'FREE_AGENT' ||
+                          i.category === 'SWAP' ||
+                          i.category === 'RELEASE_CLAUSE' ||
+                          i.category === 'PRE_CONTRACT' ||
                           i.category === 'BUY_OPTION'
                       ).length
+                    })`,
+                  },
+                  {
+                    id: 'FREE_AGENTS',
+                    label: `Livres (${
+                      seasonHistory.filter((i) => i.category === 'FREE_AGENT').length
                     })`,
                   },
                   {
@@ -4893,10 +5006,12 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
                         categoryLabel = 'Opção de Compra';
                         categoryColor = 'text-amber-300';
                       } else if (item.category === 'LOAN_IN') {
-                        categoryLabel = 'Empréstimo (Chegada)';
+                        categoryLabel =
+                          item.direction === 'CPU' ? 'Empréstimo (Mercado)' : 'Empréstimo (Chegada)';
                         categoryColor = 'text-amber-300';
                       } else if (item.category === 'LOAN_OUT') {
-                        categoryLabel = 'Empréstimo (Saída)';
+                        categoryLabel =
+                          item.direction === 'CPU' ? 'Empréstimo (Mercado)' : 'Empréstimo (Saída)';
                         categoryColor = 'text-amber-300';
                       } else if (item.direction === 'CPU') {
                         categoryLabel = 'Transferência no Mercado';
@@ -6572,11 +6687,18 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
               Proponha valores de transferência e salário ou acione a multa rescisória para garantir o reforço.
             </p>
 
-            {!windowStatus.isOpen && (
+            {!windowStatus.isOpen && negotiatingPlayer.club && (
               <div className="mb-4 p-3 rounded-xl bg-amber-950/35 border border-amber-500/40 text-xs text-amber-200 leading-relaxed">
                 <strong className="text-amber-300">Janela Fechada (abre em {windowStatus.nextOpenDisplay}):</strong>{' '}
                 você pode fechar a contratação normalmente agora. O atleta só poderá se apresentar e atuar pelo {userClub.shortName} quando a janela abrir em{' '}
                 <strong className="text-white font-mono">{windowStatus.nextWindowLabel}</strong>.
+              </div>
+            )}
+
+            {!windowStatus.isOpen && !negotiatingPlayer.club && (
+              <div className="mb-4 p-3 rounded-xl bg-emerald-950/35 border border-emerald-500/40 text-xs text-emerald-200 leading-relaxed">
+                <strong className="text-emerald-300">Atleta Livre (Inscrição Imediata):</strong>{' '}
+                jogadores sem contrato podem assinar e estrear pelo {userClub.shortName} imediatamente mesmo fora da janela de transferências.
               </div>
             )}
 

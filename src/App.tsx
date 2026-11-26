@@ -721,7 +721,7 @@ function advanceWorldCalendarWithRollover(
     sim2.currentDate || draftState.currentDate || effectiveSimDate,
     true
   );
-  const evaluatedState = resolveCrossCompetitionScheduleConflicts(
+  const baseEvaluatedState = resolveCrossCompetitionScheduleConflicts(
     evaluateActiveTransferClausesProgress(
       processMonthlyFinancialTurn(
         prevDate,
@@ -729,6 +729,19 @@ function advanceWorldCalendarWithRollover(
       )
     )
   );
+  const effectiveMarketDate =
+    baseEvaluatedState.currentDate || draftState.currentDate || effectiveSimDate;
+  const lastSyncRef = baseEvaluatedState.lastAiMarketSyncDate || prevDate;
+  const daysSinceMarketSync =
+    lastSyncRef && effectiveMarketDate ? daysBetween(lastSyncRef, effectiveMarketDate) : 0;
+  const evaluatedState =
+    daysSinceMarketSync >= 3
+      ? evaluateActiveTransferClausesProgress(
+          processRoundAiTransferMarket(baseEvaluatedState, effectiveMarketDate, {
+            isCalendarSkip: true,
+          })
+        )
+      : baseEvaluatedState;
   const upcomingCtxFix = getUpcomingClubFixture(
     getAllFixturesFromSave(evaluatedState),
     evaluatedState.userClubId,
@@ -5096,8 +5109,9 @@ export default function App() {
       const winStatus = getTransferWindowStatus(prev.currentDate);
       const activeSeasonYear = resolveClubActiveSeasonYear(currentUserClub, prev);
 
-      // If Transfer Window is CLOSED (Mar-Jun or Sep-Dec): lock agreement now, arrive when window opens!
-      if (!winStatus.isOpen) {
+      // If Transfer Window is CLOSED (Mar-Jun or Sep-Dec): lock club-to-club agreement now, arrive when window opens.
+      // Free Agents (sem contrato / !sellerClub) can sign and register immediately at any time of the season!
+      if (!winStatus.isOpen && sellerClub) {
         const updatedClubsClosed = prev.clubs.map((c) => {
           if (c.id === userClub.id) {
             return {
@@ -5351,6 +5365,7 @@ export default function App() {
         ...prev,
         clubs: updatedClubs,
         transferMarket: updatedFreeAgents,
+        freeAgentBids: (prev.freeAgentBids || []).filter((b) => b.playerId !== player.id),
         transferClauses: openClause
           ? [openClause, ...(prev.transferClauses || [])]
           : prev.transferClauses || [],
@@ -5754,21 +5769,23 @@ export default function App() {
 
       const loanedPlayer: Player = {
         ...playerToLoan,
+        wage: Math.max(1_000, Math.round(playerToLoan.wage * (wageSharePct / 100))),
         isStarter: false,
         isSubstitute: true,
         isLoan: true,
-        loanParentClubId: userClub.id,
+        loanParentClubId: currentUserClub.id,
         loanCurrentClubId: toClubId,
         loanRoundsRemaining: durationRounds,
         loanDurationMonths: durationMonths,
         loanWageContributionPct: wageSharePct,
         loanOriginalWage: playerToLoan.wage,
         loanBuyOptionFee: buyOptionFee,
+        loanFeePaid: loanFeeReceived,
       };
 
       const updatedUserClub: Club = {
-        ...userClub,
-        finances: recordFinanceLedgerMutation(userClub.finances, {
+        ...currentUserClub,
+        finances: recordFinanceLedgerMutation(currentUserClub.finances, {
           date: prev.currentDate,
           category: 'TRANSFERS_IN',
           type: 'INCOME',
@@ -5776,7 +5793,7 @@ export default function App() {
           description: `Cessão por empréstimo: ${playerToLoan.name} (${toClub.shortName})`,
           applyToBalance: true,
         }),
-        squad: userClub.squad.filter((p) => p.id !== playerId),
+        squad: currentUserClub.squad.filter((p) => p.id !== playerId),
       };
 
       let toClubBaseSquad = [...toClub.squad];
