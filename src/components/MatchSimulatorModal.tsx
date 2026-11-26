@@ -425,11 +425,152 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
     [attackZonesCounts.away]
   );
 
-  // Simultaneous CPU Matches in the round across all active competitions
+  // Simultaneous CPU Matches in the round across all active competitions (all simulated for global sync)
   const [otherMatches, setOtherMatches] = useState<Fixture[]>([]);
-  const [selectedSimCompFilter, setSelectedSimCompFilter] = useState<'ALL' | CompetitionType>(
-    userFixture?.competition || 'ALL'
+  const [showInlineRoundPanel, setShowInlineRoundPanel] = useState<boolean>(true);
+
+  const clubsById = useMemo(
+    () => new Map<string, Club>(allClubs.map((c) => [c.id, c])),
+    [allClubs]
   );
+
+  // Build the list of matches ONLY from the same competition/league & round currently being played
+  const sameLeagueRoundEntries = useMemo(() => {
+    if (!userFixture) return [];
+    const userComp = userFixture.competition;
+    const userRound = userFixture.round;
+    const userEstStateKey =
+      userComp === 'estadual' ? userFixture.id.split('_')[1] || '' : '';
+
+    const isSameLeagueRound = (f: Fixture): boolean => {
+      if (f.id === userFixture.id) return false;
+      if (f.competition !== userComp) return false;
+      if (
+        !f.homeTeamId ||
+        !f.awayTeamId ||
+        f.homeTeamId === 'tbd' ||
+        f.awayTeamId === 'tbd' ||
+        f.homeTeamId.startsWith('TBD') ||
+        f.awayTeamId.startsWith('TBD')
+      ) {
+        return false;
+      }
+      if (userComp === 'estadual') {
+        const sameGroup = Boolean(userFixture.groupName && f.groupName === userFixture.groupName);
+        const sameStatePrefix = Boolean(
+          userEstStateKey && f.id.startsWith(`est_${userEstStateKey}_`)
+        );
+        if (!sameGroup && !sameStatePrefix) return false;
+      }
+      if (
+        userFixture.cupPhase &&
+        userComp !== 'estadual' &&
+        (isKnockoutMatch || userFixture.leg !== undefined)
+      ) {
+        if (userFixture.leg !== undefined && f.leg !== undefined) {
+          return f.cupPhase === userFixture.cupPhase && f.leg === userFixture.leg;
+        }
+        return f.round === userRound || f.cupPhase === userFixture.cupPhase;
+      }
+      return f.round === userRound;
+    };
+
+    const liveMap = new Map<string, Fixture>();
+    for (const m of otherMatches) {
+      if (isSameLeagueRound(m)) {
+        liveMap.set(m.id, m);
+      }
+    }
+
+    type RoundEntryStatus = 'LIVE' | 'FINISHED' | 'UPCOMING';
+    const entries: Array<{ fixture: Fixture; status: RoundEntryStatus; priority: number }> = [];
+    const seenIds = new Set<string>();
+
+    // 1. Live simultaneous matches of this league & round
+    liveMap.forEach((m) => {
+      seenIds.add(m.id);
+      const sameGroupBoost =
+        userFixture.groupName && m.groupName === userFixture.groupName ? 0 : 1;
+      entries.push({ fixture: m, status: 'LIVE', priority: sameGroupBoost });
+    });
+
+    // 2. Other matches of the exact same league & round (already played earlier or scheduled later in the same round)
+    for (const f of allFixtures) {
+      if (seenIds.has(f.id) || !isSameLeagueRound(f)) continue;
+      seenIds.add(f.id);
+      const sameGroupBoost =
+        userFixture.groupName && f.groupName === userFixture.groupName ? 0 : 1;
+      entries.push({
+        fixture: f,
+        status: f.played ? 'FINISHED' : 'UPCOMING',
+        priority: (f.played ? 2 : 4) + sameGroupBoost,
+      });
+    }
+
+    entries.sort((a, b) => {
+      if (a.priority !== b.priority) return a.priority - b.priority;
+      const dateCmp = (a.fixture.date || '').localeCompare(b.fixture.date || '');
+      if (dateCmp !== 0) return dateCmp;
+      return (a.fixture.time || '').localeCompare(b.fixture.time || '');
+    });
+
+    return entries;
+  }, [userFixture, otherMatches, allFixtures, isKnockoutMatch]);
+
+  const currentRoundCompetitionLabel = useMemo(() => {
+    if (!userFixture) return 'Rodada';
+    if (userFixture.competition === 'estadual' && userFixture.groupName) {
+      return userFixture.groupName;
+    }
+    return COMPETITIONS_CATALOG[userFixture.competition]?.shortName || userFixture.competition;
+  }, [userFixture]);
+
+  // Live goals flashing right now in other matches of the same league & round (0-3 min window)
+  const recentRoundGoalAlerts = useMemo(() => {
+    if (isFinished || minute <= 0) return [];
+    const alerts: Array<{
+      fixtureId: string;
+      minute: number;
+      scorerName: string;
+      scoringClubName: string;
+      homeName: string;
+      awayName: string;
+      homeGoals: number;
+      awayGoals: number;
+    }> = [];
+
+    for (const entry of sameLeagueRoundEntries) {
+      if (entry.status !== 'LIVE') continue;
+      const m = entry.fixture;
+      const goalEvents = (m.events || [])
+        .filter((ev) => (ev.type === 'GOL' || ev.type === 'PENALTI_GOL') && ev.minute <= minute)
+        .sort((a, b) => a.minute - b.minute);
+      const latestRecent = [...goalEvents]
+        .reverse()
+        .find((ev) => minute - ev.minute >= 0 && minute - ev.minute <= 3);
+      if (!latestRecent) continue;
+
+      const h = clubsById.get(m.homeTeamId);
+      const a = clubsById.get(m.awayTeamId);
+      const homeGoals = goalEvents.filter((ev) => ev.isHomeTeam).length;
+      const awayGoals = goalEvents.filter((ev) => !ev.isHomeTeam).length;
+      alerts.push({
+        fixtureId: m.id,
+        minute: latestRecent.minute,
+        scorerName: latestRecent.playerName || 'Gol',
+        scoringClubName: latestRecent.isHomeTeam
+          ? h?.shortName || m.homeTeamId
+          : a?.shortName || m.awayTeamId,
+        homeName: h?.shortName || m.homeTeamId,
+        awayName: a?.shortName || m.awayTeamId,
+        homeGoals,
+        awayGoals,
+      });
+    }
+
+    alerts.sort((a, b) => b.minute - a.minute);
+    return alerts;
+  }, [sameLeagueRoundEntries, isFinished, minute, clubsById]);
 
   // Active in-match clubs & squads (supports substitutions, sanitized against suspensions)
   const [currentHomeClub, setCurrentHomeClub] = useState<Club>(() => {
@@ -3447,6 +3588,197 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
                 </div>
               </div>
             </div>
+            {/* Live Same-League Round Results directly on the Match Screen */}
+            {sameLeagueRoundEntries.length > 0 && (
+              <div className="bg-slate-900/90 border border-slate-800 rounded-xl overflow-hidden">
+                <div className="px-3 py-2 border-b border-slate-800/80 flex items-center justify-between gap-2 bg-slate-950/60">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <h3 className="text-xs font-extrabold text-slate-100 truncate">
+                      Jogos da Rodada · {currentRoundCompetitionLabel}
+                      {userFixture?.cupPhase && userFixture.competition !== 'estadual'
+                        ? ` · ${userFixture.cupPhase}`
+                        : userFixture
+                        ? ` · Rod. ${userFixture.round}`
+                        : ''}
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] font-mono tabular-nums text-emerald-400">
+                      {isFinished
+                        ? `Encerrada · ${sameLeagueRoundEntries.length} jogos`
+                        : `${minute}' · ${sameLeagueRoundEntries.filter((e) => e.status === 'LIVE').length} ao vivo`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundEngine.playClick();
+                        setShowInlineRoundPanel((prev) => !prev);
+                      }}
+                      className="px-2 py-0.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-[10px] font-bold text-slate-300 hover:text-white cursor-pointer transition-colors"
+                    >
+                      {showInlineRoundPanel ? 'Ocultar' : 'Mostrar'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Flash Ticker whenever a goal just happened in another match of this league */}
+                {recentRoundGoalAlerts.length > 0 && (
+                  <div className="px-3 py-1.5 bg-emerald-950/70 border-b border-emerald-500/40 flex items-center gap-2 text-[11px] text-emerald-100 overflow-x-auto no-native-scrollbar">
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-400 text-slate-950 font-black text-[10px] uppercase shrink-0">
+                      ⚽ GOL NA RODADA
+                    </span>
+                    <div className="flex items-center gap-3 whitespace-nowrap">
+                      {recentRoundGoalAlerts.slice(0, 3).map((al) => (
+                        <span key={`${al.fixtureId}_${al.minute}`} className="font-semibold">
+                          <span className="font-mono text-amber-300">{al.minute}&apos;</span>{' '}
+                          <span className="text-white">{al.scorerName}</span>{' '}
+                          <span className="text-emerald-300">({al.scoringClubName})</span>{' '}
+                          <span className="text-slate-300 font-mono tabular-nums">
+                            {al.homeName} {al.homeGoals}×{al.awayGoals} {al.awayName}
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {showInlineRoundPanel && (
+                  <div className="p-2.5 grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-56 overflow-y-auto">
+                    {sameLeagueRoundEntries.map(({ fixture: m, status }) => {
+                      const h = clubsById.get(m.homeTeamId);
+                      const a = clubsById.get(m.awayTeamId);
+                      const allGoalEvents = (m.events || [])
+                        .filter((ev) => ev.type === 'GOL' || ev.type === 'PENALTI_GOL')
+                        .sort((x, y) => x.minute - y.minute);
+
+                      const visibleGoals =
+                        status === 'FINISHED' || isFinished
+                          ? allGoalEvents
+                          : status === 'LIVE'
+                          ? allGoalEvents.filter((ev) => ev.minute <= minute)
+                          : [];
+
+                      const liveHomeGoals =
+                        status === 'FINISHED'
+                          ? m.homeScore ?? 0
+                          : status === 'UPCOMING'
+                          ? null
+                          : isFinished
+                          ? m.homeScore ?? 0
+                          : visibleGoals.filter((ev) => ev.isHomeTeam).length;
+
+                      const liveAwayGoals =
+                        status === 'FINISHED'
+                          ? m.awayScore ?? 0
+                          : status === 'UPCOMING'
+                          ? null
+                          : isFinished
+                          ? m.awayScore ?? 0
+                          : visibleGoals.filter((ev) => !ev.isHomeTeam).length;
+
+                      const recentGoal =
+                        status === 'LIVE' &&
+                        !isFinished &&
+                        minute > 0 &&
+                        [...visibleGoals]
+                          .reverse()
+                          .find((ev) => minute - ev.minute >= 0 && minute - ev.minute <= 3);
+
+                      const homeScorers = visibleGoals.filter((ev) => ev.isHomeTeam);
+                      const awayScorers = visibleGoals.filter((ev) => !ev.isHomeTeam);
+
+                      return (
+                        <div
+                          key={m.id}
+                          className={`px-2.5 py-2 rounded-lg border transition-colors ${
+                            recentGoal
+                              ? 'bg-emerald-950/60 border-emerald-400/70 shadow-sm shadow-emerald-500/20'
+                              : status === 'LIVE'
+                              ? 'bg-slate-950/80 border-slate-800'
+                              : 'bg-slate-950/45 border-slate-800/70'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1.5 text-[11px]">
+                            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                              {h && <ClubCrest club={h} size="xs" />}
+                              <span className="font-semibold text-slate-100 truncate">
+                                {h?.shortName || m.homeTeamId}
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col items-center shrink-0 px-1.5">
+                              {status === 'UPCOMING' ? (
+                                <span className="font-mono text-[10px] text-slate-400 whitespace-nowrap">
+                                  {m.date ? formatCalendarDate(m.date).slice(0, 5) : 'Breve'}{' '}
+                                  {m.time || ''}
+                                </span>
+                              ) : (
+                                <span
+                                  className={`font-mono font-extrabold tabular-nums text-xs leading-none ${
+                                    recentGoal
+                                      ? 'text-amber-300'
+                                      : status === 'FINISHED' || isFinished
+                                      ? 'text-slate-200'
+                                      : 'text-emerald-400'
+                                  }`}
+                                >
+                                  {liveHomeGoals} × {liveAwayGoals}
+                                </span>
+                              )}
+                              <span
+                                className={`text-[9px] font-mono uppercase leading-tight mt-0.5 ${
+                                  recentGoal
+                                    ? 'text-emerald-300 font-black'
+                                    : status === 'LIVE' && !isFinished
+                                    ? 'text-emerald-500/90'
+                                    : 'text-slate-500'
+                                }`}
+                              >
+                                {recentGoal
+                                  ? `GOL! ${recentGoal.minute}'`
+                                  : status === 'UPCOMING'
+                                  ? 'Agendado'
+                                  : status === 'FINISHED' || isFinished
+                                  ? 'ENC'
+                                  : `${minute}'`}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-end gap-1.5 min-w-0 flex-1">
+                              <span className="font-semibold text-slate-100 truncate text-right">
+                                {a?.shortName || m.awayTeamId}
+                              </span>
+                              {a && <ClubCrest club={a} size="xs" />}
+                            </div>
+                          </div>
+
+                          {/* Goalscorers happening in this match */}
+                          {visibleGoals.length > 0 && (
+                            <div className="mt-1.5 pt-1 border-t border-slate-800/70 grid grid-cols-2 gap-2 text-[10px] leading-tight text-slate-400">
+                              <div className="truncate">
+                                {homeScorers.length > 0
+                                  ? homeScorers
+                                      .map((g) => `${g.minute}' ${g.playerName || 'Gol'}`)
+                                      .join(', ')
+                                  : ''}
+                              </div>
+                              <div className="truncate text-right">
+                                {awayScorers.length > 0
+                                  ? awayScorers
+                                      .map((g) => `${g.minute}' ${g.playerName || 'Gol'}`)
+                                      .join(', ')
+                                  : ''}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right Side Panel (4 cols): Always beside the pitch — Lances, Stats, Ratings, Bench & Simultaneous Round */}
@@ -3457,7 +3789,7 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
                 { id: 'live' as const, label: 'Ao Vivo' },
                 { id: 'ratings' as const, label: 'Notas' },
                 { id: 'bench' as const, label: `Banco (${MAX_USER_SUBS - subsUsed})` },
-                { id: 'round' as const, label: `Rodada (${otherMatches.length})` },
+                { id: 'round' as const, label: `Rodada (${sameLeagueRoundEntries.length})` },
               ].map((tab) => {
                 const active = sideInfoTab === tab.id;
                 return (
@@ -3886,142 +4218,148 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
               </div>
             )}
 
-            {/* SIDE TAB 4: JOGOS SIMULTÂNEOS DA RODADA */}
+            {/* SIDE TAB 4: JOGOS DA RODADA (APENAS DA LIGA/COMPETIÇÃO ATUAL) */}
             {sideInfoTab === 'round' && (
               <div className="flex-1 min-h-0 overflow-y-auto p-3.5">
                 <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2.5">
-                    <h3 className="font-bold text-xs text-slate-200">
-                      Jogos Simultâneos
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2.5 gap-2">
+                    <h3 className="font-bold text-xs text-slate-200 truncate">
+                      {currentRoundCompetitionLabel}
+                      {userFixture?.cupPhase && userFixture.competition !== 'estadual'
+                        ? ` · ${userFixture.cupPhase}`
+                        : userFixture
+                        ? ` · Rodada ${userFixture.round}`
+                        : ''}
                     </h3>
-                    <span className="text-[11px] text-emerald-400 font-mono tabular-nums">
-                      {isFinished ? 'Encerrados' : `${minute}' · ${otherMatches.length} jogos`}
+                    <span className="text-[11px] text-emerald-400 font-mono tabular-nums shrink-0">
+                      {isFinished
+                        ? 'Encerrados'
+                        : `${minute}' · ${sameLeagueRoundEntries.length} jogos`}
                     </span>
                   </div>
 
-                  {(() => {
-                    const compsInRound = Array.from(
-                      new Set(otherMatches.map((m) => m.competition))
-                    );
-                    const activeFilter =
-                      selectedSimCompFilter !== 'ALL' && !compsInRound.includes(selectedSimCompFilter)
-                        ? 'ALL'
-                        : selectedSimCompFilter;
-                    const filteredMatches =
-                      activeFilter === 'ALL'
-                        ? otherMatches
-                        : otherMatches.filter((m) => m.competition === activeFilter);
+                  <div className="space-y-1.5 text-xs">
+                    {sameLeagueRoundEntries.length === 0 ? (
+                      <p className="text-slate-500 text-center py-6 text-xs">
+                        Nenhuma outra partida desta competição nesta rodada.
+                      </p>
+                    ) : (
+                      sameLeagueRoundEntries.map(({ fixture: m, status }) => {
+                        const h = clubsById.get(m.homeTeamId);
+                        const a = clubsById.get(m.awayTeamId);
+                        const allGoalEvents = (m.events || [])
+                          .filter((ev) => ev.type === 'GOL' || ev.type === 'PENALTI_GOL')
+                          .sort((x, y) => x.minute - y.minute);
 
-                    return (
-                      <>
-                        {compsInRound.length > 1 && (
-                          <div className="flex items-center gap-1 overflow-x-auto pb-2 mb-2 no-native-scrollbar">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedSimCompFilter('ALL')}
-                              className={`px-2.5 py-1 rounded-md text-[11px] font-bold whitespace-nowrap transition-colors cursor-pointer tabular-nums ${
-                                activeFilter === 'ALL'
-                                  ? 'bg-sky-400 text-slate-950'
-                                  : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
-                              }`}
-                            >
-                              Todos ({otherMatches.length})
-                            </button>
-                            {compsInRound.map((compKey) => {
-                              const meta = COMPETITIONS_CATALOG[compKey];
-                              const count = otherMatches.filter((m) => m.competition === compKey).length;
-                              return (
-                                <button
-                                  key={compKey}
-                                  type="button"
-                                  onClick={() => setSelectedSimCompFilter(compKey)}
-                                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold whitespace-nowrap transition-colors cursor-pointer tabular-nums ${
-                                    activeFilter === compKey
-                                      ? 'bg-sky-400 text-slate-950'
-                                      : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
-                                  }`}
-                                >
-                                  {meta?.shortName || compKey} ({count})
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
+                        const visibleGoals =
+                          status === 'FINISHED' || isFinished
+                            ? allGoalEvents
+                            : status === 'LIVE'
+                            ? allGoalEvents.filter((ev) => ev.minute <= minute)
+                            : [];
 
-                        <div className="space-y-1.5 text-xs">
-                          {filteredMatches.length === 0 ? (
-                            <p className="text-slate-500 text-center py-6 text-xs">
-                              Nenhuma outra partida simultânea neste horário.
-                            </p>
-                          ) : (
-                            filteredMatches.map((m) => {
-                              const h = allClubs.find((c) => c.id === m.homeTeamId);
-                              const a = allClubs.find((c) => c.id === m.awayTeamId);
-                              const compMeta = COMPETITIONS_CATALOG[m.competition];
+                        const liveHomeGoals =
+                          status === 'FINISHED'
+                            ? m.homeScore ?? 0
+                            : status === 'UPCOMING'
+                            ? null
+                            : isFinished
+                            ? m.homeScore ?? 0
+                            : visibleGoals.filter((ev) => ev.isHomeTeam).length;
 
-                              const liveHomeGoals = isFinished
-                                ? m.homeScore ?? 0
-                                : (m.events || []).filter(
-                                    (ev) => ev.type === 'GOL' && ev.isHomeTeam && ev.minute <= minute
-                                  ).length;
-                              const liveAwayGoals = isFinished
-                                ? m.awayScore ?? 0
-                                : (m.events || []).filter(
-                                    (ev) => ev.type === 'GOL' && !ev.isHomeTeam && ev.minute <= minute
-                                  ).length;
+                        const liveAwayGoals =
+                          status === 'FINISHED'
+                            ? m.awayScore ?? 0
+                            : status === 'UPCOMING'
+                            ? null
+                            : isFinished
+                            ? m.awayScore ?? 0
+                            : visibleGoals.filter((ev) => !ev.isHomeTeam).length;
 
-                              const recentGoal =
-                                !isFinished &&
-                                minute > 0 &&
-                                (m.events || []).find(
-                                  (ev) => ev.type === 'GOL' && minute - ev.minute >= 0 && minute - ev.minute <= 2
-                                );
+                        const recentGoal =
+                          status === 'LIVE' &&
+                          !isFinished &&
+                          minute > 0 &&
+                          [...visibleGoals]
+                            .reverse()
+                            .find((ev) => minute - ev.minute >= 0 && minute - ev.minute <= 3);
 
-                              return (
-                                <div
-                                  key={m.id}
-                                  className={`p-2 rounded-lg border transition-colors ${
-                                    recentGoal
-                                      ? 'bg-emerald-950/50 border-emerald-500/60'
-                                      : 'bg-slate-800/60 border-slate-700/50'
-                                  }`}
-                                >
-                                  {activeFilter === 'ALL' && compMeta && (
-                                    <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-                                      <span className="truncate">
-                                        {compMeta.shortName}
-                                        {m.cupPhase ? ` · ${m.cupPhase}` : ` · Rod. ${m.round}`}
-                                      </span>
-                                      {recentGoal && (
-                                        <span className="text-emerald-400 font-bold">
-                                          GOL! {recentGoal.minute}'
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                  <div className="flex items-center justify-between gap-2">
-                                    <span className="font-semibold text-slate-200 truncate flex-1">
-                                      {h?.shortName || m.homeTeamId}
-                                    </span>
-                                    <span
-                                      className={`font-mono font-bold tabular-nums px-2 whitespace-nowrap ${
-                                        recentGoal ? 'text-amber-300' : 'text-emerald-400'
-                                      }`}
-                                    >
-                                      {liveHomeGoals} × {liveAwayGoals}
-                                    </span>
-                                    <span className="font-semibold text-slate-200 truncate flex-1 text-right">
-                                      {a?.shortName || m.awayTeamId}
-                                    </span>
-                                  </div>
+                        const homeScorers = visibleGoals.filter((ev) => ev.isHomeTeam);
+                        const awayScorers = visibleGoals.filter((ev) => !ev.isHomeTeam);
+
+                        return (
+                          <div
+                            key={m.id}
+                            className={`p-2 rounded-lg border transition-colors ${
+                              recentGoal
+                                ? 'bg-emerald-950/60 border-emerald-400/70'
+                                : 'bg-slate-800/60 border-slate-700/50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                              <span className="truncate">
+                                {m.groupName && userFixture?.competition !== 'estadual'
+                                  ? m.groupName
+                                  : status === 'UPCOMING'
+                                  ? `${m.date ? formatCalendarDate(m.date) : 'Em breve'} ${m.time || ''}`
+                                  : status === 'FINISHED' || isFinished
+                                  ? 'Encerrado'
+                                  : `Ao vivo · ${minute}'`}
+                              </span>
+                              {recentGoal && (
+                                <span className="text-emerald-300 font-black">
+                                  ⚽ GOL! {recentGoal.minute}&apos;
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                {h && <ClubCrest club={h} size="xs" />}
+                                <span className="font-semibold text-slate-100 truncate">
+                                  {h?.shortName || m.homeTeamId}
+                                </span>
+                              </div>
+                              <span
+                                className={`font-mono font-bold tabular-nums px-2 whitespace-nowrap ${
+                                  recentGoal
+                                    ? 'text-amber-300'
+                                    : status === 'UPCOMING'
+                                    ? 'text-slate-400 text-[11px]'
+                                    : 'text-emerald-400'
+                                }`}
+                              >
+                                {status === 'UPCOMING'
+                                  ? 'vs'
+                                  : `${liveHomeGoals} × ${liveAwayGoals}`}
+                              </span>
+                              <div className="flex items-center justify-end gap-1.5 min-w-0 flex-1">
+                                <span className="font-semibold text-slate-100 truncate text-right">
+                                  {a?.shortName || m.awayTeamId}
+                                </span>
+                                {a && <ClubCrest club={a} size="xs" />}
+                              </div>
+                            </div>
+
+                            {visibleGoals.length > 0 && (
+                              <div className="mt-1.5 pt-1 border-t border-slate-700/50 grid grid-cols-2 gap-2 text-[10px] text-slate-400">
+                                <div className="truncate">
+                                  {homeScorers
+                                    .map((g) => `⚽ ${g.minute}' ${g.playerName || 'Gol'}`)
+                                    .join(', ')}
                                 </div>
-                              );
-                            })
-                          )}
-                        </div>
-                      </>
-                    );
-                  })()}
+                                <div className="truncate text-right">
+                                  {awayScorers
+                                    .map((g) => `⚽ ${g.minute}' ${g.playerName || 'Gol'}`)
+                                    .join(', ')}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               </div>
             )}
