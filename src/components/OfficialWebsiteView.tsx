@@ -19,6 +19,7 @@ import tacticsBoardImg from '../assets/images/launch_tactics_board_1795557647795
 import tunnelPitchImg from '../assets/images/launch_tunnel_pitch_1795557646780.webp';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { soundEngine } from '../services/soundEngine';
+import { PatoLogo } from './PatoLogo';
 
 interface OfficialWebsiteViewProps {
   hasSavedCareer: boolean;
@@ -47,7 +48,7 @@ const FAQ_ITEMS: Array<{ q: string; a: string }> = [
     a: 'Não! O link oficial (/site) abre esta página pública de apresentação e download. Cada amigo cria o próprio login e senha no próprio celular ou computador e começa sua carreira do zero, com 5 espaços de save independentes. O seu progresso fica privado na sua conta e no seu dispositivo.',
   },
   {
-    q: 'Como baixar e instalar o PATOFOOT 2027 no celular Android, iPhone ou PC?',
+    q: 'Como baixar e instalar o PATOFOOT no celular Android, iPhone ou PC?',
     a: 'No Android (Chrome ou Edge) e no PC/Mac (Chrome, Edge ou Brave), basta clicar em "Baixar / Instalar App" nesta página para instalar o jogo em tela cheia com ícone oficial. No iPhone ou iPad (Safari), toque em Compartilhar e selecione "Adicionar à Tela de Início".',
   },
   {
@@ -149,20 +150,20 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
   const publicSiteUrl = `${baseOrigin}/site`;
   const directDownloadUrl = `${baseOrigin}/baixar`;
 
-  const inviteMessage = `Venha jogar PATOFOOT 2027! Futebol Manager grátis com 930+ clubes, 27 estaduais, simulação 2D ao vivo, 200+ jogadores livres e Copa do Mundo. Baixe o app ou jogue no navegador com sua própria carreira: ${publicSiteUrl}`;
+  const inviteMessage = `Venha jogar PATOFOOT! Futebol Manager grátis com 946 clubes, 27 estaduais, simulação 2D ao vivo, 200+ jogadores livres e Copa do Mundo. Baixe o app ou jogue no navegador com sua própria carreira: ${publicSiteUrl}`;
   const whatsappShareHref = `https://wa.me/?text=${encodeURIComponent(inviteMessage)}`;
 
   const handleInstallAction = async () => {
     soundEngine.playClick();
     if (isInstalled) {
-      setInstallFeedback('O PATOFOOT 2027 já está instalado como aplicativo neste dispositivo.');
+      setInstallFeedback('O PATOFOOT já está instalado como aplicativo neste dispositivo.');
       return;
     }
     if (isInstallable) {
       const accepted = await promptInstall();
       setInstallFeedback(
         accepted
-          ? 'Download e instalação iniciados! O ícone do PATOFOOT 2027 aparecerá na sua tela inicial.'
+          ? 'Download e instalação iniciados! O ícone do PATOFOOT aparecerá na sua tela inicial.'
           : 'Instalação cancelada. Você pode instalar o aplicativo quando quiser por este botão ou pelo menu do navegador.'
       );
       return;
@@ -176,7 +177,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
     }
     if (activePlatform === 'desktop') {
       setInstallFeedback(
-        'No Chrome, Edge ou Brave no PC/Mac: clique no ícone de instalação na barra de endereços (ou no menu ⋮ → Instalar PATOFOOT 2027).'
+        'No Chrome, Edge ou Brave no PC/Mac: clique no ícone de instalação na barra de endereços (ou no menu ⋮ → Instalar PATOFOOT).'
       );
       return;
     }
@@ -213,8 +214,8 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
     if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {
         await navigator.share({
-          title: 'PATOFOOT 2027 – Futebol Manager Mundial',
-          text: 'Baixe o app ou jogue PATOFOOT 2027 grátis: 930+ clubes, 27 estaduais, simulação 2D ao vivo e Copa do Mundo. Crie sua própria carreira!',
+          title: 'PATOFOOT – Futebol Manager Mundial',
+          text: 'Baixe o app ou jogue PATOFOOT grátis: 946 clubes, 27 estaduais, simulação 2D ao vivo e Copa do Mundo. Crie sua própria carreira!',
           url: publicSiteUrl,
         });
         return;
@@ -244,9 +245,12 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
               e.preventDefault();
               scrollToSection('inicio');
             }}
-            className="font-display text-base sm:text-lg font-extrabold tracking-tight text-white whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-2.5 font-display text-base sm:text-lg font-extrabold tracking-tight text-white whitespace-nowrap shrink-0"
           >
-            PATOFOOT <span className="text-emerald-400">2027</span>
+            <PatoLogo size={34} className="border border-sky-400/40" />
+            <span>
+              PATO<span className="text-sky-400">FOOT</span>
+            </span>
           </a>
 
           <nav
@@ -305,7 +309,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
             <div className="lg:col-span-6 flex flex-col justify-center">
               <p className="text-xs sm:text-sm font-medium text-slate-400 mb-4">
-                Site Oficial PATOFOOT 2027 · Download para Android, iPhone, PC e Web
+                Site Oficial PATOFOOT · Download para Android, iPhone, PC e Web
               </p>
 
               <h1
@@ -319,7 +323,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
               </h1>
 
               <p className="mt-5 text-base sm:text-lg text-slate-300 leading-relaxed max-w-xl">
-                PATOFOOT 2027 reúne mais de 930 clubes, 27 estaduais brasileiros, simulação 2D em
+                PATOFOOT reúne 946 clubes, 27 estaduais brasileiros, simulação 2D em
                 tempo real, mercado da bola com 200+ jogadores livres reais, finanças completas e
                 Copa do Mundo de 48 seleções — grátis no navegador ou instalado como aplicativo.
               </p>
@@ -393,15 +397,16 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                 {!heroImgFailed ? (
                   <img
                     src={heroStadiumImg}
-                    alt="Estádio iluminado à noite pronto para a temporada do PATOFOOT 2027"
+                    alt="Estádio iluminado à noite pronto para a temporada do PATOFOOT"
                     referrerPolicy="no-referrer"
                     onError={() => setHeroImgFailed(true)}
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-slate-900 via-[#0b1220] to-emerald-950/50 flex items-center justify-center p-8 text-center">
+                  <div className="w-full h-full bg-gradient-to-br from-slate-900 via-[#0b1220] to-emerald-950/50 flex flex-col items-center justify-center gap-3 p-8 text-center">
+                    <PatoLogo size={96} className="border border-sky-400/40" />
                     <span className="font-display text-2xl font-extrabold text-white">
-                      PATOFOOT 2027
+                      PATO<span className="text-sky-400">FOOT</span>
                     </span>
                   </div>
                 )}
@@ -571,7 +576,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
               <div className="max-w-2xl">
                 <h2 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
-                  Baixe o PATOFOOT 2027 ou jogue na Web
+                  Baixe o PATOFOOT ou jogue na Web
                 </h2>
                 <p className="mt-3 text-sm sm:text-base text-slate-400 leading-relaxed">
                   Escolha seu dispositivo abaixo para instalar o aplicativo oficial em tela cheia
@@ -625,7 +630,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                       Baixar Aplicativo para Android
                     </h3>
                     <p className="mt-2.5 text-sm text-slate-300 leading-relaxed">
-                      Instale o PATOFOOT 2027 direto na tela inicial do seu celular Android sem
+                      Instale o PATOFOOT direto na tela inicial do seu celular Android sem
                       ocupar memória pesada de loja. O jogo abre em modo app (tela cheia sem barra
                       do navegador), com ícone oficial e modo offline automático.
                     </p>
@@ -638,7 +643,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                         <strong className="text-white">Instalar aplicativo</strong>).
                       </li>
                       <li>
-                        Confirme a instalação para criar o ícone do PATOFOOT 2027 no celular e jogar
+                        Confirme a instalação para criar o ícone do PATOFOOT no celular e jogar
                         mesmo sem internet.
                       </li>
                     </ol>
@@ -676,7 +681,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                       Instalar no iPhone e iPad (iOS Safari)
                     </h3>
                     <p className="mt-2.5 text-sm text-slate-300 leading-relaxed">
-                      O PATOFOOT 2027 possui ícone Apple Touch em alta resolução e modo tela cheia
+                      O PATOFOOT possui ícone Apple Touch em alta resolução e modo tela cheia
                       para iOS, funcionando como aplicativo direto na tela inicial do seu iPhone ou
                       iPad.
                     </p>
@@ -717,7 +722,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                       Baixar para Computador (Windows, macOS e Linux)
                     </h3>
                     <p className="mt-2.5 text-sm text-slate-300 leading-relaxed">
-                      Instale o PATOFOOT 2027 como aplicativo de computador com janela dedicada,
+                      Instale o PATOFOOT como aplicativo de computador com janela dedicada,
                       atalho na barra de tarefas ou área de trabalho, tela widescreen completa e
                       suporte offline.
                     </p>
@@ -728,7 +733,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                         (ou no ícone de instalação na barra de endereços do navegador).
                       </li>
                       <li>
-                        Fixe o ícone do PATOFOOT 2027 na barra de tarefas ou Dock para abrir em 1
+                        Fixe o ícone do PATOFOOT na barra de tarefas ou Dock para abrir em 1
                         clique.
                       </li>
                     </ol>
@@ -1010,7 +1015,7 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
                   }}
                   className="px-6 py-3.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-sm inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
                 >
-                  <span>Abrir PATOFOOT 2027</span>
+                  <span>Abrir PATOFOOT</span>
                   <ArrowRight className="w-4 h-4 shrink-0" />
                 </button>
               </div>
@@ -1022,8 +1027,9 @@ export const OfficialWebsiteView: React.FC<OfficialWebsiteViewProps> = ({
       {/* Quiet Footer */}
       <footer className="border-t border-slate-800/80 bg-[#020617]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-[max(2rem,env(safe-area-inset-bottom))] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div className="font-display font-bold text-slate-300">
-            PATOFOOT 2027 · Futebol Manager Mundial
+          <div className="inline-flex items-center gap-2 font-display font-bold text-slate-300">
+            <PatoLogo size={24} className="border border-sky-400/35" />
+            <span>PATOFOOT · Futebol Manager Mundial</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-5">
             <button

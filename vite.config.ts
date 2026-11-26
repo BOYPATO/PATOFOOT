@@ -23,10 +23,10 @@ export default defineConfig(() => {
         ],
         manifest: {
           id: '/',
-          name: 'PATOFOOT 2027 - Futebol Manager',
-          short_name: 'PatoFoot 27',
+          name: 'PATOFOOT - Futebol Manager',
+          short_name: 'PatoFoot',
           description:
-            'PATOFOOT 2027 - Jogo completo de futebol manager com simulação 2D, seleções 2027-2038, mercado da bola, finanças e campeonatos mundiais.',
+            'PATOFOOT - Jogo completo de futebol manager com simulação 2D, seleções 2027-2038, mercado da bola, finanças e campeonatos mundiais.',
           theme_color: '#020617',
           background_color: '#020617',
           display: 'standalone',
@@ -39,7 +39,7 @@ export default defineConfig(() => {
             {
               name: 'Jogar na Web',
               short_name: 'Jogar',
-              description: 'Abrir o PATOFOOT 2027 direto na tela de carreira',
+              description: 'Abrir o PATOFOOT direto na tela de carreira',
               url: '/',
               icons: [{ src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
             },
@@ -57,7 +57,7 @@ export default defineConfig(() => {
               sizes: '1280x720',
               type: 'image/jpeg',
               form_factor: 'wide',
-              label: 'PATOFOOT 2027 - Simulador de Futebol Manager Mundial',
+              label: 'PATOFOOT - Simulador de Futebol Manager Mundial',
             },
           ],
           icons: [

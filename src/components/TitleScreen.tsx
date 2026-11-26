@@ -984,9 +984,9 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
       {/* Top Navigation Bar */}
       <header className="relative z-20 max-w-6xl mx-auto w-full px-3 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4 border-b border-slate-800/70">
         <div className="flex items-center gap-2 sm:gap-2.5 whitespace-nowrap shrink-0">
-          <PatoLogo size={28} />
-          <span className="text-sm sm:text-lg font-extrabold tracking-wider text-sky-400 font-display">
-            PATOFOOT <span className="text-white">2027</span>
+          <PatoLogo size={32} className="border border-sky-400/40" />
+          <span className="text-sm sm:text-lg font-extrabold tracking-wider text-white font-display">
+            PATO<span className="text-sky-400">FOOT</span>
           </span>
         </div>
 
@@ -1135,15 +1135,15 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
         {/* Compact Brand Strip */}
         <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3.5 text-center sm:text-left">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#0c1424] border border-sky-400/50 flex items-center justify-center p-2 shrink-0">
-              <PatoLogo size={42} />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-black border border-sky-400/50 overflow-hidden flex items-center justify-center shrink-0 shadow-lg shadow-sky-500/15">
+              <PatoLogo size={60} className="rounded-none" />
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight text-white leading-none">
-                PATOFOOT <span className="text-sky-400">2027</span>
+                PATO<span className="text-sky-400">FOOT</span>
               </h1>
               <p className="mt-1 text-xs text-slate-400">
-                930+ clubes mundiais · 27 estaduais · Copa do Mundo · 5 espaços de carreira
+                946 clubes mundiais · 27 estaduais · Copa do Mundo · 5 espaços de carreira
               </p>
             </div>
           </div>
@@ -1772,7 +1772,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
                       <>
                         <LogIn className="w-4 h-4 shrink-0" />
                         <span>
-                          {isSubmittingAuth ? 'Entrando no Jogo...' : 'Entrar no PATOFOOT 2027'}
+                          {isSubmittingAuth ? 'Entrando no Jogo...' : 'Entrar no PATOFOOT'}
                         </span>
                       </>
                     ) : (
@@ -2121,7 +2121,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
       {/* Footer Strip */}
       <footer className="relative z-10 border-t border-slate-900 bg-black/80 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4 text-xs text-slate-500">
-          <span>PATOFOOT Edição 2027 · Simulador de Futebol Manager</span>
+          <span>PATOFOOT · Simulador de Futebol Manager</span>
           <span>Calendário Completo · Lei Bosman · Olheiros · Seleção Brasileira</span>
         </div>
       </footer>

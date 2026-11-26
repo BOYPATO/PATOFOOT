@@ -111,7 +111,7 @@ export const GameGuideModal: React.FC<GameGuideModalProps> = ({
             </div>
             <div className="min-w-0">
               <h2 className="text-base sm:text-lg font-extrabold font-display text-white truncate">
-                {tab === 'guide' ? 'Manual Rápido · Como Jogar' : 'PATOFOOT 2027 · Versão 1.0'}
+                {tab === 'guide' ? 'Manual Rápido · Como Jogar' : 'PATOFOOT · Versão 1.0'}
               </h2>
               <p className="text-xs text-slate-400 truncate">
                 {tab === 'guide'
@@ -220,7 +220,7 @@ export const GameGuideModal: React.FC<GameGuideModalProps> = ({
                     Edição de Lançamento
                   </span>
                   <h3 className="text-lg font-extrabold font-display text-white mt-0.5">
-                    PATOFOOT 2027 · v1.0.0
+                    PATOFOOT · v1.0.0
                   </h3>
                   <p className="text-xs text-slate-300 mt-0.5">
                     Simulador completo de futebol manager brasileiro e mundial.
@@ -228,7 +228,7 @@ export const GameGuideModal: React.FC<GameGuideModalProps> = ({
                 </div>
                 <div className="flex items-center gap-2 text-xs font-mono text-sky-300 bg-[#070c16]/90 border border-slate-700/80 rounded-xl px-3 py-2">
                   <Trophy className="w-4 h-4 text-amber-400" />
-                  <span>930 Clubes · 195 Seleções</span>
+                  <span>946 Clubes · 195 Seleções</span>
                 </div>
               </div>
 
@@ -266,7 +266,7 @@ export const GameGuideModal: React.FC<GameGuideModalProps> = ({
 
         {/* Footer */}
         <div className="px-5 py-3.5 border-t border-slate-800 bg-[#090f1c] flex items-center justify-between gap-3">
-          <span className="text-[11px] text-slate-500 font-mono">PATOFOOT 2027 · v1.0.0</span>
+          <span className="text-[11px] text-slate-500 font-mono">PATOFOOT · v1.0.0</span>
           <button
             type="button"
             onClick={() => {

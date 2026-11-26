@@ -1026,10 +1026,10 @@ export function validateAndParseImportedSaveJson(rawText: string): {
   try {
     parsed = JSON.parse(rawText, (key, value) => (BLOCKED_JSON_KEYS.has(key) ? undefined : value));
   } catch {
-    return { ok: false, error: 'Formato JSON inválido. Selecione um backup .json do PATOFOOT 2027.' };
+    return { ok: false, error: 'Formato JSON inválido. Selecione um backup .json do PATOFOOT.' };
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    return { ok: false, error: 'Estrutura do arquivo incompatível com o PATOFOOT 2027.' };
+    return { ok: false, error: 'Estrutura do arquivo incompatível com o PATOFOOT.' };
   }
   const candidate = parsed as Partial<GameSave>;
   if (!Array.isArray(candidate.clubs) || candidate.clubs.length === 0 || candidate.clubs.length > 2500) {

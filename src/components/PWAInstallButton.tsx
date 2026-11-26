@@ -37,7 +37,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
       <button
         type="button"
         onClick={() => void handleClick()}
-        title="Instalar PATOFOOT 2027 como aplicativo no dispositivo"
+        title="Instalar PATOFOOT como aplicativo no dispositivo"
         className={`inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 hover:text-emerald-200 font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
           iconOnlyOnMobile
             ? compact
@@ -74,7 +74,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                 <span>
                   {isIOS
                     ? 'Instalar no iPhone / iPad'
-                    : 'Instalar PATOFOOT 2027 como App'}
+                    : 'Instalar PATOFOOT como App'}
                 </span>
               </div>
               <button
@@ -127,7 +127,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                   <p>
                     Clique no ícone de instalação na barra de endereços do navegador ou acesse o
                     menu → <strong className="text-white">Salvar e compartilhar</strong> →{' '}
-                    <strong className="text-white">Instalar PATOFOOT 2027</strong>.
+                    <strong className="text-white">Instalar PATOFOOT</strong>.
                   </p>
                 </div>
               </div>

@@ -217,9 +217,9 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
             onClick={() => handleSelect('hub')}
             className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
           >
-            <PatoLogo size={28} />
-            <span className="font-bold text-sm tracking-tight text-white group-hover:text-sky-300 transition-colors whitespace-nowrap">
-              PATOFOOT 2027
+            <PatoLogo size={32} className="border border-sky-400/40" />
+            <span className="font-extrabold text-sm tracking-tight text-white group-hover:text-sky-300 transition-colors whitespace-nowrap font-display">
+              PATO<span className="text-sky-400">FOOT</span>
             </span>
           </button>
         )}

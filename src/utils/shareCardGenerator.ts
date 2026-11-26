@@ -96,7 +96,7 @@ export async function generateAndShareAchievementCard(
     ctx.fillStyle = '#38bdf8';
     ctx.font = '800 28px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('PATOFOOT 2026', W / 2, 118);
+    ctx.fillText('PATOFOOT', W / 2, 118);
 
     ctx.fillStyle = '#94a3b8';
     ctx.font = '600 20px system-ui, -apple-system, sans-serif';
@@ -235,7 +235,7 @@ export async function generateAndShareAchievementCard(
     ctx.fillStyle = '#64748b';
     ctx.font = '600 18px system-ui, -apple-system, sans-serif';
     ctx.fillText(
-      payload.footerNote || 'Gerado no PATOFOOT 2026 · Futebol Manager',
+      payload.footerNote || 'Gerado no PATOFOOT · Futebol Manager',
       W / 2,
       H - 62
     );
@@ -261,7 +261,7 @@ export async function generateAndShareAchievementCard(
         ) {
           await navigator.share({
             title: `${payload.headline} — ${payload.clubName}`,
-            text: `${payload.subtitle} (${payload.yearLabel}) no PATOFOOT 2026!`,
+            text: `${payload.subtitle} (${payload.yearLabel}) no PATOFOOT!`,
             files: [file],
           });
           return 'shared';
