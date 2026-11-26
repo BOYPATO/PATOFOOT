@@ -472,6 +472,7 @@ export function applyPostMatchRatingsToSquad(
     return {
       ...p,
       ratingAverage: Math.min(10, Math.max(4.0, newAvg)),
+      lastMatchRating: entry.rating,
     };
   });
 }

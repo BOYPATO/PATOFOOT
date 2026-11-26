@@ -6,13 +6,22 @@ import {
   YouthAcademyBoy,
   YouthAcademyState,
   YouthAgeGroupFilter,
+  YouthTrainingFocus,
+  YouthTrainingIntensity,
   YouthTryoutTier,
 } from '../types/game';
 import {
   MAX_YOUTH_ACADEMY_PLAYERS,
+  MIN_YOUTH_PROMOTION_AGE,
+  YOUTH_TRAINING_COOLDOWN_DAYS,
+  YOUTH_TRAINING_FOCUSES,
+  YOUTH_TRAINING_INTENSITIES,
   YOUTH_TRYOUT_TIERS,
+  canPromoteYouthBoy,
   createInitialYouthAcademy,
   getTryoutCost,
+  getYouthBoyTrainingRate,
+  getYouthTrainingCooldownDays,
   getYouthUpgradeCost,
 } from '../utils/youthAcademyEngine';
 import { formatPlayerNationalityFull } from '../utils/nationalityUtils';
@@ -30,6 +39,10 @@ import {
   ArrowUpRight,
   Search,
   Star,
+  Lock,
+  Dumbbell,
+  Flame,
+  TrendingUp,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -62,6 +75,17 @@ interface YouthAcademySectionProps {
     errorMessage?: string;
     newLevel?: number;
   };
+  onUpdateTrainingPlan?: (params: {
+    trainingFocus?: YouthTrainingFocus;
+    trainingIntensity?: YouthTrainingIntensity;
+  }) => void;
+  onSetBoyFocus?: (boyId: string, focus: YouthTrainingFocus | 'PADRAO') => void;
+  onRunTrainingSession?: () => {
+    success: boolean;
+    errorMessage?: string;
+    evolvedBoys?: Array<{ name: string; role: DetailedRole; newOvr: number; delta: number }>;
+    trainedCount?: number;
+  };
 }
 
 export const YouthAcademySection: React.FC<YouthAcademySectionProps> = ({
@@ -73,12 +97,27 @@ export const YouthAcademySection: React.FC<YouthAcademySectionProps> = ({
   onPromoteBoy,
   onReleaseBoy,
   onUpgradeYouthAcademy,
+  onUpdateTrainingPlan,
+  onSetBoyFocus,
+  onRunTrainingSession,
 }) => {
   const inspection = usePlayerInspection();
   const academy: YouthAcademyState = useMemo(
     () => userClub.youthAcademy || createInitialYouthAcademy(userClub, currentDate),
     [userClub, currentDate]
   );
+
+  const activeTrainingFocus: YouthTrainingFocus = academy.trainingFocus || 'EQUILIBRADO';
+  const activeTrainingIntensity: YouthTrainingIntensity = academy.trainingIntensity || 'MODERADO';
+  const trainingCooldownDays = useMemo(
+    () => getYouthTrainingCooldownDays(userClub, currentDate),
+    [userClub, currentDate]
+  );
+  const activeFocusMeta =
+    YOUTH_TRAINING_FOCUSES.find((f) => f.id === activeTrainingFocus) || YOUTH_TRAINING_FOCUSES[0];
+  const activeIntensityMeta =
+    YOUTH_TRAINING_INTENSITIES.find((i) => i.id === activeTrainingIntensity) ||
+    YOUTH_TRAINING_INTENSITIES[1];
 
   // Peneira Configuration State
   const [selectedTier, setSelectedTier] = useState<YouthTryoutTier>('COMUNITARIA');
@@ -579,6 +618,143 @@ export const YouthAcademySection: React.FC<YouthAcademySectionProps> = ({
         )}
       </div>
 
+      {/* SECTION 1.5: CENTRO DE TREINAMENTO DA BASE */}
+      <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <Dumbbell className="w-4 h-4 text-emerald-400" />
+              <span>Treinamento das Categorias de Base</span>
+            </h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Configure o programa técnico da base para lapidar os garotos antes de subirem ao profissional (idade mínima de promoção: <strong className="text-slate-200">{MIN_YOUTH_PROMOTION_AGE} anos</strong>).
+            </p>
+          </div>
+
+          <button
+            type="button"
+            disabled={trainingCooldownDays > 0 || academy.players.length === 0 || !onRunTrainingSession}
+            onClick={() => {
+              if (!onRunTrainingSession) return;
+              soundEngine.playClick();
+              const res = onRunTrainingSession();
+              if (res.success) {
+                if (res.evolvedBoys && res.evolvedBoys.length > 0) {
+                  confetti({ particleCount: 45, spread: 55, origin: { y: 0.65 } });
+                  const evoText = res.evolvedBoys
+                    .map((b) => `${b.name} (${b.role} → OVR ${b.newOvr})`)
+                    .join(', ');
+                  setFeedback({
+                    type: 'success',
+                    text: `Treino Especial da Base concluído com ${res.trainedCount} atletas! Evolução imediata: ${evoText}.`,
+                  });
+                } else {
+                  setFeedback({
+                    type: 'success',
+                    text: `Treino Especial da Base concluído! Todos os ${res.trainedCount} garotos receberam um salto de evolução no CT da Base.`,
+                  });
+                }
+              } else {
+                setFeedback({
+                  type: 'error',
+                  text: res.errorMessage || 'Não foi possível realizar o treino da base.',
+                });
+              }
+            }}
+            className={`px-4 py-2.5 rounded-xl font-black text-xs transition-colors flex items-center justify-center gap-2 whitespace-nowrap shrink-0 tabular-nums ${
+              trainingCooldownDays > 0 || academy.players.length === 0
+                ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                : 'bg-emerald-400 hover:bg-emerald-300 text-slate-950 cursor-pointer'
+            }`}
+          >
+            <Flame className="w-4 h-4" />
+            <span>
+              {trainingCooldownDays > 0
+                ? `Treino Especial em ${trainingCooldownDays} ${trainingCooldownDays === 1 ? 'dia' : 'dias'}`
+                : `Executar Treino Especial da Base (a cada ${YOUTH_TRAINING_COOLDOWN_DAYS}d)`}
+            </span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          {/* Foco Coletivo */}
+          <div className="lg:col-span-8 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-slate-300">Foco Coletivo da Base</span>
+              <span className="text-[11px] text-emerald-400 font-medium">
+                {activeFocusMeta.label}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {YOUTH_TRAINING_FOCUSES.map((focus) => {
+                const isSelected = activeTrainingFocus === focus.id;
+                return (
+                  <button
+                    key={focus.id}
+                    type="button"
+                    onClick={() => {
+                      soundEngine.playClick();
+                      onUpdateTrainingPlan?.({ trainingFocus: focus.id });
+                    }}
+                    className={`px-3 py-2 rounded-xl border text-left transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-500/15 border-emerald-400/70 text-white'
+                        : 'bg-slate-900/70 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="text-xs font-bold">{focus.shortLabel}</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5 truncate">
+                      Ideal: {focus.idealRoles.join(', ')}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              {activeFocusMeta.description}
+            </p>
+          </div>
+
+          {/* Intensidade */}
+          <div className="lg:col-span-4 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-slate-300">Intensidade de Carga</span>
+              <span className="text-[11px] text-sky-400 font-mono font-semibold">
+                {activeIntensityMeta.multiplier.toFixed(2)}x XP
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {YOUTH_TRAINING_INTENSITIES.map((inten) => {
+                const isSelected = activeTrainingIntensity === inten.id;
+                return (
+                  <button
+                    key={inten.id}
+                    type="button"
+                    onClick={() => {
+                      soundEngine.playClick();
+                      onUpdateTrainingPlan?.({ trainingIntensity: inten.id });
+                    }}
+                    className={`px-2.5 py-2.5 rounded-xl border text-center transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-sky-500/15 border-sky-400/70 text-white'
+                        : 'bg-slate-900/70 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="text-xs font-bold">{inten.label}</div>
+                    <div className="text-[10px] font-mono text-sky-300 mt-0.5">
+                      {inten.multiplier.toFixed(2)}x
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              {activeIntensityMeta.description}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* SECTION 2: ELENCO DA BASE DO CLUBE (ATÉ 10 JOGADORES) */}
       <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -590,7 +766,7 @@ export const YouthAcademySection: React.FC<YouthAcademySectionProps> = ({
               </span>
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              Os garotos alojados evoluem automaticamente nos treinos diários da base antes de subirem ao elenco profissional.
+              Garotos evoluem diariamente conforme o foco do CT da Base e os treinos especiais. Promoção ao profissional liberada a partir dos {MIN_YOUTH_PROMOTION_AGE} anos.
             </p>
           </div>
 
@@ -632,6 +808,11 @@ export const YouthAcademySection: React.FC<YouthAcademySectionProps> = ({
               const pot = p.potential || p.overall + 6;
               const progress = Math.min(100, p.trainingProgress || 0);
               const isConfirmingRelease = confirmReleaseId === boy.id;
+              const eligibility = canPromoteYouthBoy(boy);
+              const trainRate = getYouthBoyTrainingRate(userClub, boy);
+              const initialOvr =
+                boy.initialOverall ?? Math.max(45, p.overall - (p.evolutionsCount || 0));
+              const gainedInAcademy = Math.max(0, p.overall - initialOvr);
 
               return (
                 <div
@@ -677,6 +858,11 @@ export const YouthAcademySection: React.FC<YouthAcademySectionProps> = ({
                           {p.overall} <span className="text-slate-600">/</span>{' '}
                           <span className="text-emerald-400">{pot}</span>
                         </strong>
+                        {gainedInAcademy > 0 && (
+                          <span className="block text-[10px] font-bold text-emerald-400">
+                            ▲ +{gainedInAcademy} na base
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -695,15 +881,72 @@ export const YouthAcademySection: React.FC<YouthAcademySectionProps> = ({
                       <span className="text-slate-300">{p.specialSkill}</span>
                       <span className="text-slate-600">·</span>
                       <span className="text-slate-400">{p.preferredFoot}</span>
-                      <span className="text-slate-600">·</span>
-                      <span className="text-slate-400">{boy.tryoutSource}</span>
+                      {!eligibility.allowed && (
+                        <>
+                          <span className="text-slate-600">·</span>
+                          <span className="text-amber-300 font-semibold">
+                            Sobe aos {MIN_YOUTH_PROMOTION_AGE} anos (falta {eligibility.yearsRemaining}{' '}
+                            {eligibility.yearsRemaining === 1 ? 'ano' : 'anos'})
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Individual Training Focus + Live Synergy */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-950/70 border border-slate-800/80 rounded-lg px-2.5 py-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <TrendingUp className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <label
+                          htmlFor={`youth-focus-${boy.id}`}
+                          className="text-[11px] text-slate-400 whitespace-nowrap"
+                        >
+                          Foco:
+                        </label>
+                        <select
+                          id={`youth-focus-${boy.id}`}
+                          value={boy.individualFocus || 'PADRAO'}
+                          onChange={(e) => {
+                            soundEngine.playClick();
+                            onSetBoyFocus?.(
+                              boy.id,
+                              e.target.value as YouthTrainingFocus | 'PADRAO'
+                            );
+                          }}
+                          className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-[11px] text-white font-semibold focus:outline-none focus:border-emerald-400 cursor-pointer"
+                        >
+                          <option value="PADRAO">
+                            Padrão da Base ({activeFocusMeta.shortLabel})
+                          </option>
+                          {YOUTH_TRAINING_FOCUSES.map((f) => (
+                            <option key={f.id} value={f.id}>
+                              {f.shortLabel}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="text-[11px] font-mono tabular-nums flex items-center gap-1.5">
+                        <span
+                          className={
+                            trainRate.synergyLabel === 'Sinergia Alta'
+                              ? 'text-emerald-400 font-bold'
+                              : trainRate.synergyLabel === 'Sinergia Boa'
+                              ? 'text-sky-400 font-semibold'
+                              : 'text-slate-400'
+                          }
+                        >
+                          {trainRate.synergyLabel}
+                        </span>
+                        <span className="text-slate-600">·</span>
+                        <span className="text-slate-200 font-semibold">+{trainRate.dailyXp}%/dia</span>
+                      </div>
                     </div>
 
                     {/* Youth Development Progress Bar */}
                     <div className="space-y-1 tabular-nums">
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="text-slate-400">
-                          Evolução no CT da Base {p.evolutionsCount ? `(+${p.evolutionsCount} OVR ganho)` : ''}
+                          Evolução no CT da Base {gainedInAcademy > 0 ? `(entrou ${initialOvr} → ${p.overall})` : ''}
                         </span>
                         <span className="font-mono text-sky-400 font-semibold">
                           {p.overall >= pot ? 'Teto atingido na base' : `${progress}% para OVR ${p.overall + 1}`}
@@ -723,7 +966,7 @@ export const YouthAcademySection: React.FC<YouthAcademySectionProps> = ({
                     </div>
                   </div>
 
-                  {/* Actions: Promote to Senior Squad or Release from 10-slot Base */}
+                  {/* Actions: Promote to Senior Squad (>=16 only) or Release from 10-slot Base */}
                   <div className="pt-3 border-t border-slate-800/90 flex flex-wrap items-center justify-between gap-2">
                     {isConfirmingRelease ? (
                       <div className="flex items-center gap-2 w-full justify-between">
@@ -768,14 +1011,28 @@ export const YouthAcademySection: React.FC<YouthAcademySectionProps> = ({
                           <span>Dispensar</span>
                         </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handlePromoteToPro(boy)}
-                          className="px-4 py-2 rounded-lg bg-sky-400 hover:bg-sky-300 text-slate-950 font-black text-xs transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
-                        >
-                          <UserPlus className="w-3.5 h-3.5" />
-                          <span>Promover ao Profissional</span>
-                        </button>
+                        {eligibility.allowed ? (
+                          <button
+                            type="button"
+                            onClick={() => handlePromoteToPro(boy)}
+                            className="px-4 py-2 rounded-lg bg-sky-400 hover:bg-sky-300 text-slate-950 font-black text-xs transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                          >
+                            <UserPlus className="w-3.5 h-3.5" />
+                            <span>Promover ao Profissional</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled
+                            title={eligibility.reason}
+                            className="px-3.5 py-2 rounded-lg bg-slate-800/90 border border-slate-700 text-slate-400 font-bold text-xs flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-not-allowed"
+                          >
+                            <Lock className="w-3.5 h-3.5 text-amber-400" />
+                            <span>
+                              Subir aos {MIN_YOUTH_PROMOTION_AGE} anos ({p.age} anos)
+                            </span>
+                          </button>
+                        )}
                       </>
                     )}
                   </div>

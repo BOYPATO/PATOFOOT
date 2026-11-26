@@ -33,6 +33,8 @@ import {
   WorldCupId,
   WorldLeagueId,
   YouthAgeGroupFilter,
+  YouthTrainingFocus,
+  YouthTrainingIntensity,
   YouthTryoutTier,
   WorldBallonDorAward,
   ContinentalCompId,
@@ -342,7 +344,10 @@ import {
   SPLIT_YEAR_WORLD_CUP_IDS,
   WORLD_CUP_IDS,
 } from './utils/worldCupsEngine';
-import { progressSquadMedicalDay, diagnosePlayerInjury } from './utils/medicalEngine';
+import {
+  progressSquadMedicalDay,
+  computeDailyConditionRecovery,
+} from './utils/medicalEngine';
 import { 
   serveSquadCompetitionSuspensions, 
   recordPlayerCards, 
@@ -382,6 +387,10 @@ import {
   getYouthUpgradeCost,
   progressYouthAcademyDays,
   processAnnualYouthAcademyRollover,
+  updateYouthAcademyTrainingPlan,
+  setYouthBoyIndividualFocus,
+  runYouthAcademyTrainingSession,
+  buildYouthTurned16InboxMessages,
 } from './utils/youthAcademyEngine';
 import { processSeasonEndIndividualAwards, formatCurrency } from './utils/individualAwardsEngine';
 import { buildSeasonRetrospective } from './utils/seasonRetrospectiveEngine';
@@ -493,6 +502,7 @@ import {
   CURRENT_RATINGS_VERSION,
   calibrateAllClubsRealism,
   applyUserPlayerPostMatchDynamicRating,
+  applyDailySquadTrainingProgression,
   applySeasonEndRatingsTransition,
 } from './utils/clubRatingsEngine';
 import {
@@ -4018,28 +4028,6 @@ export default function App() {
       },
     ];
 
-    if (userTeam && userTeam.squad.length > 12) {
-      const reserveTarget = userTeam.squad[13] || userTeam.squad[12];
-      const { updatedPlayer, inboxMessage } = diagnosePlayerInjury(
-        reserveTarget,
-        startDate,
-        1,
-        userTeam.finances.medicalFacilityLevel || 2
-      );
-
-      finalClubs = finalClubs.map((c) => {
-        if (c.id === selectedClubId) {
-          return {
-            ...c,
-            squad: c.squad.map((p) => (p.id === reserveTarget.id ? updatedPlayer : p)),
-          };
-        }
-        return c;
-      });
-
-      initialInbox.unshift(inboxMessage);
-    }
-
     finalClubs = finalClubs.map((c) =>
       c.id === selectedClubId
         ? ensureClubMonthlyFinanceHistory(
@@ -6655,6 +6643,79 @@ export default function App() {
     });
   };
 
+  const handleUpdateYouthTrainingPlan = (params: {
+    trainingFocus?: YouthTrainingFocus;
+    trainingIntensity?: YouthTrainingIntensity;
+  }) => {
+    setGameState((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        clubs: prev.clubs.map((c) =>
+          c.id === userClub.id
+            ? updateYouthAcademyTrainingPlan(c, params, prev.currentDate)
+            : c
+        ),
+      };
+    });
+  };
+
+  const handleSetYouthBoyFocus = (
+    boyId: string,
+    focus: YouthTrainingFocus | 'PADRAO'
+  ) => {
+    setGameState((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        clubs: prev.clubs.map((c) =>
+          c.id === userClub.id
+            ? setYouthBoyIndividualFocus(c, boyId, focus, prev.currentDate)
+            : c
+        ),
+      };
+    });
+  };
+
+  const handleRunYouthTrainingSession = (): {
+    success: boolean;
+    errorMessage?: string;
+    evolvedBoys?: Array<{ name: string; role: DetailedRole; newOvr: number; delta: number }>;
+    trainedCount?: number;
+  } => {
+    if (!gameState) {
+      return { success: false, errorMessage: 'Jogo não carregado.' };
+    }
+
+    const res = runYouthAcademyTrainingSession(
+      userClub,
+      gameState.currentDate,
+      gameState.currentRound
+    );
+
+    if (!res.success) {
+      return { success: false, errorMessage: res.errorMessage };
+    }
+
+    setGameState((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        clubs: prev.clubs.map((c) => (c.id === userClub.id ? res.updatedClub : c)),
+        inbox:
+          res.inboxMessages.length > 0
+            ? [...res.inboxMessages, ...prev.inbox]
+            : prev.inbox,
+      };
+    });
+
+    return {
+      success: true,
+      evolvedBoys: res.evolvedBoys,
+      trainedCount: res.trainedCount,
+    };
+  };
+
   const handleUpgradeYouthAcademy = (): {
     success: boolean;
     errorMessage?: string;
@@ -7638,24 +7699,33 @@ export default function App() {
           );
 
           let matchRating =
-            userTeamResult === 'WIN' ? 6.9 : userTeamResult === 'DRAW' ? 6.3 : 5.6;
-          matchRating += goalsInMatch * 0.85 + assistsInMatch * 0.55;
-          if (
-            (player.detailedRole === 'GOL' ||
-              player.detailedRole === 'ZAG' ||
-              player.detailedRole === 'LAT') &&
-            userGoalsAgainst === 0
-          ) {
-            matchRating += 0.65;
-          }
-          if (userGoalsAgainst >= 3) {
-            matchRating -= 0.55;
-          }
-          if (hadRedCard) {
-            matchRating -= 1.4;
+            participated && player.lastMatchRating && player.lastMatchRating > 0
+              ? player.lastMatchRating
+              : userTeamResult === 'WIN'
+              ? 6.9
+              : userTeamResult === 'DRAW'
+              ? 6.3
+              : 5.6;
+
+          if (!player.lastMatchRating || player.lastMatchRating <= 0) {
+            matchRating += goalsInMatch * 0.85 + assistsInMatch * 0.55;
+            if (
+              (player.detailedRole === 'GOL' ||
+                player.detailedRole === 'ZAG' ||
+                player.detailedRole === 'LAT') &&
+              userGoalsAgainst === 0
+            ) {
+              matchRating += 0.65;
+            }
+            if (userGoalsAgainst >= 3) {
+              matchRating -= 0.55;
+            }
+            if (hadRedCard) {
+              matchRating -= 1.4;
+            }
           }
 
-          const { updatedPlayer, deltaOvr } = applyUserPlayerPostMatchDynamicRating(player, {
+          const { updatedPlayer, deltaOvr, reasonTag } = applyUserPlayerPostMatchDynamicRating(player, {
             participated,
             matchRating,
             goalsScoredByPlayer: goalsInMatch,
@@ -7666,13 +7736,14 @@ export default function App() {
             trainingBonusPct,
             division: club.division,
             club,
+            currentRound: prev.currentRound,
           });
 
           if (deltaOvr === 1) {
             evolutionInboxMsgs.push({
               id: `train_evo_${Date.now()}_${player.id}`,
               title: `📈 EVOLUÇÃO: ${player.name} subiu para Força ${updatedPlayer.overall}!`,
-              message: `Grande fase! ${player.name} (${player.detailedRole}) evoluiu para Força ${updatedPlayer.overall} (+1 OVR) graças às boas atuações na temporada. Valor de mercado atualizado para R$ ${updatedPlayer.marketValue.toLocaleString('pt-BR')}.`,
+              message: `Grande fase! ${player.name} (${player.detailedRole}, ${player.age} anos) evoluiu para Força ${updatedPlayer.overall} (+1 OVR) por ${reasonTag || 'boas atuações na temporada'}. Valor de mercado atualizado para R$ ${updatedPlayer.marketValue.toLocaleString('pt-BR')}.`,
               date: new Date().toLocaleDateString('pt-BR'),
               round: prev.currentRound,
               read: false,
@@ -7682,7 +7753,7 @@ export default function App() {
             evolutionInboxMsgs.push({
               id: `train_reg_${Date.now()}_${player.id}`,
               title: `📉 QUEDA DE FASE: ${player.name} caiu para Força ${updatedPlayer.overall}`,
-              message: `Alerta da comissão técnica: após atuações abaixo do esperado e desgaste recente, ${player.name} (${player.detailedRole}) caiu para Força ${updatedPlayer.overall} (-1 OVR). Boas partidas podem recuperar seu nível!`,
+              message: `Alerta da comissão técnica: ${player.name} (${player.detailedRole}, ${player.age} anos) caiu para Força ${updatedPlayer.overall} (-1 OVR) devido a ${reasonTag || 'atuações abaixo do esperado'}. Sequência de bons jogos pode recuperar seu nível!`,
               date: new Date().toLocaleDateString('pt-BR'),
               round: prev.currentRound,
               read: false,
@@ -7740,15 +7811,32 @@ export default function App() {
           postMatchMedicalMsgs.push(...generatedInboxMessages);
         }
 
-        const dailyRecoveryGain = Math.round(20 + staffBonuses.dailyConditionBonus);
-        const squadWithDailyRecovery = updatedSquad.map((p) => ({
-          ...p,
-          condition: Math.min(100, p.condition + dailyRecoveryGain),
-          trainingProgress:
-            isUser && comp === 'amistoso_internacional' && (p.isStarter || p.isSubstitute)
-              ? Math.min(99, (p.trainingProgress || 0) + 8)
-              : p.trainingProgress,
-        }));
+        const playedUserFixtureToday =
+          c.id === userFixture.homeTeamId || c.id === userFixture.awayTeamId;
+        const specialtyForClub = isUser ? getManagerSpecialtyProfile(prev.managerSpecialty) : null;
+        const squadWithDailyRecovery = updatedSquad.map((p) => {
+          // Jogadores que acabaram de jogar a partida mantêm o desgaste pós-jogo (não ganham +20 instantâneo!)
+          const nextCondition = playedUserFixtureToday
+            ? p.condition
+            : Math.min(
+                100,
+                p.condition +
+                  computeDailyConditionRecovery(
+                    p,
+                    staffBonuses.dailyConditionBonus,
+                    specialtyForClub?.id === 'MOTIVADOR'
+                  )
+              );
+
+          return {
+            ...p,
+            condition: nextCondition,
+            trainingProgress:
+              isUser && comp === 'amistoso_internacional' && (p.isStarter || p.isSubstitute)
+                ? Math.min(99, (p.trainingProgress || 0) + 8)
+                : p.trainingProgress,
+          };
+        });
 
         return {
           ...c,
@@ -8711,8 +8799,18 @@ export default function App() {
           if (cid) promotedClubIdsSet.add(cid);
         });
 
+        const clubsAfterYouthRolloverEu = lifecycleClubs.map((c) =>
+          processAnnualYouthAcademyRollover(c)
+        );
+        const youthTurned16MsgsEu = buildYouthTurned16InboxMessages(
+          lifecycleClubs.find((c) => c.id === completedPrev.userClubId),
+          clubsAfterYouthRolloverEu.find((c) => c.id === completedPrev.userClubId),
+          nextSeasonStartDate,
+          1
+        );
+
         const ratingsTransitionedClubs = applySeasonEndRatingsTransition(
-          lifecycleClubs.map((c) => processAnnualYouthAcademyRollover(c)),
+          clubsAfterYouthRolloverEu,
           promotedClubIdsSet,
           relegatedClubIdsSet
         );
@@ -8971,6 +9069,7 @@ export default function App() {
             ...euDynRepResult.inboxMessages,
             ...euEndResult.inboxMessages,
             ...splitWlEndResult.inboxMessages,
+            ...youthTurned16MsgsEu,
             ...lifecycleInboxMessages,
             newSeasonMsg,
             ...completedPrev.inbox,
@@ -9182,8 +9281,18 @@ export default function App() {
         if (wlChamp) promotedClubIdsSet.add(wlChamp);
       }
 
+      const clubsAfterYouthRolloverSa = lifecycleClubs.map((c) =>
+        processAnnualYouthAcademyRollover(c)
+      );
+      const youthTurned16MsgsSa = buildYouthTurned16InboxMessages(
+        lifecycleClubs.find((c) => c.id === completedPrev.userClubId),
+        clubsAfterYouthRolloverSa.find((c) => c.id === completedPrev.userClubId),
+        nextSeasonStartDate,
+        1
+      );
+
       const ratingsTransitionedClubs = applySeasonEndRatingsTransition(
-        lifecycleClubs.map((c) => processAnnualYouthAcademyRollover(c)),
+        clubsAfterYouthRolloverSa,
         promotedClubIdsSet,
         relegatedClubIdsSet
       );
@@ -9584,6 +9693,7 @@ export default function App() {
           ...potiguarSummaryInbox,
           ...(saEndResult.userInboxMessage ? [saEndResult.userInboxMessage] : []),
           ...wlEndResult.inboxMessages,
+          ...youthTurned16MsgsSa,
           ...lifecycleInboxMessages,
           newSeasonMsg,
           ...completedPrev.inbox,
@@ -10136,12 +10246,13 @@ export default function App() {
         }
 
         const specialty = isUser ? getManagerSpecialtyProfile(prev.managerSpecialty) : null;
-        const specialtyCondBonus = specialty?.id === 'MOTIVADOR' ? 2 : 0;
-        const dailyConditionGain = Math.round(
-          20 + staffBonuses.dailyConditionBonus + specialtyCondBonus
-        );
 
         const updatedSquad = medSquad.map((p) => {
+          const dailyConditionGain = computeDailyConditionRecovery(
+            p,
+            staffBonuses.dailyConditionBonus,
+            specialty?.id === 'MOTIVADOR'
+          );
           const condition = Math.min(100, p.condition + dailyConditionGain);
 
           // Training progression (boosted by specialist GK / DEF / ATT coaches + Manager Specialty for Sub-23)
@@ -10155,27 +10266,17 @@ export default function App() {
               : 1;
           const sub23Mult =
             isUser && specialty && p.age <= 23 ? specialty.trainingSub23Multiplier : 1;
-          let trainingProgress =
-            (p.trainingProgress || 0) +
-            Math.round((p.isStarter ? 2 : 3) * roleMult * sub23Mult);
-          let overall = p.overall;
-          let evolutionsCount = p.evolutionsCount || 0;
-
-          if (trainingProgress >= 100) {
-            const maxPot = p.potential || p.overall + 3;
-            if (overall < maxPot) {
-              overall += 1;
-              evolutionsCount += 1;
-            }
-            trainingProgress = 0;
-          }
+          const progressedPlayer = applyDailySquadTrainingProgression(p, {
+            roleMult,
+            sub23Mult,
+            currentRound: prev.currentRound,
+            division: c.division,
+            club: c,
+          });
 
           return {
-            ...p,
+            ...progressedPlayer,
             condition,
-            trainingProgress,
-            overall,
-            evolutionsCount,
           };
         });
 
@@ -10305,10 +10406,12 @@ export default function App() {
           newMedicalMessages.push(...generatedInboxMessages);
         }
 
-        const dailyConditionGain = Math.round(
-          20 + staffBonuses.dailyConditionBonus + (specialty?.id === 'MOTIVADOR' ? 2 : 0)
-        );
         const updatedSquad = medSquad.map((p) => {
+          const dailyConditionGain = computeDailyConditionRecovery(
+            p,
+            staffBonuses.dailyConditionBonus,
+            specialty?.id === 'MOTIVADOR'
+          );
           const condition = Math.min(100, p.condition + dailyConditionGain);
           const roleMult =
             p.position === 'GK'
@@ -10320,25 +10423,16 @@ export default function App() {
               : 1;
           const sub23Mult =
             isUser && specialty && p.age <= 23 ? specialty.trainingSub23Multiplier : 1;
-          let trainingProgress =
-            (p.trainingProgress || 0) +
-            Math.round((p.isStarter ? 2 : 3) * roleMult * sub23Mult);
-          let overall = p.overall;
-          let evolutionsCount = p.evolutionsCount || 0;
-          if (trainingProgress >= 100) {
-            const maxPot = p.potential || p.overall + 3;
-            if (overall < maxPot) {
-              overall += 1;
-              evolutionsCount += 1;
-            }
-            trainingProgress = 0;
-          }
+          const progressedPlayer = applyDailySquadTrainingProgression(p, {
+            roleMult,
+            sub23Mult,
+            currentRound: workingState.currentRound,
+            division: c.division,
+            club: c,
+          });
           return {
-            ...p,
+            ...progressedPlayer,
             condition,
-            trainingProgress,
-            overall,
-            evolutionsCount,
           };
         });
         return { ...c, squad: updatedSquad };
@@ -11317,6 +11411,9 @@ export default function App() {
             onPromoteYouthBoy={handlePromoteYouthBoy}
             onReleaseYouthBoy={handleReleaseYouthBoy}
             onUpgradeYouthAcademy={handleUpgradeYouthAcademy}
+            onUpdateYouthTrainingPlan={handleUpdateYouthTrainingPlan}
+            onSetYouthBoyFocus={handleSetYouthBoyFocus}
+            onRunYouthTrainingSession={handleRunYouthTrainingSession}
             onAdvanceDay={handleAdvanceDay}
           />
         )}

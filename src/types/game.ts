@@ -199,6 +199,7 @@ export interface Player {
   pitchRoleCode?: string; // Custom tactical position code (e.g., 'PE', 'SA', 'MAC', 'VOL')
   squadNumber: number;
   ratingAverage: number;
+  lastMatchRating?: number; // Nota da última partida disputada
 
   // Training & Player Evolution / Regression
   trainingProgress?: number; // 0 to 100% progress towards next +1 OVR
@@ -641,6 +642,16 @@ export type YouthPotentialTier =
   | 'Talento Promissor'
   | 'Em Lapidação';
 
+export type YouthTrainingFocus =
+  | 'EQUILIBRADO'
+  | 'TECNICA'
+  | 'FINALIZACAO'
+  | 'DEFESA'
+  | 'FISICO'
+  | 'TATICO';
+
+export type YouthTrainingIntensity = 'LEVE' | 'MODERADO' | 'INTENSO';
+
 export interface YouthAcademyBoy {
   id: string;
   player: Player;
@@ -650,6 +661,9 @@ export interface YouthAcademyBoy {
   categoryLabel: 'Sub-15' | 'Sub-17' | 'Sub-20';
   potentialTier: YouthPotentialTier;
   evaluatorNote: string;
+  initialOverall?: number; // Força inicial ao chegar na base
+  individualFocus?: YouthTrainingFocus | 'PADRAO'; // Foco individual de treino na base
+  academyTrainingSessions?: number; // Sessões especiais concluídas na base
 }
 
 export interface YouthTryoutCandidate extends YouthAcademyBoy {
@@ -672,6 +686,10 @@ export interface YouthAcademyState {
   autoTryoutAgeGroup?: YouthAgeGroupFilter;
   autoRecruitBestGem?: boolean;
   lastAutoTryoutDate?: string;
+  trainingFocus?: YouthTrainingFocus;
+  trainingIntensity?: YouthTrainingIntensity;
+  lastTrainingSessionDate?: string;
+  totalTrainingSessions?: number;
 }
 
 export type PreMatchDerbyPosture = 'PADRAO' | 'SANGUE_FRIO' | 'CLIMA_DE_GUERRA';

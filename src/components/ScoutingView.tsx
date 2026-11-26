@@ -9,6 +9,8 @@ import {
   ScoutedProspect,
   ScoutingNetworkState,
   YouthAgeGroupFilter,
+  YouthTrainingFocus,
+  YouthTrainingIntensity,
   YouthTryoutTier,
 } from '../types/game';
 import {
@@ -108,6 +110,17 @@ interface ScoutingViewProps {
     errorMessage?: string;
     newLevel?: number;
   };
+  onUpdateYouthTrainingPlan?: (params: {
+    trainingFocus?: YouthTrainingFocus;
+    trainingIntensity?: YouthTrainingIntensity;
+  }) => void;
+  onSetYouthBoyFocus?: (boyId: string, focus: YouthTrainingFocus | 'PADRAO') => void;
+  onRunYouthTrainingSession?: () => {
+    success: boolean;
+    errorMessage?: string;
+    evolvedBoys?: Array<{ name: string; role: DetailedRole; newOvr: number; delta: number }>;
+    trainedCount?: number;
+  };
   onAdvanceDay?: () => void;
 }
 
@@ -128,6 +141,9 @@ export const ScoutingView: React.FC<ScoutingViewProps> = ({
   onPromoteYouthBoy,
   onReleaseYouthBoy,
   onUpgradeYouthAcademy,
+  onUpdateYouthTrainingPlan,
+  onSetYouthBoyFocus,
+  onRunYouthTrainingSession,
   onAdvanceDay,
 }) => {
   const inspection = usePlayerInspection();
@@ -1411,6 +1427,9 @@ export const ScoutingView: React.FC<ScoutingViewProps> = ({
           onPromoteBoy={onPromoteYouthBoy}
           onReleaseBoy={onReleaseYouthBoy}
           onUpgradeYouthAcademy={onUpgradeYouthAcademy}
+          onUpdateTrainingPlan={onUpdateYouthTrainingPlan}
+          onSetBoyFocus={onSetYouthBoyFocus}
+          onRunTrainingSession={onRunYouthTrainingSession}
         />
       )}
 

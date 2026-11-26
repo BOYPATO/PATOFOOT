@@ -745,6 +745,10 @@ export function enrichPlayerWithSoccerWikiMedia(
   };
 }
 
+const CUSTOM_BRAZIL_CLUB_LOGOS: Record<string, string> = {
+  rn_ass: '/assets/aistudio/ASSU_6837087e.png',
+};
+
 export function enrichClubWithSoccerWikiBrasil(club: Club): Club {
   const isBrazil = (club.country || 'Brasil') === 'Brasil';
   const resolvedClub = isBrazil
@@ -756,10 +760,12 @@ export function enrichClubWithSoccerWikiBrasil(club: Club): Club {
     enrichPlayerWithSoccerWikiMedia(p, club.country || 'Brasil')
   );
 
+  const customLogo = CUSTOM_BRAZIL_CLUB_LOGOS[club.id];
+
   return {
     ...club,
     soccerWikiId: club.soccerWikiId ?? resolvedClub?.soccerWikiId,
-    logoUrl: club.logoUrl || resolvedClub?.logoUrl,
+    logoUrl: customLogo || club.logoUrl || resolvedClub?.logoUrl,
     managerPhotoUrl: club.managerPhotoUrl || resolvedMgr?.photoUrl,
     squad: enrichedSquad,
   };

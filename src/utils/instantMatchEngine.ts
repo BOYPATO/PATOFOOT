@@ -10,7 +10,12 @@ import {
 import { getClubSectorRatings } from './clubRatingsEngine';
 import { getMatchRivalryInfo } from './rivalryEngine';
 import { sanitizeLineupForCompetition } from './suspensionEngine';
-import { diagnosePlayerInjury } from './medicalEngine';
+import {
+  diagnosePlayerInjury,
+  computeMatchFatigueCost,
+  computeClubMatchInjuryMultiplier,
+  pickWeightedInjuryVictim,
+} from './medicalEngine';
 import { GameSettings } from './settingsEngine';
 import { computeClubStaffBonuses } from './coachingCarouselEngine';
 import {
@@ -477,14 +482,23 @@ export function executeInstantUserMatch(params: {
     }
   }
 
-  // Small realistic injury roll (~7%)
-  if (Math.random() < 0.07) {
+  // Small realistic injury roll (~4.5% base, scaled by DM count, staff, medical level & fatigue)
+  if (Math.random() < 0.045) {
     const isHomeInj = Math.random() < 0.5;
     const victimClub = isHomeInj ? currentHomeClub : currentAwayClub;
     const starters = (isHomeInj ? homeStartersList : awayStartersList).filter(
-      (p) => p.position !== 'GK'
+      (p) => p.injuryWeeks <= 0 && !p.injuryDetails
     );
-    const victim = starters[Math.floor(Math.random() * starters.length)];
+    const victimStaff = computeClubStaffBonuses(victimClub);
+    const clubRiskMult = computeClubMatchInjuryMultiplier(
+      victimClub,
+      victimStaff.injuryRiskMultiplier,
+      starters
+    );
+    const victim =
+      clubRiskMult > 0 && Math.random() < Math.min(1, clubRiskMult)
+        ? pickWeightedInjuryVictim(starters)
+        : undefined;
     if (victim) {
       const injMin = Math.floor(Math.random() * 65) + 18;
       const { updatedPlayer: injuredPlayer, inboxMessage } = diagnosePlayerInjury(
@@ -704,12 +718,19 @@ export function executeInstantUserMatch(params: {
       const redsInMatch = clubReds.filter((r) => r.playerId === p.id).length;
 
       let newCondition = p.condition;
-      if (p.isStarter && !subbedOutIds.has(p.id)) {
-        newCondition = Math.max(42, p.condition - 12);
-      } else if (playedInMatch) {
-        newCondition = Math.max(48, p.condition - 7);
+      if (playedInMatch) {
+        const wasSubbedOut = subbedOutIds.has(p.id);
+        const wasSubbedIn = subbedInIds.has(p.id);
+        const playedFullStarter = p.isStarter && !wasSubbedOut && !wasSubbedIn;
+        const condCost = computeMatchFatigueCost(p, {
+          playedFullStarter,
+          subbedOut: wasSubbedOut,
+          subbedIn: wasSubbedIn,
+          isHighIntensityContext: Boolean(rivalryInfo || isKnockout),
+        });
+        newCondition = Math.max(25, p.condition - condCost);
       } else {
-        newCondition = Math.min(100, p.condition + 5);
+        newCondition = Math.min(100, p.condition + 4);
       }
 
       let newMorale = p.morale;

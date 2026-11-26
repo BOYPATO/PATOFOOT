@@ -23,7 +23,7 @@ import { getCachedAiNationality } from '../services/nationalityAiService';
 import { isSplitCalendarClub } from './worldLeaguesEngine';
 import { recordFinanceLedgerMutation } from './financialFairPlayEngine';
 import { getClubEconomyProfile } from './clubEconomyScale';
-import { recalculatePlayerEconomics } from './clubRatingsEngine';
+import { evaluateSeasonEndPlayerProgression, recalculatePlayerEconomics } from './clubRatingsEngine';
 import { evaluatePlayerClubWillingness } from './transferWillingnessEngine';
 
 function formatBRL(val: number): string {
@@ -1036,6 +1036,8 @@ export function processAnnualSquadLifecycle(
   const userPreContractArrivals: string[] = [];
   const userPreContractDepartures: string[] = [];
   const userExpiredDepartures: string[] = [];
+  const userSeasonRisers: Array<{ name: string; role: string; newOvr: number; delta: number; reason: string }> = [];
+  const userSeasonFallers: Array<{ name: string; role: string; newOvr: number; delta: number; reason: string }> = [];
 
   // Pending pre-contract transfers to move after aging
   const incomingPreContractsByClub = new Map<string, Player[]>();
@@ -1141,47 +1143,57 @@ export function processAnnualSquadLifecycle(
         continue;
       }
 
-      // Annual aging + subtle physical progression/decline
-      const newAge = rawPlayer.age + 1;
-      let newOverall = rawPlayer.overall;
-      let newMarketValue = rawPlayer.marketValue;
-      let newWage = rawPlayer.wage;
-
-      if (newAge <= 23 && newOverall < (rawPlayer.potential || newOverall + 4)) {
-        const growthRoll = hashPlayerId(rawPlayer.id + endingYear);
-        const growthStep = newAge <= 20 && growthRoll % 3 === 0 ? 2 : growthRoll % 2 === 0 ? 1 : 0;
-        if (growthStep > 0) {
-          newOverall = Math.min(99, Math.min(rawPlayer.potential || 99, newOverall + growthStep));
-          const updatedEcon = recalculatePlayerEconomics(newOverall, newAge, club.division, club);
-          newMarketValue = Math.max(newMarketValue, updatedEcon.marketValue);
-          if (!isUser) {
-            newWage = Math.round((newWage * 0.7 + updatedEcon.wage * 0.3) / 500) * 500;
-          }
-        }
-      } else if (newAge >= 33) {
-        const declineStep = newAge >= 36 ? 2 : newAge >= 34 ? 1 : hashPlayerId(rawPlayer.id + endingYear) % 2 === 0 ? 1 : 0;
-        if (declineStep > 0) {
-          newOverall = Math.max(52, newOverall - declineStep);
-          const updatedEcon = recalculatePlayerEconomics(newOverall, newAge, club.division, club);
-          newMarketValue = Math.min(newMarketValue, Math.max(updatedEcon.marketValue, Math.round(newMarketValue * 0.84)));
-          if (!isUser) {
-            newWage = Math.max(500, Math.round((newWage * 0.85 + updatedEcon.wage * 0.15) / 500) * 500);
-          }
-        }
-      }
-
       const preserveMidSeasonStats =
         (preserveStatsForContinent === 'EU' && isSplitCalendarClub(club)) ||
         (preserveStatsForContinent === 'SA_BR' && !isSplitCalendarClub(club));
+
+      // Annual aging + performance/age/matches-based OVR progression (only when this club's season actually ended)
+      const newAge = rawPlayer.age + 1;
+      let newOverall = rawPlayer.overall;
+      let newPotential = rawPlayer.potential;
+      let newMarketValue = rawPlayer.marketValue;
+      let newWage = rawPlayer.wage;
+      let nextEvolutionsCount = rawPlayer.evolutionsCount || 0;
+
+      if (!preserveMidSeasonStats) {
+        const evalRes = evaluateSeasonEndPlayerProgression(rawPlayer, newAge, club, isUser);
+        newOverall = evalRes.newOverall;
+        newPotential = evalRes.newPotential;
+        newMarketValue = evalRes.newMarketValue;
+        newWage = evalRes.newWage;
+        nextEvolutionsCount += evalRes.deltaOvr;
+
+        if (isUser && evalRes.deltaOvr > 0) {
+          userSeasonRisers.push({
+            name: rawPlayer.name,
+            role: rawPlayer.detailedRole,
+            newOvr: newOverall,
+            delta: evalRes.deltaOvr,
+            reason: evalRes.reason,
+          });
+        } else if (isUser && evalRes.deltaOvr < 0) {
+          userSeasonFallers.push({
+            name: rawPlayer.name,
+            role: rawPlayer.detailedRole,
+            newOvr: newOverall,
+            delta: evalRes.deltaOvr,
+            reason: evalRes.reason,
+          });
+        }
+      }
 
       const agedPlayer: Player = {
         ...rawPlayer,
         age: newAge,
         overall: newOverall,
+        potential: newPotential,
+        evolutionsCount: nextEvolutionsCount,
         marketValue: newMarketValue,
         wage: newWage,
         contractYears: (rawPlayer.contractYears || 2) - 1,
         condition: 100,
+        trainingProgress: preserveMidSeasonStats ? rawPlayer.trainingProgress : 0,
+        regressionProgress: preserveMidSeasonStats ? rawPlayer.regressionProgress : 0,
         yellowCards: preserveMidSeasonStats ? rawPlayer.yellowCards : 0,
         redCards: preserveMidSeasonStats ? rawPlayer.redCards : 0,
         competitionYellowCards: preserveMidSeasonStats
@@ -1195,6 +1207,8 @@ export function processAnnualSquadLifecycle(
         matches: preserveMidSeasonStats ? rawPlayer.matches : 0,
         goals: preserveMidSeasonStats ? rawPlayer.goals : 0,
         assists: preserveMidSeasonStats ? rawPlayer.assists : 0,
+        ratingAverage: preserveMidSeasonStats ? rawPlayer.ratingAverage : 0,
+        lastMatchRating: preserveMidSeasonStats ? rawPlayer.lastMatchRating : undefined,
       };
 
       // Check Bosman Pre-Contract move!
@@ -1473,6 +1487,37 @@ export function processAnnualSquadLifecycle(
       message: `Após pendurarem as chuteiras, ${newlyMintedCoaches
         .map((c) => `${c.name} (${c.preferredFormation})`)
         .join(', ')} concluíram a Licença PRO e já estão disponíveis no Mercado de Treinadores para assumir clubes na nova temporada!`,
+      date: dateFormatted,
+      round: 1,
+      read: false,
+      type: 'BOARD',
+    });
+  }
+
+  if (userSeasonRisers.length > 0 || userSeasonFallers.length > 0) {
+    const sortedRisers = [...userSeasonRisers].sort((a, b) => b.delta - a.delta || b.newOvr - a.newOvr);
+    const sortedFallers = [...userSeasonFallers].sort((a, b) => a.delta - b.delta || b.newOvr - a.newOvr);
+    const reportLines: string[] = [];
+    if (sortedRisers.length > 0) {
+      reportLines.push(
+        `Em alta (${sortedRisers.length}): ${sortedRisers
+          .slice(0, 6)
+          .map((r) => `${r.name} (+${r.delta} → ${r.newOvr}, ${r.reason})`)
+          .join('; ')}.`
+      );
+    }
+    if (sortedFallers.length > 0) {
+      reportLines.push(
+        `Em queda (${sortedFallers.length}): ${sortedFallers
+          .slice(0, 5)
+          .map((f) => `${f.name} (${f.delta} → ${f.newOvr}, ${f.reason})`)
+          .join('; ')}.`
+      );
+    }
+    lifecycleInboxMessages.push({
+      id: `season_ovr_balance_${nextYear}`,
+      title: `📊 Balanço de Evolução do Elenco (${endingYear} → ${seasonDisplayLabel})`,
+      message: `A comissão técnica concluiu a reavaliação anual de força (OVR) com base em desempenho, jogos disputados e idade: ${reportLines.join(' ')}`,
       date: dateFormatted,
       round: 1,
       read: false,

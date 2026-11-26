@@ -857,7 +857,8 @@ export function calibrateAllClubsRealism(clubs: Club[]): Club[] {
 
 /**
  * Evolução e regressão dinâmica de um jogador do CLUBE DO USUÁRIO após uma partida,
- * baseada em nota, gols, assistências, saldo defensivo, resultado e moral.
+ * baseada em desempenho real (nota da partida, média na temporada, gols, assistências, saldo defensivo),
+ * idade (curva de desenvolvimento/declínio) e sequência de jogos disputados.
  */
 export function applyUserPlayerPostMatchDynamicRating(
   player: Player,
@@ -872,76 +873,158 @@ export function applyUserPlayerPostMatchDynamicRating(
     trainingBonusPct: number;
     division?: Division;
     club?: Club;
+    currentRound?: number;
   }
 ): {
   updatedPlayer: Player;
   deltaOvr: -1 | 0 | 1;
+  reasonTag?: string;
 } {
   let currentOvr = player.overall;
-  const maxPot = player.potential ?? computeRealisticPotential(currentOvr, player.age, params.division);
+  let maxPot = player.potential ?? computeRealisticPotential(currentOvr, player.age, params.division);
   let trainProg = player.trainingProgress ?? 0;
   let regProg = player.regressionProgress ?? 0;
   let evolutionsCount = player.evolutionsCount ?? 0;
   const bucket = getPlayerSectorBucket(player);
 
+  const matchesPlayed = player.matches || 0;
+  const seasonAvg = player.ratingAverage || 0;
+  const roundNum = params.currentRound || 1;
+
+  // Curva realista por idade (16-19 explosão, 20-22 alto crescimento, 23-25 firmação, 26-28 auge, 29-31 manutenção, 32+ declínio)
+  const ageGrowthMult =
+    player.age <= 19
+      ? 1.65
+      : player.age <= 22
+      ? 1.4
+      : player.age <= 25
+      ? 1.15
+      : player.age <= 28
+      ? 0.9
+      : player.age <= 31
+      ? 0.58
+      : player.age <= 34
+      ? 0.3
+      : 0.15;
+
+  const ageDeclineMult =
+    player.age <= 19
+      ? 0.55
+      : player.age <= 22
+      ? 0.7
+      : player.age <= 25
+      ? 0.85
+      : player.age <= 28
+      ? 1.0
+      : player.age <= 31
+      ? 1.2
+      : player.age <= 34
+      ? 1.5
+      : 1.8;
+
+  let reasonTag: string | undefined;
+
   if (!params.participated) {
-    // Reserva não utilizado: leve treino semanal se jovem, leve estagnação se veterano encostado
-    if (player.injuryWeeks === 0 && currentOvr < maxPot) {
-      trainProg += Math.round(4 * (1 + params.trainingBonusPct));
+    // Reserva não utilizado:
+    // - Jovem até 22 anos ganha leve evolução de treino no CT, mas jogar acelera muito mais.
+    // - Jogador maduro/veterano encostado sem ritmo (poucos jogos na temporada) acumula perda de ritmo.
+    if (player.injuryWeeks === 0 && player.age <= 22 && currentOvr < maxPot) {
+      trainProg += Math.round(3 * (1 + params.trainingBonusPct));
+    }
+    if (player.injuryWeeks === 0 && roundNum >= 8 && matchesPlayed <= Math.max(2, Math.floor(roundNum * 0.18))) {
+      if (player.age >= 31) {
+        regProg += 9;
+      } else if (player.age >= 25) {
+        regProg += 5;
+      }
     }
     if (player.age >= 32 && player.morale === 'Péssima') {
-      regProg += 8;
+      regProg += 7;
     }
   } else {
-    const ageGrowthMult = player.age <= 22 ? 1.35 : player.age <= 26 ? 1.15 : player.age <= 30 ? 0.9 : 0.65;
-    const ageDeclineMult = player.age >= 33 ? 1.45 : player.age >= 30 ? 1.2 : 0.9;
+    // Multiplicador de sequência de jogos + consistência na temporada
+    const rhythmMult =
+      matchesPlayed >= 20 && seasonAvg >= 7.1
+        ? 1.3
+        : matchesPlayed >= 10 && seasonAvg >= 6.8
+        ? 1.16
+        : matchesPlayed >= 5 && seasonAvg >= 6.5
+        ? 1.05
+        : matchesPlayed >= 8 && seasonAvg > 0 && seasonAvg < 6.0
+        ? 0.72
+        : 0.96;
 
     const cleanSheet = params.teamGoalsAgainst === 0;
     const heavyConcede = params.teamGoalsAgainst >= 3;
 
-    // 1. Impulso positivo (Boa atuação / vitória / destaque do setor)
+    // 1. Impulso positivo (Boa atuação / desempenho consistente / destaque do setor)
     const strongPerformance =
-      params.matchRating >= 7.1 ||
+      params.matchRating >= 7.0 ||
       params.goalsScoredByPlayer > 0 ||
       params.assistsByPlayer > 0 ||
       (bucket === 'DEF' && cleanSheet && params.teamResult !== 'LOSS');
 
     if (strongPerformance) {
-      let gain = 14;
-      if (params.matchRating >= 7.8) gain += 12;
-      else if (params.matchRating >= 7.3) gain += 6;
+      let gain = 13;
+      if (params.matchRating >= 8.2) gain += 18;
+      else if (params.matchRating >= 7.7) gain += 12;
+      else if (params.matchRating >= 7.2) gain += 7;
+
       if (params.goalsScoredByPlayer > 0) gain += params.goalsScoredByPlayer * 9;
       if (params.assistsByPlayer > 0) gain += params.assistsByPlayer * 6;
       if (bucket === 'DEF' && cleanSheet) gain += 9;
-      if (bucket === 'MEI' && params.teamResult === 'WIN') gain += 6;
-      if (params.teamResult === 'WIN') gain += 5;
+      if (bucket === 'MEI' && params.teamResult === 'WIN') gain += 5;
+      if (params.teamResult === 'WIN') gain += 4;
+      // Consistência de grande temporada acelera o avanço de OVR
+      if (matchesPlayed >= 10 && seasonAvg >= 7.25) gain += 7;
 
-      const totalGain = Math.round(gain * ageGrowthMult * (1 + params.trainingBonusPct));
-      if (currentOvr < maxPot) {
+      const totalGain = Math.round(gain * ageGrowthMult * rhythmMult * (1 + params.trainingBonusPct));
+
+      // Potencial Dinâmico: destaque jovem ou no auge que estoura na temporada pode quebrar o teto inicial!
+      const eligibleForDynamicPotential =
+        currentOvr >= maxPot &&
+        maxPot < 93 &&
+        ((player.age <= 25 && matchesPlayed >= 10 && seasonAvg >= 7.25) ||
+          (player.age <= 28 && matchesPlayed >= 16 && seasonAvg >= 7.45) ||
+          (player.age <= 27 && ((player.goals || 0) >= 14 || (player.assists || 0) >= 10)));
+
+      if (currentOvr < maxPot || eligibleForDynamicPotential) {
         trainProg += totalGain;
       }
-      regProg = Math.max(0, regProg - 28);
-    } else if (params.matchRating <= 5.8 || (params.teamResult === 'LOSS' && params.matchRating < 6.4)) {
-      // 2. Desgaste / queda de nível (Má fase, derrota pesada, nota baixa)
-      let lossRisk = 16;
-      if (params.matchRating <= 5.3) lossRisk += 14;
+      regProg = Math.max(0, regProg - 30);
+    } else if (params.matchRating <= 5.8 || (params.teamResult === 'LOSS' && params.matchRating < 6.3)) {
+      // 2. Queda de rendimento / má fase
+      let lossRisk = 15;
+      if (params.matchRating <= 5.2) lossRisk += 15;
       if (bucket === 'DEF' && heavyConcede) lossRisk += 12;
-      if (bucket === 'ATA' && params.teamGoalsFor === 0 && params.teamResult === 'LOSS') lossRisk += 10;
-      if (bucket === 'MEI' && params.teamGoalsAgainst - params.teamGoalsFor >= 2) lossRisk += 10;
+      if (bucket === 'ATA' && params.teamGoalsFor === 0 && params.teamResult === 'LOSS') lossRisk += 9;
+      if (bucket === 'MEI' && params.teamGoalsAgainst - params.teamGoalsFor >= 2) lossRisk += 9;
       if (player.morale === 'Baixa' || player.morale === 'Péssima') lossRisk += 8;
+      if (matchesPlayed >= 8 && seasonAvg > 0 && seasonAvg < 6.1) lossRisk += 8;
 
       regProg += Math.round(lossRisk * ageDeclineMult);
       trainProg = Math.max(0, trainProg - 12);
     } else {
-      // Atuação regular: evolução orgânica leve
+      // Atuação regular com minutos em campo: jovens e titulares regulares ainda progridem
       if (currentOvr < maxPot) {
-        trainProg += Math.round(7 * ageGrowthMult * (1 + params.trainingBonusPct));
+        trainProg += Math.round(7 * ageGrowthMult * rhythmMult * (1 + params.trainingBonusPct));
       }
-      regProg = Math.max(0, regProg - 8);
+      regProg = Math.max(0, regProg - 10);
     }
   }
 
   let deltaOvr: -1 | 0 | 1 = 0;
+
+  // Potencial dinâmico aplicado quando o jogador em temporada brilhante bate 100% no teto
+  if (trainProg >= 100 && currentOvr >= maxPot && maxPot < 93) {
+    const canBreakCeiling =
+      (player.age <= 25 && matchesPlayed >= 10 && seasonAvg >= 7.25) ||
+      (player.age <= 28 && matchesPlayed >= 16 && seasonAvg >= 7.45) ||
+      (player.age <= 27 && ((player.goals || 0) >= 14 || (player.assists || 0) >= 10));
+    if (canBreakCeiling) {
+      maxPot = Math.min(93, maxPot + 1);
+    }
+  }
 
   if (trainProg >= 100 && currentOvr < maxPot && currentOvr < 94) {
     currentOvr += 1;
@@ -949,12 +1032,23 @@ export function applyUserPlayerPostMatchDynamicRating(
     regProg = 0;
     evolutionsCount += 1;
     deltaOvr = 1;
+    reasonTag =
+      matchesPlayed >= 10 && seasonAvg >= 7.1
+        ? `grande fase na temporada (${matchesPlayed} jogos · média ${seasonAvg.toFixed(1)})`
+        : player.age <= 22
+        ? `evolução acelerada de jovem talento (${player.age} anos · ${matchesPlayed} jogos)`
+        : `boas atuações recentes (${matchesPlayed} jogos · nota ${params.matchRating.toFixed(1)})`;
   } else if (regProg >= 100 && currentOvr > 46) {
     currentOvr -= 1;
     regProg -= 100;
-    trainProg = Math.min(trainProg, 35);
+    trainProg = Math.min(trainProg, 30);
     evolutionsCount -= 1;
     deltaOvr = -1;
+    reasonTag = !params.participated
+      ? `falta de ritmo de jogo (${matchesPlayed} jogos na temporada)`
+      : player.age >= 32
+      ? `desgaste físico e fase irregular (${player.age} anos)`
+      : `sequência de atuações abaixo do esperado (média ${seasonAvg > 0 ? seasonAvg.toFixed(1) : params.matchRating.toFixed(1)})`;
   }
 
   const econ =
@@ -964,6 +1058,7 @@ export function applyUserPlayerPostMatchDynamicRating(
 
   return {
     deltaOvr,
+    reasonTag,
     updatedPlayer: {
       ...player,
       overall: currentOvr,
@@ -973,6 +1068,270 @@ export function applyUserPlayerPostMatchDynamicRating(
       evolutionsCount,
       marketValue: econ.marketValue,
     },
+  };
+}
+
+/**
+ * Evolução diária realista nos treinos de rotina do CT (substitui o ganho cego igual para todas as idades):
+ * - Considera idade (jovens absorvem treino diário; veteranos 32+ dependem de desempenho em campo),
+ * - Considera minutos/jogos na temporada e nota média (quem joga bem evolui mais rápido; encostados estagnam).
+ */
+export function applyDailySquadTrainingProgression(
+  player: Player,
+  params: {
+    roleMult: number;
+    sub23Mult: number;
+    currentRound: number;
+    division?: Division;
+    club?: Club;
+  }
+): Player {
+  if (player.injuryWeeks > 0) return player;
+
+  // Idade regula a absorção de treino físico/técnico diário
+  const ageFactor =
+    player.age <= 20
+      ? 1.35
+      : player.age <= 23
+      ? 1.05
+      : player.age <= 26
+      ? 0.7
+      : player.age <= 29
+      ? 0.35
+      : player.age <= 31
+      ? 0.15
+      : 0; // 32+ não sobe OVR passivamente só por passar dias; precisa jogar em alto nível
+
+  if (ageFactor <= 0) return player;
+
+  const matches = player.matches || 0;
+  const avg = player.ratingAverage || 0;
+
+  // Ritmo de jogos + desempenho na temporada
+  let formFactor = 1.0;
+  if (matches >= 6 && avg >= 7.1) {
+    formFactor = 1.35;
+  } else if (matches >= 3 && avg >= 6.6) {
+    formFactor = 1.1;
+  } else if (matches >= 5 && avg > 0 && avg < 6.0) {
+    formFactor = 0.35;
+  } else if (params.currentRound >= 10 && matches <= 1 && player.age >= 23) {
+    formFactor = 0.2;
+  }
+
+  const baseDaily = player.isStarter ? 1.8 : 1.3;
+  const gain = Math.round(baseDaily * ageFactor * formFactor * params.roleMult * params.sub23Mult);
+  if (gain <= 0) return player;
+
+  let trainingProgress = (player.trainingProgress || 0) + gain;
+  let overall = player.overall;
+  let evolutionsCount = player.evolutionsCount || 0;
+  const maxPot = player.potential || computeRealisticPotential(overall, player.age, params.division);
+
+  if (trainingProgress >= 100) {
+    if (overall < maxPot && overall < 94) {
+      overall += 1;
+      evolutionsCount += 1;
+      trainingProgress = Math.max(0, trainingProgress - 100);
+    } else {
+      trainingProgress = 99;
+    }
+  }
+
+  if (overall !== player.overall) {
+    const econ = recalculatePlayerEconomics(overall, player.age, params.division, params.club);
+    return {
+      ...player,
+      overall,
+      trainingProgress: Math.min(99, trainingProgress),
+      evolutionsCount,
+      marketValue: econ.marketValue,
+    };
+  }
+
+  return {
+    ...player,
+    trainingProgress: Math.min(99, trainingProgress),
+  };
+}
+
+/**
+ * Avaliação completa de fim de temporada de um jogador baseada em:
+ * 1) Desempenho na temporada (nota média, gols e assistências conforme posição),
+ * 2) Quantidade de jogos disputados (ritmo e protagonismo),
+ * 3) Curva de idade (16-23 explosão, 24-28 auge/potencial dinâmico, 29-31 estabilidade, 32+ declínio mitigado por grande fase).
+ */
+export function evaluateSeasonEndPlayerProgression(
+  player: Player,
+  newAge: number,
+  club: Club,
+  isUserClub: boolean
+): {
+  newOverall: number;
+  newPotential: number;
+  deltaOvr: number;
+  newMarketValue: number;
+  newWage: number;
+  reason: string;
+} {
+  const matches = player.matches || 0;
+  const avg = player.ratingAverage || 0;
+  const goals = player.goals || 0;
+  const assists = player.assists || 0;
+  const curOvr = player.overall;
+  let maxPot = player.potential ?? computeRealisticPotential(curOvr, newAge, club.division);
+
+  // 1. Pontuação por Desempenho (Nota Média + Participações em Gol por posição)
+  let perfScore = 0;
+  if (matches >= 4 && avg > 0) {
+    if (avg >= 7.5) perfScore += 42;
+    else if (avg >= 7.15) perfScore += 28;
+    else if (avg >= 6.8) perfScore += 14;
+    else if (avg >= 6.4) perfScore += 2;
+    else if (avg >= 6.0) perfScore -= 14;
+    else perfScore -= 28;
+  }
+
+  if (player.position === 'FW') {
+    if (goals >= 20) perfScore += 22;
+    else if (goals >= 12) perfScore += 13;
+    else if (goals >= 7) perfScore += 6;
+    if (goals + assists >= 18) perfScore += 8;
+  } else if (player.position === 'MF') {
+    if (goals + assists >= 14) perfScore += 20;
+    else if (goals + assists >= 8) perfScore += 11;
+    else if (goals + assists >= 4) perfScore += 5;
+  } else {
+    // GK / DF
+    if (matches >= 20 && avg >= 7.05) perfScore += 16;
+    else if (matches >= 14 && avg >= 6.85) perfScore += 9;
+  }
+
+  // 2. Pontuação por Jogos Disputados (Minutagem / Ritmo)
+  let gamesScore = 0;
+  if (matches >= 28) gamesScore = 20;
+  else if (matches >= 18) gamesScore = 12;
+  else if (matches >= 10) gamesScore = 4;
+  else if (matches >= 4) gamesScore = -6;
+  else gamesScore = newAge <= 21 ? -8 : -18; // Encostado na temporada inteira
+
+  // 3. Curva de Idade
+  let ageScore = 0;
+  let maxUp = 2;
+  let maxDown = -1;
+
+  if (newAge <= 20) {
+    ageScore = 18;
+    maxUp = 3;
+    maxDown = matches >= 6 ? 0 : -1;
+  } else if (newAge <= 23) {
+    ageScore = 11;
+    maxUp = 3;
+    maxDown = -1;
+  } else if (newAge <= 27) {
+    ageScore = 0;
+    maxUp = 2;
+    maxDown = -1;
+  } else if (newAge <= 30) {
+    ageScore = -5;
+    maxUp = 1;
+    maxDown = -1;
+  } else if (newAge <= 32) {
+    ageScore = -14;
+    maxUp = 1; // Só sobe se tiver temporada brilhante
+    maxDown = -2;
+  } else if (newAge <= 34) {
+    ageScore = -25;
+    maxUp = 0; // Consegue manter (0) se jogar muito bem!
+    maxDown = -2;
+  } else {
+    ageScore = -38;
+    maxUp = 0;
+    maxDown = -3;
+  }
+
+  const totalScore = perfScore + gamesScore + ageScore;
+
+  let rawDelta = 0;
+  if (totalScore >= 62) rawDelta = 3;
+  else if (totalScore >= 38) rawDelta = 2;
+  else if (totalScore >= 16) rawDelta = 1;
+  else if (totalScore <= -46) rawDelta = -3;
+  else if (totalScore <= -28) rawDelta = -2;
+  else if (totalScore <= -12) rawDelta = -1;
+
+  // Respeitar limites da faixa etária
+  rawDelta = Math.max(maxDown, Math.min(maxUp, rawDelta));
+
+  // Jogador jovem que quase não jogou não pode subir +2/+3 só pela idade
+  if (matches < 6 && rawDelta > 1) {
+    rawDelta = matches >= 2 && newAge <= 19 ? 1 : 0;
+  }
+  if (matches === 0 && rawDelta > 0) {
+    rawDelta = 0;
+  }
+
+  // Potencial Dinâmico no fim de temporada: temporada fora da curva aumenta o potencial!
+  if (rawDelta > 0 && newAge <= 27 && totalScore >= 46 && maxPot < 94) {
+    const potBump = totalScore >= 64 && newAge <= 24 ? 2 : 1;
+    maxPot = Math.min(94, maxPot + potBump);
+  }
+
+  let newOverall = curOvr;
+  if (rawDelta > 0) {
+    newOverall = Math.min(95, Math.min(Math.max(curOvr, maxPot), curOvr + rawDelta));
+  } else if (rawDelta < 0) {
+    newOverall = Math.max(48, curOvr + rawDelta);
+  }
+
+  const deltaOvr = newOverall - curOvr;
+
+  let newMarketValue = player.marketValue;
+  let newWage = player.wage;
+  if (deltaOvr !== 0) {
+    const updatedEcon = recalculatePlayerEconomics(newOverall, newAge, club.division, club);
+    if (deltaOvr > 0) {
+      newMarketValue = Math.max(newMarketValue, updatedEcon.marketValue);
+      if (!isUserClub) {
+        newWage = Math.round((newWage * 0.72 + updatedEcon.wage * 0.28) / 500) * 500;
+      }
+    } else {
+      newMarketValue = Math.min(
+        newMarketValue,
+        Math.max(updatedEcon.marketValue, Math.round(newMarketValue * 0.85))
+      );
+      if (!isUserClub) {
+        newWage = Math.max(500, Math.round((newWage * 0.85 + updatedEcon.wage * 0.15) / 500) * 500);
+      }
+    }
+  }
+
+  let reason = 'temporada estável';
+  if (deltaOvr > 0) {
+    if (matches >= 18 && avg >= 7.1) {
+      reason = `grande temporada (${matches} jogos · média ${avg.toFixed(1)})`;
+    } else if (newAge <= 22) {
+      reason = `evolução jovem (${newAge} anos · ${matches} jogos)`;
+    } else {
+      reason = `bom desempenho (${matches} jogos${goals > 0 ? ` · ${goals}G` : ''}${assists > 0 ? ` · ${assists}A` : ''})`;
+    }
+  } else if (deltaOvr < 0) {
+    if (newAge >= 33) {
+      reason = `desgaste físico (${newAge} anos · ${matches} jogos)`;
+    } else if (matches <= 4) {
+      reason = `poucos jogos na temporada (${matches} ${matches === 1 ? 'partida' : 'partidas'})`;
+    } else {
+      reason = `temporada abaixo da média (${matches} jogos · média ${avg > 0 ? avg.toFixed(1) : '—'})`;
+    }
+  }
+
+  return {
+    newOverall,
+    newPotential: Math.max(newOverall, maxPot),
+    deltaOvr,
+    newMarketValue,
+    newWage,
+    reason,
   };
 }
 
@@ -1084,11 +1443,11 @@ export function applyCpuClubsDynamicRatingsAfterFixtures(
       }
 
       if (sectorScore > 0) {
-        const ageBoost = p.age <= 24 ? 1.25 : p.age <= 29 ? 1.0 : 0.7;
+        const ageBoost = p.age <= 22 ? 1.35 : p.age <= 26 ? 1.1 : p.age <= 30 ? 0.8 : 0.45;
         trainProg += Math.round(sectorScore * partWeight * ageBoost);
         regProg = Math.max(0, regProg - 18);
       } else if (sectorScore < 0) {
-        const agePenalty = p.age >= 31 ? 1.3 : 1.0;
+        const agePenalty = p.age >= 32 ? 1.4 : p.age >= 29 ? 1.15 : 0.85;
         regProg += Math.round(Math.abs(sectorScore) * partWeight * agePenalty);
         trainProg = Math.max(0, trainProg - 8);
       }
@@ -1132,11 +1491,9 @@ export function applyCpuClubsDynamicRatingsAfterFixtures(
 }
 
 /**
- * Ajuste estrutural de virada de temporada:
- * - Clubes promovidos ganham confiança e evolução (+1 a +2 OVR nos titulares de destaque) para competir na nova divisão.
- * - Clubes rebaixados sofrem queda de moral/nível (-1 OVR em medalhões/titulares que fracassaram).
- * - Veteranos acima de 33 anos sofrem declínio físico natural se não tiveram grande média, enquanto jovens titulares sobem.
- * - Atualiza `seasonStartSectorRatings` para o novo ano!
+ * Ajuste estrutural de virada de temporada (acesso / rebaixamento + baseline da nova temporada):
+ * A evolução/queda individual por desempenho, idade e jogos já é calculada em `evaluateSeasonEndPlayerProgression`
+ * antes do zeramento das estatísticas. Aqui aplicamos apenas o impulso coletivo de acesso/rebaixamento e atualizamos baselines.
  */
 export function applySeasonEndRatingsTransition(
   clubs: Club[],
@@ -1153,20 +1510,17 @@ export function applySeasonEndRatingsTransition(
       let evolutionsCount = p.evolutionsCount ?? 0;
 
       if (wasPromoted && (p.isStarter || idx < 14)) {
-        // Impulso de acesso de divisão
-        const boost = p.age <= 25 ? 2 : 1;
-        pot = Math.min(93, Math.max(pot, ovr + boost + 1));
-        ovr = Math.min(91, ovr + (idx % 2 === 0 ? boost : 1));
+        // Impulso coletivo de acesso/título de divisão (+1 OVR para a base titular)
+        const boost = 1;
+        pot = Math.min(94, Math.max(pot, ovr + boost));
+        ovr = Math.min(92, ovr + (idx % 2 === 0 || p.age <= 25 ? boost : 0));
         evolutionsCount += ovr - p.overall;
       } else if (wasRelegated && (p.isStarter || p.age >= 29)) {
-        // Impacto técnico do rebaixamento
-        const drop = p.age >= 31 ? 2 : 1;
-        ovr = Math.max(47, ovr - (idx % 3 === 0 ? drop : 1));
-        evolutionsCount += ovr - p.overall;
-      } else if (p.age >= 34 && (p.ratingAverage === 0 || p.ratingAverage < 6.9)) {
-        // Declínio natural de veterano
-        ovr = Math.max(47, ovr - 1);
-        evolutionsCount -= 1;
+        // Impacto técnico do rebaixamento nos titulares/experientes
+        if (idx % 2 === 0 || p.age >= 30) {
+          ovr = Math.max(47, ovr - 1);
+          evolutionsCount += ovr - p.overall;
+        }
       }
 
       const econ =

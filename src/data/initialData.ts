@@ -1194,6 +1194,10 @@ function buildNonEuClubFromMeta(meta: NonEuClubMetaTuple): Club {
     squad,
   });
 
+  const CUSTOM_CLUB_LOGOS: Record<string, string> = {
+    rn_ass: '/assets/aistudio/ASSU_6837087e.png',
+  };
+
   return {
     id,
     name,
@@ -1207,6 +1211,7 @@ function buildNonEuClubFromMeta(meta: NonEuClubMetaTuple): Club {
     worldLeagueId,
     rivals: getDefaultClubRivals(id),
     colors: { primary, secondary, text },
+    logoUrl: CUSTOM_CLUB_LOGOS[id],
     stadium: {
       name: stadiumName,
       capacity,

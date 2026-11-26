@@ -10,6 +10,8 @@ import {
   YouthAcademyState,
   YouthAgeGroupFilter,
   YouthPotentialTier,
+  YouthTrainingFocus,
+  YouthTrainingIntensity,
   YouthTryoutCandidate,
   YouthTryoutTier,
 } from '../types/game';
@@ -18,6 +20,211 @@ import { recordFinanceLedgerMutation } from './financialFairPlayEngine';
 import { getClubEconomyProfile } from './clubEconomyScale';
 
 export const MAX_YOUTH_ACADEMY_PLAYERS = 10;
+export const MIN_YOUTH_PROMOTION_AGE = 16;
+export const YOUTH_TRAINING_COOLDOWN_DAYS = 7;
+
+export interface YouthTrainingFocusInfo {
+  id: YouthTrainingFocus;
+  label: string;
+  shortLabel: string;
+  description: string;
+  idealRoles: DetailedRole[];
+}
+
+export const YOUTH_TRAINING_FOCUSES: YouthTrainingFocusInfo[] = [
+  {
+    id: 'EQUILIBRADO',
+    label: 'Desenvolvimento Geral',
+    shortLabel: 'Equilibrado',
+    description: 'Evolução uniforme de fundamentos, ritmo de jogo e leitura tática para todas as posições.',
+    idealRoles: ['GOL', 'ZAG', 'LAT', 'VOL', 'MEI', 'ATA'],
+  },
+  {
+    id: 'TECNICA',
+    label: 'Fundamentos & Técnica',
+    shortLabel: 'Técnica',
+    description: 'Domínio orientado, drible em espaço curto e passe vertical. Sinergia máxima para MEI, ATA e LAT.',
+    idealRoles: ['MEI', 'ATA', 'LAT'],
+  },
+  {
+    id: 'FINALIZACAO',
+    label: 'Finalização & Ofensividade',
+    shortLabel: 'Finalização',
+    description: 'Chute colocado, movimentação na área e tomada de decisão no terço final. Ideal para ATA e MEI.',
+    idealRoles: ['ATA', 'MEI'],
+  },
+  {
+    id: 'DEFESA',
+    label: 'Marcação & Cobertura',
+    shortLabel: 'Defesa',
+    description: 'Posicionamento defensivo, desarme, bola aérea e saída sob pressão. Ideal para GOL, ZAG, LAT e VOL.',
+    idealRoles: ['GOL', 'ZAG', 'LAT', 'VOL'],
+  },
+  {
+    id: 'FISICO',
+    label: 'Maturação Física & Velocidade',
+    shortLabel: 'Físico',
+    description: 'Ganho de força, explosão e resistência. Excelente para garotos Sub-15 e Sub-17 em formação.',
+    idealRoles: ['LAT', 'ATA', 'ZAG', 'VOL'],
+  },
+  {
+    id: 'TATICO',
+    label: 'Inteligência Tática',
+    shortLabel: 'Tático',
+    description: 'Compactação, cobertura de espaços e construção desde trás. Ideal para VOL, MEI, ZAG e GOL.',
+    idealRoles: ['VOL', 'MEI', 'ZAG', 'GOL'],
+  },
+];
+
+export interface YouthTrainingIntensityInfo {
+  id: YouthTrainingIntensity;
+  label: string;
+  multiplier: number;
+  description: string;
+}
+
+export const YOUTH_TRAINING_INTENSITIES: YouthTrainingIntensityInfo[] = [
+  {
+    id: 'LEVE',
+    label: 'Leve',
+    multiplier: 0.85,
+    description: 'Ritmo cadenciado focado em fundamentos básicos (0.85x evolução).',
+  },
+  {
+    id: 'MODERADO',
+    label: 'Moderado',
+    multiplier: 1.15,
+    description: 'Carga equilibrada de categorias de base competitivas (1.15x evolução).',
+  },
+  {
+    id: 'INTENSO',
+    label: 'Intenso',
+    multiplier: 1.45,
+    description: 'Preparação acelerada para lapidar joias antes da subida ao profissional (1.45x evolução).',
+  },
+];
+
+export function canPromoteYouthBoy(boy: YouthAcademyBoy): {
+  allowed: boolean;
+  yearsRemaining: number;
+  reason?: string;
+} {
+  if (boy.player.age < MIN_YOUTH_PROMOTION_AGE) {
+    const yearsRemaining = MIN_YOUTH_PROMOTION_AGE - boy.player.age;
+    return {
+      allowed: false,
+      yearsRemaining,
+      reason: `Precisa completar ${MIN_YOUTH_PROMOTION_AGE} anos para subir ao profissional (falta ${yearsRemaining} ${
+        yearsRemaining === 1 ? 'ano' : 'anos'
+      }).`,
+    };
+  }
+  return { allowed: true, yearsRemaining: 0 };
+}
+
+export function getYouthBoyTrainingRate(
+  club: Club,
+  boy: YouthAcademyBoy
+): {
+  dailyXp: number;
+  effectiveFocus: YouthTrainingFocus;
+  intensity: YouthTrainingIntensity;
+  synergyLabel: 'Sinergia Alta' | 'Sinergia Boa' | 'Padrão';
+  synergyBonusPct: number;
+} {
+  const academyLevel = Math.max(1, Math.min(5, club.finances.youthAcademyLevel || 1));
+  const academy = club.youthAcademy;
+  const collectiveFocus: YouthTrainingFocus = academy?.trainingFocus || 'EQUILIBRADO';
+  const effectiveFocus: YouthTrainingFocus =
+    boy.individualFocus && boy.individualFocus !== 'PADRAO'
+      ? boy.individualFocus
+      : collectiveFocus;
+  const intensity: YouthTrainingIntensity = academy?.trainingIntensity || 'MODERADO';
+  const intensityMeta =
+    YOUTH_TRAINING_INTENSITIES.find((i) => i.id === intensity) || YOUTH_TRAINING_INTENSITIES[1];
+
+  const role = boy.player.detailedRole;
+  let synergyMult = 1.0;
+  let synergyLabel: 'Sinergia Alta' | 'Sinergia Boa' | 'Padrão' = 'Padrão';
+
+  if (effectiveFocus === 'EQUILIBRADO') {
+    synergyMult = 1.15;
+    synergyLabel = 'Sinergia Boa';
+  } else if (effectiveFocus === 'FINALIZACAO') {
+    if (role === 'ATA') {
+      synergyMult = 1.35;
+      synergyLabel = 'Sinergia Alta';
+    } else if (role === 'MEI') {
+      synergyMult = 1.18;
+      synergyLabel = 'Sinergia Boa';
+    }
+  } else if (effectiveFocus === 'DEFESA') {
+    if (role === 'GOL' || role === 'ZAG' || role === 'LAT' || role === 'VOL') {
+      synergyMult = 1.35;
+      synergyLabel = 'Sinergia Alta';
+    }
+  } else if (effectiveFocus === 'TECNICA') {
+    if (role === 'MEI' || role === 'ATA' || role === 'LAT') {
+      synergyMult = 1.3;
+      synergyLabel = 'Sinergia Alta';
+    } else if (role === 'VOL') {
+      synergyMult = 1.15;
+      synergyLabel = 'Sinergia Boa';
+    }
+  } else if (effectiveFocus === 'TATICO') {
+    if (role === 'VOL' || role === 'MEI' || role === 'ZAG' || role === 'GOL') {
+      synergyMult = 1.3;
+      synergyLabel = 'Sinergia Alta';
+    } else {
+      synergyMult = 1.12;
+      synergyLabel = 'Sinergia Boa';
+    }
+  } else if (effectiveFocus === 'FISICO') {
+    if (boy.player.age <= 16) {
+      synergyMult = 1.32;
+      synergyLabel = 'Sinergia Alta';
+    } else {
+      synergyMult = 1.18;
+      synergyLabel = 'Sinergia Boa';
+    }
+  }
+
+  // Jovens de 14–16 anos absorvem fundamentos mais rápido na base antes de subir ao profissional
+  const ageMult = boy.player.age <= 15 ? 1.22 : boy.player.age <= 17 ? 1.12 : 0.96;
+  const baseDaily = 2.8 + academyLevel * 1.1; // 3.9 (Nv1) até 8.3 (Nv5)
+  const dailyXp = Math.max(3, Math.round(baseDaily * intensityMeta.multiplier * synergyMult * ageMult));
+
+  return {
+    dailyXp,
+    effectiveFocus,
+    intensity,
+    synergyLabel,
+    synergyBonusPct: Math.round((synergyMult - 1) * 100),
+  };
+}
+
+function parseYouthCalendarDateMs(dateStr: string): number {
+  if (!dateStr) return NaN;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return Date.parse(`${dateStr}T12:00:00Z`);
+  }
+  const brMatch = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (brMatch) {
+    return Date.parse(`${brMatch[3]}-${brMatch[2]}-${brMatch[1]}T12:00:00Z`);
+  }
+  return Date.parse(dateStr);
+}
+
+export function getYouthTrainingCooldownDays(club: Club, currentDate: string): number {
+  const lastDate = club.youthAcademy?.lastTrainingSessionDate;
+  if (!lastDate) return 0;
+  const lastMs = parseYouthCalendarDateMs(lastDate);
+  const currMs = parseYouthCalendarDateMs(currentDate);
+  if (Number.isNaN(lastMs) || Number.isNaN(currMs)) return 0;
+  const elapsed = Math.floor((currMs - lastMs) / 86400000);
+  if (elapsed < 0) return 0;
+  return Math.max(0, YOUTH_TRAINING_COOLDOWN_DAYS - elapsed);
+}
 
 export interface YouthTryoutTierInfo {
   id: YouthTryoutTier;
@@ -428,6 +635,9 @@ function buildGeneratedYouthBoy(params: {
     categoryLabel: getCategoryFromAge(age),
     potentialTier,
     evaluatorNote: pickRandom(EVALUATOR_NOTES_BY_TIER[potentialTier]),
+    initialOverall: player.overall,
+    individualFocus: 'PADRAO',
+    academyTrainingSessions: 0,
   };
 }
 
@@ -437,7 +647,7 @@ export function createInitialYouthAcademy(
 ): YouthAcademyState {
   const usedNames = new Set<string>(club.squad.map((p) => p.name));
   const initialRoles: DetailedRole[] = ['ATA', 'MEI', 'ZAG', 'GOL'];
-  const initialAges = [16, 15, 17, 17];
+  const initialAges = [16, 15, 17, 15];
 
   const players: YouthAcademyBoy[] = initialRoles.map((role, idx) =>
     buildGeneratedYouthBoy({
@@ -459,6 +669,9 @@ export function createInitialYouthAcademy(
     lastTryoutCandidates: [],
     totalTryoutsHeld: 0,
     totalPromotedCount: 0,
+    trainingFocus: 'EQUILIBRADO',
+    trainingIntensity: 'MODERADO',
+    totalTrainingSessions: 0,
   };
 }
 
@@ -468,10 +681,18 @@ export function ensureClubYouthAcademy(club: Club, currentDate: string = '2026-0
       ...club,
       youthAcademy: {
         ...club.youthAcademy,
-        players: club.youthAcademy.players.slice(0, MAX_YOUTH_ACADEMY_PLAYERS),
+        players: club.youthAcademy.players.slice(0, MAX_YOUTH_ACADEMY_PLAYERS).map((b) => ({
+          ...b,
+          initialOverall: b.initialOverall ?? Math.max(45, b.player.overall - (b.player.evolutionsCount || 0)),
+          individualFocus: b.individualFocus ?? 'PADRAO',
+          academyTrainingSessions: b.academyTrainingSessions ?? 0,
+        })),
         lastTryoutCandidates: club.youthAcademy.lastTryoutCandidates || [],
         totalTryoutsHeld: club.youthAcademy.totalTryoutsHeld || 0,
         totalPromotedCount: club.youthAcademy.totalPromotedCount || 0,
+        trainingFocus: club.youthAcademy.trainingFocus || 'EQUILIBRADO',
+        trainingIntensity: club.youthAcademy.trainingIntensity || 'MODERADO',
+        totalTrainingSessions: club.youthAcademy.totalTrainingSessions || 0,
       },
     };
   }
@@ -517,10 +738,10 @@ export function runClubYouthTryout(params: {
   const allRoles: DetailedRole[] = ['ATA', 'MEI', 'VOL', 'LAT', 'ZAG', 'GOL'];
 
   const pickAge = (): number => {
-    if (ageGroup === 'SUB_15') return 15;
+    if (ageGroup === 'SUB_15') return Math.random() > 0.45 ? 15 : 14;
     if (ageGroup === 'SUB_17') return Math.random() > 0.5 ? 16 : 17;
     if (ageGroup === 'SUB_20') return 18;
-    const ages = [15, 16, 16, 17, 17, 18];
+    const ages = [14, 15, 15, 16, 16, 17, 17, 18];
     return pickRandom(ages);
   };
 
@@ -713,6 +934,15 @@ export function promoteBoyToSeniorSquad(
     return { success: false, errorMessage: 'Atleta da base não encontrado.', updatedClub: club };
   }
 
+  const eligibility = canPromoteYouthBoy(boy);
+  if (!eligibility.allowed) {
+    return {
+      success: false,
+      errorMessage: `${boy.player.name} tem ${boy.player.age} anos (${boy.categoryLabel}). Só é permitido subir ao profissional atletas com ${MIN_YOUTH_PROMOTION_AGE} anos ou mais. Continue treinando-o na base!`,
+      updatedClub: club,
+    };
+  }
+
   const usedNumbers = new Set(club.squad.map((p) => p.squadNumber));
   let nextSquadNumber = 12;
   while (usedNumbers.has(nextSquadNumber) && nextSquadNumber < 99) {
@@ -896,6 +1126,170 @@ export function checkAndRunAutoTryout(params: {
   };
 }
 
+export function updateYouthAcademyTrainingPlan(
+  club: Club,
+  params: {
+    trainingFocus?: YouthTrainingFocus;
+    trainingIntensity?: YouthTrainingIntensity;
+  },
+  currentDate: string = '2026-01-15'
+): Club {
+  const ensured = ensureClubYouthAcademy(club, currentDate);
+  const academy = ensured.youthAcademy!;
+  return {
+    ...ensured,
+    youthAcademy: {
+      ...academy,
+      trainingFocus: params.trainingFocus ?? academy.trainingFocus ?? 'EQUILIBRADO',
+      trainingIntensity: params.trainingIntensity ?? academy.trainingIntensity ?? 'MODERADO',
+    },
+  };
+}
+
+export function setYouthBoyIndividualFocus(
+  club: Club,
+  boyId: string,
+  focus: YouthTrainingFocus | 'PADRAO',
+  currentDate: string = '2026-01-15'
+): Club {
+  const ensured = ensureClubYouthAcademy(club, currentDate);
+  const academy = ensured.youthAcademy!;
+  return {
+    ...ensured,
+    youthAcademy: {
+      ...academy,
+      players: academy.players.map((b) =>
+        b.id === boyId ? { ...b, individualFocus: focus } : b
+      ),
+    },
+  };
+}
+
+export function runYouthAcademyTrainingSession(
+  club: Club,
+  currentDate: string,
+  currentRound: number
+): {
+  success: boolean;
+  errorMessage?: string;
+  updatedClub: Club;
+  evolvedBoys: Array<{ name: string; role: DetailedRole; newOvr: number; delta: number }>;
+  trainedCount: number;
+  inboxMessages: InboxMessage[];
+} {
+  const workingClub = ensureClubYouthAcademy(club, currentDate);
+  const academy = workingClub.youthAcademy!;
+
+  if (academy.players.length === 0) {
+    return {
+      success: false,
+      errorMessage: 'Não há garotos alojados na base para treinar. Faça uma peneira primeiro.',
+      updatedClub: workingClub,
+      evolvedBoys: [],
+      trainedCount: 0,
+      inboxMessages: [],
+    };
+  }
+
+  const remainingCooldown = getYouthTrainingCooldownDays(workingClub, currentDate);
+  if (remainingCooldown > 0) {
+    return {
+      success: false,
+      errorMessage: `O elenco da base está em recuperação física do último treino especial. Novo treino liberado em ${remainingCooldown} ${
+        remainingCooldown === 1 ? 'dia' : 'dias'
+      }.`,
+      updatedClub: workingClub,
+      evolvedBoys: [],
+      trainedCount: 0,
+      inboxMessages: [],
+    };
+  }
+
+  const evolvedBoys: Array<{ name: string; role: DetailedRole; newOvr: number; delta: number }> = [];
+  const inboxMessages: InboxMessage[] = [];
+
+  const updatedBoys = academy.players.map((boy) => {
+    const p = boy.player;
+    const pot = p.potential || p.overall + 6;
+    const initialOverall =
+      boy.initialOverall ?? Math.max(45, p.overall - (p.evolutionsCount || 0));
+
+    if (p.overall >= pot) {
+      return {
+        ...boy,
+        initialOverall,
+        academyTrainingSessions: (boy.academyTrainingSessions || 0) + 1,
+        player: { ...p, trainingProgress: 100 },
+      };
+    }
+
+    const rate = getYouthBoyTrainingRate(workingClub, boy);
+    const sessionGain = Math.max(14, Math.round(rate.dailyXp * 3.4));
+    let progress = (p.trainingProgress || 0) + sessionGain;
+    let nextOvr = p.overall;
+    let evolutions = p.evolutionsCount || 0;
+    let deltaThisSession = 0;
+
+    while (progress >= 100 && nextOvr < pot) {
+      progress -= 100;
+      nextOvr += 1;
+      evolutions += 1;
+      deltaThisSession += 1;
+    }
+
+    if (deltaThisSession > 0) {
+      evolvedBoys.push({
+        name: p.name,
+        role: p.detailedRole,
+        newOvr: nextOvr,
+        delta: deltaThisSession,
+      });
+      inboxMessages.push({
+        id: `msg_youth_camp_${Date.now()}_${p.id}_${nextOvr}`,
+        title: `Treino da Base: ${p.name} subiu para Força ${nextOvr}!`,
+        message: `No treino especial da base (${rate.effectiveFocus}), ${p.name} (${p.detailedRole}, ${p.age} anos) destacou-se e evoluiu +${deltaThisSession} OVR, chegando à Força ${nextOvr} (Potencial ${pot}).`,
+        date: currentDate,
+        round: currentRound,
+        read: false,
+        type: 'SCOUTING',
+      });
+    }
+
+    const updatedMarketValue = calculateYouthMarketValue(nextOvr, pot, p.age, workingClub);
+    const updatedWage = calculateYouthRookieWage(nextOvr, workingClub);
+
+    return {
+      ...boy,
+      initialOverall,
+      academyTrainingSessions: (boy.academyTrainingSessions || 0) + 1,
+      player: {
+        ...p,
+        overall: nextOvr,
+        trainingProgress: nextOvr >= pot ? 100 : Math.min(99, progress),
+        evolutionsCount: evolutions,
+        marketValue: updatedMarketValue,
+        wage: updatedWage,
+      },
+    };
+  });
+
+  return {
+    success: true,
+    updatedClub: {
+      ...workingClub,
+      youthAcademy: {
+        ...academy,
+        players: updatedBoys,
+        lastTrainingSessionDate: currentDate,
+        totalTrainingSessions: (academy.totalTrainingSessions || 0) + 1,
+      },
+    },
+    evolvedBoys,
+    trainedCount: updatedBoys.length,
+    inboxMessages,
+  };
+}
+
 export function progressYouthAcademyDays(
   club: Club,
   days: number,
@@ -928,21 +1322,24 @@ export function progressYouthAcademyDays(
     return { updatedClub: workingClub, inboxMessages: aggregatedInbox };
   }
 
-  const academyLevel = Math.max(1, Math.min(5, workingClub.finances.youthAcademyLevel || 1));
-  const dailyGain = 3 + academyLevel; // 4% to 8% per day in Youth Academy
   const inboxMessages: InboxMessage[] = [];
 
   const updatedBoys = workingClub.youthAcademy.players.map((boy) => {
     const p = boy.player;
     const pot = p.potential || p.overall + 6;
+    const initialOverall =
+      boy.initialOverall ?? Math.max(45, p.overall - (p.evolutionsCount || 0));
+
     if (p.overall >= pot) {
       return {
         ...boy,
+        initialOverall,
         player: { ...p, trainingProgress: 100 },
       };
     }
 
-    let progress = (p.trainingProgress || 0) + days * dailyGain;
+    const rate = getYouthBoyTrainingRate(workingClub, boy);
+    let progress = (p.trainingProgress || 0) + days * rate.dailyXp;
     let nextOvr = p.overall;
     let evolutions = p.evolutionsCount || 0;
 
@@ -955,7 +1352,7 @@ export function progressYouthAcademyDays(
         inboxMessages.push({
           id: `msg_youth_evo_${Date.now()}_${p.id}_${nextOvr}`,
           title: `Evolução na Base: ${p.name} subiu para Força ${nextOvr}!`,
-          message: `Os treinos na categoria ${boy.categoryLabel} surtiram efeito! O garoto ${p.name} (${p.detailedRole}, ${p.age} anos) evoluiu para Força ${nextOvr} (Potencial estimado: ${pot}).`,
+          message: `Os treinos na categoria ${boy.categoryLabel} (${rate.effectiveFocus}) surtiram efeito! O garoto ${p.name} (${p.detailedRole}, ${p.age} anos) evoluiu para Força ${nextOvr} (Potencial estimado: ${pot}).`,
           date: currentDate,
           round: currentRound,
           read: false,
@@ -969,6 +1366,7 @@ export function progressYouthAcademyDays(
 
     return {
       ...boy,
+      initialOverall,
       player: {
         ...p,
         overall: nextOvr,
@@ -1013,4 +1411,36 @@ export function processAnnualYouthAcademyRollover(club: Club): Club {
       players: agedPlayers,
     },
   };
+}
+
+export function buildYouthTurned16InboxMessages(
+  beforeClub: Club | undefined,
+  afterClub: Club | undefined,
+  currentDate: string,
+  currentRound: number
+): InboxMessage[] {
+  if (!beforeClub?.youthAcademy || !afterClub?.youthAcademy) return [];
+  const prevAges = new Map(beforeClub.youthAcademy.players.map((b) => [b.id, b.player.age]));
+  const newlyEligible = afterClub.youthAcademy.players.filter((b) => {
+    const prevAge = prevAges.get(b.id);
+    return prevAge !== undefined && prevAge < MIN_YOUTH_PROMOTION_AGE && b.player.age >= MIN_YOUTH_PROMOTION_AGE;
+  });
+
+  if (newlyEligible.length === 0) return [];
+
+  const summary = newlyEligible
+    .map((b) => `${b.player.name} (${b.player.detailedRole}, Força ${b.player.overall}/Pot ${b.player.potential})`)
+    .join(', ');
+
+  return [
+    {
+      id: `msg_youth_16_${Date.now()}_${afterClub.id}`,
+      title: `🎓 Base: ${newlyEligible.length} ${newlyEligible.length === 1 ? 'garoto completou' : 'garotos completaram'} 16 anos e já podem subir!`,
+      message: `Com a virada da temporada, ${summary} atingiu a idade mínima de ${MIN_YOUTH_PROMOTION_AGE} anos e agora está liberado para ser promovido ao elenco profissional quando você desejar (ou seguir evoluindo no CT da Base).`,
+      date: currentDate,
+      round: currentRound,
+      read: false,
+      type: 'SCOUTING',
+    },
+  ];
 }

@@ -1,4 +1,14 @@
-import { Player, PlayerInjury, InboxMessage, MedicalReportData, InjurySeverity, MedicalStage, Morale } from '../types/game';
+import {
+  Club,
+  InGameTacticOrder,
+  Player,
+  PlayerInjury,
+  InboxMessage,
+  MedicalReportData,
+  InjurySeverity,
+  MedicalStage,
+  Morale,
+} from '../types/game';
 
 export interface InjuryTemplate {
   name: string;
@@ -115,6 +125,190 @@ export function getMedicalFacilityBonus(facilityLevel: number = 2): {
 }
 
 /**
+ * Picks a realistic injury severity distribution:
+ * - ~66% Leve (4–12 dias)
+ * - ~25% Moderada (14–26 dias)
+ * - ~7.5% Grave (30–65 dias)
+ * - ~1.5% Gravíssima (LCA)
+ */
+function pickWeightedInjuryTemplate(): InjuryTemplate {
+  const roll = Math.random();
+  let targetSeverity: InjurySeverity = 'Leve';
+  if (roll < 0.66) targetSeverity = 'Leve';
+  else if (roll < 0.91) targetSeverity = 'Moderada';
+  else if (roll < 0.985) targetSeverity = 'Grave';
+  else targetSeverity = 'Gravíssima';
+
+  const pool = INJURIES_CATALOG.filter((t) => t.severity === targetSeverity);
+  if (pool.length === 0) {
+    return INJURIES_CATALOG[0];
+  }
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/**
+ * Calcula o desgaste físico (perda de condição) realista de um atleta em uma partida,
+ * levando em conta posição, tática/intensidade, minutos jogados e curva de idade
+ * (jogadores mais velhos cansam significativamente mais).
+ */
+export function computeMatchFatigueCost(
+  player: Player,
+  params: {
+    playedFullStarter: boolean;
+    subbedOut?: boolean;
+    subbedIn?: boolean;
+    inGameTactic?: InGameTacticOrder;
+    isHighIntensityContext?: boolean;
+  }
+): number {
+  if (!params.playedFullStarter && !params.subbedOut && !params.subbedIn) {
+    return 0;
+  }
+
+  // Base de desgaste para 90 minutos por posição
+  let baseCost = 21;
+  if (player.detailedRole === 'GOL' || player.position === 'GK') {
+    baseCost = 10;
+  } else if (player.detailedRole === 'ZAG') {
+    baseCost = 17;
+  } else if (player.detailedRole === 'ATA') {
+    baseCost = 20;
+  } else {
+    // LAT, VOL, MEI (maior quilometragem por jogo)
+    baseCost = 22;
+  }
+
+  // Intensidade tática
+  let tacticMult = 1.0;
+  if (params.inGameTactic === 'PRESSAO_TOTAL') tacticMult = 1.28;
+  else if (params.inGameTactic === 'CONTRA_ATAQUE' || params.inGameTactic === 'CHUVEIRINHO') {
+    tacticMult = 1.08;
+  } else if (params.inGameTactic === 'RETRANCA') tacticMult = 0.9;
+  else if (params.inGameTactic === 'SEGURAR_RESULTADO') tacticMult = 0.85;
+
+  if (params.isHighIntensityContext) {
+    tacticMult *= 1.08;
+  }
+
+  // Curva de idade: jovens aguentam sequência; veteranos (30+) desgastam bem mais
+  const ageMult =
+    player.age <= 23
+      ? 0.88
+      : player.age <= 27
+      ? 1.0
+      : player.age <= 30
+      ? 1.14
+      : player.age <= 33
+      ? 1.3
+      : player.age <= 35
+      ? 1.48
+      : 1.65;
+
+  // Fração de minutos em campo
+  const minutesMult = params.playedFullStarter
+    ? 1.0
+    : params.subbedOut
+    ? 0.65
+    : 0.44;
+
+  // Jogador que já entra cansado (< 72%) sofre desgaste extra por fadiga acumulada
+  const preFatigueMult = player.condition < 65 ? 1.15 : player.condition < 75 ? 1.06 : 1.0;
+
+  return Math.max(
+    4,
+    Math.round(baseCost * tacticMult * ageMult * minutesMult * preFatigueMult)
+  );
+}
+
+/**
+ * Calcula a recuperação física diária realista (entre partidas/dias de descanso),
+ * respeitando a idade do atleta (jovens recuperam rápido; veteranos 31+ precisam de mais dias ou rodízio).
+ */
+export function computeDailyConditionRecovery(
+  player: Player,
+  staffDailyBonus: number = 0,
+  isMotivador: boolean = false
+): number {
+  const baseByAge =
+    player.age <= 23
+      ? 10
+      : player.age <= 27
+      ? 9
+      : player.age <= 30
+      ? 7.5
+      : player.age <= 33
+      ? 6
+      : player.age <= 35
+      ? 4.8
+      : 3.8;
+
+  // Preparador físico & motivador ajudam de forma realista (+0.5 a +2.5/dia)
+  const scaledStaffBonus = Math.min(2.5, Math.max(0, staffDailyBonus * 0.45));
+  const motivatorBonus = isMotivador ? 0.6 : 0;
+
+  return Math.max(3, Math.round(baseByAge + scaledStaffBonus + motivatorBonus));
+}
+
+/**
+ * Calcula o multiplicador de risco de lesão de um clube numa partida:
+ * - Protege contra surtos irrealistas no DM (reduz drasticamente risco se já houver 2–3 lesionados)
+ * - Considera nível do DM e staff médico contratado
+ * - Aumenta risco se o técnico insistir em escalar titulares esgotados (< 65% físico)
+ */
+export function computeClubMatchInjuryMultiplier(
+  club: Club,
+  staffInjuryRiskMultiplier: number = 1.0,
+  healthyStarters: Player[] = []
+): number {
+  const currentlyInjured = club.squad.filter(
+    (p) => p.injuryWeeks > 0 || Boolean(p.injuryDetails)
+  ).length;
+
+  // Amortecedor de realismo: impede "epidemia" de 6–7 lesionados ao mesmo tempo
+  let dmDampener = 1.0;
+  if (currentlyInjured >= 4) return 0; // Trava máxima de segurança para lesões simultâneas
+  if (currentlyInjured === 3) dmDampener = 0.2;
+  else if (currentlyInjured === 2) dmDampener = 0.48;
+  else if (currentlyInjured === 1) dmDampener = 0.78;
+
+  const medLevel = Math.max(1, Math.min(5, club.finances.medicalFacilityLevel || 2));
+  const facilityMult = Math.max(0.75, 1.05 - (medLevel - 1) * 0.075);
+
+  // Fadiga real dos titulares em campo influencia o risco muscular
+  const exhaustedCount = healthyStarters.filter((p) => p.condition < 62).length;
+  const tiredCount = healthyStarters.filter((p) => p.condition >= 62 && p.condition < 74).length;
+  const fatigueMult =
+    exhaustedCount >= 3
+      ? 1.55
+      : exhaustedCount >= 1
+      ? 1.25
+      : tiredCount >= 4
+      ? 1.12
+      : 0.85; // Time bem descansado se machuca menos!
+
+  return dmDampener * facilityMult * staffInjuryRiskMultiplier * fatigueMult;
+}
+
+/**
+ * Seleciona a vítima mais realista caso ocorra uma lesão na partida
+ * (jogadores cansados e veteranos desgastados têm maior probabilidade).
+ */
+export function pickWeightedInjuryVictim(healthyStarters: Player[]): Player | undefined {
+  if (healthyStarters.length === 0) return undefined;
+  const weighted: Player[] = [];
+  for (const p of healthyStarters) {
+    let weight = p.position === 'GK' ? 1 : 2;
+    if (p.condition < 58) weight += 4;
+    else if (p.condition < 70) weight += 2;
+    if (p.age >= 32 && p.condition < 75) weight += 2;
+    for (let i = 0; i < weight; i++) {
+      weighted.push(p);
+    }
+  }
+  return weighted[Math.floor(Math.random() * weighted.length)];
+}
+
+/**
  * Diagnoses a new injury for a player and produces the player's injury data and initial Inbox medical report
  */
 export function diagnosePlayerInjury(
@@ -124,9 +318,7 @@ export function diagnosePlayerInjury(
   medicalFacilityLevel: number = 2,
   specificTemplate?: InjuryTemplate
 ): { updatedPlayer: Player; inboxMessage: InboxMessage } {
-  const template =
-    specificTemplate ||
-    INJURIES_CATALOG[Math.floor(Math.random() * INJURIES_CATALOG.length)];
+  const template = specificTemplate || pickWeightedInjuryTemplate();
 
   const rawDays =
     Math.floor(Math.random() * (template.maxDays - template.minDays + 1)) +

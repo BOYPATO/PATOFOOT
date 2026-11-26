@@ -31,7 +31,13 @@ import { ClubCrest, CompetitionCrest } from './ClubCrest';
 import { InGameSubModal, SubstitutionPair } from './InGameSubModal';
 import { MatchBenchBar } from './MatchBenchBar';
 import { PenaltyShootoutModal } from './PenaltyShootoutModal';
-import { diagnosePlayerInjury } from '../utils/medicalEngine';
+import {
+  diagnosePlayerInjury,
+  computeMatchFatigueCost,
+  computeClubMatchInjuryMultiplier,
+  pickWeightedInjuryVictim,
+} from '../utils/medicalEngine';
+import { computeClubStaffBonuses } from '../utils/coachingCarouselEngine';
 import { sanitizeLineupForCompetition } from '../utils/suspensionEngine';
 import { CUP_PRIZES_CATALOG, formatMoney } from '../utils/prizeEngine';
 import { isEuropeanCup } from '../utils/europeanCupsEngine';
@@ -1114,7 +1120,15 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
       } else {
         const candidatesOut = [...onPitchOutfield]
           .map((p) => {
-            const estimatedLiveCond = Math.max(35, p.condition - Math.round((currentMin / 90) * 14));
+            const fullCost = computeMatchFatigueCost(p, {
+              playedFullStarter: true,
+              inGameTactic,
+              isHighIntensityContext: Boolean(rivalryInfo),
+            });
+            const estimatedLiveCond = Math.max(
+              25,
+              p.condition - Math.round((currentMin / 90) * fullCost)
+            );
             const hasYellow = yellowCardPlayerIds.has(p.id);
             const urgency =
               (100 - estimatedLiveCond) +
@@ -1676,12 +1690,13 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
         });
       }
     }
-    // In-Match Player Injury simulation (stops match for mandatory user substitution!)
+    // In-Match Player Injury simulation (realistic ~5-8% per club per match, max 1 injury/match, DM & fatigue-aware)
     else if (
       currentMin !== 45 &&
+      !events.some((e) => e.type === 'LESAO') &&
       Math.random() <
-        0.011 *
-          (inGameTactic === 'PRESSAO_TOTAL' ? 1.2 : 1) *
+        0.0014 *
+          (inGameTactic === 'PRESSAO_TOTAL' ? 1.25 : 1) *
           (rivalryInfo && preMatchDerbyPosture === 'CLIMA_DE_GUERRA' ? 1.15 : 1)
     ) {
       const isHomeVictim = Math.random() < 0.5;
@@ -1694,12 +1709,16 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
           !p.injuryDetails
       );
 
-      // Fatigued starters (< 72% condition) have double probability of muscle/contact injury
-      const weightedStarters = healthyStarters.flatMap((p) =>
-        p.condition < 72 ? [p, p] : [p]
+      const victimStaff = computeClubStaffBonuses(victimClub);
+      const clubRiskMult = computeClubMatchInjuryMultiplier(
+        victimClub,
+        victimStaff.injuryRiskMultiplier,
+        healthyStarters
       );
       const victim =
-        weightedStarters[Math.floor(Math.random() * weightedStarters.length)];
+        clubRiskMult > 0 && Math.random() < Math.min(1, clubRiskMult)
+          ? pickWeightedInjuryVictim(healthyStarters)
+          : undefined;
 
       if (victim) {
         const matchDate = userFixture?.date || new Date().toISOString().slice(0, 10);
@@ -2137,12 +2156,23 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
     const homeStartersList = currentHomeClub.squad.filter((p) => p.isStarter);
     const awayStartersList = currentAwayClub.squad.filter((p) => p.isStarter);
 
-    // Minor chance of injury during instant sim
-    if (Math.random() < 0.07) {
+    // Minor realistic chance of injury during instant finish (skipped if match already had an injury)
+    if (!simEvents.some((e) => e.type === 'LESAO') && Math.random() < 0.035) {
       const isHomeVictim = Math.random() < 0.5;
       const victimClub = isHomeVictim ? currentHomeClub : currentAwayClub;
-      const starters = victimClub.squad.filter((p) => p.isStarter);
-      const victim = starters[Math.floor(Math.random() * starters.length)];
+      const starters = victimClub.squad.filter(
+        (p) => p.isStarter && p.injuryWeeks <= 0 && !p.injuryDetails
+      );
+      const victimStaff = computeClubStaffBonuses(victimClub);
+      const clubRiskMult = computeClubMatchInjuryMultiplier(
+        victimClub,
+        victimStaff.injuryRiskMultiplier,
+        starters
+      );
+      const victim =
+        clubRiskMult > 0 && Math.random() < Math.min(1, clubRiskMult)
+          ? pickWeightedInjuryVictim(starters)
+          : undefined;
 
       if (victim && victim.injuryWeeks <= 0 && !victim.injuryDetails) {
         const matchDate = userFixture?.date || new Date().toISOString().slice(0, 10);
@@ -2837,19 +2867,23 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
           const yellowsInMatch = clubYellows.filter((y) => y.playerId === p.id).length;
           const redsInMatch = clubReds.filter((r) => r.playerId === p.id).length;
 
-          // Fatigue reduction (starters lose condition based on live tactical intensity)
-          let condCost = 12;
-          if (inGameTactic === 'PRESSAO_TOTAL') condCost = 15;
-          else if (inGameTactic === 'RETRANCA') condCost = 10;
-          else if (inGameTactic === 'SEGURAR_RESULTADO') condCost = 9;
+          // Realistic age/position/tactics-based match fatigue
+          const wasSubbedOut = subbedOutIds.has(p.id);
+          const wasSubbedIn = subHistory.some((s) => s.inPlayer.id === p.id);
+          const playedFullStarter = p.isStarter && !wasSubbedOut && !wasSubbedIn;
 
           let newCondition = p.condition;
-          if (p.isStarter) {
-            newCondition = Math.max(40, p.condition - condCost);
-          } else if (playedInMatch) {
-            newCondition = Math.max(45, p.condition - Math.round(condCost * 0.6));
+          if (playedInMatch) {
+            const condCost = computeMatchFatigueCost(p, {
+              playedFullStarter,
+              subbedOut: wasSubbedOut,
+              subbedIn: wasSubbedIn,
+              inGameTactic,
+              isHighIntensityContext: Boolean(rivalryInfo || penaltyResult),
+            });
+            newCondition = Math.max(25, p.condition - condCost);
           } else {
-            newCondition = Math.min(100, p.condition + 5);
+            newCondition = Math.min(100, p.condition + 4);
           }
 
           // Morale update (influenced by match result or penalty outcome)
