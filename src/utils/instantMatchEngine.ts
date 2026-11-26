@@ -9,7 +9,7 @@ import {
 } from '../types/game';
 import { getClubSectorRatings } from './clubRatingsEngine';
 import { getMatchRivalryInfo } from './rivalryEngine';
-import { sanitizeLineupForCompetition } from './suspensionEngine';
+import { sanitizeLineupForCompetition, pickWeightedFouler } from './suspensionEngine';
 import {
   diagnosePlayerInjury,
   computeMatchFatigueCost,
@@ -308,6 +308,8 @@ export function executeInstantUserMatch(params: {
   const awayZoneCounts = { left: 1, center: 1, right: 1 };
 
   const autoSubsForUser = Boolean(userClub.tactics.autoMatchSubsEnabled ?? true);
+  const matchYellowIds = new Set<string>();
+  const matchRedIds = new Set<string>();
 
   for (let m = 1; m <= 90; m++) {
     // Perform realistic 2nd half substitutions (User assistant + CPU)
@@ -407,16 +409,21 @@ export function executeInstantUserMatch(params: {
           awayOnTarget++;
         }
 
-        const weightedScorers = atkStarters.flatMap((p) =>
+        const activeAtkStarters = atkStarters.filter((p) => !matchRedIds.has(p.id));
+        const scorerBase = activeAtkStarters.length > 0 ? activeAtkStarters : atkStarters;
+        const weightedScorers = scorerBase.flatMap((p) =>
           p.position === 'FW' ? [p, p, p, p] : p.position === 'MF' ? [p, p] : p.position === 'DF' ? [p] : []
         );
         const scorer =
-          weightedScorers[Math.floor(Math.random() * weightedScorers.length)] || atkStarters[0];
-        const assistCandidates = atkStarters.filter(
+          weightedScorers[Math.floor(Math.random() * weightedScorers.length)] || scorerBase[0];
+        const assistCandidates = scorerBase.filter(
           (p) => p.id !== scorer?.id && p.position !== 'GK'
         );
         const assister =
-          isCornerAssist && atkSpec.cornerTaker && atkSpec.cornerTaker.id !== scorer?.id
+          isCornerAssist &&
+          atkSpec.cornerTaker &&
+          atkSpec.cornerTaker.id !== scorer?.id &&
+          !matchRedIds.has(atkSpec.cornerTaker.id)
             ? atkSpec.cornerTaker
             : assistCandidates.length > 0 && Math.random() < 0.72
             ? assistCandidates[Math.floor(Math.random() * assistCandidates.length)]
@@ -442,42 +449,73 @@ export function executeInstantUserMatch(params: {
       }
     }
 
-    // Fouls & Cards
+    // Fouls & Cards (~10.5% notable foul chance/min -> ~3.8-4.4 yellows & ~0.20 reds/match)
     const foulMult = rivalryInfo?.foulRateMultiplier ?? 1;
-    if (Math.random() < 0.035 * foulMult) {
-      const isHomeFoul = Math.random() < 0.5;
-      if (isHomeFoul) homeFouls++;
-      else awayFouls++;
+    if (Math.random() < 0.105 * foulMult) {
+      const homeMarkW =
+        currentHomeClub.tactics.marking === 'Pesada'
+          ? 1.22
+          : currentHomeClub.tactics.marking === 'Leve'
+          ? 0.8
+          : 1.0;
+      const awayMarkW =
+        currentAwayClub.tactics.marking === 'Pesada'
+          ? 1.22
+          : currentAwayClub.tactics.marking === 'Leve'
+          ? 0.8
+          : 1.0;
+      const isHomeFoul = Math.random() < homeMarkW / (homeMarkW + awayMarkW);
       const fClub = isHomeFoul ? currentHomeClub : currentAwayClub;
       const fStarters = isHomeFoul ? homeStartersList : awayStartersList;
-      const fouler = fStarters[Math.floor(Math.random() * fStarters.length)] || fStarters[0];
-      const roll = Math.random();
-      if (roll < 0.025 && fouler) {
-        if (isHomeFoul) homeReds++;
-        else awayReds++;
-        events.push({
-          id: `inst_red_${m}_${fouler.id}`,
-          minute: m,
-          type: 'CARTAO_VERMELHO',
-          teamId: fClub.id,
-          playerId: fouler.id,
-          playerName: fouler.name,
-          description: `🟥 Cartão vermelho para ${fouler.name} (${fClub.shortName}) aos ${m}'!`,
-          isHomeTeam: isHomeFoul,
-        });
-      } else if (roll < 0.34 && fouler) {
-        if (isHomeFoul) homeYellows++;
-        else awayYellows++;
-        events.push({
-          id: `inst_yel_${m}_${fouler.id}`,
-          minute: m,
-          type: 'CARTAO_AMARELO',
-          teamId: fClub.id,
-          playerId: fouler.id,
-          playerName: fouler.name,
-          description: `🟨 Cartão amarelo para ${fouler.name} (${fClub.shortName}) aos ${m}'.`,
-          isHomeTeam: isHomeFoul,
-        });
+      const fouler = pickWeightedFouler(fStarters, matchRedIds);
+      if (fouler) {
+        if (isHomeFoul) homeFouls++;
+        else awayFouls++;
+        const hasYellowAlready = matchYellowIds.has(fouler.id);
+        const roll = Math.random();
+        if (hasYellowAlready && roll < 0.24) {
+          matchRedIds.add(fouler.id);
+          if (isHomeFoul) homeReds++;
+          else awayReds++;
+          events.push({
+            id: `inst_red2_${m}_${fouler.id}`,
+            minute: m,
+            type: 'CARTAO_VERMELHO',
+            teamId: fClub.id,
+            playerId: fouler.id,
+            playerName: fouler.name,
+            description: `🟥 Segundo amarelo! ${fouler.name} (${fClub.shortName}) expulso aos ${m}'!`,
+            isHomeTeam: isHomeFoul,
+          });
+        } else if (roll < 0.022) {
+          matchRedIds.add(fouler.id);
+          if (isHomeFoul) homeReds++;
+          else awayReds++;
+          events.push({
+            id: `inst_red_${m}_${fouler.id}`,
+            minute: m,
+            type: 'CARTAO_VERMELHO',
+            teamId: fClub.id,
+            playerId: fouler.id,
+            playerName: fouler.name,
+            description: `🟥 Cartão vermelho direto para ${fouler.name} (${fClub.shortName}) aos ${m}'!`,
+            isHomeTeam: isHomeFoul,
+          });
+        } else if (!hasYellowAlready && roll < 0.41) {
+          matchYellowIds.add(fouler.id);
+          if (isHomeFoul) homeYellows++;
+          else awayYellows++;
+          events.push({
+            id: `inst_yel_${m}_${fouler.id}`,
+            minute: m,
+            type: 'CARTAO_AMARELO',
+            teamId: fClub.id,
+            playerId: fouler.id,
+            playerName: fouler.name,
+            description: `🟨 Cartão amarelo para ${fouler.name} (${fClub.shortName}) aos ${m}'.`,
+            isHomeTeam: isHomeFoul,
+          });
+        }
       }
     }
   }
@@ -752,8 +790,9 @@ export function executeInstantUserMatch(params: {
         matches: p.matches + (playedInMatch ? 1 : 0),
         goals: p.goals + goalsInMatch,
         assists: p.assists + assistsInMatch,
-        yellowCards: p.yellowCards + yellowsInMatch,
-        redCards: p.redCards + redsInMatch,
+        // Card totals & competition suspensions are recorded once in App.tsx via recordPlayerCards()
+        yellowCards: p.yellowCards,
+        redCards: p.redCards,
         condition: newCondition,
         morale: newMorale,
       };

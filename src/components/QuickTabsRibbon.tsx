@@ -1,26 +1,38 @@
 import React from 'react';
 import {
-  Award,
-  Briefcase,
   Building2,
   CalendarDays,
   Compass,
-  Crown,
-  Dumbbell,
-  Globe,
-  Handshake,
-  History,
   LayoutDashboard,
   Mail,
-  Shield,
   ShoppingBag,
-  Sliders,
   Trophy,
-  UserCheck,
   Users,
 } from 'lucide-react';
 import { soundEngine } from '../services/soundEngine';
 import { ScrollableTabStrip } from './ScrollableTabStrip';
+
+export function resolvePrimaryNavTabId(activeTab: string): string {
+  if (activeTab === 'players' || activeTab === 'tactics') return 'squad';
+  if (
+    activeTab === 'clubs' ||
+    activeTab === 'selecao' ||
+    activeTab === 'selecao_minha' ||
+    activeTab === 'selecao_mundo'
+  ) {
+    return 'standings';
+  }
+  if (activeTab === 'youth' || activeTab === 'training') return 'scouting';
+  if (
+    activeTab === 'sponsors' ||
+    activeTab === 'board' ||
+    activeTab === 'trophies' ||
+    activeTab === 'history'
+  ) {
+    return 'finances';
+  }
+  return activeTab;
+}
 
 interface QuickTabsRibbonProps {
   activeTab: string;
@@ -33,6 +45,7 @@ interface QuickTabsRibbonProps {
   selecaoBadge?: number;
   financesAlert?: boolean;
   openSponsorSlots?: number;
+  classicFastMode?: boolean;
 }
 
 export const QuickTabsRibbon: React.FC<QuickTabsRibbonProps> = React.memo(
@@ -47,26 +60,23 @@ export const QuickTabsRibbon: React.FC<QuickTabsRibbonProps> = React.memo(
     selecaoBadge = 0,
     financesAlert = false,
     openSponsorSlots = 0,
+    classicFastMode = false,
   }) => {
+    const primaryActive = resolvePrimaryNavTabId(activeTab);
+    const clubBadge =
+      (financesAlert ? 1 : 0) +
+      jobOffersBadge +
+      (!classicFastMode ? openSponsorSlots : 0);
+
     const tabs = [
       { id: 'hub', label: 'Central', icon: LayoutDashboard },
-      { id: 'inbox', label: 'Notícias', icon: Mail, badge: unreadCount },
+      { id: 'squad', label: 'Time', icon: Users },
       { id: 'calendar', label: 'Calendário', icon: CalendarDays },
-      { id: 'players', label: 'Jogadores', icon: UserCheck },
-      { id: 'squad', label: 'Escalação', icon: Users },
-      { id: 'tactics', label: 'Táticas', icon: Sliders },
-      { id: 'training', label: 'Treinos', icon: Dumbbell },
-      { id: 'standings', label: 'Classificação', icon: Trophy },
-      { id: 'clubs', label: 'Outros Times', icon: Shield },
+      { id: 'standings', label: 'Competições', icon: Trophy, badge: selecaoBadge },
       { id: 'market', label: 'Mercado', icon: ShoppingBag, badge: marketBadge },
-      { id: 'scouting', label: 'Olheiros & Base', icon: Compass, badge: scoutingBadge },
-      { id: 'finances', label: 'Finanças', icon: Building2, badge: financesAlert ? 1 : 0 },
-      { id: 'sponsors', label: 'Patrocinadores', icon: Handshake, badge: openSponsorSlots },
-      { id: 'board', label: 'Diretoria', icon: Briefcase, badge: jobOffersBadge },
-      { id: 'selecao_minha', label: 'Minha Seleção', icon: Crown, badge: selecaoBadge },
-      { id: 'selecao_mundo', label: 'Seleções & FIFA', icon: Globe },
-      { id: 'trophies', label: 'Troféus', icon: Award },
-      { id: 'history', label: 'Histórico', icon: History },
+      { id: 'scouting', label: 'Base & Treinos', icon: Compass, badge: scoutingBadge },
+      { id: 'finances', label: 'Clube', icon: Building2, badge: clubBadge },
+      { id: 'inbox', label: 'Notícias', icon: Mail, badge: unreadCount },
     ];
 
     return (
@@ -76,15 +86,13 @@ export const QuickTabsRibbon: React.FC<QuickTabsRibbonProps> = React.memo(
         }`}
       >
         <ScrollableTabStrip
-          activeKey={activeTab}
-          ariaLabel="Navegação rápida entre todas as abas"
+          activeKey={primaryActive}
+          ariaLabel="Navegação rápida principal"
           innerClassName="flex items-center gap-1.5"
         >
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const isActive =
-              activeTab === tab.id ||
-              (tab.id === 'selecao_minha' && activeTab === 'selecao');
+            const isActive = primaryActive === tab.id;
             return (
               <button
                 key={tab.id}

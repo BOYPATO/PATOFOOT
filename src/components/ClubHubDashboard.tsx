@@ -4,10 +4,16 @@ import {
   Fixture,
   GameSave,
   Player,
+  SavedLineupProfile,
+  SmartAdvanceSummary,
   Standing,
   TacticalPreset,
   TacticalSettings,
 } from '../types/game';
+import {
+  buildRotatedRestedLineup,
+  inspectPreMatchReadiness,
+} from '../utils/quickLineupEngine';
 import { getManagerSpecialtyProfile } from '../utils/managerSpecialtyEngine';
 import { evaluateChallengeStatus } from '../utils/careerChallengesEngine';
 import { DirectorAdvicePanel } from './DirectorAdvicePanel';
@@ -60,6 +66,12 @@ import {
   Award,
   X,
   AlertTriangle,
+  BookmarkCheck,
+  ShieldAlert,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 interface ClubHubDashboardProps {
@@ -101,9 +113,13 @@ interface ClubHubDashboardProps {
   deadlineDayClosesOn?: string;
   onOpenDeadlineDay?: () => void;
   smartAdvanceNotice?: string | null;
+  smartAdvanceSummary?: SmartAdvanceSummary | null;
   onDismissSmartAdvanceNotice?: () => void;
   onOpenFirstRunTour?: () => void;
   onLoadTacticalPreset?: (preset: TacticalPreset) => void;
+  onLoadLineupProfile?: (profile: SavedLineupProfile) => void;
+  classicFastMode?: boolean;
+  onToggleClassicFastMode?: () => void;
 }
 
 export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
@@ -142,10 +158,21 @@ export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
   deadlineDayClosesOn,
   onOpenDeadlineDay,
   smartAdvanceNotice = null,
+  smartAdvanceSummary = null,
   onDismissSmartAdvanceNotice,
   onOpenFirstRunTour,
   onLoadTacticalPreset,
+  onLoadLineupProfile,
+  classicFastMode = false,
+  onToggleClassicFastMode,
 }) => {
+  const [quickHubFeedback, setQuickHubFeedback] = useState<string | null>(null);
+  const [showExtraPanels, setShowExtraPanels] = useState(false);
+  const preMatchReadiness = useMemo(
+    () => inspectPreMatchReadiness(userClub, upcomingFixture?.competition),
+    [userClub, upcomingFixture?.competition]
+  );
+  const savedLineups = useMemo(() => userClub.savedLineups || [], [userClub.savedLineups]);
   const [completedTourSteps, setCompletedTourSteps] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem('patofoot_onboarding_steps_v1');
@@ -315,28 +342,117 @@ export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Smart Advance Early-Pause Notice */}
-      {smartAdvanceNotice && (
-        <section className="bg-amber-950/35 border border-amber-500/40 rounded-2xl px-4 sm:px-5 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-            <p className="text-xs sm:text-sm font-semibold text-amber-100 leading-snug">
-              {smartAdvanceNotice}
-            </p>
+      {/* Unified Smart Advance Digest Card (Summary + Early-Pause Reason) */}
+      {(smartAdvanceSummary || smartAdvanceNotice) && (
+        <section
+          className={`rounded-2xl px-4 sm:px-5 py-3.5 border space-y-2.5 ${
+            smartAdvanceNotice || smartAdvanceSummary?.pausedReason
+              ? 'bg-amber-950/35 border-amber-500/45'
+              : 'bg-sky-950/30 border-sky-500/35'
+          }`}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2.5 min-w-0">
+              {smartAdvanceNotice || smartAdvanceSummary?.pausedReason ? (
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              ) : (
+                <FastForward className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+              )}
+              <div className="min-w-0 space-y-1">
+                <div className="text-xs sm:text-sm font-bold text-white leading-snug">
+                  {smartAdvanceSummary?.pausedReason || smartAdvanceNotice
+                    ? smartAdvanceSummary?.pausedReason || smartAdvanceNotice
+                    : `Resumo do Avanço Inteligente: ${smartAdvanceSummary?.daysAdvanced || 0} ${
+                        (smartAdvanceSummary?.daysAdvanced || 0) === 1 ? 'dia avançado' : 'dias avançados'
+                      } até ${
+                        smartAdvanceSummary?.toDate
+                          ? formatCalendarDate(smartAdvanceSummary.toDate)
+                          : formatCalendarDate(gameState.currentDate)
+                      }`}
+                </div>
+
+                {smartAdvanceSummary && (
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-300">
+                    <span className="font-mono text-slate-400">
+                      {smartAdvanceSummary.daysAdvanced}d simulados
+                    </span>
+                    {smartAdvanceSummary.medicalRecoveries.length > 0 && (
+                      <span className="text-emerald-300 font-semibold flex items-center gap-1">
+                        <HeartPulse className="w-3 h-3" />
+                        Alta médica: {smartAdvanceSummary.medicalRecoveries.slice(0, 3).join(', ')}
+                        {smartAdvanceSummary.medicalRecoveries.length > 3
+                          ? ` +${smartAdvanceSummary.medicalRecoveries.length - 3}`
+                          : ''}
+                      </span>
+                    )}
+                    {smartAdvanceSummary.newInjuries.length > 0 && (
+                      <span className="text-rose-300 font-semibold flex items-center gap-1">
+                        <ShieldAlert className="w-3 h-3" />
+                        DM: {smartAdvanceSummary.newInjuries.slice(0, 2).join(', ')}
+                      </span>
+                    )}
+                    {smartAdvanceSummary.squadEvolutions.length > 0 && (
+                      <span className="text-sky-300 font-semibold flex items-center gap-1">
+                        <TrendingUp className="w-3 h-3" />
+                        Evolução CT: {smartAdvanceSummary.squadEvolutions.slice(0, 3).join(', ')}
+                        {smartAdvanceSummary.squadEvolutions.length > 3
+                          ? ` +${smartAdvanceSummary.squadEvolutions.length - 3}`
+                          : ''}
+                      </span>
+                    )}
+                    {smartAdvanceSummary.youthUpdates.length > 0 && (
+                      <span className="text-cyan-300 font-semibold">
+                        Base: {smartAdvanceSummary.youthUpdates.length}{' '}
+                        {smartAdvanceSummary.youthUpdates.length === 1 ? 'atualização' : 'atualizações'}
+                      </span>
+                    )}
+                    {smartAdvanceSummary.scoutingUpdates.length > 0 && (
+                      <span className="text-indigo-300 font-semibold">
+                        Olheiros: {smartAdvanceSummary.scoutingUpdates.length}{' '}
+                        {smartAdvanceSummary.scoutingUpdates.length === 1 ? 'relatório' : 'relatórios'}
+                      </span>
+                    )}
+                    {smartAdvanceSummary.offersReceived > 0 && (
+                      <span className="text-amber-300 font-bold">
+                        +{smartAdvanceSummary.offersReceived}{' '}
+                        {smartAdvanceSummary.offersReceived === 1 ? 'proposta' : 'propostas'} de mercado
+                      </span>
+                    )}
+                    {smartAdvanceSummary.jobOffersReceived > 0 && (
+                      <span className="text-amber-300 font-bold">
+                        +{smartAdvanceSummary.jobOffersReceived} proposta de clube
+                      </span>
+                    )}
+                    {smartAdvanceSummary.medicalRecoveries.length === 0 &&
+                      smartAdvanceSummary.newInjuries.length === 0 &&
+                      smartAdvanceSummary.squadEvolutions.length === 0 &&
+                      smartAdvanceSummary.youthUpdates.length === 0 &&
+                      smartAdvanceSummary.scoutingUpdates.length === 0 &&
+                      smartAdvanceSummary.offersReceived === 0 &&
+                      smartAdvanceSummary.jobOffersReceived === 0 && (
+                        <span className="text-slate-400">
+                          Semana tranquila no CT: elenco recuperou condição física sem ocorrências no DM.
+                        </span>
+                      )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {onDismissSmartAdvanceNotice && (
+              <button
+                type="button"
+                onClick={() => {
+                  soundEngine.playClick();
+                  onDismissSmartAdvanceNotice();
+                }}
+                aria-label="Dispensar resumo"
+                className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/70 cursor-pointer shrink-0 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
-          {onDismissSmartAdvanceNotice && (
-            <button
-              type="button"
-              onClick={() => {
-                soundEngine.playClick();
-                onDismissSmartAdvanceNotice();
-              }}
-              aria-label="Dispensar aviso"
-              className="p-1.5 rounded-lg text-amber-300 hover:text-white hover:bg-amber-900/50 cursor-pointer shrink-0 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
         </section>
       )}
 
@@ -370,31 +486,87 @@ export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
         </section>
       )}
 
-      {/* Compact Manager Specialty + Active Challenge + Quick Tactical Presets Strip */}
-      <section className="bg-[#0c1424] border border-slate-800/80 rounded-2xl px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs min-w-0">
-          <div className="flex items-center gap-2">
-            <Award className="w-4 h-4 text-sky-400 shrink-0" />
-            <span className="text-slate-400">Perfil:</span>
-            <strong className="text-white">{managerSpecialty.title}</strong>
-            <span className="hidden md:inline text-slate-500">·</span>
-            <span className="hidden md:inline text-slate-400">{managerSpecialty.shortTag}</span>
-          </div>
+      {/* Compact Mode Bar (Classic vs Complete) + Profile & Quick Lineups */}
+      <section className="bg-[#0c1424] border border-slate-800/80 rounded-2xl px-4 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs min-w-0">
+          {onToggleClassicFastMode && (
+            <button
+              type="button"
+              onClick={() => {
+                soundEngine.playClick();
+                onToggleClassicFastMode();
+              }}
+              className={`px-3 py-1.5 rounded-lg border text-[11px] font-bold flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-colors ${
+                classicFastMode
+                  ? 'bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/40 text-amber-200'
+                  : 'bg-slate-900 hover:bg-slate-800 border-slate-700/80 text-slate-300 hover:text-white'
+              }`}
+              title={
+                classicFastMode
+                  ? 'Modo Clássico Ativo: patrocínios, avisos secundários e baixas no 11 inicial são resolvidos automaticamente.'
+                  : 'Ativar Modo Clássico para uma experiência mais direta e rápida, focada nos jogos.'
+              }
+            >
+              {classicFastMode ? (
+                <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              ) : (
+                <SlidersHorizontal className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              )}
+              <span>{classicFastMode ? 'Modo Clássico: ON' : 'Modo Clássico: OFF'}</span>
+            </button>
+          )}
 
-          {challengeEval && (
-            <div className="flex items-center gap-2">
-              <span className="text-slate-600 hidden sm:inline">|</span>
-              <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span className="text-amber-300 font-bold">{challengeEval.active.title}:</span>
-              <span className="text-slate-300 font-mono tabular-nums text-[11px]">
-                {challengeEval.progressText}
-              </span>
-            </div>
+          {classicFastMode ? (
+            <span className="text-[11px] text-slate-400 truncate">
+              Patrocínios e baixas no 11 inicial no automático · Foco total nos jogos
+            </span>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-sky-400 shrink-0" />
+                <span className="text-slate-400">Perfil:</span>
+                <strong className="text-white">{managerSpecialty.title}</strong>
+              </div>
+
+              {challengeEval && (
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600 hidden sm:inline">|</span>
+                  <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="text-amber-300 font-bold">{challengeEval.active.title}:</span>
+                  <span className="text-slate-300 font-mono tabular-nums text-[11px]">
+                    {challengeEval.progressText}
+                  </span>
+                </div>
+              )}
+            </>
           )}
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-          {savedPresets.length > 0 && onLoadTacticalPreset && (
+          {savedLineups.length > 0 && onLoadLineupProfile && (
+            <div className="flex items-center gap-1.5 mr-1">
+              <BookmarkCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              {savedLineups.map((profile) => (
+                <button
+                  key={profile.slot}
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    onLoadLineupProfile(profile);
+                    setQuickHubFeedback(`${profile.name} (${profile.formation}) aplicado ao 11 inicial!`);
+                    setTimeout(() => setQuickHubFeedback(null), 3500);
+                  }}
+                  title={`Alternar escalação para ${profile.name} (${profile.formation})`}
+                  className="px-2.5 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/35 text-[11px] font-bold text-sky-200 hover:text-white whitespace-nowrap cursor-pointer transition-colors"
+                >
+                  Time {profile.slot}{' '}
+                  <span className="text-sky-400 font-mono">{profile.formation}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!classicFastMode && savedPresets.length > 0 && onLoadTacticalPreset && (
             <div className="flex items-center gap-1.5 mr-1">
               <Sliders className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               {savedPresets.map((preset) => (
@@ -414,7 +586,7 @@ export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
             </div>
           )}
 
-          {onOpenFirstRunTour && (
+          {!classicFastMode && onOpenFirstRunTour && (
             <button
               type="button"
               onClick={() => {
@@ -430,8 +602,8 @@ export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
         </div>
       </section>
 
-      {/* Optional Dismissible 5-Step Interactive Onboarding Checklist */}
-      {!hasDismissedOnboarding && onDismissOnboarding && (() => {
+      {/* Optional Dismissible 5-Step Interactive Onboarding Checklist (hidden in Classic Mode) */}
+      {!classicFastMode && !hasDismissedOnboarding && onDismissOnboarding && (() => {
         const onboardingItems = [
           {
             step: '01',
@@ -819,6 +991,111 @@ export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
                 })()}
               </div>
 
+              {/* Alerta Inteligente de Prontidão, Cartões & Cansaço Pré-Jogo (com correção em 1 clique) */}
+              {(preMatchReadiness.hasAlerts ||
+                preMatchReadiness.penduradosStarters.length > 0 ||
+                quickHubFeedback) && (
+                <div
+                  className={`mb-4 rounded-xl px-3.5 py-2.5 border flex flex-wrap items-center justify-between gap-2.5 text-xs ${
+                    preMatchReadiness.unavailableCount > 0
+                      ? 'bg-rose-950/35 border-rose-500/45 text-rose-100'
+                      : preMatchReadiness.fatiguedStarters.length > 0
+                      ? 'bg-amber-950/35 border-amber-500/45 text-amber-100'
+                      : preMatchReadiness.penduradosStarters.length > 0
+                      ? 'bg-amber-950/25 border-amber-500/35 text-amber-100'
+                      : 'bg-emerald-950/35 border-emerald-500/40 text-emerald-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    {preMatchReadiness.unavailableCount > 0 ? (
+                      <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
+                    ) : preMatchReadiness.fatiguedStarters.length > 0 ? (
+                      <HeartPulse className="w-4 h-4 text-amber-400 shrink-0" />
+                    ) : preMatchReadiness.penduradosStarters.length > 0 ? (
+                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    )}
+                    <div className="leading-snug">
+                      {quickHubFeedback &&
+                      !preMatchReadiness.hasAlerts &&
+                      preMatchReadiness.penduradosStarters.length === 0 ? (
+                        <span className="font-semibold">{quickHubFeedback}</span>
+                      ) : (
+                        <>
+                          <strong className="mr-1.5">Alerta Pré-Jogo:</strong>
+                          {preMatchReadiness.injuredStarters.length > 0 && (
+                            <span className="text-rose-300 font-semibold mr-2">
+                              {preMatchReadiness.injuredStarters.length} lesionado
+                              {preMatchReadiness.injuredStarters.length > 1 ? 's' : ''} no 11 inicial
+                            </span>
+                          )}
+                          {preMatchReadiness.suspendedStarters.length > 0 && (
+                            <span className="text-rose-300 font-semibold mr-2">
+                              🟥 {preMatchReadiness.suspendedStarters.length} suspenso
+                              {preMatchReadiness.suspendedStarters.length > 1 ? 's' : ''} (1 jogo fora)
+                            </span>
+                          )}
+                          {preMatchReadiness.fatiguedStarters.length > 0 && (
+                            <span className="text-amber-300 font-semibold mr-2">
+                              {preMatchReadiness.fatiguedStarters.length} titular
+                              {preMatchReadiness.fatiguedStarters.length > 1 ? 'es' : ''} cansado
+                              {preMatchReadiness.fatiguedStarters.length > 1 ? 's' : ''} (&lt;68%) · Média física{' '}
+                              {preMatchReadiness.avgStarterCondition}%
+                            </span>
+                          )}
+                          {preMatchReadiness.penduradosStarters.length > 0 && (
+                            <span
+                              className="text-amber-200 font-semibold"
+                              title={`Pendurados com 2 amarelos: ${preMatchReadiness.penduradosStarters
+                                .map((p) => p.name)
+                                .join(', ')}`}
+                            >
+                              🟨 {preMatchReadiness.penduradosStarters.length} pendurado
+                              {preMatchReadiness.penduradosStarters.length > 1 ? 's' : ''} (2/3:{' '}
+                              {preMatchReadiness.penduradosStarters
+                                .slice(0, 2)
+                                .map((p) => p.name.split(' ')[0])
+                                .join(', ')}
+                              {preMatchReadiness.penduradosStarters.length > 2 ? '...' : ''})
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {preMatchReadiness.hasAlerts && onApplyAssistantLineup && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundEngine.playClick();
+                        const res = buildRotatedRestedLineup(
+                          userClub,
+                          upcomingFixture?.competition,
+                          75
+                        );
+                        onApplyAssistantLineup(res.updatedSquad, res.updatedTactics);
+                        setQuickHubFeedback(res.summaryText);
+                        setTimeout(() => setQuickHubFeedback(null), 4000);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg font-black text-[11px] transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                        preMatchReadiness.unavailableCount > 0
+                          ? 'bg-rose-500 hover:bg-rose-400 text-white'
+                          : 'bg-amber-400 hover:bg-amber-300 text-slate-950'
+                      }`}
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      <span>
+                        {preMatchReadiness.unavailableCount > 0
+                          ? 'Corrigir e Poupar (1 Clique)'
+                          : 'Poupar Cansados (1 Clique)'}
+                      </span>
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Match Preparation Actions */}
               <div className="pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2.5">
                 <div className="flex flex-wrap items-center gap-2">
@@ -1034,31 +1311,6 @@ export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
           </div>
         </section>
       </div>
-
-      {/* DICAS DE GESTÃO: Conselhos contextuais sobre contratos, base, finanças, elenco e mercado */}
-      <ManagementTipsPanel
-        userClub={userClub}
-        gameState={gameState}
-        onNavigateTab={onNavigateTab}
-        onOpenContracts={onOpenContracts}
-        onOpenMarketTarget={onOpenMarketTarget}
-      />
-
-      {/* CONSELHOS DO DIRETOR: Diagnóstico do Elenco, Contratações Sugeridas & Ajustes Táticos */}
-      <DirectorAdvicePanel
-        userClub={userClub}
-        gameState={gameState}
-        upcomingFixture={upcomingFixture}
-        upcomingOpponent={upcomingOpponent}
-        onUpdateTactics={onUpdateTactics}
-        onApplyAssistantLineup={onApplyAssistantLineup}
-        onInspectClubPlayer={onInspectClubPlayer}
-        onOpenMarketTarget={onOpenMarketTarget}
-        onToggleWatchlistPlayer={onToggleWatchlistPlayer}
-        onOpenContracts={onOpenContracts}
-        onOpenTacticsTab={() => onNavigateTab('tactics')}
-        onOpenSquadTab={() => onNavigateTab('squad')}
-      />
 
       {/* SECOND ROW: League Standings Slice (5 cols) + Department Status (4 cols) + Inbox (3 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
@@ -1318,6 +1570,66 @@ export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
           )}
         </section>
       </div>
+
+      {/* COLLAPSIBLE EXTRA ANALYTICS: Director Advice & Management Tips (collapsed by default for clean focus) */}
+      <section className="bg-[#0c1424] border border-slate-800/80 rounded-2xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => {
+            soundEngine.playClick();
+            setShowExtraPanels((prev) => !prev);
+          }}
+          className="w-full px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 text-left hover:bg-slate-900/50 transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4 text-sky-400" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs sm:text-sm font-bold text-white truncate">
+                Análises do Diretor &amp; Dicas de Gestão
+              </div>
+              <div className="text-[11px] text-slate-400 truncate mt-0.5">
+                Sugestões de contratações, diagnóstico do elenco, contratos e ajustes táticos
+              </div>
+            </div>
+          </div>
+          <span className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700/80 text-xs font-semibold text-sky-300 flex items-center gap-1.5 whitespace-nowrap shrink-0">
+            <span>{showExtraPanels ? 'Ocultar' : 'Mostrar Análises'}</span>
+            {showExtraPanels ? (
+              <ChevronUp className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5" />
+            )}
+          </span>
+        </button>
+
+        {showExtraPanels && (
+          <div className="p-4 sm:p-5 pt-2 border-t border-slate-800/80 space-y-5">
+            <ManagementTipsPanel
+              userClub={userClub}
+              gameState={gameState}
+              onNavigateTab={onNavigateTab}
+              onOpenContracts={onOpenContracts}
+              onOpenMarketTarget={onOpenMarketTarget}
+            />
+            <DirectorAdvicePanel
+              userClub={userClub}
+              gameState={gameState}
+              upcomingFixture={upcomingFixture}
+              upcomingOpponent={upcomingOpponent}
+              onUpdateTactics={onUpdateTactics}
+              onApplyAssistantLineup={onApplyAssistantLineup}
+              onInspectClubPlayer={onInspectClubPlayer}
+              onOpenMarketTarget={onOpenMarketTarget}
+              onToggleWatchlistPlayer={onToggleWatchlistPlayer}
+              onOpenContracts={onOpenContracts}
+              onOpenTacticsTab={() => onNavigateTab('tactics')}
+              onOpenSquadTab={() => onNavigateTab('squad')}
+            />
+          </div>
+        )}
+      </section>
     </div>
   );
 };

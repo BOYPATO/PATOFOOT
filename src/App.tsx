@@ -40,6 +40,8 @@ import {
   ContinentalCompId,
   MAX_SQUAD_SIZE,
   TacticalPreset,
+  SavedLineupProfile,
+  SmartAdvanceSummary,
   ManagerSpecialtyId,
   CareerChallengeId,
 } from './types/game';
@@ -356,6 +358,11 @@ import {
 } from './utils/suspensionEngine';
 import { buildAssistantOptimalLineup } from './utils/assistantLineupEngine';
 import {
+  applySavedLineupProfile,
+  buildFixedUnavailableLineup,
+  createSavedLineupProfile,
+} from './utils/quickLineupEngine';
+import {
   processRoundLoans,
   executeBuyOption,
   terminateLoan,
@@ -368,7 +375,14 @@ import {
 } from './utils/loanEngine';
 import { checkAndAwardCupPhasePrize } from './utils/prizeEngine';
 import { settleAllSeasonEndPrizes } from './utils/seasonPrizeSettlementEngine';
-import { signSponsorContract, terminateSponsorSlot, processRoundSponsors } from './utils/sponsorEngine';
+import {
+  signSponsorContract,
+  terminateSponsorSlot,
+  processRoundSponsors,
+  SPONSOR_SLOTS_ORDER,
+  getAvailableSponsorOptionsForSlot,
+  countActiveSponsors,
+} from './utils/sponsorEngine';
 import {
   createInitialScoutingNetwork,
   dispatchScoutMission,
@@ -484,6 +498,7 @@ import {
 import {
   ensurePlayerContractFields,
   computeDefaultReleaseClause,
+  getPlayerRenewalExpectations,
   negotiateContractRenewal,
   signBosmanPreContract,
   triggerReleaseClausePurchase,
@@ -626,7 +641,33 @@ import {
 import { applySeasonalClubReputationUpdates } from './utils/clubReputationEngine';
 import { generateContextualNewsMessages } from './utils/contextualNewsEngine';
 import confetti from 'canvas-confetti';
-import { Trophy, Users, List, Grid, Tag, Handshake, ArrowRightLeft, PieChart, Award, Briefcase, FileSignature, Scale, Ban, AlertTriangle, Flag, Search } from 'lucide-react';
+import {
+  Trophy,
+  Users,
+  List,
+  Grid,
+  Tag,
+  Handshake,
+  ArrowRightLeft,
+  PieChart,
+  Award,
+  Briefcase,
+  FileSignature,
+  Scale,
+  Ban,
+  AlertTriangle,
+  Flag,
+  Search,
+  Building2,
+  Compass,
+  Crown,
+  Dumbbell,
+  Globe,
+  History,
+  Shield,
+  Sliders,
+  UserCheck,
+} from 'lucide-react';
 import {
   CareerSaveKey,
   SaveSlotNumber,
@@ -2766,6 +2807,7 @@ export default function App() {
   const [deadlineDaySession, setDeadlineDaySession] = useState<DeadlineDaySession | null>(null);
   const [isDeadlineDayModalOpen, setIsDeadlineDayModalOpen] = useState<boolean>(false);
   const [smartAdvanceNotice, setSmartAdvanceNotice] = useState<string | null>(null);
+  const [smartAdvanceSummary, setSmartAdvanceSummary] = useState<SmartAdvanceSummary | null>(null);
   const [isFirstRunTourOpen, setIsFirstRunTourOpen] = useState<boolean>(false);
   const seenCelebrationKeysRef = useRef<{ careerKey: string; keys: Set<string> }>({
     careerKey: '',
@@ -4797,6 +4839,51 @@ export default function App() {
               ...p,
               isStarter: selectedIds.has(p.id),
             })),
+          };
+        }),
+      };
+    });
+  };
+
+  // Save current XI + bench into Time A (Titular) or Time B (Misto/Reserva) quick profile
+  const handleSaveLineupProfile = (slot: 'A' | 'B') => {
+    setGameState((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        clubs: prev.clubs.map((c) => {
+          if (c.id !== prev.userClubId) return c;
+          const snapshot = createSavedLineupProfile(
+            c,
+            slot,
+            slot === 'A' ? 'Time A (Titular)' : 'Time B (Misto)',
+            formatShortDate(prev.currentDate)
+          );
+          const others = (c.savedLineups || []).filter((p) => p.slot !== slot);
+          const nextSaved = [...others, snapshot].sort((a, b) => a.slot.localeCompare(b.slot));
+          return {
+            ...c,
+            savedLineups: nextSaved,
+          };
+        }),
+      };
+    });
+  };
+
+  // Load saved Time A / Time B profile with automatic replacement of sold/injured/suspended players
+  const handleLoadLineupProfile = (profile: SavedLineupProfile) => {
+    const upcomingComp = upcomingUserFixture?.competition;
+    setGameState((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        clubs: prev.clubs.map((c) => {
+          if (c.id !== prev.userClubId) return c;
+          const applied = applySavedLineupProfile(c, profile, upcomingComp);
+          return {
+            ...c,
+            squad: applied.updatedSquad,
+            tactics: applied.updatedTactics,
           };
         }),
       };
@@ -7903,7 +7990,36 @@ export default function App() {
         nextDate
       );
 
-      const finalClubsAfterMarket = clubsWithSponsors;
+      // In Classic/Fast Mode, silently refill any expired sponsor slots so routine renewal doesn't slow down gameplay
+      const finalClubsAfterMarket = gameSettings.classicFastMode
+        ? clubsWithSponsors.map((clubItem) => {
+            if (clubItem.id !== prev.userClubId) return clubItem;
+            let updatedUserClub = clubItem;
+            for (const slot of SPONSOR_SLOTS_ORDER) {
+              if (!updatedUserClub.sponsors?.[slot]) {
+                const options = getAvailableSponsorOptionsForSlot(updatedUserClub, slot);
+                const bestOption = options.sort(
+                  (a, b) =>
+                    b.signingBonus +
+                    b.perRoundAmount * b.totalRounds -
+                    (a.signingBonus + a.perRoundAmount * a.totalRounds)
+                )[0];
+                if (bestOption) {
+                  const res = signSponsorContract(
+                    updatedUserClub,
+                    bestOption,
+                    prev.currentRound,
+                    nextDate
+                  );
+                  if (res.success) {
+                    updatedUserClub = res.updatedClub;
+                  }
+                }
+              }
+            }
+            return updatedUserClub;
+          })
+        : clubsWithSponsors;
 
       const daysAdvancedAfterMatch = hasAnotherUserMatchSameDay ? 0 : 1;
 
@@ -10161,6 +10277,88 @@ export default function App() {
     return { accepted: result.accepted, feedbackText: result.feedbackText };
   };
 
+  const handleBatchRenewContracts = (
+    filter: 'ALL_EXPIRING' | 'STARTERS' | 'YOUTH_U23'
+  ) => {
+    if (!gameState) {
+      return {
+        attempted: 0,
+        renewedCount: 0,
+        rejectedCount: 0,
+        monthlyWageDelta: 0,
+        renewedNames: [] as string[],
+        rejectedNames: [] as string[],
+      };
+    }
+
+    let workingState: GameSave = gameState;
+    const currentClub = workingState.clubs.find((c) => c.id === workingState.userClubId);
+    if (!currentClub) {
+      return {
+        attempted: 0,
+        renewedCount: 0,
+        rejectedCount: 0,
+        monthlyWageDelta: 0,
+        renewedNames: [] as string[],
+        rejectedNames: [] as string[],
+      };
+    }
+
+    const targets = currentClub.squad.filter((p) => {
+      if (p.isLoan || p.contractYears > 1 || p.retiringAtSeasonEnd || p.preContractClubId) {
+        return false;
+      }
+      if (filter === 'STARTERS') return p.isStarter;
+      if (filter === 'YOUTH_U23') return p.age <= 23;
+      return true;
+    });
+
+    let renewedCount = 0;
+    let rejectedCount = 0;
+    let monthlyWageDelta = 0;
+    const renewedNames: string[] = [];
+    const rejectedNames: string[] = [];
+
+    for (const player of targets) {
+      const latestClub = workingState.clubs.find((c) => c.id === workingState.userClubId);
+      if (!latestClub) break;
+      const latestPlayer = latestClub.squad.find((p) => p.id === player.id);
+      if (!latestPlayer) continue;
+      const exp = getPlayerRenewalExpectations(latestPlayer, latestClub);
+      const proposedClause = latestPlayer.releaseClause || exp.suggestedReleaseClause;
+      const res = negotiateContractRenewal(
+        workingState,
+        latestPlayer.id,
+        exp.recommendedYears,
+        exp.desiredWage,
+        proposedClause,
+        0
+      );
+      if (res.accepted) {
+        workingState = res.updatedState;
+        renewedCount++;
+        monthlyWageDelta += exp.desiredWage - latestPlayer.wage;
+        renewedNames.push(latestPlayer.name);
+      } else {
+        rejectedCount++;
+        rejectedNames.push(latestPlayer.name);
+      }
+    }
+
+    if (renewedCount > 0) {
+      setGameState(workingState);
+    }
+
+    return {
+      attempted: targets.length,
+      renewedCount,
+      rejectedCount,
+      monthlyWageDelta,
+      renewedNames,
+      rejectedNames,
+    };
+  };
+
   const handleSignPreContract = (
     playerId: string,
     sellerClubId: string,
@@ -10364,13 +10562,26 @@ export default function App() {
 
     soundEngine.playWhistle(false);
     setSmartAdvanceNotice(null);
+    setSmartAdvanceSummary(null);
 
+    const startDate = gameState.currentDate;
     const totalDays = Math.min(45, Math.max(1, daysBetween(gameState.currentDate, targetDate)));
     let workingState: GameSave = gameState;
     let pausedReason: string | null = null;
     let triggeredDeadlineDay = false;
+    let daysSimulated = 0;
+
+    const digestMedicalRecoveries: string[] = [];
+    const digestNewInjuries: string[] = [];
+    const digestSquadEvolutions: string[] = [];
+    const digestYouthUpdates: string[] = [];
+    const digestScoutingUpdates: string[] = [];
+    const digestRetrainingUpdates: string[] = [];
+    let digestOffersReceived = 0;
+    let digestJobOffersReceived = 0;
 
     for (let step = 0; step < totalDays; step++) {
+      daysSimulated++;
       const prevDate = workingState.currentDate;
       const nextDate = addDays(prevDate, 1);
       const isFinalTargetStep = nextDate >= targetDate;
@@ -10430,6 +10641,12 @@ export default function App() {
             division: c.division,
             club: c,
           });
+          if (isUser && progressedPlayer.overall !== p.overall) {
+            const delta = progressedPlayer.overall - p.overall;
+            digestSquadEvolutions.push(
+              `${p.name} (${delta > 0 ? `+${delta}` : delta} OVR → ${progressedPlayer.overall})`
+            );
+          }
           return {
             ...progressedPlayer,
             condition,
@@ -10498,14 +10715,38 @@ export default function App() {
         !isFinalTargetStep
       );
 
+      for (const m of newMedicalMessages) {
+        if (/alta|liberad|recuperad|apt[oa]/i.test(m.title)) {
+          digestMedicalRecoveries.push(m.title.replace(/^🏥\s*|^✅\s*/, '').slice(0, 48));
+        } else if (/les[aã]o|dm|contus|fratura|estiramento/i.test(m.title)) {
+          digestNewInjuries.push(m.title.replace(/^🏥\s*|^🚑\s*/, '').slice(0, 48));
+        }
+      }
+      if (youthDayMsgs.length > 0) {
+        digestYouthUpdates.push(...youthDayMsgs.map((m) => m.title));
+      }
+      if (scoutingDayMsgs.length > 0) {
+        digestScoutingUpdates.push(...scoutingDayMsgs.map((m) => m.title));
+      }
+      if (retrainDay.inboxMessages.length > 0) {
+        digestRetrainingUpdates.push(...retrainDay.inboxMessages.map((m) => m.title));
+      }
+
+      const afterStepOffers = (workingState.transferOffers || []).filter(
+        (o) => o.status === 'PENDING'
+      ).length;
+      const afterStepJobs = (workingState.managerCareer?.jobOffers || []).filter(
+        (o) => o.status === 'PENDING'
+      ).length;
+      if (afterStepOffers > prevPendingOffers) {
+        digestOffersReceived += afterStepOffers - prevPendingOffers;
+      }
+      if (afterStepJobs > prevPendingJobs) {
+        digestJobOffersReceived += afterStepJobs - prevPendingJobs;
+      }
+
       // Smart pause checks strictly before reaching match day
       if (!isFinalTargetStep) {
-        const afterPendingOffers = (workingState.transferOffers || []).filter(
-          (o) => o.status === 'PENDING'
-        ).length;
-        const afterPendingJobs = (workingState.managerCareer?.jobOffers || []).filter(
-          (o) => o.status === 'PENDING'
-        ).length;
         const hasNewInjury = newMedicalMessages.some((m) =>
           /les[aã]o|dm|contus|fratura|estiramento/i.test(m.title)
         );
@@ -10519,11 +10760,11 @@ export default function App() {
           triggeredDeadlineDay = true;
           break;
         }
-        if (afterPendingOffers > prevPendingOffers) {
+        if (afterStepOffers > prevPendingOffers) {
           pausedReason = `Avanço Inteligente pausado em ${formatShortDate(workingState.currentDate)}: Nova proposta de transferência recebida na Caixa de Entrada!`;
           break;
         }
-        if (afterPendingJobs > prevPendingJobs) {
+        if (afterStepJobs > prevPendingJobs) {
           pausedReason = `Avanço Inteligente pausado em ${formatShortDate(workingState.currentDate)}: Você recebeu uma nova proposta de emprego na Sala da Presidência!`;
           break;
         }
@@ -10534,9 +10775,29 @@ export default function App() {
       }
     }
 
+    if (gameSettings.classicFastMode) {
+      workingState = autoDelegateClassicSponsors(workingState);
+    }
+
     setGameState(workingState);
     if (pausedReason) {
       setSmartAdvanceNotice(pausedReason);
+    }
+    if (daysSimulated >= 1) {
+      setSmartAdvanceSummary({
+        daysAdvanced: daysSimulated,
+        fromDate: startDate,
+        toDate: workingState.currentDate,
+        pausedReason,
+        medicalRecoveries: digestMedicalRecoveries,
+        newInjuries: digestNewInjuries,
+        squadEvolutions: digestSquadEvolutions,
+        youthUpdates: digestYouthUpdates,
+        scoutingUpdates: digestScoutingUpdates,
+        retrainingUpdates: digestRetrainingUpdates,
+        offersReceived: digestOffersReceived,
+        jobOffersReceived: digestJobOffersReceived,
+      });
     }
     if (triggeredDeadlineDay) {
       handleOpenDeadlineDay(workingState);
@@ -10611,16 +10872,19 @@ export default function App() {
         ),
       };
     } else {
-      const { sanitizedSquad, benchedNames } = sanitizeLineupForCompetition(
+      const { benchedNames } = sanitizeLineupForCompetition(
         activeClubInResolved.squad,
         comp
       );
       if (benchedNames.length > 0) {
         soundEngine.playWhistle(false);
+        const fixed = buildFixedUnavailableLineup(activeClubInResolved, comp);
         resolvedState = {
           ...resolvedState,
           clubs: resolvedState.clubs.map((c) =>
-            c.id === activeClubInResolved.id ? { ...c, squad: sanitizedSquad } : c
+            c.id === activeClubInResolved.id
+              ? { ...c, squad: fixed.updatedSquad, tactics: fixed.updatedTactics }
+              : c
           ),
         };
       }
@@ -10696,14 +10960,16 @@ export default function App() {
         ),
       };
     } else {
-      const { sanitizedSquad, benchedNames } = sanitizeLineupForCompetition(
+      const { benchedNames } = sanitizeLineupForCompetition(
         activeClubInResolved.squad,
         comp
       );
       if (benchedNames.length > 0) {
+        const fixed = buildFixedUnavailableLineup(activeClubInResolved, comp);
         activeClubInResolved = {
           ...activeClubInResolved,
-          squad: sanitizedSquad,
+          squad: fixed.updatedSquad,
+          tactics: fixed.updatedTactics,
         };
         resolvedState = {
           ...resolvedState,
@@ -10765,7 +11031,66 @@ export default function App() {
     });
   };
 
-  const unreadMessagesCount = gameState.inbox.filter((m) => !m.read).length;
+  // Auto-fills empty sponsor slots with the best available deal when Classic/Fast Mode is active
+  const autoDelegateClassicSponsors = (state: GameSave): GameSave => {
+    let changed = false;
+    const nextClubs = state.clubs.map((clubItem) => {
+      if (clubItem.id !== state.userClubId) return clubItem;
+      let updatedUserClub = clubItem;
+      for (const slot of SPONSOR_SLOTS_ORDER) {
+        if (!updatedUserClub.sponsors?.[slot]) {
+          const options = getAvailableSponsorOptionsForSlot(updatedUserClub, slot);
+          const bestOption = options.sort(
+            (a, b) =>
+              b.signingBonus +
+              b.perRoundAmount * b.totalRounds -
+              (a.signingBonus + a.perRoundAmount * a.totalRounds)
+          )[0];
+          if (bestOption) {
+            const res = signSponsorContract(
+              updatedUserClub,
+              bestOption,
+              state.currentRound,
+              state.currentDate
+            );
+            if (res.success) {
+              updatedUserClub = res.updatedClub;
+              changed = true;
+            }
+          }
+        }
+      }
+      return updatedUserClub;
+    });
+    return changed ? { ...state, clubs: nextClubs } : state;
+  };
+
+  const handleToggleClassicFastMode = () => {
+    const nextEnabled = !gameSettings.classicFastMode;
+    handleUpdateSettings({
+      ...gameSettings,
+      classicFastMode: nextEnabled,
+    });
+    if (nextEnabled) {
+      setGameState((prev) => (prev ? autoDelegateClassicSponsors(prev) : null));
+    }
+  };
+
+  const openSponsorSlotsCount = Math.max(0, 4 - countActiveSponsors(userClub.sponsors));
+  const unreadMessagesCount = gameState.inbox.filter((m) => {
+    if (m.read) return false;
+    if (!gameSettings.classicFastMode) return true;
+    return (
+      m.type === 'TRANSFER' ||
+      m.type === 'INJURY' ||
+      m.type === 'SUSPENSION' ||
+      m.type === 'JOB_OFFER' ||
+      m.type === 'NATIONAL_TEAM' ||
+      m.type === 'BOARD' ||
+      Boolean(m.offerId) ||
+      Boolean(m.jobOfferId)
+    );
+  }).length;
   const activeScoutingMissionsCount =
     gameState.scoutingNetwork?.missions.filter((m) => m.status === 'ACTIVE').length || 0;
   const pendingLockerActionsCount =
@@ -10841,6 +11166,8 @@ export default function App() {
         onOpenOfficialSite={() => handleOpenOfficialSite('compartilhar')}
         onSaveAndExitToTitle={handleSaveAndExitToTitle}
         autoSaveEnabled={gameSettings.autoSaveEnabled}
+        classicFastMode={Boolean(gameSettings.classicFastMode)}
+        onToggleClassicFastMode={handleToggleClassicFastMode}
       />
 
       {/* Right Workspace Column: Slim Executive Top Bar + Main Content */}
@@ -10893,7 +11220,127 @@ export default function App() {
             jobOffersBadge={pendingJobOffersCount}
             selecaoBadge={selecaoActionCount}
             financesAlert={userClub.finances.balance < 0}
+            openSponsorSlots={openSponsorSlotsCount}
+            classicFastMode={Boolean(gameSettings.classicFastMode)}
           />
+
+          {/* Contextual Sub-Tab Bar for the 4 Grouped Domains (Time, Competições, Base & Treinos, Clube) */}
+          {(() => {
+            const subTabGroup: Array<{
+              id: string;
+              label: string;
+              icon: React.ComponentType<{ className?: string }>;
+              badge?: number;
+            }> | null =
+              activeTab === 'squad' || activeTab === 'players' || activeTab === 'tactics'
+                ? [
+                    { id: 'squad', label: 'Escalação & Campo', icon: Users },
+                    { id: 'players', label: 'Meus Jogadores', icon: UserCheck },
+                    { id: 'tactics', label: 'Táticas', icon: Sliders },
+                  ]
+                : activeTab === 'standings' ||
+                  activeTab === 'clubs' ||
+                  activeTab === 'selecao' ||
+                  activeTab === 'selecao_minha' ||
+                  activeTab === 'selecao_mundo'
+                ? [
+                    { id: 'standings', label: 'Classificação', icon: Trophy },
+                    { id: 'clubs', label: 'Outros Times', icon: Shield },
+                    {
+                      id: 'selecao_minha',
+                      label: 'Minha Seleção',
+                      icon: Crown,
+                      badge: selecaoActionCount,
+                    },
+                    { id: 'selecao_mundo', label: 'Seleções & FIFA', icon: Globe },
+                  ]
+                : activeTab === 'scouting' || activeTab === 'youth' || activeTab === 'training'
+                ? [
+                    {
+                      id: 'scouting',
+                      label: 'Olheiros & Base',
+                      icon: Compass,
+                      badge: activeScoutingMissionsCount,
+                    },
+                    { id: 'training', label: 'Treinos & CT', icon: Dumbbell },
+                  ]
+                : activeTab === 'finances' ||
+                  activeTab === 'sponsors' ||
+                  activeTab === 'board' ||
+                  activeTab === 'trophies' ||
+                  activeTab === 'history'
+                ? [
+                    {
+                      id: 'finances',
+                      label: 'Finanças & Estádio',
+                      icon: Building2,
+                      badge: userClub.finances.balance < 0 ? 1 : 0,
+                    },
+                    {
+                      id: 'sponsors',
+                      label: 'Patrocínios',
+                      icon: Handshake,
+                      badge: !gameSettings.classicFastMode ? openSponsorSlotsCount : 0,
+                    },
+                    {
+                      id: 'board',
+                      label: 'Diretoria & Carreira',
+                      icon: Briefcase,
+                      badge: pendingJobOffersCount,
+                    },
+                    { id: 'trophies', label: 'Troféus', icon: Award },
+                    { id: 'history', label: 'Histórico', icon: History },
+                  ]
+                : null;
+
+            if (!subTabGroup) return null;
+            const normalizedSubActive =
+              activeTab === 'selecao'
+                ? 'selecao_minha'
+                : activeTab === 'youth'
+                ? 'scouting'
+                : activeTab;
+
+            return (
+              <div className="mb-4 bg-[#0b1220]/90 border border-slate-800/80 rounded-xl px-2 py-1.5">
+                <ScrollableTabStrip
+                  activeKey={normalizedSubActive}
+                  ariaLabel="Sub-seções da área atual"
+                  innerClassName="flex items-center gap-1.5"
+                >
+                  {subTabGroup.map((sub) => {
+                    const SubIcon = sub.icon;
+                    const isSubActive = normalizedSubActive === sub.id;
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        data-tab-active={isSubActive ? 'true' : undefined}
+                        onClick={() => {
+                          soundEngine.playClick();
+                          setActiveTab(sub.id);
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+                          isSubActive
+                            ? 'bg-sky-500/20 text-sky-200 border border-sky-400/40 font-bold'
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800/70 border border-transparent'
+                        }`}
+                      >
+                        <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? 'text-sky-400' : 'text-slate-400'}`} />
+                        <span>{sub.label}</span>
+                        {sub.badge !== undefined && sub.badge > 0 && (
+                          <span className="font-mono text-[10px] tabular-nums px-1.5 py-0.2 rounded bg-sky-500/25 text-sky-300 font-bold">
+                            {sub.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </ScrollableTabStrip>
+              </div>
+            );
+          })()}
+
           {/* Special Pre-Match Rivalry Alert Banner when next match is a Derby */}
           {activeTab !== 'hub' && upcomingRivalry && upcomingOpponentClub && upcomingUserFixture && (
             <div className="mb-5 bg-[#0c1424] border border-amber-500/40 rounded-2xl px-4 sm:px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
@@ -10980,9 +11427,16 @@ export default function App() {
               deadlineDayClosesOn={deadlineDayInfo.closesOnDisplay}
               onOpenDeadlineDay={() => handleOpenDeadlineDay()}
               smartAdvanceNotice={smartAdvanceNotice}
-              onDismissSmartAdvanceNotice={() => setSmartAdvanceNotice(null)}
+              smartAdvanceSummary={smartAdvanceSummary}
+              onDismissSmartAdvanceNotice={() => {
+                setSmartAdvanceNotice(null);
+                setSmartAdvanceSummary(null);
+              }}
               onOpenFirstRunTour={() => setIsFirstRunTourOpen(true)}
               onLoadTacticalPreset={handleLoadTacticalPreset}
+              onLoadLineupProfile={handleLoadLineupProfile}
+              classicFastMode={Boolean(gameSettings.classicFastMode)}
+              onToggleClassicFastMode={handleToggleClassicFastMode}
             />
           )}
 
@@ -11128,6 +11582,8 @@ export default function App() {
                 onUpdateFormation={(formation: FormationType) =>
                   handleUpdateTactics({ ...userClub.tactics, formation })
                 }
+                onSaveLineupProfile={handleSaveLineupProfile}
+                onLoadLineupProfile={handleLoadLineupProfile}
               />
             ) : squadSubView === 'table' ? (
               <SquadTable 
@@ -11165,6 +11621,7 @@ export default function App() {
                 userClub={userClub}
                 seasonYear={gameState.currentSeasonYear}
                 onRenewContract={handleRenewPlayerContract}
+                onBatchRenewContracts={handleBatchRenewContracts}
                 onNavigateToBosmanMarket={() => {
                   setMarketInitialTab('bosman');
                   setActiveTab('market');

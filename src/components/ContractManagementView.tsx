@@ -21,7 +21,19 @@ import {
   X,
   AlertTriangle,
   Shield,
+  Sparkles,
 } from 'lucide-react';
+
+export type BatchRenewalFilter = 'ALL_EXPIRING' | 'STARTERS' | 'YOUTH_U23';
+
+export interface BatchRenewalSummary {
+  attempted: number;
+  renewedCount: number;
+  rejectedCount: number;
+  monthlyWageDelta: number;
+  renewedNames: string[];
+  rejectedNames: string[];
+}
 
 interface ContractManagementViewProps {
   userClub: Club;
@@ -33,6 +45,7 @@ interface ContractManagementViewProps {
     proposedReleaseClause: number,
     signingBonus: number
   ) => { accepted: boolean; feedbackText: string };
+  onBatchRenewContracts?: (filter: BatchRenewalFilter) => BatchRenewalSummary;
   onNavigateToBosmanMarket?: () => void;
 }
 
@@ -40,6 +53,7 @@ export const ContractManagementView: React.FC<ContractManagementViewProps> = ({
   userClub,
   seasonYear,
   onRenewContract,
+  onBatchRenewContracts,
   onNavigateToBosmanMarket,
 }) => {
   const inspection = usePlayerInspection();
@@ -54,6 +68,7 @@ export const ContractManagementView: React.FC<ContractManagementViewProps> = ({
   const [proposedClause, setProposedClause] = useState<number>(5000000);
   const [signingBonus, setSigningBonus] = useState<number>(0);
   const [feedback, setFeedback] = useState<{ accepted: boolean; text: string } | null>(null);
+  const [batchResult, setBatchResult] = useState<BatchRenewalSummary | null>(null);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', {
@@ -62,13 +77,36 @@ export const ContractManagementView: React.FC<ContractManagementViewProps> = ({
       maximumFractionDigits: 0,
     }).format(val);
 
-  const expiringCount = useMemo(
+  const expiringEligiblePlayers = useMemo(
     () =>
       userClub.squad.filter(
         (p) => !p.isLoan && p.contractYears <= 1 && !p.retiringAtSeasonEnd && !p.preContractClubId
-      ).length,
+      ),
     [userClub.squad]
   );
+
+  const expiringCount = expiringEligiblePlayers.length;
+  const expiringStartersCount = useMemo(
+    () => expiringEligiblePlayers.filter((p) => p.isStarter).length,
+    [expiringEligiblePlayers]
+  );
+  const expiringYouthCount = useMemo(
+    () => expiringEligiblePlayers.filter((p) => p.age <= 23).length,
+    [expiringEligiblePlayers]
+  );
+
+  const handleRunBatchRenewal = (filter: BatchRenewalFilter) => {
+    if (!onBatchRenewContracts) return;
+    soundEngine.playClick();
+    const res = onBatchRenewContracts(filter);
+    setBatchResult(res);
+    if (res.renewedCount > 0) {
+      soundEngine.playFanfare();
+      confetti({ particleCount: 55, spread: 65 });
+    } else {
+      soundEngine.playWhistle(false);
+    }
+  };
 
   const retiringCount = useMemo(
     () => userClub.squad.filter((p) => p.retiringAtSeasonEnd || p.age >= 35).length,
@@ -230,6 +268,86 @@ export const ContractManagementView: React.FC<ContractManagementViewProps> = ({
             </span>
           </div>
         </div>
+
+        {/* Assistente de Renovação em Lote (1 Clique) */}
+        {onBatchRenewContracts && expiringCount > 0 && (
+          <div className="mt-4 pt-4 border-t border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <div className="text-xs font-bold text-amber-200">
+                  Assistente de Renovação em Lote (1 Clique)
+                </div>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Oferece automaticamente o salário justo e prazo recomendado para renovar contratos no último ano sem abrir tela por tela.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleRunBatchRenewal('ALL_EXPIRING')}
+                className="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-colors cursor-pointer whitespace-nowrap"
+              >
+                Renovar Todos ({expiringCount})
+              </button>
+              {expiringStartersCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => handleRunBatchRenewal('STARTERS')}
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-sky-500/40 text-sky-300 font-bold text-xs transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  Só Titulares ({expiringStartersCount})
+                </button>
+              )}
+              {expiringYouthCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => handleRunBatchRenewal('YOUTH_U23')}
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 font-bold text-xs transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  Só Jovens ≤23 ({expiringYouthCount})
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {batchResult && (
+          <div
+            className={`mt-3 rounded-xl px-3.5 py-2.5 border flex items-center justify-between gap-3 text-xs ${
+              batchResult.renewedCount > 0
+                ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
+                : 'bg-amber-950/40 border-amber-500/40 text-amber-200'
+            }`}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              {batchResult.renewedCount > 0 ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+              )}
+              <span className="leading-snug">
+                <strong>Renovação em Lote:</strong> {batchResult.renewedCount} renovado
+                {batchResult.renewedCount === 1 ? '' : 's'}
+                {batchResult.rejectedCount > 0
+                  ? ` · ${batchResult.rejectedCount} recusado${batchResult.rejectedCount === 1 ? '' : 's'}`
+                  : ''}
+                {batchResult.renewedCount > 0
+                  ? ` · Impacto na folha: ${batchResult.monthlyWageDelta >= 0 ? '+' : ''}${formatCurrency(batchResult.monthlyWageDelta)}/mês`
+                  : ' · Nenhum contrato renovado nesta tentativa.'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setBatchResult(null)}
+              aria-label="Fechar resumo da renovação em lote"
+              className="p-1 rounded-lg hover:bg-slate-800/70 text-slate-300 hover:text-white cursor-pointer shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filter & Search Toolbar */}

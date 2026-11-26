@@ -1,5 +1,11 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { Club, Player, FormationType, CompetitionType } from '../types/game';
+import {
+  Club,
+  Player,
+  FormationType,
+  CompetitionType,
+  SavedLineupProfile,
+} from '../types/game';
 import { soundEngine } from '../services/soundEngine';
 import {
   Sparkles,
@@ -13,6 +19,10 @@ import {
   Bot,
   AlertTriangle,
   Wand2,
+  HeartPulse,
+  ShieldAlert,
+  Bookmark,
+  BookmarkCheck,
 } from 'lucide-react';
 import {
   isPlayerSuspendedInCompetition,
@@ -30,6 +40,11 @@ import {
   formatPlayerNationalityShort,
 } from '../utils/nationalityUtils';
 import { buildAssistantOptimalLineup } from '../utils/assistantLineupEngine';
+import {
+  buildFixedUnavailableLineup,
+  buildRotatedRestedLineup,
+  inspectPreMatchReadiness,
+} from '../utils/quickLineupEngine';
 import {
   evaluatePlayerSlotFit,
   FORMATION_PITCH_SLOTS,
@@ -49,6 +64,8 @@ interface PitchTacticsViewProps {
   upcomingCompetition?: CompetitionType;
   onUpdateSquad: (updatedSquad: Player[]) => void;
   onUpdateFormation: (formation: FormationType) => void;
+  onSaveLineupProfile?: (slot: 'A' | 'B') => void;
+  onLoadLineupProfile?: (profile: SavedLineupProfile) => void;
 }
 
 const FORMATIONS: FormationType[] = ['4-3-3', '4-4-2', '3-5-2', '4-2-3-1', '5-3-2', '4-1-4-1', '3-4-3'];
@@ -58,6 +75,8 @@ export const PitchTacticsView: React.FC<PitchTacticsViewProps> = ({
   upcomingCompetition,
   onUpdateSquad,
   onUpdateFormation,
+  onSaveLineupProfile,
+  onLoadLineupProfile,
 }) => {
   const pitchRef = useRef<HTMLDivElement>(null);
   const inspection = usePlayerInspection();
@@ -849,6 +868,20 @@ export const PitchTacticsView: React.FC<PitchTacticsViewProps> = ({
     placePlayerAtCustomPitchCoords(selectedPlayerId, coords.x, coords.y);
   };
 
+  const readiness = useMemo(
+    () => inspectPreMatchReadiness(club, upcomingCompetition),
+    [club, upcomingCompetition]
+  );
+
+  const savedProfileA = useMemo(
+    () => (club.savedLineups || []).find((p) => p.slot === 'A') || null,
+    [club.savedLineups]
+  );
+  const savedProfileB = useMemo(
+    () => (club.savedLineups || []).find((p) => p.slot === 'B') || null,
+    [club.savedLineups]
+  );
+
   // Auto-escalar Inteligente: Põe cada jogador na sua melhor posição considerando Forma Física + Overall
   const handleAutoPick = () => {
     soundEngine.playClick();
@@ -858,6 +891,24 @@ export const PitchTacticsView: React.FC<PitchTacticsViewProps> = ({
     showFeedback(
       `Assistente IA escalou no ${club.tactics.formation}: OVR ${optimal.avgOverall} · Forma Física ${optimal.avgCondition}% (${optimal.substitutes.length}/${MAX_BENCH_PLAYERS} reservas)!`
     );
+  };
+
+  // Rodízio 1-Clique: Poupar titulares cansados (<75%) e corrigir lesionados/suspensos
+  const handleRotateTired = () => {
+    soundEngine.playClick();
+    const result = buildRotatedRestedLineup(club, upcomingCompetition, 75);
+    onUpdateSquad(result.updatedSquad);
+    setSelectedPlayerId(null);
+    showFeedback(result.summaryText);
+  };
+
+  // Corrigir Indisponíveis 1-Clique: Troca apenas lesionados/suspensos mantendo o resto do time
+  const handleFixUnavailable = () => {
+    soundEngine.playClick();
+    const result = buildFixedUnavailableLineup(club, upcomingCompetition);
+    onUpdateSquad(result.updatedSquad);
+    setSelectedPlayerId(null);
+    showFeedback(result.summaryText);
   };
 
   const getOverallColor = (ovr: number) => {
@@ -1022,16 +1073,120 @@ export const PitchTacticsView: React.FC<PitchTacticsViewProps> = ({
               </span>
             )}
 
+            {readiness.unavailableCount > 0 && (
+              <button
+                type="button"
+                onClick={handleFixUnavailable}
+                title="Substitui automaticamente os titulares lesionados ou suspensos pelo melhor reserva da função"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black bg-rose-500 hover:bg-rose-400 text-white shadow-md shadow-rose-500/20 transition-all cursor-pointer whitespace-nowrap shrink-0"
+              >
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>Corrigir Indisponíveis ({readiness.unavailableCount})</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handleRotateTired}
+              title="Poupa automaticamente titulares com físico abaixo de 75% colocando reservas descansados da posição"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border whitespace-nowrap shrink-0 ${
+                readiness.tiredStarters75.length > 0
+                  ? 'bg-amber-400/20 hover:bg-amber-400/30 border-amber-400/50 text-amber-200'
+                  : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-200'
+              }`}
+            >
+              <HeartPulse className="w-3.5 h-3.5 text-amber-400" />
+              <span>
+                Poupar Cansados
+                {readiness.tiredStarters75.length > 0 ? ` (${readiness.tiredStarters75.length})` : ''}
+              </span>
+            </button>
+
             <button
               type="button"
               onClick={handleAutoPick}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black bg-gradient-to-r from-sky-400 to-cyan-400 hover:from-sky-300 hover:to-cyan-300 text-slate-950 shadow-md shadow-sky-500/20 transition-all cursor-pointer whitespace-nowrap shrink-0"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Auto Escalar (OVR + Físico)</span>
+              <span>Melhor 11</span>
             </button>
           </div>
         </div>
+
+        {/* Perfis Rápidos de Escalação (Time A Titular vs Time B Misto/Reserva) */}
+        {(onSaveLineupProfile || onLoadLineupProfile) && (
+          <div className="pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+            <div className="flex items-center gap-1.5 text-slate-400">
+              <Bookmark className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              <span className="font-semibold text-slate-300">Perfis Rápidos de Elenco:</span>
+              <span className="hidden md:inline text-[11px] text-slate-500">
+                Salve seu Time A (titular) e Time B (reserva/rodízio) para alternar em 1 clique.
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {([
+                { slot: 'A' as const, label: 'Time A', subtitle: 'Titular', saved: savedProfileA },
+                { slot: 'B' as const, label: 'Time B', subtitle: 'Misto', saved: savedProfileB },
+              ]).map(({ slot, label, subtitle, saved }) => (
+                <div
+                  key={slot}
+                  className="flex items-center gap-1 bg-slate-900/90 border border-slate-800 rounded-lg p-1"
+                >
+                  {saved && onLoadLineupProfile ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundEngine.playClick();
+                          onLoadLineupProfile(saved);
+                          setSelectedPlayerId(null);
+                          showFeedback(`${saved.name} (${saved.formation}) aplicado à prancheta!`);
+                        }}
+                        title={`Carregar ${saved.name} (${saved.formation})`}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-500/15 hover:bg-sky-500/25 text-sky-200 font-bold text-[11px] cursor-pointer transition-colors whitespace-nowrap"
+                      >
+                        <BookmarkCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                        <span>Usar {label}</span>
+                        <span className="font-mono text-sky-400 text-[10px]">{saved.formation}</span>
+                      </button>
+                      {onSaveLineupProfile && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            soundEngine.playClick();
+                            onSaveLineupProfile(slot);
+                            showFeedback(`${label} (${subtitle}) atualizado com os 11 titulares atuais!`);
+                          }}
+                          title={`Sobrescrever ${label} com a escalação atual`}
+                          className="px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold cursor-pointer transition-colors whitespace-nowrap"
+                        >
+                          Salvar
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    onSaveLineupProfile && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundEngine.playClick();
+                          onSaveLineupProfile(slot);
+                          showFeedback(`${label} (${subtitle}) salvo com os 11 titulares atuais!`);
+                        }}
+                        title={`Salvar escalação atual como ${label} (${subtitle})`}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800/80 hover:bg-slate-700 text-slate-200 font-semibold text-[11px] cursor-pointer transition-colors whitespace-nowrap"
+                      >
+                        <Bookmark className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span>Salvar {label} ({subtitle})</span>
+                      </button>
+                    )
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Live Sector Ratings & Positional Fit Telemetry Strip */}
         <div className="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4 text-xs tabular-nums">
@@ -1581,22 +1736,37 @@ export const PitchTacticsView: React.FC<PitchTacticsViewProps> = ({
                           const isSusp = upcomingCompetition
                             ? isPlayerSuspendedInCompetition(player, upcomingCompetition)
                             : isPlayerSuspendedInCompetition(player);
-                          if (!isSusp) return null;
-                          const susp = upcomingCompetition
-                            ? getPlayerSuspensionInCompetition(player, upcomingCompetition)
-                            : player.suspensions?.find((s) => s.matchesRemaining > 0);
-                          const compName = susp
-                            ? COMPETITIONS_CATALOG[susp.competition]?.shortName || susp.competition
-                            : '';
-                          const reason = susp?.reason === 'RED_CARD' ? 'Vermelho' : '3º Amarelo';
-                          return (
-                            <span
-                              className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] shadow"
-                              title={`Suspenso: ${compName} (${reason})`}
-                            >
-                              🟥
-                            </span>
-                          );
+                          if (isSusp) {
+                            const susp = upcomingCompetition
+                              ? getPlayerSuspensionInCompetition(player, upcomingCompetition)
+                              : player.suspensions?.find((s) => s.matchesRemaining > 0);
+                            const compName = susp
+                              ? COMPETITIONS_CATALOG[susp.competition]?.shortName || susp.competition
+                              : '';
+                            const reason = susp?.reason === 'RED_CARD' ? 'Vermelho' : '3º Amarelo';
+                            return (
+                              <span
+                                className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] shadow"
+                                title={`Suspenso: ${compName} (${reason} · 1 jogo fora)`}
+                              >
+                                🟥
+                              </span>
+                            );
+                          }
+                          const compYellows = upcomingCompetition
+                            ? player.competitionYellowCards?.[upcomingCompetition] || 0
+                            : 0;
+                          if (compYellows >= 2 && player.injuryWeeks === 0) {
+                            return (
+                              <span
+                                className="absolute -bottom-1 -left-1 px-1 h-4 rounded-full bg-amber-400 text-slate-950 font-black flex items-center justify-center text-[8px] shadow border border-amber-200"
+                                title="Pendurado (2/3 cartões amarelos) — próximo amarelo gera 1 jogo de suspensão!"
+                              >
+                                2🟨
+                              </span>
+                            );
+                          }
+                          return null;
                         })()}
                       </div>
 

@@ -3,22 +3,17 @@ import { Club, Fixture } from '../types/game';
 import { PatoLogo } from './PatoLogo';
 import { ClubCrest } from './ClubCrest';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { resolvePrimaryNavTabId } from './QuickTabsRibbon';
 import { soundEngine } from '../services/soundEngine';
 import { countActiveSponsors } from '../utils/sponsorEngine';
 import { formatShortDate } from '../utils/calendarUtils';
 import { COMPETITIONS_CATALOG } from '../utils/competitionsEngine';
 import {
-  Award,
-  Briefcase,
   Building2,
   CalendarDays,
   Compass,
-  Crown,
-  Dumbbell,
   Globe,
-  Handshake,
   HelpCircle,
-  History,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -26,15 +21,14 @@ import {
   PanelLeftOpen,
   RefreshCw,
   Settings,
-  Shield,
   ShoppingBag,
-  Sliders,
+  SlidersHorizontal,
   Trophy,
-  UserCheck,
   Users,
   Volume2,
   VolumeX,
   X,
+  Zap,
 } from 'lucide-react';
 
 export interface NavItemConfig {
@@ -74,6 +68,8 @@ interface GameSidebarProps {
   onOpenOct2026GlobalSyncModal?: () => void;
   isSyncingOct2026Global?: boolean;
   autoSaveEnabled?: boolean;
+  classicFastMode?: boolean;
+  onToggleClassicFastMode?: () => void;
 }
 
 export const GameSidebar: React.FC<GameSidebarProps> = ({
@@ -101,89 +97,57 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
   onOpenOct2026GlobalSyncModal,
   isSyncingOct2026Global = false,
   autoSaveEnabled = true,
+  classicFastMode = false,
+  onToggleClassicFastMode,
 }) => {
   const openSponsorSlots = Math.max(0, 4 - countActiveSponsors(userClub.sponsors));
+  const primaryActive = resolvePrimaryNavTabId(activeTab);
+  const clubBadgeCount =
+    (userClub.finances.balance < 0 ? 1 : 0) +
+    (jobOffersBadge || 0) +
+    (!classicFastMode ? openSponsorSlots : 0);
 
   const navGroups: NavGroupConfig[] = [
     {
-      groupTitle: 'Comando',
+      groupTitle: 'Dia a Dia',
       items: [
-        { id: 'hub', label: 'Central do Clube', icon: LayoutDashboard },
-        {
-          id: 'inbox',
-          label: 'Notícias',
-          icon: Mail,
-          badge: unreadCount > 0 ? unreadCount : undefined,
-        },
+        { id: 'hub', label: 'Central', icon: LayoutDashboard },
+        { id: 'squad', label: 'Time', icon: Users },
         { id: 'calendar', label: 'Calendário', icon: CalendarDays },
-      ],
-    },
-    {
-      groupTitle: 'Futebol',
-      items: [
-        { id: 'players', label: 'Meus Jogadores', icon: UserCheck },
-        { id: 'squad', label: 'Escalação & Campo', icon: Users },
-        { id: 'tactics', label: 'Táticas', icon: Sliders },
-        { id: 'training', label: 'Treinos', icon: Dumbbell },
-      ],
-    },
-    {
-      groupTitle: 'Competições & Mundo',
-      items: [
-        { id: 'standings', label: 'Classificação', icon: Trophy },
-        { id: 'clubs', label: 'Outros Times', icon: Shield },
-        { id: 'trophies', label: 'Sala de Troféus', icon: Award },
-        { id: 'history', label: 'Histórico & Recordes', icon: History },
-      ],
-    },
-    {
-      groupTitle: 'Seleções & FIFA',
-      items: [
         {
-          id: 'selecao_minha',
-          label: 'Minha Seleção',
-          icon: Crown,
+          id: 'standings',
+          label: 'Competições',
+          icon: Trophy,
           badge: selecaoBadge && selecaoBadge > 0 ? selecaoBadge : undefined,
         },
-        {
-          id: 'selecao_mundo',
-          label: 'Seleções & Torneios',
-          icon: Globe,
-        },
       ],
     },
     {
-      groupTitle: 'Mercado & Gestão',
+      groupTitle: 'Gestão',
       items: [
         {
           id: 'market',
-          label: 'Mercado da Bola',
+          label: 'Mercado',
           icon: ShoppingBag,
           badge: marketBadge && marketBadge > 0 ? marketBadge : undefined,
         },
         {
           id: 'scouting',
-          label: 'Olheiros & Base',
+          label: 'Base & Treinos',
           icon: Compass,
           badge: scoutingBadge && scoutingBadge > 0 ? scoutingBadge : undefined,
         },
         {
           id: 'finances',
-          label: 'Finanças & Estádio',
+          label: 'Clube',
           icon: Building2,
-          badge: userClub.finances.balance < 0 ? 1 : undefined,
+          badge: clubBadgeCount > 0 ? clubBadgeCount : undefined,
         },
         {
-          id: 'sponsors',
-          label: 'Patrocinadores',
-          icon: Handshake,
-          badge: openSponsorSlots > 0 ? openSponsorSlots : undefined,
-        },
-        {
-          id: 'board',
-          label: 'Diretoria & Carreira',
-          icon: Briefcase,
-          badge: jobOffersBadge && jobOffersBadge > 0 ? jobOffersBadge : undefined,
+          id: 'inbox',
+          label: 'Notícias',
+          icon: Mail,
+          badge: unreadCount > 0 ? unreadCount : undefined,
         },
       ],
     },
@@ -252,10 +216,10 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
         )}
       </div>
 
-      {/* Grouped Navigation Links */}
-      <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4">
+      {/* Grouped Navigation Links (8 streamlined items) */}
+      <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-5">
         {navGroups.map((group) => (
-          <div key={group.groupTitle} className="space-y-0.5">
+          <div key={group.groupTitle} className="space-y-1">
             {!isCompact && (
               <div className="px-2.5 pb-1 text-[11px] font-semibold text-slate-500 whitespace-nowrap">
                 {group.groupTitle}
@@ -264,9 +228,7 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
 
             {group.items.map((item) => {
               const Icon = item.icon;
-              const isActive =
-                activeTab === item.id ||
-                (item.id === 'selecao_minha' && activeTab === 'selecao');
+              const isActive = primaryActive === item.id;
               return (
                 <button
                   key={item.id}
@@ -278,7 +240,7 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
                       ? 'justify-center px-2 py-2.5'
                       : isMobileDrawer
                       ? 'justify-between px-3 py-2.5 min-h-[42px]'
-                      : 'justify-between px-2.5 py-2'
+                      : 'justify-between px-3 py-2.5'
                   } rounded-xl text-[13px] transition-colors relative cursor-pointer ${
                     isActive
                       ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30 font-semibold'
@@ -313,7 +275,61 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
           </div>
         ))}
 
-        {/* Mobile Drawer System & Preferences Utilities (restores desktop-header controls on phones) */}
+        {/* Quick 1-Click Mode Switch (Clássico vs Completo) */}
+        {onToggleClassicFastMode && (
+          <div className="pt-2 border-t border-slate-800/70">
+            <button
+              type="button"
+              onClick={() => {
+                soundEngine.playClick();
+                onToggleClassicFastMode();
+              }}
+              title={
+                classicFastMode
+                  ? 'Modo Clássico Ativo: patrocínios, avisos secundários e baixas no 11 inicial são automatizados. Clique para voltar ao Modo Completo.'
+                  : 'Ativar Modo Clássico / Rápido: automatiza rotinas secundárias e limpa a Central para foco nos jogos.'
+              }
+              className={`w-full flex items-center ${
+                isCompact ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2.5'
+              } rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                classicFastMode
+                  ? 'bg-amber-500/15 border-amber-500/40 text-amber-200 hover:bg-amber-500/20'
+                  : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800/80'
+              }`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                {classicFastMode ? (
+                  <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+                ) : (
+                  <SlidersHorizontal className="w-4 h-4 text-slate-400 shrink-0" />
+                )}
+                {!isCompact && (
+                  <div className="text-left min-w-0">
+                    <div className="truncate leading-tight">
+                      {classicFastMode ? 'Modo Clássico' : 'Modo Completo'}
+                    </div>
+                    <div className="text-[10px] font-medium text-slate-400 truncate mt-0.5">
+                      {classicFastMode ? 'Rotinas no automático' : 'Clique p/ modo rápido'}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {!isCompact && (
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase shrink-0 ${
+                    classicFastMode
+                      ? 'bg-amber-400 text-slate-950'
+                      : 'bg-slate-800 text-slate-400'
+                  }`}
+                >
+                  {classicFastMode ? 'ON' : 'OFF'}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* Mobile Drawer System & Preferences Utilities */}
         {isMobileDrawer && (
           <div className="pt-3 mt-2 border-t border-slate-800/80 space-y-2.5">
             <div className="px-2.5 text-[11px] font-semibold text-slate-500">

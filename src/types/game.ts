@@ -330,6 +330,38 @@ export interface TacticalPreset {
   savedAtLabel?: string;
 }
 
+export interface SavedLineupProfile {
+  slot: 'A' | 'B';
+  name: string;
+  formation: FormationType;
+  mentality?: TacticalMentality;
+  passing?: PassingStyle;
+  starterEntries: Array<{
+    playerId: string;
+    pitchSlot: number;
+    pitchX?: number;
+    pitchY?: number;
+    pitchRoleCode?: string;
+  }>;
+  benchIds: string[];
+  savedAtLabel?: string;
+}
+
+export interface SmartAdvanceSummary {
+  daysAdvanced: number;
+  fromDate: string;
+  toDate: string;
+  pausedReason?: string | null;
+  medicalRecoveries: string[];
+  newInjuries: string[];
+  squadEvolutions: string[];
+  youthUpdates: string[];
+  scoutingUpdates: string[];
+  retrainingUpdates: string[];
+  offersReceived: number;
+  jobOffersReceived: number;
+}
+
 export interface Stadium {
   name: string;
   capacity: number;
@@ -609,6 +641,7 @@ export interface Club {
   finances: Finances;
   tactics: TacticalSettings;
   tacticalPresets?: TacticalPreset[];
+  savedLineups?: SavedLineupProfile[];
   squad: Player[];
   sponsors?: Partial<Record<SponsorSlotType, SponsorContract>>;
   teamTrainingFocus?: TrainingFocus;

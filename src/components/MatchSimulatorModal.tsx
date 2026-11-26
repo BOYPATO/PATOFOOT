@@ -20,7 +20,8 @@ import {
   Flame,
   Megaphone,
   Layers,
-  AlertTriangle
+  AlertTriangle,
+  HeartPulse,
 } from 'lucide-react';
 import { calculatePitchSlots } from '../utils/matchPitchLayout';
 import { getClubSectorRatings } from '../utils/clubRatingsEngine';
@@ -38,7 +39,11 @@ import {
   pickWeightedInjuryVictim,
 } from '../utils/medicalEngine';
 import { computeClubStaffBonuses } from '../utils/coachingCarouselEngine';
-import { sanitizeLineupForCompetition } from '../utils/suspensionEngine';
+import {
+  sanitizeLineupForCompetition,
+  pickWeightedFouler,
+  previewMatchDisciplinaryImpact,
+} from '../utils/suspensionEngine';
 import { CUP_PRIZES_CATALOG, formatMoney } from '../utils/prizeEngine';
 import { isEuropeanCup } from '../utils/europeanCupsEngine';
 import { isSouthAmericanCup } from '../utils/southAmericanCupsEngine';
@@ -599,6 +604,7 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
     Array<{ outPlayer: Player; inPlayer: Player; minute: number }>
   >([]);
   const [isSubModalOpen, setIsSubModalOpen] = useState<boolean>(false);
+  const [quickSubToast, setQuickSubToast] = useState<string | null>(null);
   const [selectedStarterForSub, setSelectedStarterForSub] = useState<Player | null>(null);
   const [selectedReserveForSub, setSelectedReserveForSub] = useState<Player | null>(null);
   const [pendingInjuryStoppage, setPendingInjuryStoppage] = useState<{
@@ -1601,93 +1607,107 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
         }
       }
     }
-    // Fouls & Cards (~4% chance per minute, elevated in historic/state derbies)
+    // Fouls & Cards (~10.5% notable foul chance per minute -> ~3.8-4.4 yellows & ~0.20 reds/match, scaled by marking & derby)
     else if (
       Math.random() <
-      0.04 *
+      0.105 *
         (rivalryInfo?.foulRateMultiplier ?? 1) *
         (preMatchDerbyPosture === 'SANGUE_FRIO'
           ? 0.8
           : preMatchDerbyPosture === 'CLIMA_DE_GUERRA'
-          ? 1.15
+          ? 1.18
           : 1)
     ) {
-      const isHomeFoul = Math.random() < 0.5;
+      const homeMarkWeight =
+        currentHomeClub.tactics.marking === 'Pesada'
+          ? 1.22
+          : currentHomeClub.tactics.marking === 'Leve'
+          ? 0.8
+          : 1.0;
+      const awayMarkWeight =
+        currentAwayClub.tactics.marking === 'Pesada'
+          ? 1.22
+          : currentAwayClub.tactics.marking === 'Leve'
+          ? 0.8
+          : 1.0;
+      const isHomeFoul = Math.random() < homeMarkWeight / (homeMarkWeight + awayMarkWeight);
       const committingClub = isHomeFoul ? currentHomeClub : currentAwayClub;
       const squad = committingClub.squad.filter((p) => p.isStarter);
-      const fouler = squad[Math.floor(Math.random() * squad.length)] || squad[0];
+      const fouler = pickWeightedFouler(squad, redCardPlayerIds);
 
-      setStats((prev) => ({
-        ...prev,
-        homeFouls: isHomeFoul ? prev.homeFouls + 1 : prev.homeFouls,
-        awayFouls: !isHomeFoul ? prev.awayFouls + 1 : prev.awayFouls,
-      }));
-
-      // Disciplinary card checks (Second yellow -> Red, Direct Red, or Yellow)
-      const hasYellowAlready = fouler?.id ? yellowCardPlayerIds.has(fouler.id) : false;
-      const cardRoll = Math.random();
-
-      if (hasYellowAlready && cardRoll < 0.35) {
-        // Second Yellow -> EXPULSION / RED CARD!
-        soundEngine.playWhistle(false);
+      if (fouler) {
         setStats((prev) => ({
           ...prev,
-          homeRedCards: isHomeFoul ? prev.homeRedCards + 1 : prev.homeRedCards,
-          awayRedCards: !isHomeFoul ? prev.awayRedCards + 1 : prev.awayRedCards,
+          homeFouls: isHomeFoul ? prev.homeFouls + 1 : prev.homeFouls,
+          awayFouls: !isHomeFoul ? prev.awayFouls + 1 : prev.awayFouls,
         }));
 
-        addEvent({
-          id: `ev_red2_${currentMin}_${Date.now()}`,
-          minute: currentMin,
-          type: 'CARTAO_VERMELHO',
-          teamId: committingClub.id,
-          playerId: fouler?.id,
-          playerName: fouler?.name || 'Jogador',
-          description: COMMENTARY_TEMPLATES.red[1](fouler?.name || 'Jogador'),
-          isHomeTeam: isHomeFoul,
-        });
-      } else if (cardRoll < 0.035) {
-        // Direct RED CARD!
-        soundEngine.playWhistle(false);
-        setStats((prev) => ({
-          ...prev,
-          homeRedCards: isHomeFoul ? prev.homeRedCards + 1 : prev.homeRedCards,
-          awayRedCards: !isHomeFoul ? prev.awayRedCards + 1 : prev.awayRedCards,
-        }));
+        // Disciplinary card checks (Second yellow -> Red, Direct Red, or Yellow)
+        const hasYellowAlready = yellowCardPlayerIds.has(fouler.id);
+        const cardRoll = Math.random();
 
-        addEvent({
-          id: `ev_red_${currentMin}_${Date.now()}`,
-          minute: currentMin,
-          type: 'CARTAO_VERMELHO',
-          teamId: committingClub.id,
-          playerId: fouler?.id,
-          playerName: fouler?.name || 'Jogador',
-          description: COMMENTARY_TEMPLATES.red[0](fouler?.name || 'Jogador'),
-          isHomeTeam: isHomeFoul,
-        });
-      } else if (cardRoll < 0.35) {
-        // Yellow Card
-        soundEngine.playWhistle(false);
-        setStats((prev) => ({
-          ...prev,
-          homeYellowCards: isHomeFoul ? prev.homeYellowCards + 1 : prev.homeYellowCards,
-          awayYellowCards: !isHomeFoul ? prev.awayYellowCards + 1 : prev.awayYellowCards,
-        }));
+        if (hasYellowAlready && cardRoll < 0.24) {
+          // Second Yellow -> EXPULSION / RED CARD (1 match out)!
+          soundEngine.playWhistle(false);
+          setStats((prev) => ({
+            ...prev,
+            homeRedCards: isHomeFoul ? prev.homeRedCards + 1 : prev.homeRedCards,
+            awayRedCards: !isHomeFoul ? prev.awayRedCards + 1 : prev.awayRedCards,
+          }));
 
-        const yellowText = COMMENTARY_TEMPLATES.yellow[
-          Math.floor(Math.random() * COMMENTARY_TEMPLATES.yellow.length)
-        ](fouler?.name || 'Jogador');
+          addEvent({
+            id: `ev_red2_${currentMin}_${Date.now()}`,
+            minute: currentMin,
+            type: 'CARTAO_VERMELHO',
+            teamId: committingClub.id,
+            playerId: fouler.id,
+            playerName: fouler.name,
+            description: COMMENTARY_TEMPLATES.red[1](fouler.name),
+            isHomeTeam: isHomeFoul,
+          });
+        } else if (cardRoll < 0.022) {
+          // Direct RED CARD (1 match out)!
+          soundEngine.playWhistle(false);
+          setStats((prev) => ({
+            ...prev,
+            homeRedCards: isHomeFoul ? prev.homeRedCards + 1 : prev.homeRedCards,
+            awayRedCards: !isHomeFoul ? prev.awayRedCards + 1 : prev.awayRedCards,
+          }));
 
-        addEvent({
-          id: `ev_yellow_${currentMin}_${Date.now()}`,
-          minute: currentMin,
-          type: 'CARTAO_AMARELO',
-          teamId: committingClub.id,
-          playerId: fouler?.id,
-          playerName: fouler?.name || 'Jogador',
-          description: yellowText,
-          isHomeTeam: isHomeFoul,
-        });
+          addEvent({
+            id: `ev_red_${currentMin}_${Date.now()}`,
+            minute: currentMin,
+            type: 'CARTAO_VERMELHO',
+            teamId: committingClub.id,
+            playerId: fouler.id,
+            playerName: fouler.name,
+            description: COMMENTARY_TEMPLATES.red[0](fouler.name),
+            isHomeTeam: isHomeFoul,
+          });
+        } else if (!hasYellowAlready && cardRoll < 0.41) {
+          // Yellow Card (3 accumulated yellows = 1 match out)
+          soundEngine.playWhistle(false);
+          setStats((prev) => ({
+            ...prev,
+            homeYellowCards: isHomeFoul ? prev.homeYellowCards + 1 : prev.homeYellowCards,
+            awayYellowCards: !isHomeFoul ? prev.awayYellowCards + 1 : prev.awayYellowCards,
+          }));
+
+          const yellowText = COMMENTARY_TEMPLATES.yellow[
+            Math.floor(Math.random() * COMMENTARY_TEMPLATES.yellow.length)
+          ](fouler.name);
+
+          addEvent({
+            id: `ev_yellow_${currentMin}_${Date.now()}`,
+            minute: currentMin,
+            type: 'CARTAO_AMARELO',
+            teamId: committingClub.id,
+            playerId: fouler.id,
+            playerName: fouler.name,
+            description: yellowText,
+            isHomeTeam: isHomeFoul,
+          });
+        }
       }
     }
     // In-Match Player Injury simulation (realistic ~5-8% per club per match, max 1 injury/match, DM & fatigue-aware)
@@ -2000,6 +2020,9 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
     let addHomeReds = 0;
     let addAwayReds = 0;
 
+    const htYellowIds = new Set<string>(yellowCardPlayerIds);
+    const htRedIds = new Set<string>(redCardPlayerIds);
+
     for (let m = minute + 1; m <= 45; m++) {
       const isHome = Math.random() < 0.52;
       if (isHome) {
@@ -2017,7 +2040,9 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
         else addAwayShots++;
         if (Math.random() < 0.34) {
           const club = isHome ? currentHomeClub : currentAwayClub;
-          const starters = isHome ? homeStartersList : awayStartersList;
+          const starters = (isHome ? homeStartersList : awayStartersList).filter(
+            (p) => !htRedIds.has(p.id)
+          );
           const scorerPool = starters.flatMap((p) =>
             p.position === 'FW' ? [p, p, p, p] : p.position === 'MF' ? [p, p] : p.position === 'DF' ? [p] : []
           );
@@ -2057,41 +2082,60 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
         }
       }
 
-      if (Math.random() < 0.038 * (rivalryInfo?.foulRateMultiplier ?? 1)) {
+      if (Math.random() < 0.105 * (rivalryInfo?.foulRateMultiplier ?? 1)) {
         const isHomeFoul = Math.random() < 0.5;
-        if (isHomeFoul) addHomeFouls++;
-        else addAwayFouls++;
         const club = isHomeFoul ? currentHomeClub : currentAwayClub;
         const starters = isHomeFoul ? homeStartersList : awayStartersList;
-        const fouler = starters[Math.floor(Math.random() * starters.length)] || starters[0];
-        const cardRoll = Math.random();
+        const fouler = pickWeightedFouler(starters, htRedIds);
+        if (fouler) {
+          if (isHomeFoul) addHomeFouls++;
+          else addAwayFouls++;
+          const hasYellowAlready = htYellowIds.has(fouler.id);
+          const cardRoll = Math.random();
 
-        if (cardRoll < 0.035) {
-          if (isHomeFoul) addHomeReds++;
-          else addAwayReds++;
-          simEvents.push({
-            id: `ev_ht_skip_red_${m}_${Date.now()}`,
-            minute: m,
-            type: 'CARTAO_VERMELHO',
-            teamId: club.id,
-            playerId: fouler?.id,
-            playerName: fouler?.name || 'Jogador',
-            description: `CARTÃO VERMELHO para ${fouler?.name || 'Jogador'} (${club.shortName})! Expulso de campo!`,
-            isHomeTeam: isHomeFoul,
-          });
-        } else if (cardRoll < 0.35) {
-          if (isHomeFoul) addHomeYellows++;
-          else addAwayYellows++;
-          simEvents.push({
-            id: `ev_ht_skip_yellow_${m}_${Date.now()}`,
-            minute: m,
-            type: 'CARTAO_AMARELO',
-            teamId: club.id,
-            playerId: fouler?.id,
-            playerName: fouler?.name || 'Jogador',
-            description: `Cartão amarelo para ${fouler?.name || 'Jogador'} (${club.shortName}) aos ${m}'.`,
-            isHomeTeam: isHomeFoul,
-          });
+          if (hasYellowAlready && cardRoll < 0.24) {
+            htRedIds.add(fouler.id);
+            if (isHomeFoul) addHomeReds++;
+            else addAwayReds++;
+            simEvents.push({
+              id: `ev_ht_skip_red2_${m}_${fouler.id}`,
+              minute: m,
+              type: 'CARTAO_VERMELHO',
+              teamId: club.id,
+              playerId: fouler.id,
+              playerName: fouler.name,
+              description: `🟥 SEGUNDO AMARELO! ${fouler.name} (${club.shortName}) está expulso de campo aos ${m}'!`,
+              isHomeTeam: isHomeFoul,
+            });
+          } else if (cardRoll < 0.022) {
+            htRedIds.add(fouler.id);
+            if (isHomeFoul) addHomeReds++;
+            else addAwayReds++;
+            simEvents.push({
+              id: `ev_ht_skip_red_${m}_${fouler.id}`,
+              minute: m,
+              type: 'CARTAO_VERMELHO',
+              teamId: club.id,
+              playerId: fouler.id,
+              playerName: fouler.name,
+              description: `🟥 CARTÃO VERMELHO DIRETO para ${fouler.name} (${club.shortName}) aos ${m}'! Expulso de campo!`,
+              isHomeTeam: isHomeFoul,
+            });
+          } else if (!hasYellowAlready && cardRoll < 0.41) {
+            htYellowIds.add(fouler.id);
+            if (isHomeFoul) addHomeYellows++;
+            else addAwayYellows++;
+            simEvents.push({
+              id: `ev_ht_skip_yellow_${m}_${fouler.id}`,
+              minute: m,
+              type: 'CARTAO_AMARELO',
+              teamId: club.id,
+              playerId: fouler.id,
+              playerName: fouler.name,
+              description: `🟨 Cartão amarelo para ${fouler.name} (${club.shortName}) aos ${m}'.`,
+              isHomeTeam: isHomeFoul,
+            });
+          }
         }
       }
     }
@@ -2224,6 +2268,8 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
     let addAwayReds = 0;
     const addHomeZones = { left: 0, center: 0, right: 0 };
     const addAwayZones = { left: 0, center: 0, right: 0 };
+    const simYellowIds = new Set<string>(yellowCardPlayerIds);
+    const simRedIds = new Set<string>(redCardPlayerIds);
 
     for (let m = minute + 1; m <= 90; m++) {
       if (m === 45) {
@@ -2392,42 +2438,61 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
         }
       }
 
-      // Fouls and cards during instant sim
-      if (Math.random() < 0.038 * (rivalryInfo?.foulRateMultiplier ?? 1)) {
+      // Fouls and cards during instant sim (consistent 2nd-yellow expulsion & realistic card rate)
+      if (Math.random() < 0.105 * (rivalryInfo?.foulRateMultiplier ?? 1)) {
         const isHomeFoul = Math.random() < 0.5;
-        if (isHomeFoul) addHomeFouls++;
-        else addAwayFouls++;
         const club = isHomeFoul ? currentHomeClub : currentAwayClub;
         const starters = isHomeFoul ? homeStartersList : awayStartersList;
-        const fouler = starters[Math.floor(Math.random() * starters.length)] || starters[0];
-        const cardRoll = Math.random();
+        const fouler = pickWeightedFouler(starters, simRedIds);
+        if (fouler) {
+          if (isHomeFoul) addHomeFouls++;
+          else addAwayFouls++;
+          const hasYellowAlready = simYellowIds.has(fouler.id);
+          const cardRoll = Math.random();
 
-        if (cardRoll < 0.035) {
-          if (isHomeFoul) addHomeReds++;
-          else addAwayReds++;
-          simEvents.push({
-            id: `ev_instant_red_${m}_${Date.now()}`,
-            minute: m,
-            type: 'CARTAO_VERMELHO',
-            teamId: club.id,
-            playerId: fouler?.id,
-            playerName: fouler?.name || 'Jogador',
-            description: `CARTÃO VERMELHO para ${fouler?.name || 'Jogador'} (${club.shortName})! Expulso de campo!`,
-            isHomeTeam: isHomeFoul,
-          });
-        } else if (cardRoll < 0.35) {
-          if (isHomeFoul) addHomeYellows++;
-          else addAwayYellows++;
-          simEvents.push({
-            id: `ev_instant_yellow_${m}_${Date.now()}`,
-            minute: m,
-            type: 'CARTAO_AMARELO',
-            teamId: club.id,
-            playerId: fouler?.id,
-            playerName: fouler?.name || 'Jogador',
-            description: `Cartão amarelo para ${fouler?.name || 'Jogador'} (${club.shortName}) aos ${m}'.`,
-            isHomeTeam: isHomeFoul,
-          });
+          if (hasYellowAlready && cardRoll < 0.24) {
+            simRedIds.add(fouler.id);
+            if (isHomeFoul) addHomeReds++;
+            else addAwayReds++;
+            simEvents.push({
+              id: `ev_instant_red2_${m}_${fouler.id}`,
+              minute: m,
+              type: 'CARTAO_VERMELHO',
+              teamId: club.id,
+              playerId: fouler.id,
+              playerName: fouler.name,
+              description: `🟥 SEGUNDO AMARELO! ${fouler.name} (${club.shortName}) está expulso aos ${m}'!`,
+              isHomeTeam: isHomeFoul,
+            });
+          } else if (cardRoll < 0.022) {
+            simRedIds.add(fouler.id);
+            if (isHomeFoul) addHomeReds++;
+            else addAwayReds++;
+            simEvents.push({
+              id: `ev_instant_red_${m}_${fouler.id}`,
+              minute: m,
+              type: 'CARTAO_VERMELHO',
+              teamId: club.id,
+              playerId: fouler.id,
+              playerName: fouler.name,
+              description: `🟥 CARTÃO VERMELHO DIRETO para ${fouler.name} (${club.shortName}) aos ${m}'! Expulso de campo!`,
+              isHomeTeam: isHomeFoul,
+            });
+          } else if (!hasYellowAlready && cardRoll < 0.41) {
+            simYellowIds.add(fouler.id);
+            if (isHomeFoul) addHomeYellows++;
+            else addAwayYellows++;
+            simEvents.push({
+              id: `ev_instant_yellow_${m}_${fouler.id}`,
+              minute: m,
+              type: 'CARTAO_AMARELO',
+              teamId: club.id,
+              playerId: fouler.id,
+              playerName: fouler.name,
+              description: `🟨 Cartão amarelo para ${fouler.name} (${club.shortName}) aos ${m}'.`,
+              isHomeTeam: isHomeFoul,
+            });
+          }
         }
       }
     }
@@ -2739,6 +2804,143 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
     setIsSubModalOpen(true);
   };
 
+  // Compute live fatigued outfield starters count for the 1-click Quick Sub badge
+  const liveTiredStartersCount = useMemo(() => {
+    if (isFinished) return 0;
+    const myClub = isUserHome ? currentHomeClub : currentAwayClub;
+    return myClub.squad.filter((p) => {
+      if (!p.isStarter || redCardPlayerIds.has(p.id) || p.position === 'GK') return false;
+      const fullCost = computeMatchFatigueCost(p, {
+        playedFullStarter: true,
+        inGameTactic,
+        isHighIntensityContext: Boolean(rivalryInfo),
+      });
+      const estimatedLiveCond = Math.max(
+        25,
+        p.condition - Math.round((minute / 90) * fullCost)
+      );
+      return estimatedLiveCond < 74 || (yellowCardPlayerIds.has(p.id) && minute >= 55);
+    }).length;
+  }, [
+    isFinished,
+    isUserHome,
+    currentHomeClub,
+    currentAwayClub,
+    redCardPlayerIds,
+    yellowCardPlayerIds,
+    inGameTactic,
+    rivalryInfo,
+    minute,
+  ]);
+
+  // 1-Click Quick Sub: instantly swaps up to 3 fatigued/yellow-carded outfield starters with best role-matched reserves
+  const handleQuickSubTired = () => {
+    if (isFinished || subsUsed >= MAX_USER_SUBS || pendingInjuryStoppage) return;
+    soundEngine.playClick();
+
+    const remainingSubs = Math.max(0, MAX_USER_SUBS - subsUsed);
+    const maxBatch = Math.min(3, remainingSubs);
+    if (maxBatch <= 0) return;
+
+    const myClub = isUserHome ? currentHomeClub : currentAwayClub;
+    const onPitchOutfield = myClub.squad.filter(
+      (p) => p.isStarter && !redCardPlayerIds.has(p.id) && p.position !== 'GK'
+    );
+    const healthyBench = myClub.squad.filter(
+      (p) =>
+        p.isSubstitute &&
+        !p.isStarter &&
+        !subbedOutIds.has(p.id) &&
+        p.injuryWeeks === 0 &&
+        !p.injuryDetails &&
+        !p.isSuspended &&
+        p.position !== 'GK'
+    );
+
+    if (healthyBench.length === 0) {
+      setQuickSubToast('Sem reservas de linha disponíveis no banco.');
+      setTimeout(() => setQuickSubToast(null), 3000);
+      return;
+    }
+
+    const scoredOut = onPitchOutfield
+      .map((p) => {
+        const fullCost = computeMatchFatigueCost(p, {
+          playedFullStarter: true,
+          inGameTactic,
+          isHighIntensityContext: Boolean(rivalryInfo),
+        });
+        const estimatedLiveCond = Math.max(
+          25,
+          p.condition - Math.round((minute / 90) * fullCost)
+        );
+        const hasYellow = yellowCardPlayerIds.has(p.id);
+        const urgency =
+          100 -
+          estimatedLiveCond +
+          (hasYellow && minute >= 45 ? 16 : 0) +
+          (estimatedLiveCond < 65 ? 20 : 0);
+        return { player: p, estimatedLiveCond, hasYellow, urgency };
+      })
+      .sort((a, b) => b.urgency - a.urgency);
+
+    let targets = scoredOut.filter(
+      (item) => item.estimatedLiveCond < 74 || (item.hasYellow && minute >= 50)
+    );
+    if (targets.length === 0) {
+      // Fallback: still allow swapping the single most tired player so the click always feels responsive
+      targets = scoredOut.slice(0, 1);
+    } else {
+      targets = targets.slice(0, maxBatch);
+    }
+
+    const usedBenchIds = new Set<string>();
+    const pairs: SubstitutionPair[] = [];
+
+    for (const target of targets) {
+      const candidates = healthyBench
+        .filter((b) => !usedBenchIds.has(b.id))
+        .sort((a, b) => {
+          const fitA =
+            a.detailedRole === target.player.detailedRole
+              ? 20
+              : a.position === target.player.position
+              ? 12
+              : 0;
+          const fitB =
+            b.detailedRole === target.player.detailedRole
+              ? 20
+              : b.position === target.player.position
+              ? 12
+              : 0;
+          return (
+            fitB +
+            b.overall * 0.85 +
+            b.condition * 0.2 -
+            (fitA + a.overall * 0.85 + a.condition * 0.2)
+          );
+        });
+      const chosenIn = candidates[0];
+      if (chosenIn) {
+        usedBenchIds.add(chosenIn.id);
+        pairs.push({ outPlayer: target.player, inPlayer: chosenIn });
+      }
+    }
+
+    if (pairs.length === 0) {
+      setQuickSubToast('Nenhuma substituição rápida disponível no momento.');
+      setTimeout(() => setQuickSubToast(null), 3000);
+      return;
+    }
+
+    handleConfirmBatchSubstitutions(pairs, false);
+    const summary = pairs
+      .map((pair) => `${pair.inPlayer.name.split(' ')[0]} ⇄ ${pair.outPlayer.name.split(' ')[0]}`)
+      .join(' · ');
+    setQuickSubToast(`Troca Rápida (${pairs.length}): ${summary}`);
+    setTimeout(() => setQuickSubToast(null), 4000);
+  };
+
   // In-Match Keyboard Shortcuts: Space (Play/Pause/2nd Half), 1/2/3 (Speed 1x/2x/4x), S (Substitutions)
   useEffect(() => {
     const handleMatchKeyDown = (e: KeyboardEvent) => {
@@ -2905,8 +3107,9 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
             matches: p.matches + (playedInMatch ? 1 : 0),
             goals: p.goals + goalsInMatch,
             assists: p.assists + assistsInMatch,
-            yellowCards: p.yellowCards + yellowsInMatch,
-            redCards: p.redCards + redsInMatch,
+            // Card totals & competition suspensions are recorded once in App.tsx via recordPlayerCards()
+            yellowCards: p.yellowCards,
+            redCards: p.redCards,
             condition: newCondition,
             morale: newMorale,
           };
@@ -3366,6 +3569,32 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
                 <ArrowLeftRight className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Substituir ({MAX_USER_SUBS - subsUsed})</span>
               </button>
+            )}
+
+            {/* 1-Click Quick Sub Tired Players */}
+            {!isFinished && subsUsed < MAX_USER_SUBS && !pendingInjuryStoppage && (
+              <button
+                type="button"
+                onClick={handleQuickSubTired}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                  liveTiredStartersCount > 0
+                    ? 'bg-amber-400/20 hover:bg-amber-400/30 border-amber-400/50 text-amber-200'
+                    : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-white'
+                }`}
+                title="Substitui imediatamente em 1 clique os jogadores mais cansados ou amarelados pelos melhores reservas da posição"
+              >
+                <HeartPulse className="w-3.5 h-3.5 text-amber-400" />
+                <span>
+                  Trocar Cansados
+                  {liveTiredStartersCount > 0 ? ` (${liveTiredStartersCount})` : ''}
+                </span>
+              </button>
+            )}
+
+            {quickSubToast && (
+              <span className="text-[11px] font-bold text-emerald-300 bg-emerald-950/70 border border-emerald-500/40 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                {quickSubToast}
+              </span>
             )}
 
             {/* Live Assistant Auto-Substitutions Toggle */}
@@ -4402,7 +4631,44 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
 
         {/* Post-Match Summary Panel if finished */}
         {isFinished && (
-          <div className="bg-slate-950 px-4 sm:px-5 py-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="bg-slate-950 px-4 sm:px-5 py-3 border-t border-slate-800 space-y-2.5 shrink-0">
+            {(() => {
+              if (!userFixture) return null;
+              const discPreview = previewMatchDisciplinaryImpact(
+                userClub,
+                events,
+                userFixture.competition
+              );
+              if (
+                discPreview.suspendedNextMatch.length === 0 &&
+                discPreview.penduradosNow.length === 0
+              ) {
+                return null;
+              }
+              return (
+                <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-800/80 text-[11px]">
+                  <span className="font-bold text-slate-400">Disciplinar:</span>
+                  {discPreview.suspendedNextMatch.map((s) => (
+                    <span
+                      key={s.playerId}
+                      className="px-2 py-0.5 rounded-md bg-rose-950/80 border border-rose-500/50 text-rose-200 font-bold"
+                    >
+                      {s.reason === 'RED_CARD' ? '🟥' : '🟨🟥'} {s.playerName} suspenso 1 jogo (
+                      {s.reason === 'RED_CARD' ? 'Vermelho' : '3º Amarelo'})
+                    </span>
+                  ))}
+                  {discPreview.penduradosNow.map((p) => (
+                    <span
+                      key={p.playerId}
+                      className="px-2 py-0.5 rounded-md bg-amber-950/70 border border-amber-500/40 text-amber-200 font-semibold"
+                    >
+                      🟨 {p.playerName} pendurado (2/3)
+                    </span>
+                  ))}
+                </div>
+              );
+            })()}
+            <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
               <div className="flex items-center gap-1.5">
                 <Award className="w-4 h-4 text-amber-400" />
@@ -4525,6 +4791,7 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
                 Avançar para Próxima Rodada →
               </button>
             )}
+            </div>
           </div>
         )}
       </div>

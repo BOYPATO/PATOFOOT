@@ -52,6 +52,7 @@ export interface GameSettings {
   performanceMode: PerformanceMode;
   language: GameLanguage;
   hasDismissedOnboarding?: boolean;
+  classicFastMode?: boolean;
 }
 
 const SETTINGS_STORAGE_KEY = 'patofoot_game_settings_v1';
@@ -69,6 +70,7 @@ export const DEFAULT_GAME_SETTINGS: GameSettings = {
   performanceMode: 'AUTO',
   language: 'pt-BR',
   hasDismissedOnboarding: false,
+  classicFastMode: false,
 };
 
 /**
@@ -188,6 +190,10 @@ export function loadGameSettings(): GameSettings {
         typeof parsed.hasDismissedOnboarding === 'boolean'
           ? parsed.hasDismissedOnboarding
           : DEFAULT_GAME_SETTINGS.hasDismissedOnboarding,
+      classicFastMode:
+        typeof parsed.classicFastMode === 'boolean'
+          ? parsed.classicFastMode
+          : DEFAULT_GAME_SETTINGS.classicFastMode,
     };
   } catch {
     return { ...DEFAULT_GAME_SETTINGS };
