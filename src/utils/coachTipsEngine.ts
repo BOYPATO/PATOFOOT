@@ -65,7 +65,7 @@ export function buildContextualCoachTips({
 }: BuildCoachTipsInput): CoachTipItem[] {
   const tips: CoachTipItem[] = [];
 
-  const transferWindow = getTransferWindowStatus(gameState.currentDate);
+  const transferWindow = getTransferWindowStatus(gameState.currentDate, userClub);
   const rivalry = getMatchRivalryInfo(userClub, upcomingOpponent);
   const readiness = inspectPreMatchReadiness(userClub, upcomingFixture?.competition);
   const openSponsorSlots = Math.max(0, 4 - countActiveSponsors(userClub.sponsors));

@@ -481,7 +481,7 @@ function executeSaleFromUserToCpu(
 
   const isLoanDeal = offer.offerType === 'LOAN';
   const userSeasonYear = resolveClubActiveSeasonYear(userClub, state);
-  const winStatus = getTransferWindowStatus(state.currentDate);
+  const winStatus = getTransferWindowStatus(state.currentDate, userClub);
 
   if (!winStatus.isOpen) {
     const updatedClubsClosed = state.clubs.map((c) => {
@@ -840,7 +840,7 @@ export function respondToIncomingTransferOffer(
   }
 
   if (action === 'ACCEPT') {
-    const winNow = getTransferWindowStatus(state.currentDate);
+    const winNow = getTransferWindowStatus(state.currentDate, userClub);
     const soldState = executeSaleFromUserToCpu(state, offer, offer.transferFee);
     const dealLabel =
       offer.offerType === 'LOAN'
@@ -1144,14 +1144,8 @@ export function isClubRegionTransferWindowOpen(club: Club, dateStr?: string): bo
   const [, month, day] = safeDate.split('-').map(Number);
 
   if (club.division === 'EU') {
-    // Jan 1 - Feb 2 (winter) & Jul 1 - Sep 1 (summer)
-    return (
-      month === 1 ||
-      (month === 2 && day <= 2) ||
-      month === 7 ||
-      month === 8 ||
-      (month === 9 && day <= 1)
-    );
+    // Jan 1 - Jan 31 (winter) & Jul 1 - Aug 31 (summer)
+    return month === 1 || month === 7 || month === 8;
   }
   if (club.division === 'WL') {
     // Jan 1 - Mar 15 & Jul 1 - Sep 15
@@ -1164,7 +1158,7 @@ export function isClubRegionTransferWindowOpen(club: Club, dateStr?: string): bo
       (month === 9 && day <= 15)
     );
   }
-  return getTransferWindowStatus(safeDate).isOpen;
+  return getTransferWindowStatus(safeDate, club).isOpen;
 }
 
 function trimTransferHistory(
@@ -1496,7 +1490,11 @@ export function processRoundAiTransferMarket(
       ...sampleSubset(lowBand, Math.max(1, Math.ceil(newFreeAgentBidsTarget * 0.35))),
     ].slice(0, newFreeAgentBidsTarget);
 
-    const allCpuSnaps = cpuSnapshotsList().filter((s) => s.club.squad.length < MAX_SQUAD_SIZE);
+    const allCpuSnaps = cpuSnapshotsList().filter(
+      (s) =>
+        s.club.squad.length < MAX_SQUAD_SIZE &&
+        (s.club.division !== 'EU' || s.windowOpen)
+    );
     const sameDivSnaps = allCpuSnaps.filter((s) => s.club.division === userDivision);
 
     for (const faPlayer of chosenFreeCandidates) {

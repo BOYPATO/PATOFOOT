@@ -519,7 +519,7 @@ export function buildManagementTipsReport(
     });
   }
 
-  const windowStatus = getTransferWindowStatus(gameState.currentDate);
+  const windowStatus = getTransferWindowStatus(gameState.currentDate, userClub);
   const loanCounts = getClubSeasonLoanCounts({
     club: userClub,
     transferHistory: gameState.transferHistory,

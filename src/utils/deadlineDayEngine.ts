@@ -47,14 +47,17 @@ export interface DeadlineDaySession {
   newsFeed: DeadlineNewsItem[];
 }
 
-export function getDeadlineDayWindowKey(dateStr?: string): {
+export function getDeadlineDayWindowKey(
+  dateStr?: string,
+  clubOrDivision?: Pick<Club, 'division'> | Club['division']
+): {
   isDeadlinePeriod: boolean;
   windowKey: string;
   windowLabel: string;
   closesOnDisplay: string;
   daysLeft: number;
 } {
-  const status = getTransferWindowStatus(dateStr);
+  const status = getTransferWindowStatus(dateStr, clubOrDivision);
   const year = (dateStr || '2026-01-11').slice(0, 4);
   const isDeadlinePeriod = status.isOpen && status.daysUntilChange <= 2;
   return {
@@ -71,8 +74,8 @@ export function generateDeadlineDaySession(
   sellBonusPct: number = 0,
   buyDiscountPct: number = 0
 ): DeadlineDaySession {
-  const info = getDeadlineDayWindowKey(save.currentDate);
   const userClub = save.clubs.find((c) => c.id === save.userClubId) || save.clubs[0];
+  const info = getDeadlineDayWindowKey(save.currentDate, userClub);
   const otherClubs = save.clubs.filter(
     (c) => c.id !== userClub.id && !c.id.startsWith('guest_') && c.squad.length >= 16
   );

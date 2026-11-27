@@ -41,6 +41,7 @@ import { ClubCrest, CompetitionCrest } from './ClubCrest';
 import { ScrollableTabStrip } from './ScrollableTabStrip';
 import { computeCompetitionPlayerStats, buildTeamOfTheRound } from '../utils/statsCentralEngine';
 import {
+  buildEstadualQualificationMeritContext,
   computeSerieDOverallCampaignMap,
   resolveAllEstaduaisFinalClassifications,
   resolveCupChampionId,
@@ -603,6 +604,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
   competitionSelectNonce,
 }) => {
   const clubs = useMemo(() => withWorldGuestClubs(rawClubs), [rawClubs]);
+  const clubsByIdMap = useMemo(() => new Map(clubs.map((c) => [c.id, c])), [clubs]);
   const userWlId = userClub.division === 'WL' ? getClubWorldLeagueId(userClub) : null;
   const defaultUserComp: CompetitionType =
     userClub.division === 'EU'
@@ -811,6 +813,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
     selectedComp === 'europa_league' ||
     selectedComp === 'conference_league' ||
     selectedComp === 'copa_brasil' ||
+    selectedComp === 'copa_nordeste' ||
     selectedComp === 'serie_d' ||
     selectedComp === 'concacaf_champions' ||
     selectedComp === 'afc_champions' ||
@@ -1209,15 +1212,48 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
     [selectedComp, activeEstadualGroup]
   );
 
+  const liveEstadualMeritCtx = useMemo(() => {
+    const libBrIds = conmebolReport.libertadoresEntries
+      .filter((e) => e.country === 'Brasil')
+      .map((e) => e.clubId);
+    const sulaBrIds = conmebolReport.sulamericanaEntries
+      .filter((e) => e.country === 'Brasil')
+      .map((e) => e.clubId);
+    const relegatedFromCIds = (standingsC || []).slice(-4).map((s) => s.teamId);
+    return buildEstadualQualificationMeritContext({
+      clubs,
+      relegatedFromCIds,
+      fixturesD,
+      standingsD,
+      copaBrasilChampId: resolveCupChampionId(fixturesCopaBrasil),
+      copaNordesteChampId: resolveCupChampionId(fixturesCopaNordeste),
+      copaVerdeChampId: resolveCupChampionId(fixturesCopaVerde),
+      serieCChampId: standingsC?.[0]?.teamId,
+      serieDChampId: resolveCupChampionId(fixturesD),
+      libertadoresBrIds: libBrIds,
+      sulamericanaBrIds: sulaBrIds,
+    });
+  }, [
+    clubs,
+    conmebolReport,
+    standingsC,
+    fixturesD,
+    standingsD,
+    fixturesCopaBrasil,
+    fixturesCopaNordeste,
+    fixturesCopaVerde,
+  ]);
+
   const activeEstadualClassification = useMemo(() => {
     if (selectedComp !== 'estadual' || !activeEstadualCfg) return null;
     return resolveEstadualClassificationForConfig(
       activeEstadualCfg,
       fixturesEstadual,
       standingsEstadual,
-      clubs
+      clubs,
+      liveEstadualMeritCtx
     );
-  }, [selectedComp, activeEstadualCfg, fixturesEstadual, standingsEstadual, clubs]);
+  }, [selectedComp, activeEstadualCfg, fixturesEstadual, standingsEstadual, clubs, liveEstadualMeritCtx]);
 
   // Tabela Agregada Geral da Série D (96 clubes — campanha acumulada em 1ª Fase + Mata-Mata, critério oficial CBF)
   const serieDAggregatedRanking = useMemo(() => {
@@ -1392,7 +1428,8 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
     const allEstSummary = resolveAllEstaduaisFinalClassifications(
       fixturesEstadual,
       standingsEstadual,
-      clubs
+      clubs,
+      liveEstadualMeritCtx
     );
 
     const serieDQualifiedSet = new Set(allEstSummary.allSerieDQualifiedIds);
@@ -1408,7 +1445,9 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
       const st = allEstSummary.byUf[cfg.uf];
       // Check if the state championship actually finished its final fixture
       const finalPlayed = fixturesEstadual.some(
-        (f) => f.played && f.id.startsWith(`est_${cfg.key}_final`)
+        (f) =>
+          f.played &&
+          (f.id.startsWith(`est_final_${cfg.key}`) || f.id.startsWith(`est_${cfg.key}_final`))
       );
       if (finalPlayed && st?.championId) {
         definedChampionsCount++;
@@ -1527,7 +1566,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
       definedChampionsCount,
       totalSerieDSpots: ESTADUAIS_2026_CONFIG.reduce((sum, cfg) => sum + cfg.serieDSpots, 0),
     };
-  }, [clubs, fixturesEstadual, standingsEstadual, overallSortBy]);
+  }, [clubs, fixturesEstadual, standingsEstadual, overallSortBy, liveEstadualMeritCtx]);
 
   const orderedEstadualConfigs = useMemo(() => {
     const presentGroups = new Set(Object.keys(groupedStandings));
@@ -2581,6 +2620,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                 selectedComp === 'eng_championship' ||
                 selectedComp === 'eng_league_two' ||
                 selectedComp === 'eng_league_one' ||
+                selectedComp === 'serie_b' ||
                 selectedComp === 'serie_c' ||
                 selectedComp === 'usa_mls') && (
                 <button
@@ -2600,7 +2640,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                       ? 'Playoffs (3º–8º)'
                       : selectedComp === 'eng_league_two' || selectedComp === 'serie_c'
                       ? 'Playoffs (4º–7º)'
-                      : selectedComp === 'eng_league_one'
+                      : selectedComp === 'eng_league_one' || selectedComp === 'serie_b'
                       ? 'Playoffs (3º–6º)'
                       : selectedComp === 'usa_mls'
                       ? 'Playoffs (MLS Cup)'
@@ -2764,7 +2804,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="space-y-1">
                   <div className="text-xs font-mono font-bold text-teal-400 tabular-nums">
-                    {activeEstadualCfg.federation} · Região {activeEstadualCfg.region} · UF {activeEstadualCfg.uf} · Temporada {saSeasonYear ?? seasonYear}
+                    {activeEstadualCfg.federation} · RNF #{activeEstadualCfg.rnfRank} · Região {activeEstadualCfg.region} · UF {activeEstadualCfg.uf} · Temporada {saSeasonYear ?? seasonYear}
                   </div>
                   <h2 className="text-base sm:text-lg font-black text-white">
                     {activeEstadualCfg.name}
@@ -2801,9 +2841,20 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                   )}
                   {activeEstadualCfg.copaVerdeSpots > 0 && (
                     <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800">
-                      <span className="text-slate-400 block text-[10px]">Copa Verde</span>
+                      <span className="text-slate-400 block text-[10px]">
+                        Copa Verde ({activeEstadualCfg.copaVerdeBlock || 'Regional'})
+                      </span>
                       <strong className="text-emerald-300">
-                        {activeEstadualCfg.copaVerdeSpots} vagas
+                        {activeEstadualCfg.copaVerdeSpots}{' '}
+                        {activeEstadualCfg.copaVerdeSpots === 1 ? 'vaga' : 'vagas'}
+                      </strong>
+                    </div>
+                  )}
+                  {activeEstadualCfg.copaSulSudesteSpots > 0 && (
+                    <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800">
+                      <span className="text-slate-400 block text-[10px]">Copa Sul-Sudeste</span>
+                      <strong className="text-violet-300">
+                        {activeEstadualCfg.copaSulSudesteSpots} vagas
                       </strong>
                     </div>
                   )}
@@ -2943,9 +2994,15 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                     qualifyLabel: overallLabel,
                   });
                 } else {
+                  const isCne4Groups =
+                    selectedComp === 'copa_nordeste' && groupSts.length <= 5;
+                  const isCv4Groups =
+                    selectedComp === 'copa_verde' && groupSts.length <= 6;
                   const qCount =
                     selectedComp === 'afc_champions'
                       ? 8
+                      : isCne4Groups || isCv4Groups
+                      ? 2
                       : selectedComp === 'serie_d' ||
                         selectedComp === 'copa_nordeste' ||
                         selectedComp === 'copa_verde'
@@ -2954,6 +3011,10 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                   const qLabel =
                     selectedComp === 'afc_champions'
                       ? '16 clubes · 8 rodadas (4C/4F) · Top 8 avançam às Oitavas'
+                      : isCne4Groups
+                      ? '5 clubes · 8 jogos (Turno e Returno) · Top 2 avançam às Quartas (Ida e Volta)'
+                      : isCv4Groups
+                      ? '6 clubes · 5 rodadas · Top 2 avançam às Semifinais Regionais (Ida e Volta)'
                       : selectedComp === 'copa_nordeste' || selectedComp === 'copa_verde'
                       ? '8 clubes · Top 4 avançam às Quartas (Ida e Volta)'
                       : selectedComp === 'serie_d'
@@ -3218,7 +3279,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                             </h3>
                           </div>
                           <span className="text-[11px] text-slate-400 font-mono tabular-nums">
-                            Vagas da Série D repassam automaticamente caso o clube já dispute as Séries A, B ou C
+                            RNF #{activeEstadualCfg.rnfRank} · Se um clube já tem vaga por outro mérito (Série A/B/C, CONMEBOL, título ou 3ª Fase Série D), a vaga estadual passa ao próximo melhor colocado
                           </span>
                         </div>
 
@@ -3235,7 +3296,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                             </div>
                             <div className="space-y-1.5">
                               {activeEstadualClassification.serieDQualifiedIds.map((cid, idx) => {
-                                const cObj = clubs.find((x) => x.id === cid);
+                                const cObj = clubsByIdMap.get(cid);
                                 if (!cObj) return null;
                                 return (
                                   <button
@@ -3271,7 +3332,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                             </div>
                             <div className="space-y-1.5">
                               {activeEstadualClassification.copaBrasilIds.map((cid, idx) => {
-                                const cObj = clubs.find((x) => x.id === cid);
+                                const cObj = clubsByIdMap.get(cid);
                                 if (!cObj) return null;
                                 return (
                                   <button
@@ -3295,7 +3356,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                             </div>
                           </div>
 
-                          {/* Regional Cup Berths (Copa do Nordeste / Copa Verde / Nacional) */}
+                          {/* Regional Cup Berths (Copa do Nordeste / Copa Verde / Copa Sul-Sudeste) */}
                           <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3.5 space-y-2.5">
                             {activeEstadualCfg.copaNordesteSpots > 0 ? (
                               <>
@@ -3309,7 +3370,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                                 </div>
                                 <div className="space-y-1.5">
                                   {activeEstadualClassification.copaNordesteIds.map((cid, idx) => {
-                                    const cObj = clubs.find((x) => x.id === cid);
+                                    const cObj = clubsByIdMap.get(cid);
                                     if (!cObj) return null;
                                     return (
                                       <button
@@ -3336,7 +3397,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                               <>
                                 <div className="flex items-center justify-between text-xs">
                                   <strong className="text-emerald-300 font-extrabold">
-                                    Copa Verde
+                                    Copa Verde · {activeEstadualCfg.copaVerdeBlock || 'Regional'}
                                   </strong>
                                   <span className="font-mono tabular-nums text-slate-400 text-[11px]">
                                     {activeEstadualCfg.copaVerdeSpots} vaga(s)
@@ -3344,7 +3405,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                                 </div>
                                 <div className="space-y-1.5">
                                   {activeEstadualClassification.copaVerdeIds.map((cid, idx) => {
-                                    const cObj = clubs.find((x) => x.id === cid);
+                                    const cObj = clubsByIdMap.get(cid);
                                     if (!cObj) return null;
                                     return (
                                       <button
@@ -3370,20 +3431,67 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                             ) : (
                               <>
                                 <div className="flex items-center justify-between text-xs">
-                                  <strong className="text-slate-200 font-extrabold">
-                                    Calendário Regional Sul/Sudeste
+                                  <strong className="text-violet-300 font-extrabold">
+                                    Copa Sul-Sudeste
                                   </strong>
-                                  <span className="font-mono tabular-nums text-slate-500 text-[11px]">
-                                    CBF Ranking Top
+                                  <span className="font-mono tabular-nums text-slate-400 text-[11px]">
+                                    {activeEstadualCfg.copaSulSudesteSpots} vaga(s)
                                   </span>
                                 </div>
-                                <p className="text-xs text-slate-400 leading-relaxed">
-                                  Os estados do Sul e Sudeste (SP, RJ, MG, RS, PR e SC) concentram as maiores cotas diretas na Copa do Brasil ({activeEstadualCfg.copaBrasilSpots} vagas) e na Série D ({activeEstadualCfg.serieDSpots} vagas).
-                                </p>
+                                <div className="space-y-1.5">
+                                  {activeEstadualClassification.copaSulSudesteIds.map((cid, idx) => {
+                                    const cObj = clubsByIdMap.get(cid);
+                                    if (!cObj) return null;
+                                    return (
+                                      <button
+                                        key={cid}
+                                        type="button"
+                                        onClick={() => onInspectClub?.(cObj.id)}
+                                        className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-slate-950/80 hover:bg-slate-800 text-xs cursor-pointer transition-colors"
+                                      >
+                                        <div className="flex items-center gap-2 min-w-0">
+                                          <ClubCrest club={cObj} size="xs" rounded="md" />
+                                          <span className="font-bold text-white truncate">
+                                            {cObj.shortName}
+                                          </span>
+                                        </div>
+                                        <span className="font-mono tabular-nums text-[10px] text-violet-300 shrink-0">
+                                          Sul-Sudeste #{idx + 1}
+                                        </span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
                               </>
                             )}
                           </div>
                         </div>
+
+                        {activeEstadualClassification.repassedBerths.length > 0 && (
+                          <div className="pt-2 border-t border-slate-800/80 text-[11px] text-slate-400 leading-relaxed">
+                            <span className="text-emerald-400 font-bold">Vagas repassadas por outro mérito: </span>
+                            {activeEstadualClassification.repassedBerths
+                              .slice(0, 6)
+                              .map((rep, idx) => {
+                                const cObj = clubsByIdMap.get(rep.skippedClubId);
+                                const compLabel =
+                                  rep.competition === 'copa_brasil'
+                                    ? 'Copa do Brasil'
+                                    : rep.competition === 'serie_d'
+                                    ? 'Série D'
+                                    : rep.competition === 'copa_nordeste'
+                                    ? 'Copa NE'
+                                    : rep.competition === 'copa_verde'
+                                    ? 'Copa Verde'
+                                    : 'Sul-Sudeste';
+                                return `${idx > 0 ? ' · ' : ''}${cObj?.shortName || rep.skippedClubId} (${compLabel} → ${rep.reason})`;
+                              })
+                              .join('')}
+                            {activeEstadualClassification.repassedBerths.length > 6
+                              ? ` e +${activeEstadualClassification.repassedBerths.length - 6} repasse(s)`
+                              : ''}
+                          </div>
+                        )}
                       </div>
                     )}
                 </div>
@@ -4032,6 +4140,21 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                             <span>Rebaixamento (23º–24º)</span>
                           </span>
                         </>
+                      ) : selectedComp === 'serie_b' ? (
+                        <>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-emerald-400" />
+                            <span>Acesso Direto à Série A (1º–2º)</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-sky-400" />
+                            <span>Playoff de Acesso (3º–6º · 3ºx6º e 4ºx5º Ida/Volta)</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-rose-500" />
+                            <span>Rebaixamento à Série C (17º–20º)</span>
+                          </span>
+                        </>
                       ) : selectedComp === 'serie_c' ? (
                         <>
                           <span className="flex items-center gap-1.5">
@@ -4201,7 +4324,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                               zoneBadge =
                                 'text-rose-200 bg-rose-950 font-bold border border-rose-700/50';
                             }
-                          } else if (selectedComp === 'eng_league_one') {
+                          } else if (selectedComp === 'eng_league_one' || selectedComp === 'serie_b') {
                             if (pos <= 2) {
                               zoneBadge = 'text-slate-950 bg-emerald-400 font-black';
                             } else if (pos <= 6) {
@@ -4271,7 +4394,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                               : pos === orderedTableStandings.length - 3
                               ? 'border-b border-rose-500/50'
                               : ''
-                            : selectedComp === 'eng_league_one'
+                            : selectedComp === 'eng_league_one' || selectedComp === 'serie_b'
                             ? pos === 2
                               ? 'border-b-2 border-emerald-500/50'
                               : pos === 6
@@ -5964,6 +6087,8 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
             const bracketSource =
               selectedComp === 'usa_mls'
                 ? bracketPool.filter((f) => isMlsPlayoffFixture(f))
+                : selectedComp === 'serie_b'
+                ? bracketPool.filter((f) => f.id.startsWith('serie_b_playoff_'))
                 : selectedComp === 'serie_c'
                 ? bracketPool.filter((f) => f.id.startsWith('serie_c_playoff_'))
                 : isPureKnockoutComp(selectedComp)
@@ -5998,6 +6123,8 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                           ? `EFL League Two · Playoffs de Acesso (4º ao 7º) ${seasonYear}`
                           : selectedComp === 'eng_league_one'
                           ? `EFL League One · Playoffs de Acesso (3º ao 6º) ${seasonYear}`
+                          : selectedComp === 'serie_b'
+                          ? `Brasileirão Série B · Playoff de Acesso (3º ao 6º) ${seasonYear}`
                           : selectedComp === 'serie_c'
                           ? `Brasileirão Série C · Playoff de Acesso (4º ao 7º) ${seasonYear}`
                           : selectedComp === 'eng_community_shield'
@@ -6029,6 +6156,19 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                     <span>{bracketSource.length} partidas eliminatórias</span>
                   </div>
                 </div>
+
+                {selectedComp === 'serie_b' && (
+                  <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3.5 text-xs text-amber-100/90 flex flex-wrap items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="font-black text-amber-300">
+                        🥈 Regulamento Oficial · Brasileirão Série B ({seasonYear})
+                      </div>
+                      <p className="text-[11px] text-slate-300">
+                        20 clubes em 38 rodadas. 1º e 2º sobem direto para a Série A; 3º x 6º e 4º x 5º disputam o Playoff de Acesso em jogos de Ida e Volta (3º e 4º decidem a volta em casa) e os 2 vencedores garantem acesso à Série A. Os 4 últimos (17º ao 20º) são rebaixados à Série C.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {selectedComp === 'serie_c' && (
                   <div className="rounded-xl bg-sky-500/10 border border-sky-500/30 p-3.5 text-xs text-sky-100/90 flex flex-wrap items-center justify-between gap-2">

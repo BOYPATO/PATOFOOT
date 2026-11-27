@@ -15,6 +15,7 @@ import {
   getSeasonStartDate,
   getEstadualTournamentScheduleDates,
   getCopaNordesteScheduleDates,
+  getCopaNordeste20ScheduleDates,
   getContinentalFinalDates,
   getRoundDate,
   getSerieDScheduleDates,
@@ -93,7 +94,7 @@ export const COMPETITIONS_CATALOG: Record<CompetitionType, CompetitionMeta> = {
     name: 'Campeonato Brasileiro Série B',
     shortName: 'Série B',
     description:
-      'Os 20 clubes da segunda divisão nacional em 38 rodadas de pontos corridos. Os 4 primeiros sobem à Série A e os 4 últimos caem à Série C.',
+      'Os 20 clubes da segunda divisão nacional em 38 rodadas. 1º e 2º sobem direto à Série A, do 3º ao 6º disputam Playoff de Acesso (3ºx6º e 4ºx5º em ida e volta; os 2 vencedores sobem) e os 4 últimos caem à Série C.',
     badgeEmoji: '🥈',
     logoUrl: SOCCERWIKI_COMPETITION_LOGOS.serie_b,
     primaryColor: '#f59e0b',
@@ -101,7 +102,7 @@ export const COMPETITIONS_CATALOG: Record<CompetitionType, CompetitionMeta> = {
     isCup: false,
     category: 'national',
     officialClubsCount: 20,
-    formatSummary: '20 clubes · 38 rodadas · G-4 sobe à Série A',
+    formatSummary: '20 clubes · 38 rodadas · G-2 direto + Playoff (3º–6º)',
   },
   serie_c: {
     id: 'serie_c',
@@ -225,28 +226,30 @@ export const COMPETITIONS_CATALOG: Record<CompetitionType, CompetitionMeta> = {
     name: 'Copa do Nordeste',
     shortName: 'Copa do Nordeste',
     description:
-      'A tradicional Lampions League reunindo os 16 clubes classificados dos 9 Campeonatos Estaduais nordestinos (BA, PE, CE, AL, RN, MA, PB, SE e PI)! Dois grupos de 8 clubes em 7 rodadas seguidos de Quartas de Final, Semifinal e Grande Final em ida e volta, valendo vaga direta na 3ª Fase da Copa do Brasil.',
+      'A tradicional Lampions League reunindo 20 clubes dos 9 Estados do Nordeste (BA, CE, PE, AL, RN, MA, PB, SE e PI)! Quatro grupos de 5 times em turno e returno (8 jogos por clube), classificando os 2 melhores de cada grupo para Quartas de Final, Semifinal e Final todas em jogos de ida e volta, valendo vaga direta na 3ª Fase da Copa do Brasil.',
     badgeEmoji: '🌵',
     primaryColor: '#f59e0b',
     secondaryColor: '#d97706',
     isCup: true,
     category: 'state',
-    officialClubsCount: 16,
-    formatSummary: '16 clubes (9 Estados do NE) · 2 grupos de 8 + Quartas, Semifinal e Final',
+    officialClubsCount: 20,
+    formatSummary:
+      '20 clubes (9 Estados do NE) · 4 grupos de 5 (turno e returno, 8 jogos) + Quartas, Semifinal e Final (Ida e Volta)',
   },
   copa_verde: {
     id: 'copa_verde',
     name: 'Copa Verde',
     shortName: 'Copa Verde',
     description:
-      'Copa regional oficial da CBF reunindo 16 clubes classificados pelos Estaduais do Norte (PA, AM, TO, AC, RO, RR, AP), Centro-Oeste (GO, MT, DF, MS) e Espírito Santo (ES)! Grupo Norte (8 clubes) e Grupo Centro-Oeste (8 clubes) em 7 rodadas + Quartas, Semifinal e Final em ida e volta, valendo vaga na 3ª Fase da Copa do Brasil.',
+      'Copa regional oficial da CBF reunindo 24 clubes classificados pelos Estaduais da Copa Norte (PA:3, AM:2, AC:2, RO:2, RR:2, AP:1) e da Copa Centro-Oeste (GO:3, MT:2, DF:2, ES:2, TO:2, MS:1)! Quatro grupos de 6 clubes (2 no Norte e 2 no Centro-Oeste) + Semifinais Regionais, Finais Regionais e Grande Final em ida e volta, valendo vaga na 3ª Fase da Copa do Brasil.',
     badgeEmoji: '🌿',
     primaryColor: '#10b981',
     secondaryColor: '#047857',
     isCup: true,
     category: 'state',
-    officialClubsCount: 16,
-    formatSummary: '16 clubes (Norte, Centro-Oeste e ES) · 2 blocos de 8 + Mata-Mata',
+    officialClubsCount: 24,
+    formatSummary:
+      '24 clubes (12 Copa Norte + 12 Copa Centro-Oeste) · 4 grupos de 6 + Mata-Mata Regional e Final (Ida e Volta)',
   },
   intercontinental: {
     id: 'intercontinental',
@@ -4300,14 +4303,368 @@ function build16ClubRegionalCupCompetition(params: {
 }
 
 /**
+ * Lista oficial dos 20 clubes participantes da Copa do Nordeste 2026:
+ * - Alagoas (2): CRB, ASA
+ * - Bahia (3): Bahia, Vitória, Juazeirense
+ * - Ceará (3): Fortaleza, Ceará, Ferroviário
+ * - Maranhão (2): IAPE, Maranhão
+ * - Paraíba (2): Botafogo-PB, Sousa
+ * - Pernambuco (2): Sport, Náutico
+ * - Piauí (2): Atlético-PI, Piauí
+ * - Rio Grande do Norte (2): ABC, América-RN
+ * - Sergipe (2): Sergipe, Confiança
+ */
+export const COPA_NORDESTE_2026_CLUB_IDS: string[] = [
+  'crb',
+  'asa',
+  'bah',
+  'vit',
+  'jua',
+  'for',
+  'cea',
+  'fer',
+  'est_ma_iad',
+  'mar',
+  'bpb',
+  'sou',
+  'spo',
+  'nau',
+  'est_pi_cap',
+  'pi_pia',
+  'abc',
+  'arn',
+  'ser',
+  'con',
+];
+
+const CNE_GROUP_NAMES: Array<'Grupo A' | 'Grupo B' | 'Grupo C' | 'Grupo D'> = [
+  'Grupo A',
+  'Grupo B',
+  'Grupo C',
+  'Grupo D',
+];
+
+const CNE_PERMUTATIONS_4: number[][] = [
+  [0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 2, 3, 1], [0, 3, 1, 2], [0, 3, 2, 1],
+  [1, 0, 2, 3], [1, 0, 3, 2], [1, 2, 0, 3], [1, 2, 3, 0], [1, 3, 0, 2], [1, 3, 2, 0],
+  [2, 0, 1, 3], [2, 0, 3, 1], [2, 1, 0, 3], [2, 1, 3, 0], [2, 3, 0, 1], [2, 3, 1, 0],
+  [3, 0, 1, 2], [3, 0, 2, 1], [3, 1, 0, 2], [3, 1, 2, 0], [3, 2, 0, 1], [3, 2, 1, 0],
+];
+
+function shuffleItems<T>(items: T[]): T[] {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/**
+ * Sorteio oficial dos 4 grupos de 5 clubes da Copa do Nordeste:
+ * Divide os 20 clubes em 5 potes de 4 clubes por força/divisão/reputação,
+ * embaralha os potes e distribui 1 clube de cada pote por grupo evitando confrontos estaduais na fase de grupos.
+ */
+export function drawCopaNordesteGroups(
+  clubIds: string[],
+  clubs: Club[],
+  options?: { shufflePots?: boolean }
+): Record<'Grupo A' | 'Grupo B' | 'Grupo C' | 'Grupo D', string[]> {
+  const shufflePots = options?.shufflePots ?? true;
+  const divOrder: Record<string, number> = { A: 1, B: 2, C: 3, D: 4, EST: 5 };
+  const clubById = new Map<string, Club>(clubs.map((c) => [c.id, c]));
+
+  const uniqueIds = Array.from(new Set(clubIds)).filter((id) => clubById.has(id)).slice(0, 20);
+  const seeded = [...uniqueIds].sort((a, b) => {
+    const ca = clubById.get(a)!;
+    const cb = clubById.get(b)!;
+    const d = (divOrder[ca.division] || 5) - (divOrder[cb.division] || 5);
+    if (d !== 0) return d;
+    if (cb.reputation !== ca.reputation) return cb.reputation - ca.reputation;
+    return (cb.stadium?.capacity || 0) - (ca.stadium?.capacity || 0);
+  });
+
+  const groupBuckets: string[][] = [[], [], [], []];
+  const groupStates: Array<Set<string>> = [new Set(), new Set(), new Set(), new Set()];
+
+  for (let potIdx = 0; potIdx < 5; potIdx++) {
+    const rawPot = seeded.slice(potIdx * 4, (potIdx + 1) * 4);
+    if (rawPot.length === 0) break;
+    const pot = shufflePots ? shuffleItems(rawPot) : rawPot;
+
+    if (pot.length === 4) {
+      let bestCost = Number.POSITIVE_INFINITY;
+      let bestPerms: number[][] = [];
+      for (const perm of CNE_PERMUTATIONS_4) {
+        let cost = 0;
+        for (let i = 0; i < 4; i++) {
+          const st = clubById.get(pot[i])?.state || '';
+          if (st && groupStates[perm[i]].has(st)) {
+            cost += 1;
+          }
+        }
+        if (cost < bestCost) {
+          bestCost = cost;
+          bestPerms = [perm];
+        } else if (cost === bestCost) {
+          bestPerms.push(perm);
+        }
+      }
+      const chosenPerm = shufflePots
+        ? bestPerms[Math.floor(Math.random() * bestPerms.length)]
+        : bestPerms[0];
+      for (let i = 0; i < 4; i++) {
+        const gIdx = chosenPerm[i];
+        groupBuckets[gIdx].push(pot[i]);
+        const st = clubById.get(pot[i])?.state;
+        if (st) groupStates[gIdx].add(st);
+      }
+    } else {
+      pot.forEach((id, idx) => {
+        const gIdx = idx % 4;
+        groupBuckets[gIdx].push(id);
+        const st = clubById.get(id)?.state;
+        if (st) groupStates[gIdx].add(st);
+      });
+    }
+  }
+
+  return {
+    'Grupo A': groupBuckets[0],
+    'Grupo B': groupBuckets[1],
+    'Grupo C': groupBuckets[2],
+    'Grupo D': groupBuckets[3],
+  };
+}
+
+/**
+ * Monta tabela e jogos da Copa do Nordeste no formato de 20 clubes:
+ * - 4 grupos de 5 times (Grupo A, Grupo B, Grupo C, Grupo D)
+ * - Turno e returno dentro de cada grupo: 10 rodadas, 8 jogos por time (1 folga por turno e 1 por returno)
+ * - Top 2 de cada grupo avançam às Quartas de Final, Semifinal e Final — todas em Ida e Volta!
+ */
+export function buildCopaNordeste20Competition(
+  groups: Record<'Grupo A' | 'Grupo B' | 'Grupo C' | 'Grupo D', string[]>,
+  year: number = 2026
+): {
+  fixtures: Fixture[];
+  standings: Standing[];
+} {
+  const fixtures: Fixture[] = [];
+  const standings: Standing[] = [];
+  const dates = getCopaNordeste20ScheduleDates(year);
+  const minRegDate = getSeasonStartDate(year);
+
+  const groupSpecs: Array<{
+    key: 'ga' | 'gb' | 'gc' | 'gd';
+    name: 'Grupo A' | 'Grupo B' | 'Grupo C' | 'Grupo D';
+    offset: number;
+  }> = [
+    { key: 'ga', name: 'Grupo A', offset: 0 },
+    { key: 'gb', name: 'Grupo B', offset: 2 },
+    { key: 'gc', name: 'Grupo C', offset: 4 },
+    { key: 'gd', name: 'Grupo D', offset: 6 },
+  ];
+
+  for (const spec of groupSpecs) {
+    const gTeams = groups[spec.name] || [];
+    gTeams.forEach((tId) => {
+      standings.push({
+        teamId: tId,
+        played: 0,
+        won: 0,
+        drawn: 0,
+        lost: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        goalDifference: 0,
+        points: 0,
+        form: [],
+        group: spec.name,
+      });
+    });
+
+    if (gTeams.length < 2) continue;
+
+    const teams = [...gTeams];
+    if (teams.length % 2 !== 0) teams.push('__BYE__');
+    const n = teams.length;
+    const half = n / 2;
+    const singleLegRounds = n - 1; // 5 rounds for 5 teams (+1 bye)
+    const rotation = teams.slice(1);
+
+    // Precompute turno pairings (5 rounds)
+    const firstHalfPairs: Array<Array<[string, string]>> = [];
+    for (let r = 0; r < singleLegRounds; r++) {
+      const currentOrder = [teams[0], ...rotation];
+      const roundPairs: Array<[string, string]> = [];
+      for (let m = 0; m < half; m++) {
+        const t1 = currentOrder[m];
+        const t2 = currentOrder[n - 1 - m];
+        if (t1 === '__BYE__' || t2 === '__BYE__') continue;
+        const swapHome = (r + m) % 2 === 1;
+        roundPairs.push(swapHome ? [t2, t1] : [t1, t2]);
+      }
+      firstHalfPairs.push(roundPairs);
+      const last = rotation.pop()!;
+      rotation.unshift(last);
+    }
+
+    // Build Turno (Rodadas 1..5) + Returno (Rodadas 6..10, mandos invertidos)
+    const totalGroupRounds = singleLegRounds * 2;
+    for (let r = 0; r < totalGroupRounds; r++) {
+      const roundNum = r + 1;
+      const isReturno = r >= singleLegRounds;
+      const basePairs = firstHalfPairs[r % singleLegRounds];
+      const dStr = dates.groupDates[r] || addDays(dates.groupDates[dates.groupDates.length - 1], (r - dates.groupDates.length + 1) * 7);
+      const prevDate = r > 0 ? dates.groupDates[r - 1] : undefined;
+      const nextDate = r + 1 < totalGroupRounds ? dates.groupDates[r + 1] : undefined;
+
+      basePairs.forEach(([hBase, aBase], mIdx) => {
+        const homeTeamId = isReturno ? aBase : hBase;
+        const awayTeamId = isReturno ? hBase : aBase;
+        const slot = assignVariedMatchDaySlot(
+          dStr,
+          spec.offset + mIdx,
+          roundNum,
+          totalGroupRounds,
+          `cne_${year}`,
+          {
+            keepLastRoundSimultaneous: true,
+            minDate: minRegDate,
+            maxDate: `${year}-07-15`,
+            prevRoundBaseDate: prevDate,
+            nextRoundBaseDate: nextDate,
+            region: 'south_america',
+            fallbackTime: mIdx % 2 === 0 ? '19:30' : '21:30',
+          }
+        );
+
+        fixtures.push({
+          id: `cne_${spec.key}_r${roundNum}_m${mIdx}`,
+          round: roundNum,
+          competition: 'copa_nordeste',
+          groupName: spec.name,
+          cupPhase: `${spec.name} • Rodada ${roundNum}`,
+          homeTeamId,
+          awayTeamId,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: slot.date,
+          time: slot.time,
+        });
+      });
+    }
+  }
+
+  // Quartas de Final (Ida e Volta, Rodadas 11 e 12)
+  for (let q = 0; q < 4; q++) {
+    fixtures.push({
+      id: `cne_qf_m${q}_ida`,
+      round: 11,
+      competition: 'copa_nordeste',
+      cupPhase: 'Quartas de Final',
+      leg: 1,
+      homeTeamId: 'tbd',
+      awayTeamId: 'tbd',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: dates.qfIdaDate,
+      time: q % 2 === 0 ? '19:30' : '21:30',
+    });
+    fixtures.push({
+      id: `cne_qf_m${q}_volta`,
+      round: 12,
+      competition: 'copa_nordeste',
+      cupPhase: 'Quartas de Final',
+      leg: 2,
+      homeTeamId: 'tbd',
+      awayTeamId: 'tbd',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: dates.qfVoltaDate,
+      time: q % 2 === 0 ? '19:30' : '21:30',
+    });
+  }
+
+  // Semifinal (Ida e Volta, Rodadas 13 e 14)
+  for (let s = 0; s < 2; s++) {
+    fixtures.push({
+      id: `cne_semi_m${s}_ida`,
+      round: 13,
+      competition: 'copa_nordeste',
+      cupPhase: 'Semifinal',
+      leg: 1,
+      homeTeamId: 'tbd',
+      awayTeamId: 'tbd',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: dates.semiIdaDate,
+      time: '21:30',
+    });
+    fixtures.push({
+      id: `cne_semi_m${s}_volta`,
+      round: 14,
+      competition: 'copa_nordeste',
+      cupPhase: 'Semifinal',
+      leg: 2,
+      homeTeamId: 'tbd',
+      awayTeamId: 'tbd',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: dates.semiVoltaDate,
+      time: '21:30',
+    });
+  }
+
+  // Grande Final (Ida e Volta, Rodadas 15 e 16)
+  fixtures.push({
+    id: 'cne_final_ida',
+    round: 15,
+    competition: 'copa_nordeste',
+    cupPhase: 'Final da Copa do Nordeste',
+    leg: 1,
+    homeTeamId: 'tbd',
+    awayTeamId: 'tbd',
+    homeScore: null,
+    awayScore: null,
+    played: false,
+    date: dates.finalIdaDate,
+    time: '21:30',
+  });
+  fixtures.push({
+    id: 'cne_final_volta',
+    round: 16,
+    competition: 'copa_nordeste',
+    cupPhase: 'Final da Copa do Nordeste',
+    leg: 2,
+    homeTeamId: 'tbd',
+    awayTeamId: 'tbd',
+    homeScore: null,
+    awayScore: null,
+    played: false,
+    date: dates.finalVoltaDate,
+    time: '21:30',
+  });
+
+  return { fixtures, standings };
+}
+
+/**
  * Generates Copa do Nordeste (`copa_nordeste`):
- * 16 clubes classificados dos 9 Estados do Nordeste (BA:3, PE:2, CE:2, AL:2, RN:2, MA:2, PB:1, SE:1, PI:1)
- * divididos em Grupo A (8 clubes) e Grupo B (8 clubes) com 7 rodadas + Quartas, Semifinal e Final em Ida e Volta!
+ * 20 clubes dos 9 Estados do Nordeste (BA:3, CE:3, PE:2, AL:2, RN:2, MA:2, PB:2, SE:2, PI:2)
+ * sorteados em 4 grupos de 5 times (turno e returno, 8 jogos por time) + Quartas, Semifinal e Final em Ida e Volta!
  */
 export function generateCopaNordesteFixtures(
   clubs: Club[],
   year: number = 2026,
-  explicitQualifiedIds?: string[]
+  explicitQualifiedIds?: string[],
+  options?: { shufflePots?: boolean }
 ): {
   fixtures: Fixture[];
   standings: Standing[];
@@ -4317,47 +4674,45 @@ export function generateCopaNordesteFixtures(
   const selectedIds: string[] = [];
   const used = new Set<string>();
   const addId = (id?: string) => {
-    if (!id || used.has(id) || !clubById.has(id)) return false;
+    if (!id || used.has(id) || !clubById.has(id) || selectedIds.length >= 20) return false;
     selectedIds.push(id);
     used.add(id);
     return true;
   };
 
-  if (explicitQualifiedIds && explicitQualifiedIds.length >= 10) {
+  if (explicitQualifiedIds && explicitQualifiedIds.length >= 16) {
+    // Temporadas seguintes: classificados oficiais dos 9 Estaduais do Nordeste
     for (const qId of explicitQualifiedIds) {
-      if (selectedIds.length >= 16) break;
+      if (selectedIds.length >= 20) break;
       addId(qId);
     }
-  } else if (explicitQualifiedIds && explicitQualifiedIds.length > 0) {
-    // Legacy RN-only qualifier array
-    explicitQualifiedIds.slice(0, 2).forEach((id) => addId(id));
+  } else {
+    // Temporada inicial: os 20 participantes oficiais da Copa do Nordeste 2026
+    for (const officialId of COPA_NORDESTE_2026_CLUB_IDS) {
+      addId(officialId);
+    }
   }
 
-  // Fill exact CBF Copa do Nordeste state quotas across all 9 NE states
-  for (const cfg of ESTADUAIS_2026_CONFIG) {
-    if (cfg.copaNordesteSpots <= 0) continue;
-    const countFromState = selectedIds.filter((id) => clubById.get(id)?.state === cfg.uf).length;
-    let needed = Math.max(0, cfg.copaNordesteSpots - countFromState);
-    if (needed === 0) continue;
+  // Garante fechamento de 20 clubes respeitando as cotas estaduais do Nordeste caso algum ID esteja ausente
+  if (selectedIds.length < 20) {
+    for (const cfg of ESTADUAIS_2026_CONFIG) {
+      if (cfg.copaNordesteSpots <= 0 || selectedIds.length >= 20) continue;
+      const countFromState = selectedIds.filter((id) => clubById.get(id)?.state === cfg.uf).length;
+      let needed = Math.max(0, cfg.copaNordesteSpots - countFromState);
+      if (needed === 0) continue;
 
-    if (cfg.uf === 'RN') {
-      for (const rnId of ['abc', 'arn']) {
-        if (needed <= 0) break;
-        if (addId(rnId)) needed -= 1;
+      const candidates = clubs
+        .filter((c) => c.state === cfg.uf && ['A', 'B', 'C', 'D', 'EST'].includes(c.division))
+        .sort((a, b) => {
+          const d = (divOrder[a.division] || 5) - (divOrder[b.division] || 5);
+          if (d !== 0) return d;
+          if (b.reputation !== a.reputation) return b.reputation - a.reputation;
+          return b.stadium.capacity - a.stadium.capacity;
+        });
+      for (const c of candidates) {
+        if (needed <= 0 || selectedIds.length >= 20) break;
+        if (addId(c.id)) needed -= 1;
       }
-    }
-
-    const candidates = clubs
-      .filter((c) => c.state === cfg.uf && ['A', 'B', 'C', 'D', 'EST'].includes(c.division))
-      .sort((a, b) => {
-        const d = (divOrder[a.division] || 5) - (divOrder[b.division] || 5);
-        if (d !== 0) return d;
-        if (b.reputation !== a.reputation) return b.reputation - a.reputation;
-        return b.stadium.capacity - a.stadium.capacity;
-      });
-    for (const c of candidates) {
-      if (needed <= 0 || selectedIds.length >= 16) break;
-      if (addId(c.id)) needed -= 1;
     }
   }
 
@@ -4365,31 +4720,256 @@ export function generateCopaNordesteFixtures(
     return { fixtures: [], standings: [] };
   }
 
-  const groupAIds: string[] = [];
-  const groupBIds: string[] = [];
-  selectedIds.slice(0, 16).forEach((id, idx) => {
-    if (idx % 2 === 0) groupAIds.push(id);
-    else groupBIds.push(id);
+  const drawnGroups = drawCopaNordesteGroups(selectedIds, clubs, {
+    shufflePots: options?.shufflePots ?? true,
   });
 
-  return build16ClubRegionalCupCompetition({
-    competition: 'copa_nordeste',
-    prefix: 'cne',
-    groupAName: 'Grupo A',
-    groupBName: 'Grupo B',
-    groupAIds,
-    groupBIds,
-    finalPhaseTitle: 'Final da Copa do Nordeste',
-    year,
+  // Ensure all 4 group keys exist cleanly
+  const normalizedGroups: Record<'Grupo A' | 'Grupo B' | 'Grupo C' | 'Grupo D', string[]> = {
+    'Grupo A': drawnGroups[CNE_GROUP_NAMES[0]] || [],
+    'Grupo B': drawnGroups[CNE_GROUP_NAMES[1]] || [],
+    'Grupo C': drawnGroups[CNE_GROUP_NAMES[2]] || [],
+    'Grupo D': drawnGroups[CNE_GROUP_NAMES[3]] || [],
+  };
+
+  return buildCopaNordeste20Competition(normalizedGroups, year);
+}
+
+/**
+ * Monta tabela e jogos da Copa Verde no formato oficial de 24 clubes:
+ * - Copa Norte (12 clubes): Copa Norte · Grupo A (6) e Copa Norte · Grupo B (6)
+ * - Copa Centro-Oeste (12 clubes): Copa Centro-Oeste · Grupo A (6) e Copa Centro-Oeste · Grupo B (6)
+ * - 5 rodadas na fase de grupos -> Top 2 de cada grupo -> Quartas (Semifinais Regionais) -> Semifinal (Finais Regionais) -> Final da Copa Verde (Ida e Volta)
+ */
+export function build24ClubCopaVerdeCompetition(
+  northIds: string[],
+  centerWestIds: string[],
+  year: number = 2026
+): {
+  fixtures: Fixture[];
+  standings: Standing[];
+} {
+  const fixtures: Fixture[] = [];
+  const standings: Standing[] = [];
+  const dates = getCopaNordesteScheduleDates(year);
+  const minRegDate = getSeasonStartDate(year);
+
+  const northA: string[] = [];
+  const northB: string[] = [];
+  northIds.slice(0, 12).forEach((id, idx) => {
+    if (idx % 2 === 0) northA.push(id);
+    else northB.push(id);
   });
+
+  const cwA: string[] = [];
+  const cwB: string[] = [];
+  centerWestIds.slice(0, 12).forEach((id, idx) => {
+    if (idx % 2 === 0) cwA.push(id);
+    else cwB.push(id);
+  });
+
+  const groupSpecs: Array<{
+    key: 'na' | 'nb' | 'ca' | 'cb';
+    name: string;
+    teamIds: string[];
+    offset: number;
+  }> = [
+    { key: 'na', name: 'Copa Norte · Grupo A', teamIds: northA, offset: 0 },
+    { key: 'nb', name: 'Copa Norte · Grupo B', teamIds: northB, offset: 3 },
+    { key: 'ca', name: 'Copa Centro-Oeste · Grupo A', teamIds: cwA, offset: 6 },
+    { key: 'cb', name: 'Copa Centro-Oeste · Grupo B', teamIds: cwB, offset: 9 },
+  ];
+
+  // Use 5 spaced dates from the 7-date regional schedule for the 5 rounds of 6-club groups
+  const fiveRoundDates = [
+    dates.groupDates[0],
+    dates.groupDates[1],
+    dates.groupDates[3],
+    dates.groupDates[5],
+    dates.groupDates[6],
+  ];
+
+  for (const spec of groupSpecs) {
+    spec.teamIds.forEach((tId) => {
+      standings.push({
+        teamId: tId,
+        played: 0,
+        won: 0,
+        drawn: 0,
+        lost: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        goalDifference: 0,
+        points: 0,
+        form: [],
+        group: spec.name,
+      });
+    });
+
+    if (spec.teamIds.length < 2) continue;
+    const teams = [...spec.teamIds];
+    if (teams.length % 2 !== 0) teams.push('__BYE__');
+    const n = teams.length;
+    const half = n / 2;
+    const roundsCount = Math.min(fiveRoundDates.length, n - 1);
+    const rotation = teams.slice(1);
+
+    for (let r = 0; r < roundsCount; r++) {
+      const roundNum = r + 1;
+      const dStr = fiveRoundDates[r];
+      const prevDate = r > 0 ? fiveRoundDates[r - 1] : undefined;
+      const nextDate = r + 1 < roundsCount ? fiveRoundDates[r + 1] : undefined;
+      const currentOrder = [teams[0], ...rotation];
+
+      for (let m = 0; m < half; m++) {
+        const t1 = currentOrder[m];
+        const t2 = currentOrder[n - 1 - m];
+        if (t1 === '__BYE__' || t2 === '__BYE__') continue;
+
+        const swapHome = (r + m) % 2 === 1;
+        const slot = assignVariedMatchDaySlot(
+          dStr,
+          spec.offset + m,
+          roundNum,
+          roundsCount,
+          `cv_${year}`,
+          {
+            keepLastRoundSimultaneous: true,
+            minDate: minRegDate,
+            maxDate: `${year}-07-15`,
+            prevRoundBaseDate: prevDate,
+            nextRoundBaseDate: nextDate,
+            region: 'south_america',
+            fallbackTime: m % 2 === 0 ? '19:30' : '21:30',
+          }
+        );
+
+        fixtures.push({
+          id: `cv_${spec.key}_r${roundNum}_m${m}`,
+          round: roundNum,
+          competition: 'copa_verde',
+          groupName: spec.name,
+          cupPhase: `${spec.name} • Rodada ${roundNum}`,
+          homeTeamId: swapHome ? t2 : t1,
+          awayTeamId: swapHome ? t1 : t2,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: slot.date,
+          time: slot.time,
+        });
+      }
+
+      const last = rotation.pop()!;
+      rotation.unshift(last);
+    }
+  }
+
+  // Quartas de Final / Semifinais Regionais (Ida e Volta, Rodadas 6 e 7)
+  for (let q = 0; q < 4; q++) {
+    const phaseLabel = q < 2 ? 'Semifinal Copa Norte' : 'Semifinal Copa Centro-Oeste';
+    fixtures.push({
+      id: `cv_qf_m${q}_ida`,
+      round: 6,
+      competition: 'copa_verde',
+      cupPhase: phaseLabel,
+      leg: 1,
+      homeTeamId: 'tbd',
+      awayTeamId: 'tbd',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: dates.qfIdaDate,
+      time: q % 2 === 0 ? '19:30' : '21:30',
+    });
+    fixtures.push({
+      id: `cv_qf_m${q}_volta`,
+      round: 7,
+      competition: 'copa_verde',
+      cupPhase: phaseLabel,
+      leg: 2,
+      homeTeamId: 'tbd',
+      awayTeamId: 'tbd',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: dates.qfVoltaDate,
+      time: q % 2 === 0 ? '19:30' : '21:30',
+    });
+  }
+
+  // Semifinal / Finais Regionais (Ida e Volta, Rodadas 8 e 9)
+  for (let s = 0; s < 2; s++) {
+    const phaseLabel = s === 0 ? 'Final Copa Norte' : 'Final Copa Centro-Oeste';
+    fixtures.push({
+      id: `cv_semi_m${s}_ida`,
+      round: 8,
+      competition: 'copa_verde',
+      cupPhase: phaseLabel,
+      leg: 1,
+      homeTeamId: 'tbd',
+      awayTeamId: 'tbd',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: dates.semiIdaDate,
+      time: '21:30',
+    });
+    fixtures.push({
+      id: `cv_semi_m${s}_volta`,
+      round: 9,
+      competition: 'copa_verde',
+      cupPhase: phaseLabel,
+      leg: 2,
+      homeTeamId: 'tbd',
+      awayTeamId: 'tbd',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: dates.semiVoltaDate,
+      time: '21:30',
+    });
+  }
+
+  // Grande Final da Copa Verde (Ida e Volta, Rodadas 10 e 11)
+  fixtures.push({
+    id: 'cv_final_ida',
+    round: 10,
+    competition: 'copa_verde',
+    cupPhase: 'Final da Copa Verde',
+    leg: 1,
+    homeTeamId: 'tbd',
+    awayTeamId: 'tbd',
+    homeScore: null,
+    awayScore: null,
+    played: false,
+    date: dates.finalIdaDate,
+    time: '21:30',
+  });
+  fixtures.push({
+    id: 'cv_final_volta',
+    round: 11,
+    competition: 'copa_verde',
+    cupPhase: 'Final da Copa Verde',
+    leg: 2,
+    homeTeamId: 'tbd',
+    awayTeamId: 'tbd',
+    homeScore: null,
+    awayScore: null,
+    played: false,
+    date: dates.finalVoltaDate,
+    time: '21:30',
+  });
+
+  return { fixtures, standings };
 }
 
 /**
  * Generates Copa Verde (`copa_verde`):
- * 16 clubes classificados dos 12 Estados do Norte, Centro-Oeste e Espírito Santo:
- * - Grupo Norte (8 clubes): PA (2), AM (1), TO (1), AC (1), RO (1), RR (1), AP (1)
- * - Grupo Centro-Oeste (8 clubes): GO (2), MT (2), DF (2), ES (1), MS (1)
- * 7 rodadas + Quartas, Semifinal e Final em Ida e Volta (campeão garante vaga na 3ª Fase da Copa do Brasil!).
+ * 24 clubes classificados pelos Estaduais das 12 Federações (critério RNF CBF):
+ * - Copa Norte (12 clubes): PA (3), AM (2), AC (2), RO (2), RR (2), AP (1)
+ * - Copa Centro-Oeste (12 clubes): GO (3), MT (2), DF (2), ES (2), TO (2), MS (1)
+ * 4 grupos de 6 clubes (2 Norte + 2 Centro-Oeste) + Mata-Mata Regional e Final em Ida e Volta!
  */
 export function generateCopaVerdeFixtures(
   clubs: Club[],
@@ -4401,7 +4981,8 @@ export function generateCopaVerdeFixtures(
 } {
   const divOrder: Record<string, number> = { A: 1, B: 2, C: 3, D: 4, EST: 5 };
   const clubById = new Map<string, Club>(clubs.map((c) => [c.id, c]));
-  const northUfs = new Set(['PA', 'AM', 'TO', 'AC', 'RO', 'RR', 'AP']);
+  const northUfs = new Set(['PA', 'AM', 'AC', 'RO', 'RR', 'AP']);
+  const centerWestUfs = new Set(['GO', 'MT', 'DF', 'ES', 'TO', 'MS']);
 
   const northIds: string[] = [];
   const centerWestIds: string[] = [];
@@ -4412,15 +4993,18 @@ export function generateCopaVerdeFixtures(
     const club = clubById.get(id);
     if (!club) return false;
     if (northUfs.has(club.state)) {
-      if (northIds.length >= 8) return false;
+      if (northIds.length >= 12) return false;
       northIds.push(id);
       used.add(id);
       return true;
     }
-    if (centerWestIds.length >= 8) return false;
-    centerWestIds.push(id);
-    used.add(id);
-    return true;
+    if (centerWestUfs.has(club.state)) {
+      if (centerWestIds.length >= 12) return false;
+      centerWestIds.push(id);
+      used.add(id);
+      return true;
+    }
+    return false;
   };
 
   if (explicitQualifiedIds && explicitQualifiedIds.length > 0) {
@@ -4431,7 +5015,8 @@ export function generateCopaVerdeFixtures(
 
   for (const cfg of ESTADUAIS_2026_CONFIG) {
     if (cfg.copaVerdeSpots <= 0) continue;
-    const blockArr = northUfs.has(cfg.uf) ? northIds : centerWestIds;
+    const isNorth = cfg.copaVerdeBlock === 'Norte' || northUfs.has(cfg.uf);
+    const blockArr = isNorth ? northIds : centerWestIds;
     const currentFromUf = blockArr.filter((id) => clubById.get(id)?.state === cfg.uf).length;
     let needed = Math.max(0, cfg.copaVerdeSpots - currentFromUf);
     if (needed === 0) continue;
@@ -4454,16 +5039,7 @@ export function generateCopaVerdeFixtures(
     return { fixtures: [], standings: [] };
   }
 
-  return build16ClubRegionalCupCompetition({
-    competition: 'copa_verde',
-    prefix: 'cv',
-    groupAName: 'Grupo Norte',
-    groupBName: 'Grupo Centro-Oeste',
-    groupAIds: northIds.slice(0, 8),
-    groupBIds: centerWestIds.slice(0, 8),
-    finalPhaseTitle: 'Final da Copa Verde',
-    year,
-  });
+  return build24ClubCopaVerdeCompetition(northIds, centerWestIds, year);
 }
 
 /**

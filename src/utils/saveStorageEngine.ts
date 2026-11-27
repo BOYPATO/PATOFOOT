@@ -88,27 +88,25 @@ export function buildSaveSummary(key: CareerSaveKey, save: GameSave): SaveSlotSu
 }
 
 function compactPlayer(player: Player): Player {
+  const dropYellow =
+    Boolean(player.competitionYellowCards) &&
+    Object.keys(player.competitionYellowCards!).length === 0;
+  const dropRed =
+    Boolean(player.competitionRedCards) &&
+    Object.keys(player.competitionRedCards!).length === 0;
+  const dropSusp = Boolean(player.suspensions) && player.suspensions!.length === 0;
+  const dropInjuryDetails = !player.injuryWeeks && Boolean(player.injuryDetails);
+
+  // Fast path: 95%+ of players need zero changes — avoid allocating 12,000+ clone objects
+  if (!dropYellow && !dropRed && !dropSusp && !dropInjuryDetails) {
+    return player;
+  }
+
   const cleaned: Player = { ...player };
-
-  if (
-    cleaned.competitionYellowCards &&
-    Object.keys(cleaned.competitionYellowCards).length === 0
-  ) {
-    delete cleaned.competitionYellowCards;
-  }
-  if (
-    cleaned.competitionRedCards &&
-    Object.keys(cleaned.competitionRedCards).length === 0
-  ) {
-    delete cleaned.competitionRedCards;
-  }
-  if (cleaned.suspensions && cleaned.suspensions.length === 0) {
-    delete cleaned.suspensions;
-  }
-  if (!cleaned.injuryWeeks && cleaned.injuryDetails) {
-    delete cleaned.injuryDetails;
-  }
-
+  if (dropYellow) delete cleaned.competitionYellowCards;
+  if (dropRed) delete cleaned.competitionRedCards;
+  if (dropSusp) delete cleaned.suspensions;
+  if (dropInjuryDetails) delete cleaned.injuryDetails;
   return cleaned;
 }
 
@@ -116,35 +114,48 @@ function compactFixtureList(
   fixtures: Fixture[] | undefined,
   userClubId: string
 ): Fixture[] | undefined {
-  if (!fixtures) return undefined;
+  if (!fixtures || fixtures.length === 0) return fixtures;
 
   // Keep full play-by-play events/stats only on the user's most recent 16 played matches
-  const playedUserFixtureIds = fixtures
-    .filter(
-      (f) =>
-        f.played &&
-        (f.homeTeamId === userClubId || f.awayTeamId === userClubId) &&
-        (f.events || f.stats)
-    )
-    .slice(-16)
-    .map((f) => f.id);
-  const keepRichReportIds = new Set<string>(playedUserFixtureIds);
+  const playedUserFixtureIds: string[] = [];
+  for (let i = 0; i < fixtures.length; i++) {
+    const f = fixtures[i];
+    if (
+      f.played &&
+      (f.homeTeamId === userClubId || f.awayTeamId === userClubId) &&
+      (f.events || f.stats)
+    ) {
+      playedUserFixtureIds.push(f.id);
+    }
+  }
+  const keepRichReportIds =
+    playedUserFixtureIds.length > 0
+      ? new Set<string>(playedUserFixtureIds.slice(-16))
+      : null;
 
-  return fixtures.map((f) => {
+  let changed = false;
+  const next = new Array<Fixture>(fixtures.length);
+  for (let i = 0; i < fixtures.length; i++) {
+    const f = fixtures[i];
     if (!f.played) {
       if (f.events && f.events.length === 0) {
         const slim: Fixture = { ...f };
         delete slim.events;
-        return slim;
+        next[i] = slim;
+        changed = true;
+      } else {
+        next[i] = f;
       }
-      return f;
+      continue;
     }
     const isUserMatch = f.homeTeamId === userClubId || f.awayTeamId === userClubId;
-    if (isUserMatch && keepRichReportIds.has(f.id)) {
-      return f;
+    if (isUserMatch && keepRichReportIds?.has(f.id)) {
+      next[i] = f;
+      continue;
     }
-    if (!f.events && !f.stats && !f.penaltyKicks) {
-      return f;
+    if (!f.events && !f.stats && (isUserMatch || !f.penaltyKicks)) {
+      next[i] = f;
+      continue;
     }
     const slim: Fixture = { ...f };
     delete slim.events;
@@ -152,27 +163,41 @@ function compactFixtureList(
     if (!isUserMatch) {
       delete slim.penaltyKicks;
     }
-    return slim;
-  });
+    next[i] = slim;
+    changed = true;
+  }
+
+  return changed ? next : fixtures;
 }
 
 function compactInternationalFixtures(
   fixtures: InternationalMatchFixture[] | undefined,
   userTeamId?: string | null
 ): InternationalMatchFixture[] | undefined {
-  if (!fixtures) return undefined;
-  return fixtures.map((m) => {
-    if (!m.played || !m.highlights) return m;
+  if (!fixtures || fixtures.length === 0) return fixtures;
+  let changed = false;
+  const next = new Array<InternationalMatchFixture>(fixtures.length);
+  for (let i = 0; i < fixtures.length; i++) {
+    const m = fixtures[i];
+    if (!m.played || !m.highlights) {
+      next[i] = m;
+      continue;
+    }
     const isRelevantToUser =
       m.homeTeamId === userTeamId ||
       m.awayTeamId === userTeamId ||
       m.homeTeamId === 'bra' ||
       m.awayTeamId === 'bra';
-    if (isRelevantToUser) return m;
+    if (isRelevantToUser) {
+      next[i] = m;
+      continue;
+    }
     const slim: InternationalMatchFixture = { ...m };
     delete slim.highlights;
-    return slim;
-  });
+    next[i] = slim;
+    changed = true;
+  }
+  return changed ? next : fixtures;
 }
 
 function compactQualifiersCycle(
@@ -232,16 +257,35 @@ export function compactGameSaveForStorage(save: GameSave): GameSave {
   const userClubId = save.userClubId;
   const userSelecaoId = save.nationalTeam?.userTeamId;
 
-  const compactedClubs = save.clubs.map((club) => ({
-    ...club,
-    squad: club.squad.map(compactPlayer),
-    finances: club.finances
-      ? {
-          ...club.finances,
-          ledger: (club.finances.ledger || []).slice(0, club.id === userClubId ? 90 : 12),
-        }
-      : club.finances,
-  }));
+  let anyClubChanged = false;
+  const compactedClubs = save.clubs.map((club) => {
+    let squadChanged = false;
+    const nextSquad = new Array<Player>(club.squad.length);
+    for (let i = 0; i < club.squad.length; i++) {
+      const orig = club.squad[i];
+      const compacted = compactPlayer(orig);
+      nextSquad[i] = compacted;
+      if (compacted !== orig) squadChanged = true;
+    }
+    const ledgerLimit = club.id === userClubId ? 90 : 12;
+    const needsLedgerTrim = Boolean(club.finances?.ledger && club.finances.ledger.length > ledgerLimit);
+    if (!squadChanged && !needsLedgerTrim) {
+      return club;
+    }
+    anyClubChanged = true;
+    return {
+      ...club,
+      squad: squadChanged ? nextSquad : club.squad,
+      finances:
+        needsLedgerTrim && club.finances
+          ? {
+              ...club.finances,
+              ledger: (club.finances.ledger || []).slice(0, ledgerLimit),
+            }
+          : club.finances,
+    };
+  });
+  const finalCompactedClubs = anyClubChanged ? compactedClubs : save.clubs;
 
   // Keep all unread messages + up to 90 recent read messages
   const unreadInbox = (save.inbox || []).filter((m) => !m.read);
@@ -367,7 +411,7 @@ export function compactGameSaveForStorage(save: GameSave): GameSave {
 
   const result: GameSave = {
     ...save,
-    clubs: compactedClubs,
+    clubs: finalCompactedClubs,
     fixturesA: compactFixtureList(save.fixturesA, userClubId) || [],
     fixturesB: compactFixtureList(save.fixturesB, userClubId) || [],
     fixturesC: compactFixtureList(save.fixturesC, userClubId),
@@ -717,17 +761,24 @@ export async function initializeCareerSaveStorage(options?: {
 
   await migrateLegacyLocalStorageSaves(db);
 
-  // Sync slot metadata from IndexedDB in case metadata was cleared
-  for (const slotKey of [
-    'brasfoot_slot_1',
-    'brasfoot_slot_2',
-    'brasfoot_slot_3',
-    'brasfoot_slot_4',
-    'brasfoot_slot_5',
-  ] as CareerSaveKey[]) {
+  // Keep memorySaveCache lean: only keep autosave + at most 1 recently accessed slot in RAM
+  const setBoundedMemoryCache = (k: CareerSaveKey, val: GameSave) => {
+    if (k !== 'brasfoot_autosave') {
+      for (const existingKey of Array.from(memorySaveCache.keys())) {
+        if (existingKey !== 'brasfoot_autosave' && existingKey !== k) {
+          memorySaveCache.delete(existingKey);
+        }
+      }
+    }
+    memorySaveCache.set(k, val);
+  };
+
+  // Only hydrate missing slot summaries from IndexedDB so normal boot skips decompressing inactive multi-MB slots!
+  for (const slotNum of CAREER_SLOT_NUMBERS) {
+    if (getSlotSummarySync(slotNum)) continue;
+    const slotKey: CareerSaveKey = `brasfoot_slot_${slotNum}`;
     const slotSave = await idbGetSave(db, slotKey);
     if (slotSave) {
-      memorySaveCache.set(slotKey, slotSave);
       writeSummaryToLocalStorage(buildSaveSummary(slotKey, slotSave));
     }
   }
@@ -747,7 +798,7 @@ export async function initializeCareerSaveStorage(options?: {
 
   const autoSave = await idbGetSave(db, 'brasfoot_autosave');
   if (autoSave) {
-    memorySaveCache.set('brasfoot_autosave', autoSave);
+    setBoundedMemoryCache('brasfoot_autosave', autoSave);
     writeSummaryToLocalStorage(buildSaveSummary('brasfoot_autosave', autoSave));
     return autoSave;
   }
@@ -770,21 +821,27 @@ export async function refreshSaveSlotSummaries(): Promise<void> {
     const slotKey: CareerSaveKey = `brasfoot_slot_${slotNum}`;
     const slotSave = await idbGetSave(db, slotKey);
     if (slotSave) {
-      memorySaveCache.set(slotKey, slotSave);
+      // Store only lightweight summary in localStorage — never hoard all 5 full saves in RAM
       writeSummaryToLocalStorage(buildSaveSummary(slotKey, slotSave));
     }
   }
 }
 
-/**
- * Persists a GameSave to IndexedDB (unlimited browser storage) + lightweight
- * metadata in localStorage, falling back to compacted localStorage if IndexedDB is blocked.
- */
-export async function persistCareerSave(
+const activePersistPromises = new Map<CareerSaveKey, Promise<boolean>>();
+const queuedPersistPayloads = new Map<CareerSaveKey, GameSave>();
+
+async function persistCareerSaveDirect(
   key: CareerSaveKey,
   save: GameSave
 ): Promise<boolean> {
   const compacted = compactGameSaveForStorage(save);
+  if (key !== 'brasfoot_autosave') {
+    for (const existingKey of Array.from(memorySaveCache.keys())) {
+      if (existingKey !== 'brasfoot_autosave' && existingKey !== key) {
+        memorySaveCache.delete(existingKey);
+      }
+    }
+  }
   memorySaveCache.set(key, compacted);
   const summary = buildSaveSummary(key, compacted);
 
@@ -825,6 +882,47 @@ export async function persistCareerSave(
 }
 
 /**
+ * Persists a GameSave to IndexedDB (unlimited browser storage) + lightweight
+ * metadata in localStorage, coalescing overlapping writes to the same key so
+ * rapid actions never stack concurrent gzip/IDB transactions.
+ */
+export async function persistCareerSave(
+  key: CareerSaveKey,
+  save: GameSave
+): Promise<boolean> {
+  const inFlight = activePersistPromises.get(key);
+  if (inFlight) {
+    queuedPersistPayloads.set(key, save);
+    return inFlight;
+  }
+
+  const runLoop = (async (): Promise<boolean> => {
+    let currentPayload: GameSave | undefined = save;
+    let lastResult = true;
+    while (currentPayload) {
+      lastResult = await persistCareerSaveDirect(key, currentPayload);
+      const nextQueued = queuedPersistPayloads.get(key);
+      if (nextQueued) {
+        queuedPersistPayloads.delete(key);
+        currentPayload = nextQueued;
+      } else {
+        currentPayload = undefined;
+      }
+    }
+    return lastResult;
+  })();
+
+  activePersistPromises.set(key, runLoop);
+  try {
+    return await runLoop;
+  } finally {
+    if (activePersistPromises.get(key) === runLoop) {
+      activePersistPromises.delete(key);
+    }
+  }
+}
+
+/**
  * Loads a GameSave from memory cache, IndexedDB, or legacy localStorage.
  */
 export async function loadCareerSave(key: CareerSaveKey): Promise<GameSave | null> {
@@ -837,6 +935,13 @@ export async function loadCareerSave(key: CareerSaveKey): Promise<GameSave | nul
   if (db) {
     const fromDb = await idbGetSave(db, key);
     if (fromDb) {
+      if (key !== 'brasfoot_autosave') {
+        for (const existingKey of Array.from(memorySaveCache.keys())) {
+          if (existingKey !== 'brasfoot_autosave' && existingKey !== key) {
+            memorySaveCache.delete(existingKey);
+          }
+        }
+      }
       memorySaveCache.set(key, fromDb);
       writeSummaryToLocalStorage(buildSaveSummary(key, fromDb));
       return fromDb;
@@ -963,11 +1068,11 @@ export function scheduleAutoSave(save: GameSave): void {
         window as unknown as {
           requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number;
         }
-      ).requestIdleCallback(runPersist, { timeout: 1500 });
+      ).requestIdleCallback(runPersist, { timeout: 3500 });
     } else {
       runPersist();
     }
-  }, 650);
+  }, 1800);
 }
 
 /**

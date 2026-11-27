@@ -230,8 +230,8 @@ export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
   const activeSponsorsCount = countActiveSponsors(userClub.sponsors);
   const openSponsorSlots = Math.max(0, 4 - activeSponsorsCount);
   const windowStatus = useMemo(
-    () => getTransferWindowStatus(gameState.currentDate),
-    [gameState.currentDate]
+    () => getTransferWindowStatus(gameState.currentDate, userClub),
+    [gameState.currentDate, userClub]
   );
 
   const rivalry = useMemo(

@@ -402,6 +402,17 @@ export function progressSquadMedicalDay(
 ): { updatedSquad: Player[]; generatedInboxMessages: InboxMessage[] } {
   const generatedInboxMessages: InboxMessage[] = [];
 
+  let anyInjured = false;
+  for (let i = 0; i < squad.length; i++) {
+    if (squad[i].injuryWeeks > 0 || squad[i].injuryDetails) {
+      anyInjured = true;
+      break;
+    }
+  }
+  if (!anyInjured) {
+    return { updatedSquad: squad, generatedInboxMessages };
+  }
+
   const updatedSquad = squad.map((player) => {
     // If not injured, return as is
     if (player.injuryWeeks <= 0 && !player.injuryDetails) {

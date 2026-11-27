@@ -61,16 +61,113 @@ export interface TransferWindowStatus {
 }
 
 /**
- * Calcula o status oficial da Janela de Transferências para uma data YYYY-MM-DD (Calendário CBF):
- * - 1ª Janela ABERTA: 05/01 (01/01 internamente para abertura) até 03/03
- * - FECHADA: 04/03 até 19/07 -> reabre em 20/07 do mesmo ano
- * - 2ª Janela ABERTA: 20/07 até 11/09
- * - FECHADA: 12/09 até 31/12 -> reabre em Janeiro (05/01) do ano seguinte
+ * Calcula o status oficial da Janela de Transferências para uma data YYYY-MM-DD:
+ * - Europa (division === 'EU'):
+ *   - 1ª Janela ABERTA: 01/01 até 31/01
+ *   - FECHADA: 01/02 até 30/06 -> reabre em 01/07 do mesmo ano
+ *   - 2ª Janela ABERTA: 01/07 até 31/08
+ *   - FECHADA: 01/09 até 31/12 -> reabre em 01/01 do ano seguinte
+ * - Brasil / Padrão CBF:
+ *   - 1ª Janela ABERTA: 05/01 (01/01 internamente para abertura) até 03/03
+ *   - FECHADA: 04/03 até 19/07 -> reabre em 20/07 do mesmo ano
+ *   - 2ª Janela ABERTA: 20/07 até 11/09
+ *   - FECHADA: 12/09 até 31/12 -> reabre em 05/01 do ano seguinte
  */
-export function getTransferWindowStatus(dateStr?: string): TransferWindowStatus {
+export function getTransferWindowStatus(
+  dateStr?: string,
+  clubOrDivision?: Pick<Club, 'division'> | Club['division']
+): TransferWindowStatus {
   const safeDate =
     dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? dateStr : '2026-01-11';
   const [year, month, day] = safeDate.split('-').map(Number);
+
+  const isEurope =
+    typeof clubOrDivision === 'string'
+      ? clubOrDivision === 'EU'
+      : clubOrDivision?.division === 'EU';
+
+  if (isEurope) {
+    // 1ª Janela Europeia (Inverno): 01/01 até 31/01
+    if (month === 1) {
+      const closesOnDate = `${year}-01-31`;
+      const closesOnDisplay = `31/01/${year}`;
+      const daysLeft = Math.max(0, daysBetween(safeDate, closesOnDate));
+      const isDeadlineWeek = day >= 25;
+
+      return {
+        isOpen: true,
+        windowCode: 'JAN_FEB',
+        windowTitle: '1ª Janela Europeia Aberta (01/01 a 31/01)',
+        shortBadge: 'Janela Europa Aberta (até 31/01)',
+        closesOnDate,
+        closesOnDisplay,
+        nextOpenDate: safeDate,
+        nextOpenDisplay: 'Imediata',
+        nextWindowLabel: 'Inscrição Imediata (1ª Janela Europeia)',
+        daysUntilChange: daysLeft,
+        isDeadlineWeek,
+      };
+    }
+
+    // 2ª Janela Europeia (Verão): 01/07 até 31/08
+    if (month === 7 || month === 8) {
+      const closesOnDate = `${year}-08-31`;
+      const closesOnDisplay = `31/08/${year}`;
+      const daysLeft = Math.max(0, daysBetween(safeDate, closesOnDate));
+      const isDeadlineWeek = month === 8 && day >= 25;
+
+      return {
+        isOpen: true,
+        windowCode: 'JUL_AUG',
+        windowTitle: '2ª Janela Europeia Aberta (01/07 a 31/08)',
+        shortBadge: 'Janela Europa Aberta (01/07–31/08)',
+        closesOnDate,
+        closesOnDisplay,
+        nextOpenDate: safeDate,
+        nextOpenDisplay: 'Imediata',
+        nextWindowLabel: 'Inscrição Imediata (2ª Janela Europeia)',
+        daysUntilChange: daysLeft,
+        isDeadlineWeek,
+      };
+    }
+
+    // Fechada na Europa: 01/02 até 30/06 -> reabre em 01/07 do mesmo ano
+    if (month >= 2 && month <= 6) {
+      const nextOpenDate = `${year}-07-01`;
+      const nextOpenDisplay = `01/07/${year}`;
+      const daysUntil = Math.max(1, daysBetween(safeDate, nextOpenDate));
+
+      return {
+        isOpen: false,
+        windowCode: 'CLOSED_MAR_JUN',
+        windowTitle: 'Janela Europeia Fechada (Reabre em 01/07)',
+        shortBadge: 'Janela Fechada · Abre 01/07',
+        nextOpenDate,
+        nextOpenDisplay,
+        nextWindowLabel: `01/07/${year} (2ª Janela Europeia · 01/07 a 31/08)`,
+        daysUntilChange: daysUntil,
+        isDeadlineWeek: false,
+      };
+    }
+
+    // Fechada na Europa: 01/09 até 31/12 -> reabre em 01/01 do ano seguinte
+    const nextYear = year + 1;
+    const nextOpenDate = `${nextYear}-01-01`;
+    const nextOpenDisplay = `01/01/${nextYear}`;
+    const daysUntil = Math.max(1, daysBetween(safeDate, nextOpenDate));
+
+    return {
+      isOpen: false,
+      windowCode: 'CLOSED_SEP_DEC',
+      windowTitle: `Janela Europeia Fechada (Reabre em 01/01/${nextYear})`,
+      shortBadge: `Janela Fechada · Abre 01/01/${nextYear}`,
+      nextOpenDate,
+      nextOpenDisplay,
+      nextWindowLabel: `01/01/${nextYear} (1ª Janela Europeia · 01/01 a 31/01)`,
+      daysUntilChange: daysUntil,
+      isDeadlineWeek: false,
+    };
+  }
 
   // 1ª Janela: Janeiro até 03/03 (inclui 01/01..03/03 para abertura imediata dos estaduais)
   if (month === 1 || month === 2 || (month === 3 && day <= 3)) {
@@ -156,8 +253,11 @@ export function getTransferWindowStatus(dateStr?: string): TransferWindowStatus 
   };
 }
 
-export function isTransferWindowOpen(dateStr?: string): boolean {
-  return getTransferWindowStatus(dateStr).isOpen;
+export function isTransferWindowOpen(
+  dateStr?: string,
+  clubOrDivision?: Pick<Club, 'division'> | Club['division']
+): boolean {
+  return getTransferWindowStatus(dateStr, clubOrDivision).isOpen;
 }
 
 export function findPendingTransferForPlayer(
@@ -226,8 +326,9 @@ export function processTransferWindowTransitions(
   state: GameSave,
   options?: { isNewSeasonTurn?: boolean }
 ): GameSave {
-  const prevWin = getTransferWindowStatus(prevDate);
-  const currWin = getTransferWindowStatus(state.currentDate);
+  const userClub = state.clubs.find((c) => c.id === state.userClubId);
+  const prevWin = getTransferWindowStatus(prevDate, userClub);
+  const currWin = getTransferWindowStatus(state.currentDate, userClub);
   const newInbox: InboxMessage[] = [];
 
   // 1. Aviso de fechamento ou abertura de janela durante a temporada
@@ -238,7 +339,7 @@ export function processTransferWindowTransitions(
         title: `🔒 Janela de Transferências Encerrada`,
         message: `O período de registros foi encerrado hoje (${formatDateBR(
           state.currentDate
-        )}). Você continua livre para negociar compras, empréstimos, trocas e atletas livres a qualquer momento, mas novos reforços só serão integrados ao elenco na reabertura da janela em ${
+        )}). Você pode acertar compras, vendas e empréstimos fora da janela, mas os jogadores só mudam de clube quando a janela reabrir em ${
           currWin.nextOpenDisplay
         }.`,
         date: state.currentDate,
@@ -251,8 +352,8 @@ export function processTransferWindowTransitions(
         id: `win_opened_${state.currentDate}_${Date.now()}`,
         title: `🟢 ${currWin.windowTitle}!`,
         message: `O mercado de inscrições está oficialmente aberto até ${
-          currWin.closesOnDisplay || 'o fim do bimestre'
-        }! Contratações fechadas agora entram imediatamente no elenco, e eventuais acordos firmados fora da janela já podem ser regularizados no BID.`,
+          currWin.closesOnDisplay || 'o encerramento do período'
+        }! Contratações e vendas fechadas agora acontecem imediatamente, e todos os acordos agendados fora da janela estão sendo efetivados.`,
         date: state.currentDate,
         round: state.currentRound,
         read: false,
@@ -261,9 +362,9 @@ export function processTransferWindowTransitions(
     }
   }
 
-  // 2. Efetivar negócios engatilhados (`pendingTransfers`) se a janela estiver aberta
+  // 2. Efetivar negócios engatilhados (`pendingTransfers`) quando a janela abre ou a data de apresentação chega
   const pendingList = state.pendingTransfers || [];
-  if (!currWin.isOpen || pendingList.length === 0) {
+  if (pendingList.length === 0) {
     if (newInbox.length === 0) return state;
     return {
       ...state,
@@ -271,8 +372,12 @@ export function processTransferWindowTransitions(
     };
   }
 
-  const dueDeals = pendingList.filter((d) => d.arrivalDate <= state.currentDate);
-  const remainingDeals = pendingList.filter((d) => d.arrivalDate > state.currentDate);
+  const dueDeals = pendingList.filter(
+    (d) => d.arrivalDate <= state.currentDate && (currWin.isOpen || prevDate < d.arrivalDate)
+  );
+  const remainingDeals = pendingList.filter(
+    (d) => !(d.arrivalDate <= state.currentDate && (currWin.isOpen || prevDate < d.arrivalDate))
+  );
 
   if (dueDeals.length === 0) {
     if (newInbox.length === 0) return state;

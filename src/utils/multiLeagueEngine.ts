@@ -282,49 +282,56 @@ export function recomputeStandingsFromFixtures(
 /**
  * Recomputes all 7 league and group-stage standings tables from their fixture lists.
  */
-export function recomputeAllStandings(state: {
-  clubs?: Club[];
-  currentSeasonYear?: number;
-  standingsA: Standing[];
-  standingsB: Standing[];
-  standingsC?: Standing[];
-  standingsD?: Standing[];
-  standingsLibertadores?: Standing[];
-  standingsSulamericana?: Standing[];
-  standingsEstadual?: Standing[];
-  standingsCopaNordeste?: Standing[];
-  standingsCopaVerde?: Standing[];
-  standingsSouthAmerica?: Partial<Record<SouthAmericanLeagueId, Standing[]>>;
-  standingsEurope?: Partial<Record<EuropeanLeagueId, Standing[]>>;
-  standingsWorldLeagues?: Partial<Record<WorldLeagueId, Standing[]>>;
-  standingsChampionsLeague?: Standing[];
-  standingsEuropaLeague?: Standing[];
-  standingsConferenceLeague?: Standing[];
-  standingsCopaInternacional?: Standing[];
-  standingsAfcChampions?: Standing[];
-  standingsSuperMundial?: Standing[];
-  fixturesA: Fixture[];
-  fixturesB: Fixture[];
-  fixturesC?: Fixture[];
-  fixturesD?: Fixture[];
-  fixturesLibertadores?: Fixture[];
-  fixturesSulamericana?: Fixture[];
-  fixturesEstadual?: Fixture[];
-  fixturesCopaNordeste?: Fixture[];
-  fixturesCopaVerde?: Fixture[];
-  fixturesSouthAmerica?: Partial<Record<SouthAmericanLeagueId, Fixture[]>>;
-  fixturesEurope?: Partial<Record<EuropeanLeagueId, Fixture[]>>;
-  fixturesWorldLeagues?: Partial<Record<WorldLeagueId, Fixture[]>>;
-  fixturesChampionsLeague?: Fixture[];
-  fixturesEuropaLeague?: Fixture[];
-  fixturesConferenceLeague?: Fixture[];
-  fixturesCopaInternacional?: Fixture[];
-  fixturesAfcChampions?: Fixture[];
-  fixturesSuperMundial?: Fixture[];
-}) {
+export function recomputeAllStandings(
+  state: {
+    clubs?: Club[];
+    currentSeasonYear?: number;
+    standingsA: Standing[];
+    standingsB: Standing[];
+    standingsC?: Standing[];
+    standingsD?: Standing[];
+    standingsLibertadores?: Standing[];
+    standingsSulamericana?: Standing[];
+    standingsEstadual?: Standing[];
+    standingsCopaNordeste?: Standing[];
+    standingsCopaVerde?: Standing[];
+    standingsSouthAmerica?: Partial<Record<SouthAmericanLeagueId, Standing[]>>;
+    standingsEurope?: Partial<Record<EuropeanLeagueId, Standing[]>>;
+    standingsWorldLeagues?: Partial<Record<WorldLeagueId, Standing[]>>;
+    standingsChampionsLeague?: Standing[];
+    standingsEuropaLeague?: Standing[];
+    standingsConferenceLeague?: Standing[];
+    standingsCopaInternacional?: Standing[];
+    standingsAfcChampions?: Standing[];
+    standingsSuperMundial?: Standing[];
+    fixturesA: Fixture[];
+    fixturesB: Fixture[];
+    fixturesC?: Fixture[];
+    fixturesD?: Fixture[];
+    fixturesLibertadores?: Fixture[];
+    fixturesSulamericana?: Fixture[];
+    fixturesEstadual?: Fixture[];
+    fixturesCopaNordeste?: Fixture[];
+    fixturesCopaVerde?: Fixture[];
+    fixturesSouthAmerica?: Partial<Record<SouthAmericanLeagueId, Fixture[]>>;
+    fixturesEurope?: Partial<Record<EuropeanLeagueId, Fixture[]>>;
+    fixturesWorldLeagues?: Partial<Record<WorldLeagueId, Fixture[]>>;
+    fixturesChampionsLeague?: Fixture[];
+    fixturesEuropaLeague?: Fixture[];
+    fixturesConferenceLeague?: Fixture[];
+    fixturesCopaInternacional?: Fixture[];
+    fixturesAfcChampions?: Fixture[];
+    fixturesSuperMundial?: Fixture[];
+  },
+  onlyCompetitions?: Set<CompetitionType>
+) {
+  const shouldRecompute = (comp: CompetitionType): boolean =>
+    !onlyCompetitions || onlyCompetitions.has(comp);
+
   const deductions: Record<string, number> = {};
   if (state.clubs) {
-    state.clubs.forEach((c) => {
+    for (let i = 0; i < state.clubs.length; i++) {
+      const c = state.clubs[i];
       const pun = c.finances?.activePunishment;
       if (
         pun &&
@@ -333,102 +340,175 @@ export function recomputeAllStandings(state: {
       ) {
         deductions[c.id] = pun.pointsDeducted;
       }
-    });
+    }
   }
 
-  const standingsSouthAmerica: Partial<Record<SouthAmericanLeagueId, Standing[]>> = {};
+  let standingsSouthAmerica: Partial<Record<SouthAmericanLeagueId, Standing[]>> =
+    state.standingsSouthAmerica || {};
   if (state.standingsSouthAmerica || state.fixturesSouthAmerica) {
-    for (const leagueId of SOUTH_AMERICAN_LEAGUE_IDS) {
-      const tmpl = state.standingsSouthAmerica?.[leagueId] || [];
-      const fixs = state.fixturesSouthAmerica?.[leagueId] || [];
-      if (tmpl.length > 0 || fixs.length > 0) {
-        standingsSouthAmerica[leagueId] = recomputeStandingsFromFixtures(tmpl, fixs, deductions);
+    let anySaChanged = !onlyCompetitions;
+    if (onlyCompetitions) {
+      for (const leagueId of SOUTH_AMERICAN_LEAGUE_IDS) {
+        if (onlyCompetitions.has(leagueId)) {
+          anySaChanged = true;
+          break;
+        }
       }
+    }
+    if (anySaChanged) {
+      const nextSa: Partial<Record<SouthAmericanLeagueId, Standing[]>> = {
+        ...(state.standingsSouthAmerica || {}),
+      };
+      for (const leagueId of SOUTH_AMERICAN_LEAGUE_IDS) {
+        if (!shouldRecompute(leagueId)) continue;
+        const tmpl = state.standingsSouthAmerica?.[leagueId] || [];
+        const fixs = state.fixturesSouthAmerica?.[leagueId] || [];
+        if (tmpl.length > 0 || fixs.length > 0) {
+          nextSa[leagueId] = recomputeStandingsFromFixtures(tmpl, fixs, deductions);
+        }
+      }
+      standingsSouthAmerica = nextSa;
     }
   }
 
-  const standingsEurope: Partial<Record<EuropeanLeagueId, Standing[]>> = {};
+  let standingsEurope: Partial<Record<EuropeanLeagueId, Standing[]>> =
+    state.standingsEurope || {};
   if (state.standingsEurope || state.fixturesEurope) {
-    for (const leagueId of EUROPEAN_LEAGUE_IDS) {
-      const tmpl = state.standingsEurope?.[leagueId] || [];
-      const fixs = state.fixturesEurope?.[leagueId] || [];
-      if (tmpl.length > 0 || fixs.length > 0) {
-        standingsEurope[leagueId] = recomputeStandingsFromFixtures(tmpl, fixs, deductions);
+    let anyEuChanged = !onlyCompetitions;
+    if (onlyCompetitions) {
+      for (const leagueId of EUROPEAN_LEAGUE_IDS) {
+        if (onlyCompetitions.has(leagueId)) {
+          anyEuChanged = true;
+          break;
+        }
       }
+    }
+    if (anyEuChanged) {
+      const nextEu: Partial<Record<EuropeanLeagueId, Standing[]>> = {
+        ...(state.standingsEurope || {}),
+      };
+      for (const leagueId of EUROPEAN_LEAGUE_IDS) {
+        if (!shouldRecompute(leagueId)) continue;
+        const tmpl = state.standingsEurope?.[leagueId] || [];
+        const fixs = state.fixturesEurope?.[leagueId] || [];
+        if (tmpl.length > 0 || fixs.length > 0) {
+          nextEu[leagueId] = recomputeStandingsFromFixtures(tmpl, fixs, deductions);
+        }
+      }
+      standingsEurope = nextEu;
     }
   }
 
-  const standingsWorldLeagues: Partial<Record<WorldLeagueId, Standing[]>> = {};
+  let standingsWorldLeagues: Partial<Record<WorldLeagueId, Standing[]>> =
+    state.standingsWorldLeagues || {};
   if (state.standingsWorldLeagues || state.fixturesWorldLeagues) {
-    for (const leagueId of WORLD_LEAGUE_IDS) {
-      const tmpl = state.standingsWorldLeagues?.[leagueId] || [];
-      const fixs = state.fixturesWorldLeagues?.[leagueId] || [];
-      if (tmpl.length > 0 || fixs.length > 0) {
-        standingsWorldLeagues[leagueId] = recomputeStandingsFromFixtures(tmpl, fixs, deductions);
+    let anyWlChanged = !onlyCompetitions;
+    if (onlyCompetitions) {
+      for (const leagueId of WORLD_LEAGUE_IDS) {
+        if (onlyCompetitions.has(leagueId)) {
+          anyWlChanged = true;
+          break;
+        }
       }
+    }
+    if (anyWlChanged) {
+      const nextWl: Partial<Record<WorldLeagueId, Standing[]>> = {
+        ...(state.standingsWorldLeagues || {}),
+      };
+      for (const leagueId of WORLD_LEAGUE_IDS) {
+        if (!shouldRecompute(leagueId)) continue;
+        const tmpl = state.standingsWorldLeagues?.[leagueId] || [];
+        const fixs = state.fixturesWorldLeagues?.[leagueId] || [];
+        if (tmpl.length > 0 || fixs.length > 0) {
+          nextWl[leagueId] = recomputeStandingsFromFixtures(tmpl, fixs, deductions);
+        }
+      }
+      standingsWorldLeagues = nextWl;
     }
   }
 
   return {
-    standingsA: recomputeStandingsFromFixtures(state.standingsA, state.fixturesA, deductions),
-    standingsB: recomputeStandingsFromFixtures(state.standingsB, state.fixturesB, deductions),
-    standingsC: recomputeStandingsFromFixtures(
-      state.standingsC || [],
-      state.fixturesC || [],
-      deductions
-    ),
-    standingsD: recomputeStandingsFromFixtures(
-      state.standingsD || [],
-      state.fixturesD || [],
-      deductions
-    ),
-    standingsLibertadores: recomputeStandingsFromFixtures(
-      state.standingsLibertadores || [],
-      state.fixturesLibertadores || []
-    ),
-    standingsSulamericana: recomputeStandingsFromFixtures(
-      state.standingsSulamericana || [],
-      state.fixturesSulamericana || []
-    ),
-    standingsEstadual: recomputeStandingsFromFixtures(
-      state.standingsEstadual || [],
-      state.fixturesEstadual || []
-    ),
-    standingsCopaNordeste: recomputeStandingsFromFixtures(
-      state.standingsCopaNordeste || [],
-      state.fixturesCopaNordeste || []
-    ),
-    standingsCopaVerde: recomputeStandingsFromFixtures(
-      state.standingsCopaVerde || [],
-      state.fixturesCopaVerde || []
-    ),
+    standingsA: shouldRecompute('serie_a')
+      ? recomputeStandingsFromFixtures(state.standingsA, state.fixturesA, deductions)
+      : state.standingsA,
+    standingsB: shouldRecompute('serie_b')
+      ? recomputeStandingsFromFixtures(state.standingsB, state.fixturesB, deductions)
+      : state.standingsB,
+    standingsC: shouldRecompute('serie_c')
+      ? recomputeStandingsFromFixtures(state.standingsC || [], state.fixturesC || [], deductions)
+      : state.standingsC || [],
+    standingsD: shouldRecompute('serie_d')
+      ? recomputeStandingsFromFixtures(state.standingsD || [], state.fixturesD || [], deductions)
+      : state.standingsD || [],
+    standingsLibertadores: shouldRecompute('libertadores')
+      ? recomputeStandingsFromFixtures(
+          state.standingsLibertadores || [],
+          state.fixturesLibertadores || []
+        )
+      : state.standingsLibertadores || [],
+    standingsSulamericana: shouldRecompute('sulamericana')
+      ? recomputeStandingsFromFixtures(
+          state.standingsSulamericana || [],
+          state.fixturesSulamericana || []
+        )
+      : state.standingsSulamericana || [],
+    standingsEstadual: shouldRecompute('estadual')
+      ? recomputeStandingsFromFixtures(
+          state.standingsEstadual || [],
+          state.fixturesEstadual || []
+        )
+      : state.standingsEstadual || [],
+    standingsCopaNordeste: shouldRecompute('copa_nordeste')
+      ? recomputeStandingsFromFixtures(
+          state.standingsCopaNordeste || [],
+          state.fixturesCopaNordeste || []
+        )
+      : state.standingsCopaNordeste || [],
+    standingsCopaVerde: shouldRecompute('copa_verde')
+      ? recomputeStandingsFromFixtures(
+          state.standingsCopaVerde || [],
+          state.fixturesCopaVerde || []
+        )
+      : state.standingsCopaVerde || [],
     standingsSouthAmerica,
     standingsEurope,
     standingsWorldLeagues,
-    standingsChampionsLeague: recomputeStandingsFromFixtures(
-      state.standingsChampionsLeague || [],
-      state.fixturesChampionsLeague || []
-    ),
-    standingsEuropaLeague: recomputeStandingsFromFixtures(
-      state.standingsEuropaLeague || [],
-      state.fixturesEuropaLeague || []
-    ),
-    standingsConferenceLeague: recomputeStandingsFromFixtures(
-      state.standingsConferenceLeague || [],
-      state.fixturesConferenceLeague || []
-    ),
-    standingsCopaInternacional: recomputeStandingsFromFixtures(
-      state.standingsCopaInternacional || [],
-      state.fixturesCopaInternacional || []
-    ),
-    standingsAfcChampions: recomputeStandingsFromFixtures(
-      state.standingsAfcChampions || [],
-      state.fixturesAfcChampions || []
-    ),
-    standingsSuperMundial: recomputeStandingsFromFixtures(
-      state.standingsSuperMundial || [],
-      state.fixturesSuperMundial || []
-    ),
+    standingsChampionsLeague: shouldRecompute('champions_league')
+      ? recomputeStandingsFromFixtures(
+          state.standingsChampionsLeague || [],
+          state.fixturesChampionsLeague || []
+        )
+      : state.standingsChampionsLeague || [],
+    standingsEuropaLeague: shouldRecompute('europa_league')
+      ? recomputeStandingsFromFixtures(
+          state.standingsEuropaLeague || [],
+          state.fixturesEuropaLeague || []
+        )
+      : state.standingsEuropaLeague || [],
+    standingsConferenceLeague: shouldRecompute('conference_league')
+      ? recomputeStandingsFromFixtures(
+          state.standingsConferenceLeague || [],
+          state.fixturesConferenceLeague || []
+        )
+      : state.standingsConferenceLeague || [],
+    standingsCopaInternacional: shouldRecompute('copa_internacional')
+      ? recomputeStandingsFromFixtures(
+          state.standingsCopaInternacional || [],
+          state.fixturesCopaInternacional || []
+        )
+      : state.standingsCopaInternacional || [],
+    standingsAfcChampions: shouldRecompute('afc_champions')
+      ? recomputeStandingsFromFixtures(
+          state.standingsAfcChampions || [],
+          state.fixturesAfcChampions || []
+        )
+      : state.standingsAfcChampions || [],
+    standingsSuperMundial: shouldRecompute('super_mundial_clubes')
+      ? recomputeStandingsFromFixtures(
+          state.standingsSuperMundial || [],
+          state.fixturesSuperMundial || []
+        )
+      : state.standingsSuperMundial || [],
   };
 }
 
@@ -692,6 +772,25 @@ export interface PotiguarFinalClassification {
   serieDQualifiedIds: string[]; // 3 vagas para a Série D (repassando caso algum do Top 3 já esteja em A/B/C)
 }
 
+export interface EstadualRepassedBerth {
+  competition: 'serie_d' | 'copa_brasil' | 'copa_nordeste' | 'copa_verde' | 'copa_sul_sudeste';
+  skippedClubId: string;
+  reason: string;
+}
+
+export interface EstadualQualificationMeritContext {
+  /** Clubes já garantidos na Copa do Brasil por outro mérito (Série A, Campeões CdB/NE/Verde/C/D, Libertadores/Sul-Americana) */
+  copaBrasilMeritIds?: Set<string>;
+  /** Clubes já garantidos na Série D (ou divisão acima) por outro mérito (Séries A/B/C, rebaixados da Série C, 3ª Fase Série D) */
+  serieDMeritIds?: Set<string>;
+  /** Clubes classificados para Libertadores ou Sul-Americana (não disputam Copa NE, Copa Verde ou Copa Sul-Sudeste e repassam a vaga no estado) */
+  conmebolClubIds?: Set<string>;
+  /** Motivo legível do repasse por clube */
+  copaBrasilReasonByClubId?: Record<string, string>;
+  serieDReasonByClubId?: Record<string, string>;
+  conmebolReasonByClubId?: Record<string, string>;
+}
+
 export interface EstadualStateClassification {
   uf: BrazilianStateUF;
   tournamentName: string;
@@ -703,6 +802,8 @@ export interface EstadualStateClassification {
   copaBrasilIds: string[];
   copaNordesteIds: string[];
   copaVerdeIds: string[];
+  copaSulSudesteIds: string[];
+  repassedBerths: EstadualRepassedBerth[];
 }
 
 export interface AllEstaduaisClassificationSummary {
@@ -711,13 +812,104 @@ export interface AllEstaduaisClassificationSummary {
   allCopaBrasilQualifiedIds: string[];
   allCopaNordesteQualifiedIds: string[];
   allCopaVerdeQualifiedIds: string[];
+  allCopaSulSudesteQualifiedIds: string[];
+}
+
+/**
+ * Monta o contexto oficial de vagas já garantidas por outro mérito (critério CBF),
+ * garantindo que, se um clube já tiver vaga por outro critério, a vaga do Estadual
+ * seja repassada automaticamente ao próximo melhor colocado do mesmo Estado.
+ */
+export function buildEstadualQualificationMeritContext(params: {
+  clubs: Club[];
+  relegatedFromCIds?: string[];
+  fixturesD?: Fixture[];
+  standingsD?: Standing[];
+  copaBrasilChampId?: string;
+  copaNordesteChampId?: string;
+  copaVerdeChampId?: string;
+  serieCChampId?: string;
+  serieDChampId?: string;
+  libertadoresBrIds?: string[];
+  sulamericanaBrIds?: string[];
+}): EstadualQualificationMeritContext {
+  const copaBrasilMeritIds = new Set<string>();
+  const serieDMeritIds = new Set<string>();
+  const conmebolClubIds = new Set<string>();
+  const copaBrasilReasonByClubId: Record<string, string> = {};
+  const serieDReasonByClubId: Record<string, string> = {};
+  const conmebolReasonByClubId: Record<string, string> = {};
+
+  const markCdb = (id: string | undefined, reason: string) => {
+    if (!id) return;
+    copaBrasilMeritIds.add(id);
+    if (!copaBrasilReasonByClubId[id]) copaBrasilReasonByClubId[id] = reason;
+  };
+  const markSd = (id: string | undefined, reason: string) => {
+    if (!id) return;
+    serieDMeritIds.add(id);
+    if (!serieDReasonByClubId[id]) serieDReasonByClubId[id] = reason;
+  };
+  const markConmebol = (id: string | undefined, reason: string) => {
+    if (!id) return;
+    conmebolClubIds.add(id);
+    if (!conmebolReasonByClubId[id]) conmebolReasonByClubId[id] = reason;
+  };
+
+  for (const club of params.clubs) {
+    if (club.division === 'A') {
+      markCdb(club.id, 'Série A');
+      markSd(club.id, 'Série A');
+    } else if (club.division === 'B') {
+      markSd(club.id, 'Série B');
+    } else if (club.division === 'C') {
+      markSd(club.id, 'Série C');
+    }
+  }
+
+  // Campeões nacionais e regionais com vaga direta na Copa do Brasil
+  markCdb(params.copaBrasilChampId, 'Campeão Copa do Brasil');
+  markCdb(params.copaNordesteChampId, 'Campeão Copa do Nordeste');
+  markCdb(params.copaVerdeChampId, 'Campeão Copa Verde');
+  markCdb(params.serieCChampId, 'Campeão Série C');
+  markCdb(params.serieDChampId, 'Campeão Série D');
+
+  // Clubes brasileiros na Libertadores e Sul-Americana (vaga direta CdB + repassam vagas regionais)
+  for (const id of params.libertadoresBrIds || []) {
+    markCdb(id, 'Libertadores');
+    markConmebol(id, 'Libertadores');
+  }
+  for (const id of params.sulamericanaBrIds || []) {
+    markConmebol(id, 'Sul-Americana');
+  }
+
+  // Rebaixados da Série C e clubes que atingiram a 3ª Fase da Série D anterior já garantem vaga na Série D
+  for (const id of params.relegatedFromCIds || []) {
+    markSd(id, 'Rebaixado Série C');
+  }
+  if ((params.fixturesD && params.fixturesD.length > 0) || (params.standingsD && params.standingsD.length > 0)) {
+    const thirdPhaseIds = resolveSerieDThirdPhaseParticipantIds(params.fixturesD, params.standingsD);
+    for (const id of thirdPhaseIds) {
+      markSd(id, '3ª Fase Série D');
+    }
+  }
+
+  return {
+    copaBrasilMeritIds,
+    serieDMeritIds,
+    conmebolClubIds,
+    copaBrasilReasonByClubId,
+    serieDReasonByClubId,
+    conmebolReasonByClubId,
+  };
 }
 
 export function resolveEstadualClassificationForConfig(
   cfg: EstadualCompetitionConfig,
   fixturesEstadual: Fixture[] = [],
   standingsEstadual: Standing[] = [],
-  clubs: Club[] = []
+  clubs: Club[] = [],
+  meritCtx?: EstadualQualificationMeritContext
 ): EstadualStateClassification {
   const key = cfg.key;
   const stateName = cfg.name;
@@ -798,39 +990,134 @@ export function resolveEstadualClassificationForConfig(
   }
 
   const clubsById = new Map(clubs.map((c) => [c.id, c]));
+  const repassedBerths: EstadualRepassedBerth[] = [];
 
-  // Série D berths: skip clubs already guaranteed in Série A, B, or C (official CBF rule)
+  // 1. Vagas da Série D (64 vagas estaduais): pula clubes já nas Séries A/B/C ou já classificados por outro mérito (rebaixado C / 3ª Fase Série D)
   const serieDQualifiedIds: string[] = [];
   for (const cid of rankedClubIds) {
     if (serieDQualifiedIds.length >= cfg.serieDSpots) break;
     const club = clubsById.get(cid);
-    if (club && ['A', 'B', 'C'].includes(club.division)) continue;
+    if (club && ['A', 'B', 'C'].includes(club.division)) {
+      repassedBerths.push({
+        competition: 'serie_d',
+        skippedClubId: cid,
+        reason: `Série ${club.division}`,
+      });
+      continue;
+    }
+    if (meritCtx?.serieDMeritIds?.has(cid)) {
+      repassedBerths.push({
+        competition: 'serie_d',
+        skippedClubId: cid,
+        reason: meritCtx.serieDReasonByClubId?.[cid] || 'Vaga por outro mérito',
+      });
+      continue;
+    }
     serieDQualifiedIds.push(cid);
   }
+  // Fallback seguro para estados menores caso faltem clubes sem mérito prévio (nunca inclui clubes de A/B/C)
+  if (serieDQualifiedIds.length < cfg.serieDSpots) {
+    for (const cid of rankedClubIds) {
+      if (serieDQualifiedIds.length >= cfg.serieDSpots) break;
+      const club = clubsById.get(cid);
+      if (club && ['A', 'B', 'C'].includes(club.division)) continue;
+      if (!serieDQualifiedIds.includes(cid)) serieDQualifiedIds.push(cid);
+    }
+  }
 
-  // Copa do Brasil berths: RN preserves strict Top 3; other states pass spots past Série A clubs (which already enter 5ª Fase)
+  // 2. Vagas da Copa do Brasil (102 vagas estaduais): pula clubes da Série A e campeões nacionais/regionais já garantidos, repassando ao próximo melhor colocado!
   const copaBrasilIds: string[] = [];
-  if (cfg.uf === 'RN') {
-    rankedClubIds.slice(0, cfg.copaBrasilSpots).forEach((cid) => copaBrasilIds.push(cid));
-  } else {
+  for (const cid of rankedClubIds) {
+    if (copaBrasilIds.length >= cfg.copaBrasilSpots) break;
+    const club = clubsById.get(cid);
+    const hasCdbMerit = (club && club.division === 'A') || Boolean(meritCtx?.copaBrasilMeritIds?.has(cid));
+    if (hasCdbMerit) {
+      repassedBerths.push({
+        competition: 'copa_brasil',
+        skippedClubId: cid,
+        reason:
+          meritCtx?.copaBrasilReasonByClubId?.[cid] ||
+          (club?.division === 'A' ? 'Série A' : 'Vaga por outro mérito'),
+      });
+      continue;
+    }
+    copaBrasilIds.push(cid);
+  }
+  if (copaBrasilIds.length < cfg.copaBrasilSpots) {
     for (const cid of rankedClubIds) {
       if (copaBrasilIds.length >= cfg.copaBrasilSpots) break;
-      const club = clubsById.get(cid);
-      if (club && club.division === 'A') continue;
-      copaBrasilIds.push(cid);
+      if (!copaBrasilIds.includes(cid)) copaBrasilIds.push(cid);
     }
-    if (copaBrasilIds.length < cfg.copaBrasilSpots) {
+  }
+
+  // 3. Vagas da Copa do Nordeste (20 vagas): clubes em Libertadores ou Sul-Americana não participam e repassam a vaga no próprio estado!
+  const copaNordesteIds: string[] = [];
+  if (cfg.copaNordesteSpots > 0) {
+    for (const cid of rankedClubIds) {
+      if (copaNordesteIds.length >= cfg.copaNordesteSpots) break;
+      if (meritCtx?.conmebolClubIds?.has(cid)) {
+        repassedBerths.push({
+          competition: 'copa_nordeste',
+          skippedClubId: cid,
+          reason: meritCtx.conmebolReasonByClubId?.[cid] || 'Competição CONMEBOL',
+        });
+        continue;
+      }
+      copaNordesteIds.push(cid);
+    }
+    if (copaNordesteIds.length < cfg.copaNordesteSpots) {
       for (const cid of rankedClubIds) {
-        if (copaBrasilIds.length >= cfg.copaBrasilSpots) break;
-        if (!copaBrasilIds.includes(cid)) copaBrasilIds.push(cid);
+        if (copaNordesteIds.length >= cfg.copaNordesteSpots) break;
+        if (!copaNordesteIds.includes(cid)) copaNordesteIds.push(cid);
       }
     }
   }
 
-  const copaNordesteIds =
-    cfg.copaNordesteSpots > 0 ? rankedClubIds.slice(0, cfg.copaNordesteSpots) : [];
-  const copaVerdeIds =
-    cfg.copaVerdeSpots > 0 ? rankedClubIds.slice(0, cfg.copaVerdeSpots) : [];
+  // 4. Vagas da Copa Verde (24 vagas: 12 Norte + 12 Centro-Oeste): clubes em Libertadores ou Sul-Americana repassam a vaga no próprio estado!
+  const copaVerdeIds: string[] = [];
+  if (cfg.copaVerdeSpots > 0) {
+    for (const cid of rankedClubIds) {
+      if (copaVerdeIds.length >= cfg.copaVerdeSpots) break;
+      if (meritCtx?.conmebolClubIds?.has(cid)) {
+        repassedBerths.push({
+          competition: 'copa_verde',
+          skippedClubId: cid,
+          reason: meritCtx.conmebolReasonByClubId?.[cid] || 'Competição CONMEBOL',
+        });
+        continue;
+      }
+      copaVerdeIds.push(cid);
+    }
+    if (copaVerdeIds.length < cfg.copaVerdeSpots) {
+      for (const cid of rankedClubIds) {
+        if (copaVerdeIds.length >= cfg.copaVerdeSpots) break;
+        if (!copaVerdeIds.includes(cid)) copaVerdeIds.push(cid);
+      }
+    }
+  }
+
+  // 5. Vagas da Copa Sul-Sudeste (12 vagas: 2 por estado para SP, RJ, MG, RS, PR e SC): clubes em CONMEBOL repassam a vaga no próprio estado!
+  const copaSulSudesteIds: string[] = [];
+  if (cfg.copaSulSudesteSpots > 0) {
+    for (const cid of rankedClubIds) {
+      if (copaSulSudesteIds.length >= cfg.copaSulSudesteSpots) break;
+      if (meritCtx?.conmebolClubIds?.has(cid)) {
+        repassedBerths.push({
+          competition: 'copa_sul_sudeste',
+          skippedClubId: cid,
+          reason: meritCtx.conmebolReasonByClubId?.[cid] || 'Competição CONMEBOL',
+        });
+        continue;
+      }
+      copaSulSudesteIds.push(cid);
+    }
+    if (copaSulSudesteIds.length < cfg.copaSulSudesteSpots) {
+      for (const cid of rankedClubIds) {
+        if (copaSulSudesteIds.length >= cfg.copaSulSudesteSpots) break;
+        if (!copaSulSudesteIds.includes(cid)) copaSulSudesteIds.push(cid);
+      }
+    }
+  }
 
   return {
     uf: cfg.uf,
@@ -843,23 +1130,27 @@ export function resolveEstadualClassificationForConfig(
     copaBrasilIds,
     copaNordesteIds,
     copaVerdeIds,
+    copaSulSudesteIds,
+    repassedBerths,
   };
 }
 
 /**
  * Resolves final classifications and official CBF national & regional competition berths
- * across all 27 Brazilian State Championships (Campeonatos Estaduais).
+ * across all 27 Brazilian State Championships (Campeonatos Estaduais) with RNF quotas & merit spillover.
  */
 export function resolveAllEstaduaisFinalClassifications(
   fixturesEstadual: Fixture[] = [],
   standingsEstadual: Standing[] = [],
-  clubs: Club[] = []
+  clubs: Club[] = [],
+  meritCtx?: EstadualQualificationMeritContext
 ): AllEstaduaisClassificationSummary {
   const byUf = {} as Record<BrazilianStateUF, EstadualStateClassification>;
   const allSerieDQualifiedIds: string[] = [];
   const allCopaBrasilQualifiedIds: string[] = [];
   const allCopaNordesteQualifiedIds: string[] = [];
   const allCopaVerdeQualifiedIds: string[] = [];
+  const allCopaSulSudesteQualifiedIds: string[] = [];
 
   const pushUniq = (arr: string[], id: string) => {
     if (id && !arr.includes(id)) arr.push(id);
@@ -870,13 +1161,15 @@ export function resolveAllEstaduaisFinalClassifications(
       cfg,
       fixturesEstadual,
       standingsEstadual,
-      clubs
+      clubs,
+      meritCtx
     );
     byUf[cfg.uf] = res;
     res.serieDQualifiedIds.forEach((id) => pushUniq(allSerieDQualifiedIds, id));
     res.copaBrasilIds.forEach((id) => pushUniq(allCopaBrasilQualifiedIds, id));
     res.copaNordesteIds.forEach((id) => pushUniq(allCopaNordesteQualifiedIds, id));
     res.copaVerdeIds.forEach((id) => pushUniq(allCopaVerdeQualifiedIds, id));
+    res.copaSulSudesteIds.forEach((id) => pushUniq(allCopaSulSudesteQualifiedIds, id));
   }
 
   return {
@@ -885,25 +1178,27 @@ export function resolveAllEstaduaisFinalClassifications(
     allCopaBrasilQualifiedIds,
     allCopaNordesteQualifiedIds,
     allCopaVerdeQualifiedIds,
+    allCopaSulSudesteQualifiedIds,
   };
 }
 
 /**
  * Resolves the official final classification of Campeonato Potiguar (RN):
- * - Top 3 -> Série D & Copa do Brasil
- * - Top 2 -> Copa do Nordeste
+ * - Copa do Brasil (3 vagas), Série D (2 vagas) e Copa do Nordeste (2 vagas), com repasse por mérito
  */
 export function resolvePotiguarFinalClassification(
   fixturesEstadual: Fixture[] = [],
   standingsEstadual: Standing[] = [],
-  clubs: Club[] = []
+  clubs: Club[] = [],
+  meritCtx?: EstadualQualificationMeritContext
 ): PotiguarFinalClassification {
   const rnCfg = getEstadualConfigByUf('RN')!;
   const res = resolveEstadualClassificationForConfig(
     rnCfg,
     fixturesEstadual,
     standingsEstadual,
-    clubs
+    clubs,
+    meritCtx
   );
   return {
     rankedClubIds: res.rankedClubIds,
@@ -1146,12 +1441,15 @@ export function applyPotiguarQualificationsAndRebalanceSerieD(
         copaBrasilIds: potiguarClass.copaBrasilIds,
         copaNordesteIds: potiguarClass.copaNordesteIds,
         copaVerdeIds: [],
+        copaSulSudesteIds: [],
+        repassedBerths: [],
       },
     } as unknown as Record<BrazilianStateUF, EstadualStateClassification>,
     allSerieDQualifiedIds: potiguarClass.serieDQualifiedIds,
     allCopaBrasilQualifiedIds: potiguarClass.copaBrasilIds,
     allCopaNordesteQualifiedIds: potiguarClass.copaNordesteIds,
     allCopaVerdeQualifiedIds: [],
+    allCopaSulSudesteQualifiedIds: [],
   };
   return applyAllEstaduaisQualificationsAndRebalanceSerieD(
     clubs,
@@ -1304,14 +1602,20 @@ export function assignSingleLegSlots(
   awayId?: string | null
 ): Fixture[] {
   if (!homeId && !awayId) return list;
-  return list.map((f) => {
-    if (f.id !== fixtureId || f.played) return f;
-    return {
-      ...f,
-      homeTeamId: homeId && homeId !== 'tbd' ? homeId : f.homeTeamId,
-      awayTeamId: awayId && awayId !== 'tbd' ? awayId : f.awayTeamId,
-    };
-  });
+  for (let i = 0; i < list.length; i++) {
+    const f = list[i];
+    if (f.id !== fixtureId) continue;
+    if (f.played) return list;
+    const nextHome = homeId && homeId !== 'tbd' ? homeId : f.homeTeamId;
+    const nextAway = awayId && awayId !== 'tbd' ? awayId : f.awayTeamId;
+    if (nextHome === f.homeTeamId && nextAway === f.awayTeamId) {
+      return list;
+    }
+    const next = list.slice();
+    next[i] = { ...f, homeTeamId: nextHome, awayTeamId: nextAway };
+    return next;
+  }
+  return list;
 }
 
 export function assignTwoLeggedSlots(
@@ -1322,23 +1626,26 @@ export function assignTwoLeggedSlots(
   idaAwayId?: string | null
 ): Fixture[] {
   if (!idaHomeId && !idaAwayId) return list;
-  return list.map((f) => {
+  let next: Fixture[] | null = null;
+  for (let i = 0; i < list.length; i++) {
+    const f = list[i];
     if (f.id === idaId && !f.played) {
-      return {
-        ...f,
-        homeTeamId: idaHomeId && idaHomeId !== 'tbd' ? idaHomeId : f.homeTeamId,
-        awayTeamId: idaAwayId && idaAwayId !== 'tbd' ? idaAwayId : f.awayTeamId,
-      };
+      const nextHome = idaHomeId && idaHomeId !== 'tbd' ? idaHomeId : f.homeTeamId;
+      const nextAway = idaAwayId && idaAwayId !== 'tbd' ? idaAwayId : f.awayTeamId;
+      if (nextHome !== f.homeTeamId || nextAway !== f.awayTeamId) {
+        if (!next) next = list.slice();
+        next[i] = { ...f, homeTeamId: nextHome, awayTeamId: nextAway };
+      }
+    } else if (f.id === voltaId && !f.played) {
+      const nextHome = idaAwayId && idaAwayId !== 'tbd' ? idaAwayId : f.homeTeamId;
+      const nextAway = idaHomeId && idaHomeId !== 'tbd' ? idaHomeId : f.awayTeamId;
+      if (nextHome !== f.homeTeamId || nextAway !== f.awayTeamId) {
+        if (!next) next = list.slice();
+        next[i] = { ...f, homeTeamId: nextHome, awayTeamId: nextAway };
+      }
     }
-    if (f.id === voltaId && !f.played) {
-      return {
-        ...f,
-        homeTeamId: idaAwayId && idaAwayId !== 'tbd' ? idaAwayId : f.homeTeamId,
-        awayTeamId: idaHomeId && idaHomeId !== 'tbd' ? idaHomeId : f.awayTeamId,
-      };
-    }
-    return f;
-  });
+  }
+  return next || list;
 }
 
 function syncContinental32Bracket(
@@ -1947,8 +2254,109 @@ export function resolveSerieCPromotedIds(
 }
 
 /**
+ * Brasileirão Série B (20 clubes · 38 rodadas):
+ * - 1º e 2º colocados sobem direto à Série A
+ * - 3º x 6º (Chave 1 em Ida e Volta — 6º manda a Ida, 3º decide a Volta em casa)
+ * - 4º x 5º (Chave 2 em Ida e Volta — 5º manda a Ida, 4º decide a Volta em casa)
+ * - Os 2 vencedores sobem à Série A! Os 4 últimos (17º–20º) são rebaixados à Série C.
+ */
+function syncSerieBPlayoffBracket(
+  fixtures: Fixture[],
+  standings?: Standing[]
+): Fixture[] {
+  const hasPlayoffs = fixtures.some((f) => f.id === 'serie_b_playoff_1_ida');
+  if (!hasPlayoffs) return fixtures;
+
+  let list = fixtures;
+  const regularGames = list.filter((f) => isStandingsFixture(f));
+  const regularDone = regularGames.length > 0 && regularGames.every((f) => f.played);
+
+  if (regularDone && standings && standings.length >= 6) {
+    const ordered = [...standings].sort(
+      (a, b) =>
+        b.points - a.points ||
+        b.won - a.won ||
+        b.goalDifference - a.goalDifference ||
+        b.goalsFor - a.goalsFor
+    );
+
+    const team3 = ordered[2]?.teamId;
+    const team4 = ordered[3]?.teamId;
+    const team5 = ordered[4]?.teamId;
+    const team6 = ordered[5]?.teamId;
+
+    // Chave 1: 3º vs 6º (6º manda a Ida, 3º decide a Volta em casa)
+    list = assignTwoLeggedSlots(
+      list,
+      'serie_b_playoff_1_ida',
+      'serie_b_playoff_1_volta',
+      team6,
+      team3
+    );
+
+    // Chave 2: 4º vs 5º (5º manda a Ida, 4º decide a Volta em casa)
+    list = assignTwoLeggedSlots(
+      list,
+      'serie_b_playoff_2_ida',
+      'serie_b_playoff_2_volta',
+      team5,
+      team4
+    );
+  }
+
+  return list;
+}
+
+/**
+ * Resolve os 4 clubes promovidos da Série B para a Série A:
+ * - 1º e 2º colocados da fase regular (acesso direto)
+ * - Vencedor do Playoff 3º x 6º (Ida e Volta; fallback: 3º colocado)
+ * - Vencedor do Playoff 4º x 5º (Ida e Volta; fallback: 4º colocado)
+ */
+export function resolveSerieBPromotedIds(
+  standingsB?: Standing[],
+  fixturesB?: Fixture[]
+): string[] {
+  const ordered = [...(standingsB || [])].sort(
+    (a, b) =>
+      b.points - a.points ||
+      b.won - a.won ||
+      b.goalDifference - a.goalDifference ||
+      b.goalsFor - a.goalsFor
+  );
+  const direct = ordered.slice(0, 2).map((s) => s.teamId);
+  const getFix = (id: string) => (fixturesB || []).find((f) => f.id === id);
+
+  const winner1 = resolveTieWinner(
+    getFix('serie_b_playoff_1_ida'),
+    getFix('serie_b_playoff_1_volta')
+  );
+  const winner2 = resolveTieWinner(
+    getFix('serie_b_playoff_2_ida'),
+    getFix('serie_b_playoff_2_volta')
+  );
+
+  const promoted = [...direct];
+  const pushUnique = (id?: string | null) => {
+    if (id && id !== 'tbd' && !id.startsWith('TBD') && !promoted.includes(id)) {
+      promoted.push(id);
+    }
+  };
+
+  pushUnique(winner1 || ordered[2]?.teamId);
+  pushUnique(winner2 || ordered[3]?.teamId);
+
+  for (const st of ordered) {
+    if (promoted.length >= 4) break;
+    pushUnique(st.teamId);
+  }
+
+  return promoted.slice(0, 4);
+}
+
+/**
  * Updates unplayed knockout fixtures in Copa do Brasil (9 phases), Libertadores (32 clubs),
- * Sul-Americana (32 clubs), Brasileirão Série C (playoff 4º-7º), Série D (96 clubs -> 64 knockout), and 27 Estaduais!
+ * Sul-Americana (32 clubs), Brasileirão Série B (playoff 3º-6º), Série C (playoff 4º-7º), Série D (96 clubs -> 64 knockout), and 27 Estaduais!
  */
 export function syncDynamicKnockoutBrackets(state: {
   clubs?: Club[];
@@ -1959,6 +2367,7 @@ export function syncDynamicKnockoutBrackets(state: {
   fixturesEstadual: Fixture[];
   fixturesCopaNordeste?: Fixture[];
   fixturesCopaVerde?: Fixture[];
+  fixturesB?: Fixture[];
   fixturesC?: Fixture[];
   fixturesD?: Fixture[];
   fixturesIntercontinental?: Fixture[];
@@ -1982,6 +2391,7 @@ export function syncDynamicKnockoutBrackets(state: {
   standingsEstadual: Standing[];
   standingsCopaNordeste?: Standing[];
   standingsCopaVerde?: Standing[];
+  standingsB?: Standing[];
   standingsC?: Standing[];
   standingsD?: Standing[];
   standingsChampionsLeague?: Standing[];
@@ -2481,20 +2891,100 @@ export function syncDynamicKnockoutBrackets(state: {
     return list;
   };
 
-  // 5b. Copa do Nordeste & Copa Verde (16 clubes cada -> Quartas, Semifinal e Final em Ida e Volta)
-  const cne = syncRegional16Cup(
+  const syncCopaNordesteCup = (
+    cupFixtures: Fixture[],
+    cupStandings: Standing[]
+  ): Fixture[] => {
+    const grpC = cupStandings.filter((s) => s.group === 'Grupo C');
+    const grpD = cupStandings.filter((s) => s.group === 'Grupo D');
+    if (grpC.length === 0 && grpD.length === 0) {
+      // Compatibilidade com saves antigos no formato de 2 grupos de 8 clubes
+      return syncRegional16Cup(cupFixtures, cupStandings, 'cne', 'Grupo A', 'Grupo B');
+    }
+
+    let list = [...cupFixtures];
+    if (list.length === 0 || cupStandings.length === 0) return list;
+    const grpGames = list.filter((f) => isStandingsFixture(f));
+    const grpDone = grpGames.length > 0 && grpGames.every((f) => f.played);
+    if (!grpDone) return list;
+
+    const grpA = cupStandings.filter((s) => s.group === 'Grupo A');
+    const grpB = cupStandings.filter((s) => s.group === 'Grupo B');
+    if (grpA.length >= 2 && grpB.length >= 2 && grpC.length >= 2 && grpD.length >= 2) {
+      // Top 2 de cada grupo: 1º colocado decide o jogo da volta em casa!
+      // Chave 1: (1º A x 2º B) vs (1º C x 2º D) | Chave 2: (1º B x 2º A) vs (1º D x 2º C)
+      list = assignTwoLeggedSlots(list, 'cne_qf_m0_ida', 'cne_qf_m0_volta', grpB[1].teamId, grpA[0].teamId);
+      list = assignTwoLeggedSlots(list, 'cne_qf_m1_ida', 'cne_qf_m1_volta', grpD[1].teamId, grpC[0].teamId);
+      list = assignTwoLeggedSlots(list, 'cne_qf_m2_ida', 'cne_qf_m2_volta', grpA[1].teamId, grpB[0].teamId);
+      list = assignTwoLeggedSlots(list, 'cne_qf_m3_ida', 'cne_qf_m3_volta', grpC[1].teamId, grpD[0].teamId);
+
+      const qf0 = resolveTieWinner(getFix(list, 'cne_qf_m0_ida'), getFix(list, 'cne_qf_m0_volta'));
+      const qf1 = resolveTieWinner(getFix(list, 'cne_qf_m1_ida'), getFix(list, 'cne_qf_m1_volta'));
+      const qf2 = resolveTieWinner(getFix(list, 'cne_qf_m2_ida'), getFix(list, 'cne_qf_m2_volta'));
+      const qf3 = resolveTieWinner(getFix(list, 'cne_qf_m3_ida'), getFix(list, 'cne_qf_m3_volta'));
+
+      list = assignTwoLeggedSlots(list, 'cne_semi_m0_ida', 'cne_semi_m0_volta', qf1, qf0);
+      list = assignTwoLeggedSlots(list, 'cne_semi_m1_ida', 'cne_semi_m1_volta', qf3, qf2);
+
+      const semi0 = resolveTieWinner(getFix(list, 'cne_semi_m0_ida'), getFix(list, 'cne_semi_m0_volta'));
+      const semi1 = resolveTieWinner(getFix(list, 'cne_semi_m1_ida'), getFix(list, 'cne_semi_m1_volta'));
+      list = assignTwoLeggedSlots(list, 'cne_final_ida', 'cne_final_volta', semi1, semi0);
+    }
+    return list;
+  };
+
+  const syncCopaVerdeCup = (
+    cupFixtures: Fixture[],
+    cupStandings: Standing[]
+  ): Fixture[] => {
+    const northA = cupStandings.filter((s) => s.group === 'Copa Norte · Grupo A');
+    const northB = cupStandings.filter((s) => s.group === 'Copa Norte · Grupo B');
+    const cwA = cupStandings.filter((s) => s.group === 'Copa Centro-Oeste · Grupo A');
+    const cwB = cupStandings.filter((s) => s.group === 'Copa Centro-Oeste · Grupo B');
+    if (northA.length === 0 && cwA.length === 0) {
+      // Compatibilidade com saves antigos no formato de 16 clubes (2 grupos de 8)
+      return syncRegional16Cup(cupFixtures, cupStandings, 'cv', 'Grupo Norte', 'Grupo Centro-Oeste');
+    }
+
+    let list = [...cupFixtures];
+    if (list.length === 0 || cupStandings.length === 0) return list;
+    const grpGames = list.filter((f) => isStandingsFixture(f));
+    const grpDone = grpGames.length > 0 && grpGames.every((f) => f.played);
+    if (!grpDone) return list;
+
+    if (northA.length >= 2 && northB.length >= 2 && cwA.length >= 2 && cwB.length >= 2) {
+      // Semifinais Copa Norte: (1º Norte A x 2º Norte B) e (1º Norte B x 2º Norte A)
+      list = assignTwoLeggedSlots(list, 'cv_qf_m0_ida', 'cv_qf_m0_volta', northB[1].teamId, northA[0].teamId);
+      list = assignTwoLeggedSlots(list, 'cv_qf_m1_ida', 'cv_qf_m1_volta', northA[1].teamId, northB[0].teamId);
+      // Semifinais Copa Centro-Oeste: (1º C-O A x 2º C-O B) e (1º C-O B x 2º C-O A)
+      list = assignTwoLeggedSlots(list, 'cv_qf_m2_ida', 'cv_qf_m2_volta', cwB[1].teamId, cwA[0].teamId);
+      list = assignTwoLeggedSlots(list, 'cv_qf_m3_ida', 'cv_qf_m3_volta', cwA[1].teamId, cwB[0].teamId);
+
+      const qf0 = resolveTieWinner(getFix(list, 'cv_qf_m0_ida'), getFix(list, 'cv_qf_m0_volta'));
+      const qf1 = resolveTieWinner(getFix(list, 'cv_qf_m1_ida'), getFix(list, 'cv_qf_m1_volta'));
+      const qf2 = resolveTieWinner(getFix(list, 'cv_qf_m2_ida'), getFix(list, 'cv_qf_m2_volta'));
+      const qf3 = resolveTieWinner(getFix(list, 'cv_qf_m3_ida'), getFix(list, 'cv_qf_m3_volta'));
+
+      // Finais Regionais: Final Copa Norte (semi_m0) & Final Copa Centro-Oeste (semi_m1)
+      list = assignTwoLeggedSlots(list, 'cv_semi_m0_ida', 'cv_semi_m0_volta', qf1, qf0);
+      list = assignTwoLeggedSlots(list, 'cv_semi_m1_ida', 'cv_semi_m1_volta', qf3, qf2);
+
+      // Grande Final Copa Verde: Campeão Norte x Campeão Centro-Oeste
+      const semi0 = resolveTieWinner(getFix(list, 'cv_semi_m0_ida'), getFix(list, 'cv_semi_m0_volta'));
+      const semi1 = resolveTieWinner(getFix(list, 'cv_semi_m1_ida'), getFix(list, 'cv_semi_m1_volta'));
+      list = assignTwoLeggedSlots(list, 'cv_final_ida', 'cv_final_volta', semi1, semi0);
+    }
+    return list;
+  };
+
+  // 5b. Copa do Nordeste (20 clubes, 4 grupos de 5) & Copa Verde (24 clubes: 12 Norte + 12 Centro-Oeste)
+  const cne = syncCopaNordesteCup(
     state.fixturesCopaNordeste || [],
-    state.standingsCopaNordeste || [],
-    'cne',
-    'Grupo A',
-    'Grupo B'
+    state.standingsCopaNordeste || []
   );
-  const cv = syncRegional16Cup(
+  const cv = syncCopaVerdeCup(
     state.fixturesCopaVerde || [],
-    state.standingsCopaVerde || [],
-    'cv',
-    'Grupo Norte',
-    'Grupo Centro-Oeste'
+    state.standingsCopaVerde || []
   );
 
   // 6. UEFA Champions League, Europa League & Conference League (36 clubes em Fase de Liga -> Playoffs 9º–24º -> Oitavas Top 8 -> Quartas -> Semifinal -> Final Única)
@@ -2735,7 +3225,12 @@ export function syncDynamicKnockoutBrackets(state: {
     clubs: state.clubs,
   });
 
-  // 14. Brasileirão Série C · Playoff de Acesso (4º ao 7º)
+  // 14. Brasileirão Série B · Playoff de Acesso (3º ao 6º)
+  const serieB = state.fixturesB
+    ? syncSerieBPlayoffBracket(state.fixturesB, state.standingsB)
+    : undefined;
+
+  // 15. Brasileirão Série C · Playoff de Acesso (4º ao 7º)
   const serieC = state.fixturesC
     ? syncSerieCPlayoffBracket(state.fixturesC, state.standingsC)
     : undefined;
@@ -2747,6 +3242,7 @@ export function syncDynamicKnockoutBrackets(state: {
     fixturesEstadual: est,
     fixturesCopaNordeste: cne,
     fixturesCopaVerde: cv,
+    ...(serieB ? { fixturesB: serieB } : {}),
     ...(serieC ? { fixturesC: serieC } : {}),
     fixturesD: serieD,
     fixturesIntercontinental: intercont,
@@ -2895,101 +3391,104 @@ export function mergeCompletedFixturesIntoState(
   completedFixtures: Fixture[]
 ) {
   const completedMap = new Map<string, Fixture>();
-  completedFixtures.forEach((f) => completedMap.set(f.id, f));
-
-  const replaceList = (list: Fixture[] = []) => list.map((f) => completedMap.get(f.id) || f);
-
-  const fixturesSouthAmerica: Partial<Record<SouthAmericanLeagueId, Fixture[]>> = {};
-  if (state.fixturesSouthAmerica) {
-    for (const leagueId of SOUTH_AMERICAN_LEAGUE_IDS) {
-      const list = state.fixturesSouthAmerica[leagueId];
-      if (list) {
-        fixturesSouthAmerica[leagueId] = replaceList(list);
-      }
-    }
+  const touchedComps = new Set<CompetitionType>();
+  for (let i = 0; i < completedFixtures.length; i++) {
+    const f = completedFixtures[i];
+    completedMap.set(f.id, f);
+    touchedComps.add(f.competition);
   }
 
-  const fixturesEurope: Partial<Record<EuropeanLeagueId, Fixture[]>> = {};
-  if (state.fixturesEurope) {
-    for (const leagueId of EUROPEAN_LEAGUE_IDS) {
-      const list = state.fixturesEurope[leagueId];
-      if (list) {
-        fixturesEurope[leagueId] = replaceList(list);
+  const replaceList = (list: Fixture[] = [], comp?: CompetitionType): Fixture[] => {
+    if (list.length === 0) return list;
+    if (comp && !touchedComps.has(comp)) return list;
+    let next: Fixture[] | null = null;
+    for (let i = 0; i < list.length; i++) {
+      const f = list[i];
+      const replacement = completedMap.get(f.id);
+      if (replacement && replacement !== f) {
+        if (!next) next = list.slice();
+        next[i] = replacement;
       }
     }
-  }
+    return next || list;
+  };
 
-  const fixturesEuropeanCups: Partial<Record<EuropeanCupId, Fixture[]>> = {};
-  if (state.fixturesEuropeanCups) {
-    for (const cupId of EUROPEAN_CUP_IDS) {
-      const list = state.fixturesEuropeanCups[cupId];
-      if (list) {
-        fixturesEuropeanCups[cupId] = replaceList(list);
+  const replacePoolRecord = <K extends CompetitionType>(
+    record: Partial<Record<K, Fixture[]>> | undefined,
+    keys: readonly K[]
+  ): Partial<Record<K, Fixture[]>> => {
+    if (!record) return {};
+    let nextRecord: Partial<Record<K, Fixture[]>> | null = null;
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+      if (!touchedComps.has(k)) continue;
+      const list = record[k];
+      if (!list) continue;
+      const updated = replaceList(list, k);
+      if (updated !== list) {
+        if (!nextRecord) nextRecord = { ...record };
+        nextRecord[k] = updated;
       }
     }
-  }
+    return nextRecord || record;
+  };
 
-  const fixturesSouthAmericanCups: Partial<Record<SouthAmericanCupId, Fixture[]>> = {};
-  if (state.fixturesSouthAmericanCups) {
-    for (const cupId of SOUTH_AMERICAN_CUP_IDS) {
-      const list = state.fixturesSouthAmericanCups[cupId];
-      if (list) {
-        fixturesSouthAmericanCups[cupId] = replaceList(list);
-      }
-    }
-  }
-
-  const fixturesWorldLeagues: Partial<Record<WorldLeagueId, Fixture[]>> = {};
-  if (state.fixturesWorldLeagues) {
-    for (const leagueId of WORLD_LEAGUE_IDS) {
-      const list = state.fixturesWorldLeagues[leagueId];
-      if (list) {
-        fixturesWorldLeagues[leagueId] = replaceList(list);
-      }
-    }
-  }
-
-  const fixturesWorldCups: Partial<Record<WorldCupId, Fixture[]>> = {};
-  if (state.fixturesWorldCups) {
-    for (const cupId of WORLD_CUP_IDS) {
-      const list = state.fixturesWorldCups[cupId];
-      if (list) {
-        fixturesWorldCups[cupId] = replaceList(list);
-      }
-    }
-  }
+  const fixturesSouthAmerica = replacePoolRecord<SouthAmericanLeagueId>(
+    state.fixturesSouthAmerica,
+    SOUTH_AMERICAN_LEAGUE_IDS
+  );
+  const fixturesEurope = replacePoolRecord<EuropeanLeagueId>(
+    state.fixturesEurope,
+    EUROPEAN_LEAGUE_IDS
+  );
+  const fixturesEuropeanCups = replacePoolRecord<EuropeanCupId>(
+    state.fixturesEuropeanCups,
+    EUROPEAN_CUP_IDS
+  );
+  const fixturesSouthAmericanCups = replacePoolRecord<SouthAmericanCupId>(
+    state.fixturesSouthAmericanCups,
+    SOUTH_AMERICAN_CUP_IDS
+  );
+  const fixturesWorldLeagues = replacePoolRecord<WorldLeagueId>(
+    state.fixturesWorldLeagues,
+    WORLD_LEAGUE_IDS
+  );
+  const fixturesWorldCups = replacePoolRecord<WorldCupId>(
+    state.fixturesWorldCups,
+    WORLD_CUP_IDS
+  );
 
   return {
-    fixturesA: replaceList(state.fixturesA),
-    fixturesB: replaceList(state.fixturesB),
-    fixturesC: replaceList(state.fixturesC || []),
-    fixturesD: replaceList(state.fixturesD || []),
-    fixturesSupercopa: replaceList(state.fixturesSupercopa || []),
-    fixturesRecopa: replaceList(state.fixturesRecopa || []),
-    fixturesLibertadores: replaceList(state.fixturesLibertadores || []),
-    fixturesSulamericana: replaceList(state.fixturesSulamericana || []),
-    fixturesCopaBrasil: replaceList(state.fixturesCopaBrasil || []),
-    fixturesEstadual: replaceList(state.fixturesEstadual || []),
-    fixturesCopaNordeste: replaceList(state.fixturesCopaNordeste || []),
-    fixturesCopaVerde: replaceList(state.fixturesCopaVerde || []),
-    fixturesIntercontinental: replaceList(state.fixturesIntercontinental || []),
+    fixturesA: replaceList(state.fixturesA, 'serie_a'),
+    fixturesB: replaceList(state.fixturesB, 'serie_b'),
+    fixturesC: replaceList(state.fixturesC || [], 'serie_c'),
+    fixturesD: replaceList(state.fixturesD || [], 'serie_d'),
+    fixturesSupercopa: replaceList(state.fixturesSupercopa || [], 'supercopa_brasil'),
+    fixturesRecopa: replaceList(state.fixturesRecopa || [], 'recopa_sulamericana'),
+    fixturesLibertadores: replaceList(state.fixturesLibertadores || [], 'libertadores'),
+    fixturesSulamericana: replaceList(state.fixturesSulamericana || [], 'sulamericana'),
+    fixturesCopaBrasil: replaceList(state.fixturesCopaBrasil || [], 'copa_brasil'),
+    fixturesEstadual: replaceList(state.fixturesEstadual || [], 'estadual'),
+    fixturesCopaNordeste: replaceList(state.fixturesCopaNordeste || [], 'copa_nordeste'),
+    fixturesCopaVerde: replaceList(state.fixturesCopaVerde || [], 'copa_verde'),
+    fixturesIntercontinental: replaceList(state.fixturesIntercontinental || [], 'intercontinental'),
     fixturesSouthAmerica,
     fixturesEurope,
     fixturesEuropeanCups,
     fixturesSouthAmericanCups,
     fixturesWorldLeagues,
     fixturesWorldCups,
-    fixturesChampionsLeague: replaceList(state.fixturesChampionsLeague || []),
-    fixturesEuropaLeague: replaceList(state.fixturesEuropaLeague || []),
-    fixturesConferenceLeague: replaceList(state.fixturesConferenceLeague || []),
-    fixturesUefaSupercup: replaceList(state.fixturesUefaSupercup || []),
-    fixturesCopaInternacional: replaceList(state.fixturesCopaInternacional || []),
-    fixturesConcacafChampions: replaceList(state.fixturesConcacafChampions || []),
-    fixturesAfcChampions: replaceList(state.fixturesAfcChampions || []),
-    fixturesSuperMundial: replaceList(state.fixturesSuperMundial || []),
-    fixturesEngCommunityShield: replaceList(state.fixturesEngCommunityShield || []),
-    fixturesEngEflCup: replaceList(state.fixturesEngEflCup || []),
-    fixturesEngFaCup: replaceList(state.fixturesEngFaCup || []),
+    fixturesChampionsLeague: replaceList(state.fixturesChampionsLeague || [], 'champions_league'),
+    fixturesEuropaLeague: replaceList(state.fixturesEuropaLeague || [], 'europa_league'),
+    fixturesConferenceLeague: replaceList(state.fixturesConferenceLeague || [], 'conference_league'),
+    fixturesUefaSupercup: replaceList(state.fixturesUefaSupercup || [], 'uefa_supercup'),
+    fixturesCopaInternacional: replaceList(state.fixturesCopaInternacional || [], 'copa_internacional'),
+    fixturesConcacafChampions: replaceList(state.fixturesConcacafChampions || [], 'concacaf_champions'),
+    fixturesAfcChampions: replaceList(state.fixturesAfcChampions || [], 'afc_champions'),
+    fixturesSuperMundial: replaceList(state.fixturesSuperMundial || [], 'super_mundial_clubes'),
+    fixturesEngCommunityShield: replaceList(state.fixturesEngCommunityShield || [], 'eng_community_shield'),
+    fixturesEngEflCup: replaceList(state.fixturesEngEflCup || [], 'eng_efl_cup'),
+    fixturesEngFaCup: replaceList(state.fixturesEngFaCup || [], 'eng_fa_cup'),
   };
 }
 
@@ -3110,7 +3609,10 @@ export function simulateCpuFixturesUpToDate(
     f.competition === 'eng_community_shield' ||
     f.competition === 'eng_fa_cup' ||
     f.competition === 'eng_efl_cup' ||
+    f.id.startsWith('serie_b_playoff_') ||
+    (f.competition === 'serie_b' && f.round >= 38) ||
     f.id.startsWith('serie_c_playoff_') ||
+    (f.competition === 'serie_c' && f.round >= 46) ||
     isMlsPlayoffFixture(f) ||
     isEuropeanCup(f.competition) ||
     isSouthAmericanCup(f.competition) ||
@@ -3149,12 +3651,71 @@ export function simulateCpuFixturesUpToDate(
     ...flattenWorldCupsFixtures(s.fixturesWorldCups),
   ];
 
+  let anyFixturesSimulated = false;
+  let pendingScheduleConflictCheck = false;
+
+  // Helper to detect whether syncDynamicKnockoutBrackets actually assigned any new team slots
+  const didBracketsChange = (
+    prevState: GameSave,
+    nextBrackets: ReturnType<typeof syncDynamicKnockoutBrackets>
+  ): boolean => {
+    const checkFlat = (a?: Fixture[], b?: Fixture[]): boolean => {
+      if (a === b) return false;
+      if (!a || !b || a.length !== b.length) return true;
+      for (let i = 0; i < a.length; i++) {
+        if (a[i].homeTeamId !== b[i].homeTeamId || a[i].awayTeamId !== b[i].awayTeamId) {
+          return true;
+        }
+      }
+      return false;
+    };
+    const checkRecord = (
+      a?: Partial<Record<string, Fixture[]>>,
+      b?: Partial<Record<string, Fixture[]>>
+    ): boolean => {
+      if (a === b) return false;
+      if (!a || !b) return true;
+      const keys = Object.keys(b);
+      for (let i = 0; i < keys.length; i++) {
+        if (checkFlat(a[keys[i]], b[keys[i]])) return true;
+      }
+      return false;
+    };
+
+    return (
+      checkFlat(prevState.fixturesCopaBrasil, nextBrackets.fixturesCopaBrasil) ||
+      checkFlat(prevState.fixturesLibertadores, nextBrackets.fixturesLibertadores) ||
+      checkFlat(prevState.fixturesSulamericana, nextBrackets.fixturesSulamericana) ||
+      checkFlat(prevState.fixturesEstadual, nextBrackets.fixturesEstadual) ||
+      checkFlat(prevState.fixturesCopaNordeste, nextBrackets.fixturesCopaNordeste) ||
+      checkFlat(prevState.fixturesCopaVerde, nextBrackets.fixturesCopaVerde) ||
+      checkFlat(prevState.fixturesB, nextBrackets.fixturesB) ||
+      checkFlat(prevState.fixturesC, nextBrackets.fixturesC) ||
+      checkFlat(prevState.fixturesD, nextBrackets.fixturesD) ||
+      checkFlat(prevState.fixturesIntercontinental, nextBrackets.fixturesIntercontinental) ||
+      checkFlat(prevState.fixturesChampionsLeague, nextBrackets.fixturesChampionsLeague) ||
+      checkFlat(prevState.fixturesEuropaLeague, nextBrackets.fixturesEuropaLeague) ||
+      checkFlat(prevState.fixturesConferenceLeague, nextBrackets.fixturesConferenceLeague) ||
+      checkFlat(prevState.fixturesCopaInternacional, nextBrackets.fixturesCopaInternacional) ||
+      checkFlat(prevState.fixturesConcacafChampions, nextBrackets.fixturesConcacafChampions) ||
+      checkFlat(prevState.fixturesAfcChampions, nextBrackets.fixturesAfcChampions) ||
+      checkFlat(prevState.fixturesSuperMundial, nextBrackets.fixturesSuperMundial) ||
+      checkFlat(prevState.fixturesEngCommunityShield, nextBrackets.fixturesEngCommunityShield) ||
+      checkFlat(prevState.fixturesEngEflCup, nextBrackets.fixturesEngEflCup) ||
+      checkFlat(prevState.fixturesEngFaCup, nextBrackets.fixturesEngFaCup) ||
+      checkRecord(prevState.fixturesEuropeanCups, nextBrackets.fixturesEuropeanCups) ||
+      checkRecord(prevState.fixturesSouthAmericanCups, nextBrackets.fixturesSouthAmericanCups) ||
+      checkRecord(prevState.fixturesEurope, nextBrackets.fixturesEurope) ||
+      checkRecord(prevState.fixturesWorldLeagues, nextBrackets.fixturesWorldLeagues) ||
+      checkRecord(prevState.fixturesWorldCups, nextBrackets.fixturesWorldCups)
+    );
+  };
+
   // Up to 300 chronological waves, batching pure round-robin league games up to the next cup matchday
   for (let pass = 0; pass < 300; pass++) {
-    // On pass 0, sync standings, brackets, and schedule conflicts once before scanning due fixtures;
-    // subsequent passes already receive fresh standings, brackets, and resolved conflicts from the end of the previous wave.
+    // On pass 0, sync brackets once (standings are already up to date from prior rounds)
+    // and only trigger full-world conflict resolution if a bracket actually unlocked new teams!
     if (pass === 0) {
-      const preStandings = recomputeAllStandings(workingState);
       const preBrackets = syncDynamicKnockoutBrackets({
         clubs: workingState.clubs,
         currentDate: effectiveCutoffDate,
@@ -3164,6 +3725,7 @@ export function simulateCpuFixturesUpToDate(
         fixturesEstadual: workingState.fixturesEstadual || [],
         fixturesCopaNordeste: workingState.fixturesCopaNordeste || [],
         fixturesCopaVerde: workingState.fixturesCopaVerde || [],
+        fixturesB: workingState.fixturesB || [],
         fixturesC: workingState.fixturesC || [],
         fixturesD: workingState.fixturesD || [],
         fixturesIntercontinental: workingState.fixturesIntercontinental || [],
@@ -3182,28 +3744,30 @@ export function simulateCpuFixturesUpToDate(
         fixturesEurope: workingState.fixturesEurope,
         fixturesWorldLeagues: workingState.fixturesWorldLeagues,
         fixturesWorldCups: workingState.fixturesWorldCups,
-        standingsLibertadores: preStandings.standingsLibertadores,
-        standingsSulamericana: preStandings.standingsSulamericana,
-        standingsEstadual: preStandings.standingsEstadual,
-        standingsCopaNordeste: preStandings.standingsCopaNordeste,
-        standingsCopaVerde: preStandings.standingsCopaVerde,
-        standingsC: preStandings.standingsC,
-        standingsD: preStandings.standingsD,
-        standingsChampionsLeague: preStandings.standingsChampionsLeague,
-        standingsEuropaLeague: preStandings.standingsEuropaLeague,
-        standingsConferenceLeague: preStandings.standingsConferenceLeague,
-        standingsCopaInternacional: preStandings.standingsCopaInternacional,
-        standingsAfcChampions: preStandings.standingsAfcChampions,
-        standingsSuperMundial: preStandings.standingsSuperMundial,
-        standingsEurope: preStandings.standingsEurope,
-        standingsWorldLeagues: preStandings.standingsWorldLeagues,
+        standingsLibertadores: workingState.standingsLibertadores || [],
+        standingsSulamericana: workingState.standingsSulamericana || [],
+        standingsEstadual: workingState.standingsEstadual || [],
+        standingsCopaNordeste: workingState.standingsCopaNordeste,
+        standingsCopaVerde: workingState.standingsCopaVerde,
+        standingsB: workingState.standingsB,
+        standingsC: workingState.standingsC,
+        standingsD: workingState.standingsD,
+        standingsChampionsLeague: workingState.standingsChampionsLeague,
+        standingsEuropaLeague: workingState.standingsEuropaLeague,
+        standingsConferenceLeague: workingState.standingsConferenceLeague,
+        standingsCopaInternacional: workingState.standingsCopaInternacional,
+        standingsAfcChampions: workingState.standingsAfcChampions,
+        standingsSuperMundial: workingState.standingsSuperMundial,
+        standingsEurope: workingState.standingsEurope,
+        standingsWorldLeagues: workingState.standingsWorldLeagues,
       });
 
-      workingState = resolveCrossCompetitionScheduleConflicts({
-        ...workingState,
-        ...preStandings,
-        ...preBrackets,
-      });
+      if (didBracketsChange(workingState, preBrackets)) {
+        workingState = resolveCrossCompetitionScheduleConflicts({
+          ...workingState,
+          ...preBrackets,
+        });
+      }
     }
 
     const allPools = collectAllPools(workingState);
@@ -3212,19 +3776,22 @@ export function simulateCpuFixturesUpToDate(
     // so the user ALWAYS plays every group-stage and knockout fixture in chronological order!
     let hasPendingUserFixture = false;
     if (stopAtUserFixture) {
-      const userUnplayedDates = allPools
-        .filter(
-          (f) =>
-            !f.played &&
-            f.date &&
-            isRealTeam(f.homeTeamId) &&
-            isRealTeam(f.awayTeamId) &&
-            (f.homeTeamId === workingState.userClubId || f.awayTeamId === workingState.userClubId)
-        )
-        .map((f) => f.date as string)
-        .sort();
+      let earliestUserDate: string | undefined;
+      for (let i = 0; i < allPools.length; i++) {
+        const f = allPools[i];
+        if (
+          !f.played &&
+          f.date &&
+          (f.homeTeamId === workingState.userClubId || f.awayTeamId === workingState.userClubId) &&
+          isRealTeam(f.homeTeamId) &&
+          isRealTeam(f.awayTeamId)
+        ) {
+          if (!earliestUserDate || f.date < earliestUserDate) {
+            earliestUserDate = f.date;
+          }
+        }
+      }
 
-      const earliestUserDate = userUnplayedDates[0];
       if (earliestUserDate) {
         hasPendingUserFixture = true;
         if (
@@ -3245,48 +3812,68 @@ export function simulateCpuFixturesUpToDate(
       }
     }
 
-    const dueCpuFixtures = allPools
-      .filter((f) => {
-        if (f.played) return false;
-        if (!isRealTeam(f.homeTeamId) || !isRealTeam(f.awayTeamId)) {
-          return false;
-        }
-        if (f.homeTeamId === workingState.userClubId || f.awayTeamId === workingState.userClubId) {
-          return false;
-        }
+    const dueCpuFixtures: Fixture[] = [];
+    for (let i = 0; i < allPools.length; i++) {
+      const f = allPools[i];
+      if (f.played) continue;
+      if (f.homeTeamId === workingState.userClubId || f.awayTeamId === workingState.userClubId) {
+        continue;
+      }
+      if (!isRealTeam(f.homeTeamId) || !isRealTeam(f.awayTeamId)) {
+        continue;
+      }
 
-        if (
-          finishHemispherePools &&
-          !hasPendingUserFixture &&
-          isFixtureInFinishingHemisphere(f, finishHemispherePools)
-        ) {
-          return true;
-        }
+      if (
+        finishHemispherePools &&
+        !hasPendingUserFixture &&
+        isFixtureInFinishingHemisphere(f, finishHemispherePools)
+      ) {
+        dueCpuFixtures.push(f);
+        continue;
+      }
 
-        if (f.date) {
-          const dateDue = effectiveIncludeCurrentDate
-            ? f.date <= effectiveCutoffDate
-            : f.date < effectiveCutoffDate;
-          if (dateDue) return true;
-        } else if (CLASSIC_LEAGUES_38.includes(f.competition) && f.round < workingState.currentRound) {
-          return true;
+      if (f.date) {
+        const dateDue = effectiveIncludeCurrentDate
+          ? f.date <= effectiveCutoffDate
+          : f.date < effectiveCutoffDate;
+        if (dateDue) {
+          dueCpuFixtures.push(f);
         }
-
-        return false;
-      })
-      .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+      } else if (CLASSIC_LEAGUES_38.includes(f.competition) && f.round < workingState.currentRound) {
+        dueCpuFixtures.push(f);
+      }
+    }
 
     if (dueCpuFixtures.length === 0) {
       break;
     }
 
+    dueCpuFixtures.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
     const earliestCupDue = dueCpuFixtures.find((f) => isCupOrGroupedUnlockFixture(f));
     const waveCutoffDate = earliestCupDue?.date || effectiveCutoffDate;
-    const waveFixtures = dueCpuFixtures.filter((f) => {
-      if (!f.date) return true;
-      if (!earliestCupDue) return true; // Only pure round-robin leagues left -> simulate all in one wave
-      return f.date <= waveCutoffDate;
-    });
+    const waveFixtures = !earliestCupDue
+      ? dueCpuFixtures
+      : dueCpuFixtures.filter((f) => !f.date || f.date <= waveCutoffDate);
+
+    // Build O(1) leg-1 lookup maps only when this wave actually contains 2nd-leg ties
+    let leg1ById: Map<string, Fixture> | null = null;
+    let leg1ByPair: Map<string, Fixture> | null = null;
+    const waveHasLeg2 = waveFixtures.some((f) => f.leg === 2);
+    if (waveHasLeg2) {
+      leg1ById = new Map<string, Fixture>();
+      leg1ByPair = new Map<string, Fixture>();
+      for (let i = 0; i < allPools.length; i++) {
+        const prev = allPools[i];
+        if (prev.leg === 1) {
+          leg1ById.set(prev.id, prev);
+          leg1ByPair.set(
+            `${prev.competition}|${prev.cupPhase || ''}|${prev.homeTeamId}|${prev.awayTeamId}`,
+            prev
+          );
+        }
+      }
+    }
 
     const allClubsWithGuests = withWorldGuestClubs(workingState.clubs);
     const clubsMap = new Map<string, Club>(allClubsWithGuests.map((c) => [c.id, c]));
@@ -3295,18 +3882,14 @@ export function simulateCpuFixturesUpToDate(
     const simulatedBatch: Fixture[] = waveFixtures.map((f) => {
       const h = clubsMap.get(f.homeTeamId) || buildFallbackSyntheticClub(f.homeTeamId, templateClub);
       const a = clubsMap.get(f.awayTeamId) || buildFallbackSyntheticClub(f.awayTeamId, templateClub);
-      const leg1 =
-        f.leg === 2
-          ? allPools.find(
-              (prev) =>
-                prev.competition === f.competition &&
-                prev.leg === 1 &&
-                (prev.id === f.id.replace('_volta', '_ida') ||
-                  (prev.cupPhase === f.cupPhase &&
-                    prev.homeTeamId === f.awayTeamId &&
-                    prev.awayTeamId === f.homeTeamId))
-            )
-          : undefined;
+      let leg1: Fixture | undefined;
+      if (f.leg === 2 && leg1ById && leg1ByPair) {
+        leg1 =
+          leg1ById.get(f.id.replace('_volta', '_ida')) ||
+          leg1ByPair.get(
+            `${f.competition}|${f.cupPhase || ''}|${f.awayTeamId}|${f.homeTeamId}`
+          );
+      }
       return simulateQuickMatch(h, a, f, leg1);
     });
 
@@ -3314,65 +3897,107 @@ export function simulateCpuFixturesUpToDate(
       break;
     }
 
+    anyFixturesSimulated = true;
+    const touchedCompetitions = new Set<CompetitionType>();
+    let touchedAnyCupOrBracket = false;
+    for (let i = 0; i < simulatedBatch.length; i++) {
+      const sf = simulatedBatch[i];
+      touchedCompetitions.add(sf.competition);
+      if (!touchedAnyCupOrBracket && isCupOrGroupedUnlockFixture(sf)) {
+        touchedAnyCupOrBracket = true;
+      }
+    }
+
     const mergedFixtures = mergeCompletedFixturesIntoState(workingState, simulatedBatch);
     const updatedClubs = creditCpuPlayersFromFixtures(workingState.clubs, simulatedBatch);
 
-    const passStandings = recomputeAllStandings({
-      ...workingState,
-      ...mergedFixtures,
-    });
+    const passStandings = recomputeAllStandings(
+      {
+        ...workingState,
+        ...mergedFixtures,
+      },
+      touchedCompetitions
+    );
 
-    const syncedBrackets = syncDynamicKnockoutBrackets({
-      clubs: updatedClubs,
-      currentDate: waveCutoffDate < effectiveCutoffDate ? waveCutoffDate : effectiveCutoffDate,
-      fixturesCopaBrasil: mergedFixtures.fixturesCopaBrasil,
-      fixturesLibertadores: mergedFixtures.fixturesLibertadores,
-      fixturesSulamericana: mergedFixtures.fixturesSulamericana,
-      fixturesEstadual: mergedFixtures.fixturesEstadual,
-      fixturesCopaNordeste: mergedFixtures.fixturesCopaNordeste,
-      fixturesCopaVerde: mergedFixtures.fixturesCopaVerde,
-      fixturesC: mergedFixtures.fixturesC,
-      fixturesD: mergedFixtures.fixturesD,
-      fixturesIntercontinental: mergedFixtures.fixturesIntercontinental,
-      fixturesChampionsLeague: mergedFixtures.fixturesChampionsLeague,
-      fixturesEuropaLeague: mergedFixtures.fixturesEuropaLeague,
-      fixturesConferenceLeague: mergedFixtures.fixturesConferenceLeague,
-      fixturesCopaInternacional: mergedFixtures.fixturesCopaInternacional,
-      fixturesConcacafChampions: mergedFixtures.fixturesConcacafChampions,
-      fixturesAfcChampions: mergedFixtures.fixturesAfcChampions,
-      fixturesSuperMundial: mergedFixtures.fixturesSuperMundial,
-      fixturesEngCommunityShield: mergedFixtures.fixturesEngCommunityShield,
-      fixturesEngEflCup: mergedFixtures.fixturesEngEflCup,
-      fixturesEngFaCup: mergedFixtures.fixturesEngFaCup,
-      fixturesEuropeanCups: mergedFixtures.fixturesEuropeanCups,
-      fixturesSouthAmericanCups: mergedFixtures.fixturesSouthAmericanCups,
-      fixturesEurope: mergedFixtures.fixturesEurope,
-      fixturesWorldLeagues: mergedFixtures.fixturesWorldLeagues,
-      fixturesWorldCups: mergedFixtures.fixturesWorldCups,
-      standingsLibertadores: passStandings.standingsLibertadores,
-      standingsSulamericana: passStandings.standingsSulamericana,
-      standingsEstadual: passStandings.standingsEstadual,
-      standingsCopaNordeste: passStandings.standingsCopaNordeste,
-      standingsCopaVerde: passStandings.standingsCopaVerde,
-      standingsC: passStandings.standingsC,
-      standingsD: passStandings.standingsD,
-      standingsChampionsLeague: passStandings.standingsChampionsLeague,
-      standingsEuropaLeague: passStandings.standingsEuropaLeague,
-      standingsConferenceLeague: passStandings.standingsConferenceLeague,
-      standingsCopaInternacional: passStandings.standingsCopaInternacional,
-      standingsAfcChampions: passStandings.standingsAfcChampions,
-      standingsSuperMundial: passStandings.standingsSuperMundial,
-      standingsEurope: passStandings.standingsEurope,
-      standingsWorldLeagues: passStandings.standingsWorldLeagues,
-    });
+    if (touchedAnyCupOrBracket) {
+      const syncedBrackets = syncDynamicKnockoutBrackets({
+        clubs: updatedClubs,
+        currentDate: waveCutoffDate < effectiveCutoffDate ? waveCutoffDate : effectiveCutoffDate,
+        fixturesCopaBrasil: mergedFixtures.fixturesCopaBrasil,
+        fixturesLibertadores: mergedFixtures.fixturesLibertadores,
+        fixturesSulamericana: mergedFixtures.fixturesSulamericana,
+        fixturesEstadual: mergedFixtures.fixturesEstadual,
+        fixturesCopaNordeste: mergedFixtures.fixturesCopaNordeste,
+        fixturesCopaVerde: mergedFixtures.fixturesCopaVerde,
+        fixturesB: mergedFixtures.fixturesB,
+        fixturesC: mergedFixtures.fixturesC,
+        fixturesD: mergedFixtures.fixturesD,
+        fixturesIntercontinental: mergedFixtures.fixturesIntercontinental,
+        fixturesChampionsLeague: mergedFixtures.fixturesChampionsLeague,
+        fixturesEuropaLeague: mergedFixtures.fixturesEuropaLeague,
+        fixturesConferenceLeague: mergedFixtures.fixturesConferenceLeague,
+        fixturesCopaInternacional: mergedFixtures.fixturesCopaInternacional,
+        fixturesConcacafChampions: mergedFixtures.fixturesConcacafChampions,
+        fixturesAfcChampions: mergedFixtures.fixturesAfcChampions,
+        fixturesSuperMundial: mergedFixtures.fixturesSuperMundial,
+        fixturesEngCommunityShield: mergedFixtures.fixturesEngCommunityShield,
+        fixturesEngEflCup: mergedFixtures.fixturesEngEflCup,
+        fixturesEngFaCup: mergedFixtures.fixturesEngFaCup,
+        fixturesEuropeanCups: mergedFixtures.fixturesEuropeanCups,
+        fixturesSouthAmericanCups: mergedFixtures.fixturesSouthAmericanCups,
+        fixturesEurope: mergedFixtures.fixturesEurope,
+        fixturesWorldLeagues: mergedFixtures.fixturesWorldLeagues,
+        fixturesWorldCups: mergedFixtures.fixturesWorldCups,
+        standingsLibertadores: passStandings.standingsLibertadores,
+        standingsSulamericana: passStandings.standingsSulamericana,
+        standingsEstadual: passStandings.standingsEstadual,
+        standingsCopaNordeste: passStandings.standingsCopaNordeste,
+        standingsCopaVerde: passStandings.standingsCopaVerde,
+        standingsB: passStandings.standingsB,
+        standingsC: passStandings.standingsC,
+        standingsD: passStandings.standingsD,
+        standingsChampionsLeague: passStandings.standingsChampionsLeague,
+        standingsEuropaLeague: passStandings.standingsEuropaLeague,
+        standingsConferenceLeague: passStandings.standingsConferenceLeague,
+        standingsCopaInternacional: passStandings.standingsCopaInternacional,
+        standingsAfcChampions: passStandings.standingsAfcChampions,
+        standingsSuperMundial: passStandings.standingsSuperMundial,
+        standingsEurope: passStandings.standingsEurope,
+        standingsWorldLeagues: passStandings.standingsWorldLeagues,
+      });
 
-    workingState = resolveCrossCompetitionScheduleConflicts({
-      ...workingState,
-      clubs: updatedClubs,
-      ...mergedFixtures,
-      ...syncedBrackets,
-      ...passStandings,
-    });
+      const nextWaveState: GameSave = {
+        ...workingState,
+        clubs: updatedClubs,
+        ...mergedFixtures,
+        ...syncedBrackets,
+        ...passStandings,
+      };
+
+      if (didBracketsChange({ ...workingState, ...mergedFixtures }, syncedBrackets)) {
+        workingState = resolveCrossCompetitionScheduleConflicts(nextWaveState);
+        pendingScheduleConflictCheck = false;
+      } else {
+        workingState = nextWaveState;
+        pendingScheduleConflictCheck = true;
+      }
+    } else {
+      workingState = {
+        ...workingState,
+        clubs: updatedClubs,
+        ...mergedFixtures,
+        ...passStandings,
+      };
+    }
+  }
+
+  if (anyFixturesSimulated && pendingScheduleConflictCheck) {
+    workingState = resolveCrossCompetitionScheduleConflicts(workingState);
+  }
+
+  // Return original state reference if nothing changed so callers can detect no-op days in O(1)
+  if (!anyFixturesSimulated && workingState.currentDate === state.currentDate && workingState.clubs === state.clubs) {
+    return state;
   }
 
   return workingState;

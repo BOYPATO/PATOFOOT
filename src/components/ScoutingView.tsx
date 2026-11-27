@@ -417,7 +417,7 @@ export const ScoutingView: React.FC<ScoutingViewProps> = ({
       offerContractYears
     );
     if (signed) {
-      const winStatus = getTransferWindowStatus(currentDate);
+      const winStatus = getTransferWindowStatus(currentDate, userClub);
       soundEngine.playFanfare();
       confetti({ particleCount: 85, spread: 75 });
       setNegotiationResult({
@@ -1492,16 +1492,19 @@ export const ScoutingView: React.FC<ScoutingViewProps> = ({
               </div>
             </div>
 
-            {!getTransferWindowStatus(currentDate).isOpen && (
+            {!getTransferWindowStatus(currentDate, userClub).isOpen && (
               <div className="rounded-xl border border-amber-500/40 bg-amber-950/30 p-3 text-xs text-amber-200 space-y-1">
                 <div className="font-bold text-amber-300 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 shrink-0" />
                   <span>Janela Fechada · Contratação para Próxima Janela</span>
                 </div>
                 <p className="text-slate-300 leading-relaxed">
-                  A janela oficial abre apenas em Janeiro–Fevereiro e Julho–Agosto. O acordo é fechado agora e o atleta se apresenta ao {userClub.shortName} em{' '}
+                  {userClub.division === 'EU'
+                    ? 'Na Europa, a janela oficial abre de 01/01 a 31/01 e de 01/07 a 31/08.'
+                    : 'A janela de registros está fechada no momento.'}{' '}
+                  O acordo é fechado agora e o atleta se apresenta ao {userClub.shortName} em{' '}
                   <strong className="text-white font-mono">
-                    {getTransferWindowStatus(currentDate).nextWindowLabel}
+                    {getTransferWindowStatus(currentDate, userClub).nextWindowLabel}
                   </strong>
                   .
                 </p>

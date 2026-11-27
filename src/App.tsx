@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspens
 import { setErrorLogGameContext } from './services/errorLoggerService';
 import { ScrollableTabStrip } from './components/ScrollableTabStrip';
 import { QuickTabsRibbon } from './components/QuickTabsRibbon';
+import { TabErrorBoundary } from './components/TabErrorBoundary';
 import { 
   Club, 
   CompetitionType,
@@ -62,6 +63,7 @@ import {
   generateInitialClubs, 
   getBaseInitialClubsReadonly,
   generateLeagueSchedule, 
+  buildSerieBPlayoffFixtures,
   generateInitialStandings, 
   generateFreeAgents,
   CURRENT_FREE_AGENTS_2026_VERSION,
@@ -300,6 +302,7 @@ import {
   formatShortDate,
   getRoundDate,
   getSerieBRoundDate,
+  getSerieBPlayoffDates,
   getSerieCRoundDate,
   getSerieCPlayoffDates,
   daysBetween,
@@ -428,12 +431,14 @@ import {
   simulateCpuFixturesUpToDate,
   resolveCupChampionId,
   resolveCupRunnerUpId,
+  resolveSerieBPromotedIds,
   resolveSerieCPromotedIds,
   resolveSerieDPromotedIds,
   resolvePotiguarFinalClassification,
   applyPotiguarQualificationsAndRebalanceSerieD,
   resolveAllEstaduaisFinalClassifications,
   applyAllEstaduaisQualificationsAndRebalanceSerieD,
+  buildEstadualQualificationMeritContext,
   buildRegionalCupTrophyRecords,
   flattenSouthAmericaFixtures,
   flattenEuropeFixtures,
@@ -772,14 +777,16 @@ function advanceWorldCalendarWithRollover(
     sim2.currentDate || draftState.currentDate || effectiveSimDate,
     true
   );
-  const baseEvaluatedState = resolveCrossCompetitionScheduleConflicts(
-    evaluateActiveTransferClausesProgress(
-      processMonthlyFinancialTurn(
-        prevDate,
-        processTransferWindowTransitions(prevDate, withNationalSync)
-      )
+  const postTurnState = evaluateActiveTransferClausesProgress(
+    processMonthlyFinancialTurn(
+      prevDate,
+      processTransferWindowTransitions(prevDate, withNationalSync)
     )
   );
+  const baseEvaluatedState =
+    rolledOver || sim1 !== preparedState
+      ? resolveCrossCompetitionScheduleConflicts(postTurnState)
+      : postTurnState;
   const effectiveMarketDate =
     baseEvaluatedState.currentDate || draftState.currentDate || effectiveSimDate;
   const lastSyncRef = baseEvaluatedState.lastAiMarketSyncDate || prevDate;
@@ -1468,12 +1475,23 @@ function sanitizeSave(save: GameSave): GameSave {
       : withYouth;
   });
 
+  const serieBPlayoffDatesForSanitize = getSerieBPlayoffDates(saSeasonYear);
   const serieCPlayoffDatesForSanitize = getSerieCPlayoffDates(saSeasonYear);
   const sanitizeLeagueFixtures = (
     fixturesList: Fixture[] = [],
     comp: CompetitionType = 'serie_a'
   ) => {
     return fixturesList.map((f) => {
+      if (comp === 'serie_b' && f.id.startsWith('serie_b_playoff_')) {
+        const playoffDate = f.id.includes('_ida')
+          ? serieBPlayoffDatesForSanitize.playoffIdaDate
+          : serieBPlayoffDatesForSanitize.playoffVoltaDate;
+        const playoffTime = f.time || (f.id.includes('_ida') ? '19:30' : '16:00');
+        if (needsCalendarMigration) {
+          return { ...f, date: playoffDate, time: playoffTime };
+        }
+        return f.date && f.time ? f : { ...f, date: f.date || playoffDate, time: playoffTime };
+      }
       if (comp === 'serie_c' && f.id.startsWith('serie_c_playoff_')) {
         const playoffDate = f.id.includes('_ida')
           ? serieCPlayoffDatesForSanitize.semiIdaDate
@@ -1555,7 +1573,7 @@ function sanitizeSave(save: GameSave): GameSave {
     needsCalendarMigration || (save.standingsA || []).length < 20
       ? generateLeagueSchedule(serieAClubs, 'serie_a', saSeasonYear)
       : sanitizeLeagueFixtures(save.fixturesA, 'serie_a');
-  const fixturesB =
+  const rawFixturesB =
     needsCalendarMigration ||
     (save.standingsB || []).length < 20 ||
     (needsSerieC2027FormatMigration && !hasPlayedSerieBMatches)
@@ -1570,6 +1588,9 @@ function sanitizeSave(save: GameSave): GameSave {
           'serie_b'
         )
       : sanitizeLeagueFixtures(save.fixturesB, 'serie_b');
+  const fixturesB = rawFixturesB.some((f) => f.id === 'serie_b_playoff_1_ida')
+    ? rawFixturesB
+    : [...rawFixturesB, ...buildSerieBPlayoffFixtures(saSeasonYear, 38)];
   const hasPlayedSerieCMatches = (save.fixturesC || []).some((f) => f.played);
   const hasSerieCPlayoffFinal = (save.fixturesC || []).some(
     (f) => f.id === 'serie_c_playoff_final'
@@ -1654,7 +1675,7 @@ function sanitizeSave(save: GameSave): GameSave {
       ? save.estadualCopaBrasilQualifiedIds
       : undefined;
   const estadualCopaNordesteQualifiedIds =
-    save.estadualCopaNordesteQualifiedIds && save.estadualCopaNordesteQualifiedIds.length >= 8
+    save.estadualCopaNordesteQualifiedIds && save.estadualCopaNordesteQualifiedIds.length >= 16
       ? save.estadualCopaNordesteQualifiedIds
       : undefined;
   const estadualCopaVerdeQualifiedIds =
@@ -1672,7 +1693,7 @@ function sanitizeSave(save: GameSave): GameSave {
   const cneData = generateCopaNordesteFixtures(
     sanitizedClubs,
     saSeasonYear,
-    estadualCopaNordesteQualifiedIds || potiguarCopaNordesteQualifiedIds
+    estadualCopaNordesteQualifiedIds
   );
   const cvData = generateCopaVerdeFixtures(
     sanitizedClubs,
@@ -1697,14 +1718,16 @@ function sanitizeSave(save: GameSave): GameSave {
     Array.isArray(save.fixturesCopaNordeste) &&
     save.fixturesCopaNordeste.length > 0 &&
     Array.isArray(save.standingsCopaNordeste) &&
-    save.standingsCopaNordeste.length >= 16;
+    (save.standingsCopaNordeste.length >= 20 ||
+      save.fixturesCopaNordeste.some((f) => f.played));
   const hasSavedCopaVerde =
     !needsCalendarMigration &&
     !needsEstaduais2026Migration &&
     Array.isArray(save.fixturesCopaVerde) &&
     save.fixturesCopaVerde.length > 0 &&
     Array.isArray(save.standingsCopaVerde) &&
-    save.standingsCopaVerde.length >= 16;
+    (save.standingsCopaVerde.length >= 24 ||
+      save.fixturesCopaVerde.some((f) => f.played));
 
   const fixturesLibertadores = mergeCupTemplateWithPlayed(libData.fixtures, save.fixturesLibertadores);
   const fixturesSulamericana = mergeCupTemplateWithPlayed(sulaData.fixtures, save.fixturesSulamericana);
@@ -2765,22 +2788,24 @@ export default function App() {
     'audio' | 'match' | 'career' | 'stability'
   >('audio');
 
+  const hasActiveCareer = Boolean(gameState);
+
   useEffect(() => {
     const context = isMatchModalOpen
       ? 'match_simulator'
       : showOfficialSite
       ? 'official_site'
-      : !gameState
+      : !hasActiveCareer
       ? 'title_screen'
       : activeTab;
     setErrorLogGameContext(context);
-  }, [activeTab, gameState, isMatchModalOpen, showOfficialSite]);
+  }, [activeTab, hasActiveCareer, isMatchModalOpen, showOfficialSite]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && gameState && !showOfficialSite) {
+    if (typeof window !== 'undefined' && hasActiveCareer && !showOfficialSite) {
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
-  }, [activeTab, gameState, showOfficialSite]);
+  }, [activeTab, hasActiveCareer, showOfficialSite]);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState<boolean>(false);
   const [guideInitialTab, setGuideInitialTab] = useState<GameGuideTab>('guide');
   const [isMuted, setIsMuted] = useState<boolean>(() => soundEngine.getMuted());
@@ -2816,7 +2841,9 @@ export default function App() {
 
   // Automatically detect & celebrate Career Challenge completion
   useEffect(() => {
-    if (!gameState || isAtTitleScreen) return;
+    if (!gameState || isAtTitleScreen || !gameState.activeChallenge || gameState.activeChallenge.completed) {
+      return;
+    }
     const evaluation = evaluateChallengeStatus(gameState);
     if (!evaluation || !evaluation.completedNow) return;
     soundEngine.playFanfare();
@@ -2972,7 +2999,7 @@ export default function App() {
         Boolean(target?.isContentEditable);
 
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        if (!isAtTitleScreen && gameState) {
+        if (!isAtTitleScreen && hasActiveCareer) {
           e.preventDefault();
           soundEngine.playClick();
           setIsGlobalSearchOpen((prev) => !prev);
@@ -2981,7 +3008,7 @@ export default function App() {
       }
 
       if (e.key === '/' && !isTyping && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        if (!isAtTitleScreen && gameState && !isGlobalSearchOpen) {
+        if (!isAtTitleScreen && hasActiveCareer && !isGlobalSearchOpen) {
           e.preventDefault();
           soundEngine.playClick();
           setIsGlobalSearchOpen(true);
@@ -3018,7 +3045,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [
     isAtTitleScreen,
-    gameState,
+    hasActiveCareer,
     isMatchModalOpen,
     isGlobalSearchOpen,
     instantMatchSummary,
@@ -3088,7 +3115,6 @@ export default function App() {
   }, [gameState, gameSettings.autoSaveEnabled, gameSettings.autoSaveIntervalMinutes]);
 
   // Timed interval auto-save (5, 10, 30 or 60 minutes) + safe flush when tab is hidden
-  const hasActiveCareer = Boolean(gameState);
   useEffect(() => {
     const intervalMins = gameSettings.autoSaveIntervalMinutes ?? 0;
     if (!gameSettings.autoSaveEnabled || intervalMins <= 0 || !hasActiveCareer) {
@@ -4311,8 +4337,8 @@ export default function App() {
   const isShowingTitleScreen = !gameState || isAtTitleScreen || !activeUserClub;
 
   const clubsWithWorldGuests = useMemo(
-    () => (gameState && !isShowingTitleScreen ? withWorldGuestClubs(gameState.clubs) : []),
-    [gameState, isShowingTitleScreen]
+    () => (gameState?.clubs && !isShowingTitleScreen ? withWorldGuestClubs(gameState.clubs) : []),
+    [gameState?.clubs, isShowingTitleScreen]
   );
 
   const allCompetitionsFixtures = useMemo(() => {
@@ -4350,28 +4376,61 @@ export default function App() {
       ...flattenEuropeFixtures(gameState.fixturesEurope),
       ...flattenWorldLeaguesFixtures(gameState.fixturesWorldLeagues),
     ];
-  }, [gameState, isShowingTitleScreen]);
+  }, [
+    isShowingTitleScreen,
+    gameState?.fixturesA,
+    gameState?.fixturesB,
+    gameState?.fixturesC,
+    gameState?.fixturesD,
+    gameState?.fixturesSupercopa,
+    gameState?.fixturesRecopa,
+    gameState?.fixturesLibertadores,
+    gameState?.fixturesSulamericana,
+    gameState?.fixturesCopaBrasil,
+    gameState?.fixturesCopaNordeste,
+    gameState?.fixturesCopaVerde,
+    gameState?.fixturesEstadual,
+    gameState?.fixturesIntercontinental,
+    gameState?.fixturesConcacafChampions,
+    gameState?.fixturesAfcChampions,
+    gameState?.fixturesChampionsLeague,
+    gameState?.fixturesEuropaLeague,
+    gameState?.fixturesConferenceLeague,
+    gameState?.fixturesUefaSupercup,
+    gameState?.fixturesCopaInternacional,
+    gameState?.fixturesSuperMundial,
+    gameState?.fixturesEngCommunityShield,
+    gameState?.fixturesEngEflCup,
+    gameState?.fixturesEngFaCup,
+    gameState?.fixturesEuropeanCups,
+    gameState?.fixturesSouthAmericanCups,
+    gameState?.fixturesWorldCups,
+    gameState?.fixturesFriendlies,
+    gameState?.fixturesSouthAmerica,
+    gameState?.fixturesEurope,
+    gameState?.fixturesWorldLeagues,
+  ]);
 
   const allUserFixtures = useMemo(() => {
     if (!activeUserClub || isShowingTitleScreen) return [];
     return allCompetitionsFixtures.filter(
       (f) => f.homeTeamId === activeUserClub.id || f.awayTeamId === activeUserClub.id
     );
-  }, [activeUserClub, allCompetitionsFixtures, isShowingTitleScreen]);
+  }, [activeUserClub?.id, allCompetitionsFixtures, isShowingTitleScreen]);
 
   const upcomingUserFixture = useMemo(
     () =>
       activeUserClub && gameState && !isShowingTitleScreen
         ? getUpcomingClubFixture(allUserFixtures, activeUserClub.id, gameState.currentDate)
         : null,
-    [activeUserClub, gameState, allUserFixtures, isShowingTitleScreen]
+    [activeUserClub?.id, gameState?.currentDate, allUserFixtures, isShowingTitleScreen]
   );
   const upcomingSelecaoFixture = useMemo(
     () =>
       gameState && !isShowingTitleScreen
         ? getUpcomingUserSelecaoFixture(gameState.nationalTeam, gameState.currentDate)
         : null,
-    [gameState, isShowingTitleScreen]
+    [gameState?.nationalTeam, gameState?.currentDate, isShowingTitleScreen]
   );
   const isTodayMatchDay = Boolean(
     gameState &&
@@ -4891,14 +4950,16 @@ export default function App() {
   };
 
   // Deadline Day info & handlers
-  const deadlineDayInfo = getDeadlineDayWindowKey(gameState.currentDate);
+  const deadlineDayInfo = getDeadlineDayWindowKey(gameState.currentDate, userClub);
   const isDeadlineDayOpen =
     deadlineDayInfo.isDeadlinePeriod &&
     !(gameState.deadlineDayCompletedKeys || []).includes(deadlineDayInfo.windowKey);
 
   const handleOpenDeadlineDay = (overrideState?: GameSave) => {
     const stateToUse = overrideState || gameState;
-    const info = getDeadlineDayWindowKey(stateToUse.currentDate);
+    const clubForDeadline =
+      stateToUse.clubs.find((c) => c.id === stateToUse.userClubId) || userClub;
+    const info = getDeadlineDayWindowKey(stateToUse.currentDate, clubForDeadline);
     if (deadlineDaySession && deadlineDaySession.windowKey === info.windowKey) {
       setIsDeadlineDayModalOpen(true);
       return;
@@ -5181,12 +5242,12 @@ export default function App() {
         swapOutPlayerId && sellerClub
           ? currentUserClub.squad.find((p) => p.id === swapOutPlayerId && !p.isLoan)
           : undefined;
-      const winStatus = getTransferWindowStatus(prev.currentDate);
+      const winStatus = getTransferWindowStatus(prev.currentDate, currentUserClub);
       const activeSeasonYear = resolveClubActiveSeasonYear(currentUserClub, prev);
 
-      // If Transfer Window is CLOSED (Mar-Jun or Sep-Dec): lock club-to-club agreement now, arrive when window opens.
-      // Free Agents (sem contrato / !sellerClub) can sign and register immediately at any time of the season!
-      if (!winStatus.isOpen && sellerClub) {
+      // If Transfer Window is CLOSED: lock deal now and integrate player only when the window opens.
+      // For European clubs (Jan 1-31 & Jul 1-Aug 31), ALL signings (including free agents) wait for the open window!
+      if (!winStatus.isOpen && (sellerClub || currentUserClub.division === 'EU')) {
         const updatedClubsClosed = prev.clubs.map((c) => {
           if (c.id === userClub.id) {
             return {
@@ -5500,7 +5561,7 @@ export default function App() {
       const fromClub = prev.clubs.find((c) => c.id === fromClubId);
       const activeSeasonYear = resolveClubActiveSeasonYear(currentUserClub, prev);
       const userEffectiveWage = Math.round(player.wage * (wageSharePct / 100));
-      const winStatus = getTransferWindowStatus(prev.currentDate);
+      const winStatus = getTransferWindowStatus(prev.currentDate, currentUserClub);
 
       if (!winStatus.isOpen) {
         const updatedClubsClosed = prev.clubs.map((c) => {
@@ -5740,7 +5801,7 @@ export default function App() {
       if (!playerToLoan || !toClub) return prev;
 
       const activeSeasonYear = resolveClubActiveSeasonYear(currentUserClub, prev);
-      const winStatus = getTransferWindowStatus(prev.currentDate);
+      const winStatus = getTransferWindowStatus(prev.currentDate, currentUserClub);
       if (!winStatus.isOpen) {
         const updatedClubsClosed = prev.clubs.map((c) => {
           if (c.id === userClub.id) {
@@ -6166,7 +6227,7 @@ export default function App() {
         maximumFractionDigits: 0,
       }).format(playerToSell.wage);
 
-      const winStatus = getTransferWindowStatus(prev.currentDate);
+      const winStatus = getTransferWindowStatus(prev.currentDate, liveUserClub);
       if (!winStatus.isOpen) {
         const updatedClubsClosed = prev.clubs.map((c) => {
           if (c.id === liveUserClub.id) {
@@ -7054,7 +7115,7 @@ export default function App() {
       const currentUserClub =
         prev.clubs.find((c) => c.id === prev.userClubId) || userClub;
       const prevNet = prev.scoutingNetwork || createInitialScoutingNetwork(currentUserClub);
-      const winStatus = getTransferWindowStatus(prev.currentDate);
+      const winStatus = getTransferWindowStatus(prev.currentDate, currentUserClub);
       const activeSeasonYear = resolveClubActiveSeasonYear(currentUserClub, prev);
 
       if (!winStatus.isOpen) {
@@ -7384,6 +7445,7 @@ export default function App() {
         fixturesLibertadores: mergedFixtures.fixturesLibertadores,
         fixturesSulamericana: mergedFixtures.fixturesSulamericana,
         fixturesEstadual: mergedFixtures.fixturesEstadual,
+        fixturesB: mergedFixtures.fixturesB,
         fixturesC: mergedFixtures.fixturesC,
         fixturesD: mergedFixtures.fixturesD,
         fixturesIntercontinental: mergedFixtures.fixturesIntercontinental,
@@ -7407,6 +7469,7 @@ export default function App() {
         standingsEstadual: recomputedStandings.standingsEstadual,
         standingsCopaNordeste: recomputedStandings.standingsCopaNordeste,
         standingsCopaVerde: recomputedStandings.standingsCopaVerde,
+        standingsB: recomputedStandings.standingsB,
         standingsC: recomputedStandings.standingsC,
         standingsD: recomputedStandings.standingsD,
         standingsChampionsLeague: recomputedStandings.standingsChampionsLeague,
@@ -7420,7 +7483,7 @@ export default function App() {
       });
 
       const fA = mergedFixtures.fixturesA;
-      const fB = mergedFixtures.fixturesB;
+      const fB = syncedBrackets.fixturesB || mergedFixtures.fixturesB;
       const fC = syncedBrackets.fixturesC || mergedFixtures.fixturesC;
       const fD = syncedBrackets.fixturesD;
       const fSuper = mergedFixtures.fixturesSupercopa;
@@ -9273,7 +9336,7 @@ export default function App() {
 
       // Promotion & Relegation across Série A (20) <-> B (20), B (20) <-> C (24), C (24) <-> D (96)
       const relegatedA = completedPrev.standingsA.slice(-4).map((s) => s.teamId);
-      const promotedB = completedPrev.standingsB.slice(0, 4).map((s) => s.teamId);
+      const promotedB = resolveSerieBPromotedIds(completedPrev.standingsB, completedPrev.fixturesB);
       const relegatedB = completedPrev.standingsB.slice(-4).map((s) => s.teamId);
       const promotedC = resolveSerieCPromotedIds(completedPrev.standingsC, completedPrev.fixturesC);
       const relegatedC = (completedPrev.standingsC || []).slice(-4).map((s) => s.teamId);
@@ -9300,15 +9363,59 @@ export default function App() {
       const copaNordesteChampId = resolveCupChampionId(completedPrev.fixturesCopaNordeste);
       const copaVerdeChampId = resolveCupChampionId(completedPrev.fixturesCopaVerde);
 
+      const cdbRunnerUpId = resolveCupRunnerUpId(completedPrev.fixturesCopaBrasil);
+      const domesticCupChamps: Partial<Record<SouthAmericanCupId, string>> = {};
+      if (completedPrev.fixturesSouthAmericanCups) {
+        for (const [cId, fixList] of Object.entries(completedPrev.fixturesSouthAmericanCups)) {
+          const champ = resolveCupChampionId(fixList);
+          if (champ) domesticCupChamps[cId as SouthAmericanCupId] = champ;
+        }
+      }
+
+      // Sistema Real de Classificação CONMEBOL (calculado antes dos Estaduais para aplicar o repasse automático de vagas por mérito!)
+      const conmebolQualifiers = computeConmebolContinentalQualifiers({
+        clubs: baseBrDivisionAdjustedClubs,
+        standingsA: completedPrev.standingsA,
+        standingsSouthAmerica: completedPrev.standingsSouthAmerica,
+        libertadoresChampId,
+        sulamericanaChampId,
+        copaBrasilChampId,
+        copaBrasilRunnerUpId: cdbRunnerUpId,
+        domesticCupChampions: domesticCupChamps,
+      });
+
+      const qualifiedLibBrIds = conmebolQualifiers.libertadoresEntries
+        .filter((e) => e.country === 'Brasil')
+        .map((e) => e.clubId);
+      const qualifiedSulaBrIds = conmebolQualifiers.sulamericanaEntries
+        .filter((e) => e.country === 'Brasil')
+        .map((e) => e.clubId);
+
+      const estadualMeritCtx = buildEstadualQualificationMeritContext({
+        clubs: baseBrDivisionAdjustedClubs,
+        relegatedFromCIds: relegatedC,
+        fixturesD: completedPrev.fixturesD,
+        standingsD: completedPrev.standingsD,
+        copaBrasilChampId,
+        copaNordesteChampId,
+        copaVerdeChampId,
+        serieCChampId,
+        serieDChampId,
+        libertadoresBrIds: qualifiedLibBrIds,
+        sulamericanaBrIds: qualifiedSulaBrIds,
+      });
+
       const allEstClass = resolveAllEstaduaisFinalClassifications(
         completedPrev.fixturesEstadual,
         completedPrev.standingsEstadual,
-        baseBrDivisionAdjustedClubs
+        baseBrDivisionAdjustedClubs,
+        estadualMeritCtx
       );
       const potiguarClass = resolvePotiguarFinalClassification(
         completedPrev.fixturesEstadual,
         completedPrev.standingsEstadual,
-        baseBrDivisionAdjustedClubs
+        baseBrDivisionAdjustedClubs,
+        estadualMeritCtx
       );
       const brDivisionAdjustedClubs = applyAllEstaduaisQualificationsAndRebalanceSerieD(
         baseBrDivisionAdjustedClubs,
@@ -9475,34 +9582,6 @@ export default function App() {
         );
       }
 
-      const cdbRunnerUpId = resolveCupRunnerUpId(completedPrev.fixturesCopaBrasil);
-      const domesticCupChamps: Partial<Record<SouthAmericanCupId, string>> = {};
-      if (completedPrev.fixturesSouthAmericanCups) {
-        for (const [cId, fixList] of Object.entries(completedPrev.fixturesSouthAmericanCups)) {
-          const champ = resolveCupChampionId(fixList);
-          if (champ) domesticCupChamps[cId as SouthAmericanCupId] = champ;
-        }
-      }
-
-      // Sistema Real de Classificação CONMEBOL (10 ligas nacionais + Campeões da Libertadores, Sul-Americana, Copa do Brasil e Copas Nacionais)
-      const conmebolQualifiers = computeConmebolContinentalQualifiers({
-        clubs: updatedClubs,
-        standingsA: completedPrev.standingsA,
-        standingsSouthAmerica: completedPrev.standingsSouthAmerica,
-        libertadoresChampId,
-        sulamericanaChampId,
-        copaBrasilChampId,
-        copaBrasilRunnerUpId: cdbRunnerUpId,
-        domesticCupChampions: domesticCupChamps,
-      });
-
-      const qualifiedLibBrIds = conmebolQualifiers.libertadoresEntries
-        .filter((e) => e.country === 'Brasil')
-        .map((e) => e.clubId);
-      const qualifiedSulaBrIds = conmebolQualifiers.sulamericanaEntries
-        .filter((e) => e.country === 'Brasil')
-        .map((e) => e.clubId);
-
       const libData = generateLibertadoresFixtures(
         updatedClubs,
         nextYear,
@@ -9578,7 +9657,7 @@ export default function App() {
             spChampClub ? ` (SP: ${spChampClub.shortName}` : ''
           }${rjChampClub ? `, RJ: ${rjChampClub.shortName}` : ''}${
             potiguarChampClub ? `, RN: ${potiguarChampClub.shortName})` : spChampClub ? ')' : ''
-          }, foram distribuídas oficialmente as ${allEstClass.allCopaBrasilQualifiedIds.length} vagas estaduais da Copa do Brasil (126 clubes), as 96 vagas da Série D, as 16 vagas da Copa do Nordeste e as 16 vagas da Copa Verde ${nextYear}!`,
+          }, foram distribuídas oficialmente (critério RNF/CBF com repasse automático por mérito) as ${allEstClass.allCopaBrasilQualifiedIds.length} vagas estaduais da Copa do Brasil (126 clubes), ${allEstClass.allSerieDQualifiedIds.length} vagas estaduais da Série D (96 clubes), ${allEstClass.allCopaNordesteQualifiedIds.length} vagas da Copa do Nordeste, ${allEstClass.allCopaVerdeQualifiedIds.length} vagas da Copa Verde e ${allEstClass.allCopaSulSudesteQualifiedIds.length} vagas da Copa Sul-Sudeste ${nextYear}!`,
           date: nextSeasonStartDisplay,
           round: 1,
           read: false,
@@ -10445,7 +10524,10 @@ export default function App() {
 
         const specialty = isUser ? getManagerSpecialtyProfile(prev.managerSpecialty) : null;
 
-        const updatedSquad = medSquad.map((p) => {
+        let squadChanged = medSquad !== c.squad;
+        const updatedSquad = new Array<Player>(medSquad.length);
+        for (let i = 0; i < medSquad.length; i++) {
+          const p = medSquad[i];
           const dailyConditionGain = computeDailyConditionRecovery(
             p,
             staffBonuses.dailyConditionBonus,
@@ -10472,16 +10554,18 @@ export default function App() {
             club: c,
           });
 
-          return {
-            ...progressedPlayer,
-            condition,
-          };
-        });
+          if (progressedPlayer === p && condition === p.condition) {
+            updatedSquad[i] = p;
+          } else {
+            squadChanged = true;
+            updatedSquad[i] =
+              condition === progressedPlayer.condition
+                ? progressedPlayer
+                : { ...progressedPlayer, condition };
+          }
+        }
 
-        return {
-          ...c,
-          squad: updatedSquad,
-        };
+        return squadChanged ? { ...c, squad: updatedSquad } : c;
       });
 
       const updatedUserClubForScouting =
@@ -10617,7 +10701,10 @@ export default function App() {
           newMedicalMessages.push(...generatedInboxMessages);
         }
 
-        const updatedSquad = medSquad.map((p) => {
+        let squadChanged = medSquad !== c.squad;
+        const updatedSquad = new Array<Player>(medSquad.length);
+        for (let i = 0; i < medSquad.length; i++) {
+          const p = medSquad[i];
           const dailyConditionGain = computeDailyConditionRecovery(
             p,
             staffBonuses.dailyConditionBonus,
@@ -10647,12 +10734,17 @@ export default function App() {
               `${p.name} (${delta > 0 ? `+${delta}` : delta} OVR → ${progressedPlayer.overall})`
             );
           }
-          return {
-            ...progressedPlayer,
-            condition,
-          };
-        });
-        return { ...c, squad: updatedSquad };
+          if (progressedPlayer === p && condition === p.condition) {
+            updatedSquad[i] = p;
+          } else {
+            squadChanged = true;
+            updatedSquad[i] =
+              condition === progressedPlayer.condition
+                ? progressedPlayer
+                : { ...progressedPlayer, condition };
+          }
+        }
+        return squadChanged ? { ...c, squad: updatedSquad } : c;
       });
 
       const currentUserForStep =
@@ -10750,7 +10842,9 @@ export default function App() {
         const hasNewInjury = newMedicalMessages.some((m) =>
           /les[aã]o|dm|contus|fratura|estiramento/i.test(m.title)
         );
-        const ddCheck = getDeadlineDayWindowKey(workingState.currentDate);
+        const workingUserClub =
+          workingState.clubs.find((c) => c.id === workingState.userClubId) || userClub;
+        const ddCheck = getDeadlineDayWindowKey(workingState.currentDate, workingUserClub);
         const isFreshDeadlineDay =
           ddCheck.isDeadlinePeriod &&
           !(workingState.deadlineDayCompletedKeys || []).includes(ddCheck.windowKey);
@@ -11377,6 +11471,7 @@ export default function App() {
             </div>
           )}
 
+          <TabErrorBoundary resetKey={activeTab} onRecoverToHub={() => setActiveTab('hub')}>
           {/* Tab: Central do Clube (Executive Hub Dashboard) */}
           {activeTab === 'hub' && (
             <ClubHubDashboard
@@ -12072,6 +12167,7 @@ export default function App() {
           />
         )}
           </Suspense>
+          </TabErrorBoundary>
         </main>
       </div>
 

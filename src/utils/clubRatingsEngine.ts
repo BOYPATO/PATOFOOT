@@ -1149,9 +1149,14 @@ export function applyDailySquadTrainingProgression(
     };
   }
 
+  const clampedProgress = Math.min(99, trainingProgress);
+  if (clampedProgress === (player.trainingProgress || 0)) {
+    return player;
+  }
+
   return {
     ...player,
-    trainingProgress: Math.min(99, trainingProgress),
+    trainingProgress: clampedProgress,
   };
 }
 

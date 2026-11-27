@@ -836,7 +836,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onFinishSeason,
   onScheduleFriendlyTour,
 }) => {
-  const windowStatus = useMemo(() => getTransferWindowStatus(currentDate), [currentDate]);
+  const windowStatus = useMemo(
+    () => getTransferWindowStatus(currentDate, userClub),
+    [currentDate, userClub]
+  );
   const [showFriendlyModal, setShowFriendlyModal] = useState<boolean>(false);
   const [showFifaScheduleModal, setShowFifaScheduleModal] = useState<boolean>(false);
   const [fifaModalRegion, setFifaModalRegion] = useState<'ALL' | 'CONMEBOL' | 'UEFA' | 'GLOBAL'>('ALL');

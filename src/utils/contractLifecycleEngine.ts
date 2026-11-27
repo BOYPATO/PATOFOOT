@@ -623,7 +623,7 @@ export function triggerReleaseClausePurchase(
     };
   }
 
-  const windowStatus = getTransferWindowStatus(state.currentDate);
+  const windowStatus = getTransferWindowStatus(state.currentDate, userClub);
   const yearsText = `${safeYears} ${safeYears === 1 ? 'ano' : 'anos'}`;
 
   // If Transfer Window is CLOSED (Mar-Jun or Sep-Dec): pay clause now, register player when window opens!

@@ -328,6 +328,67 @@ export function getCopaNordesteScheduleDates(year: number = 2026): {
 }
 
 /**
+ * Copa do Nordeste (Novo formato 20 clubes):
+ * 4 grupos de 5 times em turno e returno (10 rodadas de grupos, 8 jogos por time)
+ * + Quartas de Final, Semifinal e Final todas em Ida e Volta (6 datas de mata-mata).
+ */
+export function getCopaNordeste20ScheduleDates(year: number = 2026): {
+  groupDates: string[];
+  qfIdaDate: string;
+  qfVoltaDate: string;
+  semiIdaDate: string;
+  semiVoltaDate: string;
+  finalIdaDate: string;
+  finalVoltaDate: string;
+} {
+  if (year === 2026) {
+    return {
+      groupDates: [
+        '2026-01-21',
+        '2026-01-28',
+        '2026-02-04',
+        '2026-02-18',
+        '2026-02-25',
+        '2026-03-04',
+        '2026-03-18',
+        '2026-03-25',
+        '2026-04-08',
+        '2026-04-15',
+      ],
+      qfIdaDate: '2026-04-29',
+      qfVoltaDate: '2026-05-06',
+      semiIdaDate: '2026-05-20',
+      semiVoltaDate: '2026-05-27',
+      finalIdaDate: '2026-06-03',
+      finalVoltaDate: '2026-06-07',
+    };
+  }
+
+  const startWedJan = getNthWeekdayOfMonth(year, 0, 3, 3); // 3rd Wed of Jan
+  const qfIda = addDays(startWedJan, 98);
+  return {
+    groupDates: [
+      startWedJan,
+      addDays(startWedJan, 7),
+      addDays(startWedJan, 14),
+      addDays(startWedJan, 28),
+      addDays(startWedJan, 35),
+      addDays(startWedJan, 42),
+      addDays(startWedJan, 56),
+      addDays(startWedJan, 63),
+      addDays(startWedJan, 77),
+      addDays(startWedJan, 84),
+    ],
+    qfIdaDate: qfIda,
+    qfVoltaDate: addDays(qfIda, 7),
+    semiIdaDate: addDays(qfIda, 21),
+    semiVoltaDate: addDays(qfIda, 28),
+    finalIdaDate: addDays(qfIda, 35),
+    finalVoltaDate: addDays(qfIda, 39),
+  };
+}
+
+/**
  * Continental single-match Grand Finals in late November (Sul-Americana & Libertadores)
  * CBF 2026 PDF: Final Sul-Americana 21/11 (Sáb), Final Libertadores 28/11 (Sáb)
  */
@@ -1247,8 +1308,35 @@ export function getSerieBRoundDate(round: number, baseYear: number = 2026): { da
     dates = dates.filter((_, idx) => !removeSet.has(idx));
   }
 
+  if (round === 39) {
+    const playoffDates = getSerieBPlayoffDates(baseYear);
+    return buildDayTimeInfo(playoffDates.playoffIdaDate, 39, 40);
+  }
+  if (round >= 40) {
+    const playoffDates = getSerieBPlayoffDates(baseYear);
+    return buildDayTimeInfo(playoffDates.playoffVoltaDate, 40, 40);
+  }
+
   const idx = Math.max(0, Math.min(dates.length - 1, round - 1));
   return buildDayTimeInfo(dates[idx] || endSat, round, 38);
+}
+
+/**
+ * Datas dos Playoffs de Acesso da Série B (3º x 6º e 4º x 5º em Ida e Volta; os 2 vencedores sobem à Série A),
+ * disputados logo após o encerramento da 38ª rodada.
+ */
+export function getSerieBPlayoffDates(baseYear: number = 2026): {
+  regularEndDate: string;
+  playoffIdaDate: string;
+  playoffVoltaDate: string;
+} {
+  const regularEndDate =
+    baseYear === 2026
+      ? SERIE_B_2026_DATES[37]
+      : getLastWeekdayOfMonth(baseYear, 10, 6);
+  const playoffIdaDate = addDays(regularEndDate, 4);
+  const playoffVoltaDate = addDays(regularEndDate, 7);
+  return { regularEndDate, playoffIdaDate, playoffVoltaDate };
 }
 
 /**

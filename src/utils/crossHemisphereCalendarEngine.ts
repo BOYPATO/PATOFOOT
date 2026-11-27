@@ -56,6 +56,7 @@ import {
 } from './afcChampionsEngine';
 import {
   applyAllEstaduaisQualificationsAndRebalanceSerieD,
+  buildEstadualQualificationMeritContext,
   buildRegionalCupTrophyRecords,
   flattenEuropeFixtures,
   flattenSouthAmericaFixtures,
@@ -63,6 +64,7 @@ import {
   resolveAllEstaduaisFinalClassifications,
   resolveCupChampionId,
   resolvePotiguarFinalClassification,
+  resolveSerieBPromotedIds,
   resolveSerieCPromotedIds,
   resolveSerieDPromotedIds,
   simulateCpuFixturesUpToDate,
@@ -536,7 +538,7 @@ export function syncOffContinentCalendarRollover(state: GameSave): GameSave {
     const copaInternacionalChampId = resolveCupChampionId(state.fixturesCopaInternacional);
 
     const relegatedA = state.standingsA.slice(-4).map((s) => s.teamId);
-    const promotedB = state.standingsB.slice(0, 4).map((s) => s.teamId);
+    const promotedB = resolveSerieBPromotedIds(state.standingsB, state.fixturesB);
     const relegatedB = state.standingsB.slice(-4).map((s) => s.teamId);
     const promotedC = resolveSerieCPromotedIds(state.standingsC, state.fixturesC);
     const relegatedC = (state.standingsC || []).slice(-4).map((s) => s.teamId);
@@ -554,15 +556,55 @@ export function syncOffContinentCalendarRollover(state: GameSave): GameSave {
       return { ...c, division: newDiv };
     });
 
+    const cneChampId = resolveCupChampionId(state.fixturesCopaNordeste);
+    const cvChampId = resolveCupChampionId(state.fixturesCopaVerde);
+    const serieCChampId = (state.standingsC || [])[0]?.teamId;
+    const serieDChampId = resolveCupChampionId(state.fixturesD);
+    const cdbPhase3Champs = [cneChampId, cvChampId, serieCChampId, serieDChampId].filter(
+      (id): id is string => Boolean(id)
+    );
+
+    const conmebolQualifiers = computeConmebolContinentalQualifiers({
+      clubs: baseBrAdjustedClubs,
+      standingsA: state.standingsA,
+      standingsSouthAmerica: state.standingsSouthAmerica,
+      libertadoresChampId,
+      sulamericanaChampId,
+      copaBrasilChampId,
+    });
+
+    const qualifiedLibBrIds = conmebolQualifiers.libertadoresEntries
+      .filter((e) => e.country === 'Brasil')
+      .map((e) => e.clubId);
+    const qualifiedSulaBrIds = conmebolQualifiers.sulamericanaEntries
+      .filter((e) => e.country === 'Brasil')
+      .map((e) => e.clubId);
+
+    const estadualMeritCtx = buildEstadualQualificationMeritContext({
+      clubs: baseBrAdjustedClubs,
+      relegatedFromCIds: relegatedC,
+      fixturesD: state.fixturesD,
+      standingsD: state.standingsD,
+      copaBrasilChampId,
+      copaNordesteChampId: cneChampId,
+      copaVerdeChampId: cvChampId,
+      serieCChampId,
+      serieDChampId,
+      libertadoresBrIds: qualifiedLibBrIds,
+      sulamericanaBrIds: qualifiedSulaBrIds,
+    });
+
     const allEstaduais = resolveAllEstaduaisFinalClassifications(
       state.fixturesEstadual,
       state.standingsEstadual,
-      baseBrAdjustedClubs
+      baseBrAdjustedClubs,
+      estadualMeritCtx
     );
     const potiguarClass = resolvePotiguarFinalClassification(
       state.fixturesEstadual,
       state.standingsEstadual,
-      baseBrAdjustedClubs
+      baseBrAdjustedClubs,
+      estadualMeritCtx
     );
     const brAdjustedClubs = applyAllEstaduaisQualificationsAndRebalanceSerieD(
       baseBrAdjustedClubs,
@@ -580,13 +622,6 @@ export function syncOffContinentCalendarRollover(state: GameSave): GameSave {
       state.fixturesCopaNordeste,
       allEstaduais,
       state.fixturesCopaVerde
-    );
-    const cneChampId = resolveCupChampionId(state.fixturesCopaNordeste);
-    const cvChampId = resolveCupChampionId(state.fixturesCopaVerde);
-    const serieCChampId = (state.standingsC || [])[0]?.teamId;
-    const serieDChampId = resolveCupChampionId(state.fixturesD);
-    const cdbPhase3Champs = [cneChampId, cvChampId, serieCChampId, serieDChampId].filter(
-      (id): id is string => Boolean(id)
     );
 
     const { updatedState: saSettledState } = settleAllSeasonEndPrizes(
@@ -659,22 +694,6 @@ export function syncOffContinentCalendarRollover(state: GameSave): GameSave {
     const standingsA: Standing[] = generateInitialStandings(serieAClubs);
     const standingsB: Standing[] = generateInitialStandings(serieBClubs);
     const standingsC: Standing[] = generateInitialStandings(serieCClubs);
-
-    const conmebolQualifiers = computeConmebolContinentalQualifiers({
-      clubs: updatedClubs,
-      standingsA: state.standingsA,
-      standingsSouthAmerica: state.standingsSouthAmerica,
-      libertadoresChampId,
-      sulamericanaChampId,
-      copaBrasilChampId,
-    });
-
-    const qualifiedLibBrIds = conmebolQualifiers.libertadoresEntries
-      .filter((e) => e.country === 'Brasil')
-      .map((e) => e.clubId);
-    const qualifiedSulaBrIds = conmebolQualifiers.sulamericanaEntries
-      .filter((e) => e.country === 'Brasil')
-      .map((e) => e.clubId);
 
     const libData = generateLibertadoresFixtures(
       updatedClubs,

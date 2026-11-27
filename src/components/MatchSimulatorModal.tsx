@@ -206,13 +206,15 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
 
   const leg1Fixture = useMemo(() => {
     if (!userFixture || userFixture.leg !== 2 || !allFixtures || allFixtures.length === 0) return null;
+    const expectedLeg1Id = userFixture.id.replace('_volta', '_ida');
     return allFixtures.find(
       (f) =>
         f.competition === userFixture.competition &&
-        f.cupPhase === userFixture.cupPhase &&
         f.leg === 1 &&
-        ((f.homeTeamId === userFixture.awayTeamId && f.awayTeamId === userFixture.homeTeamId) ||
-          f.id.replace('_volta', '_ida') === userFixture.id)
+        (f.id === expectedLeg1Id ||
+          (f.cupPhase === userFixture.cupPhase &&
+            f.homeTeamId === userFixture.awayTeamId &&
+            f.awayTeamId === userFixture.homeTeamId))
     );
   }, [userFixture, allFixtures]);
 

@@ -1099,8 +1099,8 @@ export const WorldClubsExplorer: React.FC<WorldClubsExplorerProps> = ({
   );
 
   const windowStatus = useMemo(
-    () => getTransferWindowStatus(gameState.currentDate),
-    [gameState.currentDate]
+    () => getTransferWindowStatus(gameState.currentDate, userClub),
+    [gameState.currentDate, userClub]
   );
 
   // Open Player Modal with calibrated initial proposal values

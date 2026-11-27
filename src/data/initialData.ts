@@ -22,6 +22,7 @@ import {
   assignVariedMatchDaySlot,
   getRoundDate,
   getSeasonStartDate,
+  getSerieBPlayoffDates,
   getSerieBRoundDate,
   getSerieCPlayoffDates,
   getSerieCRoundDate,
@@ -1486,8 +1487,13 @@ export function generateLeagueSchedule(
 
   const totalRounds = firstHalfRounds * 2;
   const minSeasonDate = getSeasonStartDate(seasonYear);
+  const serieBPlayoffDates = competition === 'serie_b' ? getSerieBPlayoffDates(seasonYear) : null;
   const serieCPlayoffDates = competition === 'serie_c' ? getSerieCPlayoffDates(seasonYear) : null;
-  const maxSeasonDate = serieCPlayoffDates ? serieCPlayoffDates.regularEndDate : `${seasonYear}-12-20`;
+  const maxSeasonDate = serieCPlayoffDates
+    ? serieCPlayoffDates.regularEndDate
+    : serieBPlayoffDates
+    ? serieBPlayoffDates.regularEndDate
+    : `${seasonYear}-12-20`;
   const roundBaseSlots: Array<{ date: string; time: string }> = Array.from(
     { length: totalRounds },
     (_, idx) => getScheduleSlotInfo(idx + 1)
@@ -1653,7 +1659,88 @@ export function generateLeagueSchedule(
     );
   }
 
+  // Série B (20 clubes · 38 rodadas): Playoff de Acesso (3º x 6º e 4º x 5º em Ida e Volta; os 2 vencedores sobem à Série A)
+  if (competition === 'serie_b') {
+    fixtures.push(...buildSerieBPlayoffFixtures(seasonYear, totalRounds));
+  }
+
   return fixtures;
+}
+
+/**
+ * Gera os 4 confrontos do Playoff de Acesso da Série B (3º x 6º e 4º x 5º em jogos de ida e volta).
+ * Melhor campanha (3º e 4º) decide o jogo de volta em casa. Os 2 vencedores sobem à Série A.
+ */
+export function buildSerieBPlayoffFixtures(
+  seasonYear: number,
+  regularTotalRounds: number = 38
+): Fixture[] {
+  const dates = getSerieBPlayoffDates(seasonYear);
+  const idaRound = regularTotalRounds + 1;
+  const voltaRound = regularTotalRounds + 2;
+
+  return [
+    {
+      id: 'serie_b_playoff_1_ida',
+      round: idaRound,
+      date: dates.playoffIdaDate,
+      time: '19:30',
+      homeTeamId: 'TBD_SB_6TH',
+      awayTeamId: 'TBD_SB_3RD',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      competition: 'serie_b',
+      cupPhase: 'Playoff de Acesso · 3º x 6º',
+      leg: 1,
+      events: [],
+    },
+    {
+      id: 'serie_b_playoff_1_volta',
+      round: voltaRound,
+      date: dates.playoffVoltaDate,
+      time: '16:00',
+      homeTeamId: 'TBD_SB_3RD',
+      awayTeamId: 'TBD_SB_6TH',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      competition: 'serie_b',
+      cupPhase: 'Playoff de Acesso · 3º x 6º',
+      leg: 2,
+      events: [],
+    },
+    {
+      id: 'serie_b_playoff_2_ida',
+      round: idaRound,
+      date: dates.playoffIdaDate,
+      time: '21:30',
+      homeTeamId: 'TBD_SB_5TH',
+      awayTeamId: 'TBD_SB_4TH',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      competition: 'serie_b',
+      cupPhase: 'Playoff de Acesso · 4º x 5º',
+      leg: 1,
+      events: [],
+    },
+    {
+      id: 'serie_b_playoff_2_volta',
+      round: voltaRound,
+      date: dates.playoffVoltaDate,
+      time: '18:30',
+      homeTeamId: 'TBD_SB_4TH',
+      awayTeamId: 'TBD_SB_5TH',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      competition: 'serie_b',
+      cupPhase: 'Playoff de Acesso · 4º x 5º',
+      leg: 2,
+      events: [],
+    },
+  ];
 }
 
 export function generateInitialStandings(clubIds: string[]): Standing[] {

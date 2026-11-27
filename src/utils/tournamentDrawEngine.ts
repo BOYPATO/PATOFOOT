@@ -2,8 +2,11 @@ import { Club, CompetitionType, Fixture, GameSave, Standing } from '../types/gam
 import {
   build32ClubContinentalCompetition,
   build36ClubUefaLeagueCompetition,
+  buildCopaNordeste20Competition,
   buildSerieDRegionalizedGroups,
   COMPETITIONS_CATALOG,
+  COPA_NORDESTE_2026_CLUB_IDS,
+  drawCopaNordesteGroups,
 } from './competitionsEngine';
 import {
   assignVariedMatchDaySlot,
@@ -105,6 +108,11 @@ export function getClubCompetitionFixturesAndStandings(
         fixtures: save.fixturesConcacafChampions || [],
         standings: [],
       };
+    case 'copa_nordeste':
+      return {
+        fixtures: save.fixturesCopaNordeste || [],
+        standings: save.standingsCopaNordeste || [],
+      };
     case 'intercontinental':
       return {
         fixtures: save.fixturesIntercontinental || [],
@@ -126,6 +134,7 @@ export const DRAWABLE_SHUFFLED_COMPETITIONS: CompetitionType[] = [
   'afc_champions',
   'serie_d',
   'copa_brasil',
+  'copa_nordeste',
   'concacaf_champions',
 ];
 
@@ -793,6 +802,29 @@ export function regenerateClubCompetitionDraw(
       },
       regenerated: true,
       feedback: `Sorteio oficial da ${compName} ${year} gerado!`,
+    };
+  }
+
+  if (competition === 'copa_nordeste') {
+    const existingIds = Array.from(
+      new Set((existingStandings || []).map((s) => s.teamId).filter((id) => clubsMap.has(id)))
+    );
+    const poolIds =
+      existingIds.length >= 20
+        ? existingIds.slice(0, 20)
+        : COPA_NORDESTE_2026_CLUB_IDS.filter((id) => clubsMap.has(id));
+    const drawnGroups = drawCopaNordesteGroups(poolIds, allClubs, { shufflePots: true });
+    const built = buildCopaNordeste20Competition(drawnGroups, year);
+
+    return {
+      updatedSave: {
+        ...save,
+        fixturesCopaNordeste: built.fixtures,
+        standingsCopaNordeste: built.standings,
+        drawnCompetitions: nextDrawn,
+      },
+      regenerated: true,
+      feedback: `Sorteio oficial da Copa do Nordeste ${year} realizado! 20 clubes sorteados em 4 grupos de 5 (turno e returno).`,
     };
   }
 

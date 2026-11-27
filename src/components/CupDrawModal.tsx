@@ -146,7 +146,8 @@ export const CupDrawModal: React.FC<CupDrawModalProps> = ({
         competition === 'champions_league' ||
         competition === 'europa_league' ||
         competition === 'conference_league' ||
-        competition === 'serie_d') &&
+        competition === 'serie_d' ||
+        competition === 'copa_nordeste') &&
       groupsMap.size > 0
     ) {
       const groupCards: DrawCardItem[] = Array.from(groupsMap.entries())

@@ -90,7 +90,10 @@ export const SquadManagementView: React.FC<SquadManagementViewProps> = ({
   onDelistPlayerForSale,
   onTogglePlayerForLoan,
 }) => {
-  const windowStatus = useMemo(() => getTransferWindowStatus(currentDate), [currentDate]);
+  const windowStatus = useMemo(
+    () => getTransferWindowStatus(currentDate, userClub),
+    [currentDate, userClub]
+  );
   const seasonLoanCounts = useMemo(
     () =>
       getClubSeasonLoanCounts({

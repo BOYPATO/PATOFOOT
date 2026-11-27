@@ -274,8 +274,8 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
   >(initialTab || 'ai_director');
 
   const windowStatus = useMemo(
-    () => getTransferWindowStatus(gameState?.currentDate),
-    [gameState?.currentDate]
+    () => getTransferWindowStatus(gameState?.currentDate, userClub),
+    [gameState?.currentDate, userClub]
   );
   const pendingTransfers = gameState?.pendingTransfers || [];
 
@@ -1108,7 +1108,10 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
           confetti({ particleCount: 70, spread: 70 });
           setNegotiationFeedback({
             success: true,
-            msg: `Proposta aceita! ${player.name} (livre no mercado) assinou por ${yearsLabel} e já foi inscrito imediatamente no ${userClub.name}!`,
+            msg:
+              !windowStatus.isOpen && userClub.division === 'EU'
+                ? `Proposta aceita! ${player.name} (livre no mercado) assinou por ${yearsLabel} e se apresentará ao ${userClub.name} na abertura da janela em ${windowStatus.nextOpenDisplay}!`
+                : `Proposta aceita! ${player.name} (livre no mercado) assinou por ${yearsLabel} e já foi inscrito imediatamente no ${userClub.name}!`,
           });
           setTimeout(() => {
             setNegotiatingPlayer(null);
@@ -1614,9 +1617,13 @@ export const TransferMarketView: React.FC<TransferMarketViewProps> = ({
             </span>
           </div>
           <p className="text-xs text-slate-300 leading-relaxed">
-            {windowStatus.isOpen
-              ? 'As janelas oficiais abrem de Janeiro a Fevereiro e de Julho a Agosto. Qualquer reforço contratado agora entra imediatamente no seu elenco.'
-              : 'A janela de registros está fechada (abre somente em Janeiro–Fevereiro e Julho–Agosto). Você pode negociar e contratar jogadores normalmente agora, mas eles só se apresentam ao elenco quando a janela abrir.'}
+            {userClub.division === 'EU'
+              ? windowStatus.isOpen
+                ? 'Na Europa, as janelas oficiais abrem de 01/01 a 31/01 e de 01/07 a 31/08. Compras, vendas e empréstimos fechados agora entram em vigor imediatamente.'
+                : 'A janela europeia está fechada (abre somente de 01/01 a 31/01 e de 01/07 a 31/08). Compras, vendas e empréstimos fechados fora desse período ficam agendados e o jogador só vai para o novo clube quando a janela abrir.'
+              : windowStatus.isOpen
+              ? 'As janelas oficiais estão abertas. Qualquer reforço contratado agora entra imediatamente no seu elenco.'
+              : 'A janela de registros está fechada. Você pode negociar compras, vendas e empréstimos normalmente agora, mas os jogadores só mudam de time quando a janela abrir.'}
           </p>
         </div>
 
