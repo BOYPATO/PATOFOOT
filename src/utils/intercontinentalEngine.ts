@@ -288,6 +288,26 @@ export function getIntercontinentalSlotLabel(slotId: string): string {
       return 'Vencedor Semifinal 1 (4º vs 7º)';
     case 'TBD_L2_WIN2':
       return 'Vencedor Semifinal 2 (5º vs 6º)';
+    case 'TBD_SB_3RD':
+      return '3º Colocado (Série B)';
+    case 'TBD_SB_4TH':
+      return '4º Colocado (Série B)';
+    case 'TBD_SB_5TH':
+      return '5º Colocado (Série B)';
+    case 'TBD_SB_6TH':
+      return '6º Colocado (Série B)';
+    case 'TBD_SC_4TH':
+      return '4º Colocado (Série C)';
+    case 'TBD_SC_5TH':
+      return '5º Colocado (Série C)';
+    case 'TBD_SC_6TH':
+      return '6º Colocado (Série C)';
+    case 'TBD_SC_7TH':
+      return '7º Colocado (Série C)';
+    case 'TBD_SC_WIN1':
+      return 'Vencedor Playoff 1 (4º vs 7º)';
+    case 'TBD_SC_WIN2':
+      return 'Vencedor Playoff 2 (5º vs 6º)';
     case 'TBD_COMMUNITY_SHIELD_PL':
       return 'Campeão Premier League';
     case 'TBD_COMMUNITY_SHIELD_FA':

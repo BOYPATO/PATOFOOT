@@ -5,11 +5,33 @@ import {
   browserLocalPersistence,
   GoogleAuthProvider,
 } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  getFirestore,
+  doc,
+  getDocFromServer,
+  type Firestore,
+} from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 export const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+function createFirestoreInstance(): Firestore {
+  try {
+    return initializeFirestore(
+      app,
+      {
+        ...(typeof window !== 'undefined' ? { experimentalForceLongPolling: true } : {}),
+        ignoreUndefinedProperties: true,
+      },
+      firebaseConfig.firestoreDatabaseId
+    );
+  } catch {
+    return getFirestore(app, firebaseConfig.firestoreDatabaseId);
+  }
+}
+
+export const db = createFirestoreInstance();
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
@@ -19,10 +41,17 @@ setPersistence(auth, browserLocalPersistence).catch((err) => {
 });
 
 async function testConnection() {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return;
+  }
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
+    if (
+      error instanceof Error &&
+      error.message.includes('the client is offline') &&
+      (typeof navigator === 'undefined' || navigator.onLine !== false)
+    ) {
       console.error('Please check your Firebase configuration.');
     }
   }

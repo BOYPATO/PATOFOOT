@@ -1730,7 +1730,20 @@ function sanitizeSave(save: GameSave): GameSave {
       save.fixturesCopaVerde.some((f) => f.played));
 
   const fixturesLibertadores = mergeCupTemplateWithPlayed(libData.fixtures, save.fixturesLibertadores);
-  const fixturesSulamericana = mergeCupTemplateWithPlayed(sulaData.fixtures, save.fixturesSulamericana);
+  const savedSulaList = save.fixturesSulamericana || [];
+  const savedSulaHasPlayoffs = savedSulaList.some((f) => f.id === 'sula_playoffs_m0_ida');
+  const savedSulaOitavasPlayed = savedSulaList.some(
+    (f) => f.id.startsWith('sula_oitavas_') && f.played
+  );
+  const fixturesSulamericana =
+    !needsCalendarMigration && !savedSulaHasPlayoffs && savedSulaOitavasPlayed
+      ? savedSulaList
+      : mergeCupTemplateWithPlayed(sulaData.fixtures, save.fixturesSulamericana).map((f) => {
+          if (!savedSulaHasPlayoffs && !f.played && f.id.startsWith('sula_oitavas_')) {
+            return { ...f, homeTeamId: 'tbd', awayTeamId: 'tbd' };
+          }
+          return f;
+        });
   const fixturesCopaBrasil = needsEstaduais2026Migration && !(save.fixturesCopaBrasil || []).some((f) => f.played)
     ? cdbTemplate
     : mergeCupTemplateWithPlayed(cdbTemplate, save.fixturesCopaBrasil);

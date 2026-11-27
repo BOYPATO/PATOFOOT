@@ -4,6 +4,7 @@ import {
   Fixture,
   GameSave,
   InboxMessage,
+  SouthAmericanCupId,
   Standing,
   TrophyRecord,
 } from '../types/game';
@@ -564,6 +565,14 @@ export function syncOffContinentCalendarRollover(state: GameSave): GameSave {
       (id): id is string => Boolean(id)
     );
 
+    const domesticCupChamps: Partial<Record<SouthAmericanCupId, string>> = {};
+    if (state.fixturesSouthAmericanCups) {
+      for (const [cId, fixList] of Object.entries(state.fixturesSouthAmericanCups)) {
+        const champ = resolveCupChampionId(fixList);
+        if (champ) domesticCupChamps[cId as SouthAmericanCupId] = champ;
+      }
+    }
+
     const conmebolQualifiers = computeConmebolContinentalQualifiers({
       clubs: baseBrAdjustedClubs,
       standingsA: state.standingsA,
@@ -571,6 +580,7 @@ export function syncOffContinentCalendarRollover(state: GameSave): GameSave {
       libertadoresChampId,
       sulamericanaChampId,
       copaBrasilChampId,
+      domesticCupChampions: domesticCupChamps,
     });
 
     const qualifiedLibBrIds = conmebolQualifiers.libertadoresEntries

@@ -414,6 +414,8 @@ export function getContinentalFinalDates(year: number = 2026): {
  */
 export function getConmebolContinentalScheduleDates(year: number = 2026): {
   groupDates: string[];
+  playoffIdaDate: string;
+  playoffVoltaDate: string;
   oitavasIdaDate: string;
   oitavasVoltaDate: string;
   quartasIdaDate: string;
@@ -434,6 +436,8 @@ export function getConmebolContinentalScheduleDates(year: number = 2026): {
         '2026-05-20',
         '2026-05-27',
       ],
+      playoffIdaDate: '2026-07-22',
+      playoffVoltaDate: '2026-07-29',
       oitavasIdaDate: '2026-08-12',
       oitavasVoltaDate: '2026-08-19',
       quartasIdaDate: '2026-09-09',
@@ -457,6 +461,8 @@ export function getConmebolContinentalScheduleDates(year: number = 2026): {
       addDays(aprWed2, 42),
       addDays(aprWed2, 49),
     ],
+    playoffIdaDate: addDays(augWed2, -21),
+    playoffVoltaDate: addDays(augWed2, -14),
     oitavasIdaDate: augWed2,
     oitavasVoltaDate: addDays(augWed2, 7),
     quartasIdaDate: sepWed2,

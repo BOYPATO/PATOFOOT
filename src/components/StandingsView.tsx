@@ -1213,12 +1213,12 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
   );
 
   const liveEstadualMeritCtx = useMemo(() => {
-    const libBrIds = conmebolReport.libertadoresEntries
-      .filter((e) => e.country === 'Brasil')
-      .map((e) => e.clubId);
-    const sulaBrIds = conmebolReport.sulamericanaEntries
-      .filter((e) => e.country === 'Brasil')
-      .map((e) => e.clubId);
+    const libBrIds = (conmebolReport.byLeague.serie_a?.libertadoresClubs || []).map(
+      (e) => e.clubId
+    );
+    const sulaBrIds = (conmebolReport.byLeague.serie_a?.sulamericanaClubs || []).map(
+      (e) => e.clubId
+    );
     const relegatedFromCIds = (standingsC || []).slice(-4).map((s) => s.teamId);
     return buildEstadualQualificationMeritContext({
       clubs,
@@ -3001,6 +3001,8 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                   const qCount =
                     selectedComp === 'afc_champions'
                       ? 8
+                      : selectedComp === 'sulamericana'
+                      ? 1
                       : isCne4Groups || isCv4Groups
                       ? 2
                       : selectedComp === 'serie_d' ||
@@ -3011,6 +3013,10 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                   const qLabel =
                     selectedComp === 'afc_champions'
                       ? '16 clubes · 8 rodadas (4C/4F) · Top 8 avançam às Oitavas'
+                      : selectedComp === 'libertadores'
+                      ? '4 clubes · 1º–2º Oitavas · 3º Playoff Sul-Americana'
+                      : selectedComp === 'sulamericana'
+                      ? '4 clubes · 1º Oitavas Direto · 2º Playoff (vs 3º Lib)'
                       : isCne4Groups
                       ? '5 clubes · 8 jogos (Turno e Returno) · Top 2 avançam às Quartas (Ida e Volta)'
                       : isCv4Groups
@@ -3080,6 +3086,8 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                                   if (!club) return null;
                                   const pos = idx + 1;
                                   const isQualified = idx < panel.qualifyCount;
+                                  const isLibPlayoffSula = selectedComp === 'libertadores' && pos === 3;
+                                  const isSulaPlayoff = selectedComp === 'sulamericana' && pos === 2;
                                   const posBadgeClass = isPotiguar
                                     ? pos <= 2
                                       ? 'bg-amber-400/20 text-amber-300 border border-amber-400/50'
@@ -3090,10 +3098,18 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                                       : 'text-slate-500'
                                     : isQualified
                                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                    : isLibPlayoffSula
+                                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                                    : isSulaPlayoff
+                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                                     : 'text-slate-500';
                                   const cutoffBorder =
                                     pos === panel.qualifyCount && pos < panel.rows.length
                                       ? 'border-b-2 border-emerald-500/40'
+                                      : isLibPlayoffSula && pos < panel.rows.length
+                                      ? 'border-b-2 border-cyan-500/40'
+                                      : isSulaPlayoff && pos < panel.rows.length
+                                      ? 'border-b-2 border-amber-500/40'
                                       : '';
 
                                   return (
@@ -3157,6 +3173,16 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                                               · G-3 Copa do Brasil
                                             </span>
                                           )}
+                                          {isLibPlayoffSula && (
+                                            <span className="hidden sm:inline text-[10px] font-semibold text-cyan-300/90 shrink-0">
+                                              · Playoff Sul-Americana
+                                            </span>
+                                          )}
+                                          {isSulaPlayoff && (
+                                            <span className="hidden sm:inline text-[10px] font-semibold text-amber-300/90 shrink-0">
+                                              · Playoff vs 3º Lib
+                                            </span>
+                                          )}
                                         </button>
                                       </td>
                                       <td className="py-2 px-2 text-center font-black text-sky-400 font-mono tabular-nums">
@@ -3197,6 +3223,72 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                       );
                     })}
                   </div>
+
+                  {selectedComp === 'libertadores' && (
+                    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 text-xs text-slate-300 space-y-2.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">
+                        <span className="font-black text-white text-sm">
+                          🌎 Regulamento Oficial · Fase de Grupos da Libertadores ({saSeasonYear ?? seasonYear})
+                        </span>
+                        <span className="text-[11px] font-mono text-amber-300">
+                          32 Clubes · 8 Grupos (A–H) · 6 Rodadas (Turno e Returno)
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px] leading-relaxed">
+                        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                          <div className="font-bold text-emerald-300 mb-1">1º e 2º Lugar · Oitavas da Libertadores</div>
+                          <p className="text-slate-300">
+                            Os 2 primeiros colocados de cada grupo (16 clubes) avançam às Oitavas de Final da Libertadores em confrontos de ida e volta. Os líderes de grupo decidem o jogo de volta em casa.
+                          </p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
+                          <div className="font-bold text-cyan-300 mb-1">3º Lugar · Playoffs da Sul-Americana</div>
+                          <p className="text-slate-300">
+                            Os 8 terceiros colocados dos grupos não são eliminados do continente: são transferidos para disputar os Playoffs da Copa Sul-Americana (ida e volta) contra os 8 segundos colocados da Sul-Americana.
+                          </p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800/80">
+                          <div className="font-bold text-slate-200 mb-1">4º Lugar · Eliminado</div>
+                          <p className="text-slate-400">
+                            O último colocado de cada chave encerra sua participação nas competições continentais da temporada.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedComp === 'sulamericana' && (
+                    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 text-xs text-slate-300 space-y-2.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">
+                        <span className="font-black text-white text-sm">
+                          🌐 Regulamento Oficial · Fase de Grupos da Sul-Americana ({saSeasonYear ?? seasonYear})
+                        </span>
+                        <span className="text-[11px] font-mono text-cyan-300">
+                          32 Clubes · 8 Grupos (A–H) · 6 Rodadas (Turno e Returno)
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px] leading-relaxed">
+                        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                          <div className="font-bold text-emerald-300 mb-1">1º Lugar · Oitavas de Final Direto</div>
+                          <p className="text-slate-300">
+                            Apenas o líder de cada grupo (8 clubes) avança diretamente às Oitavas de Final da Sul-Americana, aguardando os vencedores dos Playoffs e decidindo a volta em casa.
+                          </p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                          <div className="font-bold text-amber-300 mb-1">2º Lugar · Playoffs vs 3º da Libertadores</div>
+                          <p className="text-slate-300">
+                            Os 8 segundos colocados enfrentam os 8 terceiros colocados dos grupos da Libertadores em jogos de ida e volta (2º da Sul-Americana decide em casa). Os 8 vencedores vão às Oitavas.
+                          </p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800/80">
+                          <div className="font-bold text-slate-200 mb-1">3º e 4º Lugar · Eliminados</div>
+                          <p className="text-slate-400">
+                            Os dois últimos colocados de cada grupo encerram sua campanha continental na fase de grupos.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {selectedComp === 'serie_d' && (
                     <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 text-xs text-slate-300 space-y-2.5">
@@ -4190,41 +4282,20 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                           <span className="flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded bg-amber-400" />
                             <span>
-                              Libertadores Grupos ({leagueQual.libertadoresDirectBerths}{' '}
-                              {leagueQual.libertadoresDirectBerths === 1 ? 'vaga direta' : 'vagas diretas'})
+                              {leagueQual.country === 'Brasil'
+                                ? 'Libertadores (G-4 do Brasileirão + Campeão da Copa do Brasil = 5 vagas)'
+                                : leagueQual.country === 'Argentina'
+                                ? 'Libertadores (G-4 do Argentino + Campeão da Copa Argentina = 5 vagas)'
+                                : `Libertadores (${leagueQual.totalLibertadoresBerths} ${
+                                    leagueQual.totalLibertadoresBerths === 1 ? 'vaga' : 'vagas'
+                                  })`}
                             </span>
                           </span>
-                          {(leagueQual.libertadoresPhase2Berths > 0 ||
-                            leagueQual.libertadoresPhase1Berths > 0) && (
-                            <span className="flex items-center gap-1.5">
-                              <span className="w-2.5 h-2.5 rounded bg-amber-950 border border-amber-500" />
-                              <span>
-                                Pré-Libertadores (
-                                {leagueQual.libertadoresPhase2Berths > 0
-                                  ? `Fase 2: ${leagueQual.libertadoresPhase2Berths}`
-                                  : ''}
-                                {leagueQual.libertadoresPhase1Berths > 0
-                                  ? `${
-                                      leagueQual.libertadoresPhase2Berths > 0 ? ' · ' : ''
-                                    }Fase 1: ${leagueQual.libertadoresPhase1Berths}`
-                                  : ''}
-                                )
-                              </span>
-                            </span>
-                          )}
                           <span className="flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded bg-cyan-400" />
                             <span>
-                              Sul-Americana (
-                              {leagueQual.sulamericanaDirectBerths > 0
-                                ? `${leagueQual.sulamericanaDirectBerths} diretas`
-                                : ''}
-                              {leagueQual.sulamericanaPreliminaryBerths > 0
-                                ? `${
-                                    leagueQual.sulamericanaDirectBerths > 0 ? ' · ' : ''
-                                  }${leagueQual.sulamericanaPreliminaryBerths} preliminares`
-                                : ''}
-                              )
+                              Sul-Americana ({leagueQual.totalSulamericanaBerths}{' '}
+                              {leagueQual.totalSulamericanaBerths === 1 ? 'vaga' : 'vagas'} · logo após Libertadores)
                             </span>
                           </span>
                           {relegationCount > 0 && (
@@ -4418,6 +4489,15 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                               : pos === orderedTableStandings.length - 4
                               ? 'border-b border-rose-500/50'
                               : ''
+                            : leagueQual
+                            ? pos === leagueQual.effectiveLibertadoresDirectCutoff
+                              ? 'border-b-2 border-amber-500/50'
+                              : pos === leagueQual.effectiveSulamericanaCutoff
+                              ? 'border-b-2 border-cyan-500/50'
+                              : relegationCount > 0 &&
+                                pos === orderedTableStandings.length - relegationCount
+                              ? 'border-b border-rose-500/50'
+                              : ''
                             : '';
 
                           const pct =
@@ -4480,40 +4560,23 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                                       )}
                                       {libQual && (
                                         <span
-                                          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap ${
-                                            libQual.stage === 'libertadores_grupos'
-                                              ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
-                                              : libQual.stage === 'libertadores_pre_fase2'
-                                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                                              : 'bg-amber-600/10 text-amber-500 border border-amber-600/30'
-                                          }`}
+                                          className="text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap bg-amber-400/20 text-amber-300 border border-amber-400/40"
                                           title={libQual.stageName}
                                         >
-                                          {libQual.stage === 'libertadores_grupos'
-                                            ? '🏆 Liberta'
-                                            : libQual.stage === 'libertadores_pre_fase2'
-                                            ? '⚡ Pré-Liberta (F2)'
-                                            : '⚡ Pré-Liberta (F1)'}
+                                          🏆 Liberta
                                           {libQual.reason &&
-                                            libQual.reason !== 'Vaga Direta Liga' &&
-                                            libQual.reason !== 'Campeão Nacional' &&
-                                            libQual.reason !== 'Pré-Libertadores Liga' && (
+                                            (libQual.reason === 'Campeão da Copa do Brasil' ||
+                                              libQual.reason === 'Campeão da Copa Argentina') && (
                                               <span className="opacity-80"> · {libQual.reason}</span>
                                             )}
                                         </span>
                                       )}
                                       {sulaQual && (
                                         <span
-                                          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap ${
-                                            sulaQual.stage === 'sulamericana_grupos'
-                                              ? 'bg-cyan-400/20 text-cyan-300 border border-cyan-400/40'
-                                              : 'bg-cyan-600/10 text-cyan-400 border border-cyan-600/30'
-                                          }`}
+                                          className="text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap bg-cyan-400/20 text-cyan-300 border border-cyan-400/40"
                                           title={sulaQual.stageName}
                                         >
-                                          {sulaQual.stage === 'sulamericana_grupos'
-                                            ? '🥈 Sula (Grupos)'
-                                            : '🥈 Sula (Preliminar)'}
+                                          🥈 Sul-Americana
                                         </span>
                                       )}
                                       {euQual && euQual.uelCupChampionId === club.id && (
@@ -5630,7 +5693,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                 Distribuição de Vagas por País — Temporada {seasonYear + 1}
               </h2>
               <p className="text-xs text-slate-400 mt-1 max-w-3xl leading-relaxed">
-                Regulamento oficial da CONMEBOL: <strong>47 clubes</strong> na Libertadores (28 diretos na Fase de Grupos + 19 nas fases preliminares) e <strong>44 clubes nacionais</strong> na Sul-Americana (12 diretos BRA/ARG + 32 na Fase Preliminar dos outros 8 países). Os <strong>4 eliminados da Fase 3 da Pré-Libertadores</strong> transferem-se aos grupos da Sul-Americana, totalizando os 32 clubes de cada torneio principal.
+                Distribuição direta de vagas por país: <strong>32 clubes</strong> na Fase de Grupos da Libertadores (Brasil e Argentina com 5 vagas cada: Copa Nacional + 4 primeiros da liga; URU, EQU, COL, CHI, PAR e PER com 3; BOL e VEN com 2) e <strong>32 clubes</strong> na Fase de Grupos da Sul-Americana (Brasil e Argentina com 4; demais 8 países com 3), preenchidos pelos clubes logo após as vagas da Libertadores em seus campeonatos nacionais.
               </p>
             </div>
 
@@ -5687,14 +5750,10 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                     <tr>
                       <th className="py-3 px-3">País</th>
                       <th className="py-3 px-3">Liga Nacional</th>
-                      <th className="py-3 px-2 text-center text-amber-300">Total Lib.</th>
-                      <th className="py-3 px-2 text-center">Grupos</th>
-                      <th className="py-3 px-2 text-center">Fase 2</th>
-                      <th className="py-3 px-2 text-center">Fase 1</th>
-                      <th className="py-3 px-2 text-center text-cyan-300">Total Sula</th>
-                      <th className="py-3 px-2 text-center">Grupos</th>
-                      <th className="py-3 px-2 text-center">Prelim.</th>
-                      <th className="py-3 px-4 min-w-[280px]">Critérios de Vaga (Libertadores & Sula)</th>
+                      <th className="py-3 px-3 text-center text-amber-300">Libertadores</th>
+                      <th className="py-3 px-3 text-center text-cyan-300">Sul-Americana</th>
+                      <th className="py-3 px-3 text-center text-slate-300">Total</th>
+                      <th className="py-3 px-4 min-w-[300px]">Critérios de Vaga (Libertadores & Sul-Americana)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 font-medium">
@@ -5735,26 +5794,14 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                               {COMPETITIONS_CATALOG[row.leagueId]?.name || row.leagueId}
                             </button>
                           </td>
-                          <td className="py-2.5 px-2 text-center font-black font-mono text-amber-400 tabular-nums">
-                            {row.libertadoresTotal}
+                          <td className="py-2.5 px-3 text-center font-black font-mono text-amber-400 tabular-nums">
+                            {row.libertadoresTotal} vagas
                           </td>
-                          <td className="py-2.5 px-2 text-center font-bold font-mono text-amber-200 tabular-nums">
-                            {row.libertadoresGrupos}
+                          <td className="py-2.5 px-3 text-center font-black font-mono text-cyan-400 tabular-nums">
+                            {row.sulamericanaTotal} vagas
                           </td>
-                          <td className="py-2.5 px-2 text-center font-mono text-slate-300 tabular-nums">
-                            {row.libertadoresPreFase2 > 0 ? row.libertadoresPreFase2 : '-'}
-                          </td>
-                          <td className="py-2.5 px-2 text-center font-mono text-slate-400 tabular-nums">
-                            {row.libertadoresPreFase1 > 0 ? row.libertadoresPreFase1 : '-'}
-                          </td>
-                          <td className="py-2.5 px-2 text-center font-black font-mono text-cyan-400 tabular-nums">
-                            {row.sulamericanaTotal}
-                          </td>
-                          <td className="py-2.5 px-2 text-center font-bold font-mono text-cyan-200 tabular-nums">
-                            {row.sulamericanaGrupos > 0 ? row.sulamericanaGrupos : '-'}
-                          </td>
-                          <td className="py-2.5 px-2 text-center font-mono text-slate-300 tabular-nums">
-                            {row.sulamericanaPreliminar > 0 ? row.sulamericanaPreliminar : '-'}
+                          <td className="py-2.5 px-3 text-center font-bold font-mono text-slate-200 tabular-nums">
+                            {row.libertadoresTotal + row.sulamericanaTotal}
                           </td>
                           <td className="py-2.5 px-4 text-[11px] text-slate-400 leading-relaxed">
                             <div className="space-y-0.5">
@@ -5777,29 +5824,17 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                       <td colSpan={2} className="py-3 px-3 uppercase tracking-wider text-slate-400">
                         Total América do Sul (10 Federações)
                       </td>
-                      <td className="py-3 px-2 text-center font-black text-amber-400 font-mono">
-                        47
+                      <td className="py-3 px-3 text-center font-black text-amber-400 font-mono">
+                        32 vagas
                       </td>
-                      <td className="py-3 px-2 text-center font-black text-amber-200 font-mono">
-                        28
+                      <td className="py-3 px-3 text-center font-black text-cyan-400 font-mono">
+                        32 vagas
                       </td>
-                      <td className="py-3 px-2 text-center font-mono text-slate-300">
-                        13
-                      </td>
-                      <td className="py-3 px-2 text-center font-mono text-slate-400">
-                        6
-                      </td>
-                      <td className="py-3 px-2 text-center font-black text-cyan-400 font-mono">
-                        44
-                      </td>
-                      <td className="py-3 px-2 text-center font-black text-cyan-200 font-mono">
-                        12
-                      </td>
-                      <td className="py-3 px-2 text-center font-mono text-slate-300">
-                        32
+                      <td className="py-3 px-3 text-center font-black text-white font-mono">
+                        64
                       </td>
                       <td className="py-3 px-4 text-[11px] text-slate-400">
-                        + 4 clubes eliminados da Fase 3 da Pré-Libertadores transferem-se aos grupos da Sul-Americana (totalizando 32 clubes por torneio).
+                        32 clubes diretos na Fase de Grupos da Libertadores + 32 clubes diretos na Fase de Grupos da Sul-Americana.
                       </td>
                     </tr>
                   </tfoot>
@@ -5809,37 +5844,37 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                 <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-3.5 space-y-1.5">
                   <div className="text-amber-400 font-bold flex items-center gap-1.5">
-                    <span>🏆 Pré-Libertadores: Fase 1, 2 e 3</span>
+                    <span>🏆 Libertadores (32 Vagas Diretas)</span>
                   </div>
                   <p className="text-slate-400 text-[11px] leading-relaxed">
-                    <strong>Fase 1 (6 clubes):</strong> 1 de BOL, ECU, PAR, PER, URU e VEN. 3 avançam à Fase 2.<br />
-                    <strong>Fase 2 (16 clubes):</strong> 3 da Fase 1 + 2 BRA, 1 ARG, 2 CHI, 2 COL + 1 de BOL, ECU, PAR, PER, URU e VEN. 8 avançam à Fase 3.<br />
-                    <strong>Fase 3 (8 clubes):</strong> 4 confrontos diretos. Os 4 vencedores vão aos Grupos da Libertadores; os 4 perdedores vão aos Grupos da Sul-Americana.
+                    <strong>Brasil (5) e Argentina (5):</strong> Campeão da Copa Nacional (Copa do Brasil / Copa Argentina) + os 4 primeiros da liga.<br />
+                    <strong>URU, EQU, COL, CHI, PAR e PER (3 cada):</strong> 3 primeiros colocados de cada liga.<br />
+                    <strong>BOL e VEN (2 cada):</strong> 2 primeiros colocados de cada liga.
                   </p>
                 </div>
 
                 <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-3.5 space-y-1.5">
                   <div className="text-cyan-400 font-bold flex items-center gap-1.5">
-                    <span>🥈 Fase Preliminar da Sul-Americana</span>
+                    <span>🥈 Sul-Americana (32 Vagas Diretas)</span>
                   </div>
                   <p className="text-slate-400 text-[11px] leading-relaxed">
-                    Disputada em jogo único nacional entre os 4 classificados de cada um dos 8 países (fora BRA e ARG). Dois confrontos por país classificam 2 equipes nacionais diretamente para a Fase de Grupos (16 equipes avançam).
+                    <strong>Brasil (4) e Argentina (4)</strong> + <strong>3 vagas</strong> para cada um dos outros 8 países (Uruguai, Equador, Colômbia, Chile, Paraguai, Peru, Bolívia e Venezuela). Todas as vagas vão para os clubes imediatamente abaixo das vagas da Libertadores nas ligas nacionais.
                   </p>
                 </div>
 
                 <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-3.5 space-y-1.5">
                   <div className="text-emerald-400 font-bold flex items-center gap-1.5">
-                    <span>🔁 Repasse de Vagas (G+1 Dinâmico)</span>
+                    <span>🔁 Repasse da Copa Nacional</span>
                   </div>
                   <p className="text-slate-400 text-[11px] leading-relaxed">
-                    Caso o Campeão da Copa Nacional (ex: Copa do Brasil, Copa Argentina, Copa Chile) ou os campeões das edições anteriores de Libertadores/Sul-Americana já estejam na zona de classificação, a vaga direta desce ao próximo clube elegível da liga.
+                    No Brasil e na Argentina, se o campeão da Copa do Brasil ou da Copa Argentina já terminar entre os 4 primeiros da liga nacional, a 5ª vaga da Libertadores passa automaticamente ao 5º colocado (e a zona da Sul-Americana desce uma posição).
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* MODO CLUBES EM TEMPO REAL: Cards dos 10 países com seus classificados por fase */}
+          {/* MODO CLUBES EM TEMPO REAL: Cards dos 10 países com seus classificados */}
           {conmebolSpotsViewMode === 'clubs' && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -5890,8 +5925,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                           <div className="text-[11px] font-bold text-amber-400 flex items-center justify-between">
                             <span>🏆 CONMEBOL Libertadores ({countrySummary.libertadoresClubs.length})</span>
                             <span className="text-[10px] text-slate-500 font-mono">
-                              {countrySummary.libertadoresDirectBerths}D +{' '}
-                              {countrySummary.libertadoresPhase2Berths + countrySummary.libertadoresPhase1Berths}P
+                              {countrySummary.totalLibertadoresBerths} vagas
                             </span>
                           </div>
 
@@ -5899,8 +5933,6 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                             {countrySummary.libertadoresClubs.map((entry) => {
                               const cObj = clubs.find((x) => x.id === entry.clubId);
                               if (!cObj) return null;
-                              const isGrupos = entry.stage === 'libertadores_grupos';
-                              const isFase2 = entry.stage === 'libertadores_pre_fase2';
                               return (
                                 <button
                                   key={entry.clubId}
@@ -5930,34 +5962,40 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                                   </div>
 
                                   <div className="flex items-center gap-1 shrink-0">
-                                    <span
-                                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                                        isGrupos
-                                          ? 'bg-amber-400/20 text-amber-300'
-                                          : isFase2
-                                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                                          : 'bg-amber-600/10 text-amber-500 border border-amber-600/30'
-                                      }`}
-                                    >
-                                      {isGrupos ? 'Grupos' : isFase2 ? 'Pré F2' : 'Pré F1'}
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300">
+                                      Grupos
                                     </span>
                                     <span className="text-[10px] text-slate-400 font-mono tabular-nums">
-                                      {entry.reason === 'Campeão da Libertadores'
-                                        ? 'LIB'
-                                        : entry.reason === 'Campeão da Sul-Americana'
-                                        ? 'SULA'
-                                        : entry.reason === 'Campeão da Copa do Brasil'
+                                      {entry.reason === 'Campeão da Copa do Brasil'
                                         ? 'CDB'
-                                        : entry.reason === 'Vice da Copa do Brasil'
-                                        ? 'Vice CDB'
-                                        : entry.reason === 'Campeão da Copa Nacional'
-                                        ? 'Copa'
+                                        : entry.reason === 'Campeão da Copa Argentina'
+                                        ? 'Copa ARG'
                                         : `${entry.positionInLeague}º`}
                                     </span>
                                   </div>
                                 </button>
                               );
                             })}
+                            {(countrySummary.country === 'Brasil' ||
+                              countrySummary.country === 'Argentina') &&
+                              countrySummary.libertadoresClubs.length <
+                                countrySummary.totalLibertadoresBerths && (
+                                <div className="w-full flex items-center justify-between gap-2 py-1 px-2 rounded-lg bg-amber-500/5 border border-dashed border-amber-500/30 text-left">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="w-4 h-4 rounded flex items-center justify-center text-[9px] font-black shrink-0 bg-amber-400/20 text-amber-300">
+                                      🏆
+                                    </span>
+                                    <span className="truncate font-semibold text-amber-200/90 text-[11px]">
+                                      {countrySummary.country === 'Brasil'
+                                        ? 'Campeão da Copa do Brasil'
+                                        : 'Campeão da Copa Argentina'}
+                                    </span>
+                                  </div>
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono shrink-0">
+                                    A definir
+                                  </span>
+                                </div>
+                              )}
                           </div>
                         </div>
 
@@ -5966,9 +6004,7 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                           <div className="text-[11px] font-bold text-cyan-400 flex items-center justify-between">
                             <span>🥈 CONMEBOL Sul-Americana ({countrySummary.sulamericanaClubs.length})</span>
                             <span className="text-[10px] text-slate-500 font-mono">
-                              {countrySummary.sulamericanaDirectBerths > 0
-                                ? `${countrySummary.sulamericanaDirectBerths}D`
-                                : `${countrySummary.sulamericanaPreliminaryBerths} Prelim`}
+                              {countrySummary.totalSulamericanaBerths} vagas
                             </span>
                           </div>
 
@@ -5976,7 +6012,6 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                             {countrySummary.sulamericanaClubs.map((entry) => {
                               const cObj = clubs.find((x) => x.id === entry.clubId);
                               if (!cObj) return null;
-                              const isGrupos = entry.stage === 'sulamericana_grupos';
                               return (
                                 <button
                                   key={entry.clubId}
@@ -6006,19 +6041,11 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                                   </div>
 
                                   <div className="flex items-center gap-1 shrink-0">
-                                    <span
-                                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                                        isGrupos
-                                          ? 'bg-cyan-400/20 text-cyan-300'
-                                          : 'bg-cyan-600/10 text-cyan-400 border border-cyan-600/30'
-                                      }`}
-                                    >
-                                      {isGrupos ? 'Grupos' : 'Prelim.'}
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-cyan-400/20 text-cyan-300">
+                                      Grupos
                                     </span>
                                     <span className="text-[10px] text-slate-400 font-mono tabular-nums">
-                                      {entry.reason === 'Campeão da Copa Nacional'
-                                        ? 'Copa'
-                                        : `${entry.positionInLeague}º`}
+                                      {`${entry.positionInLeague}º`}
                                     </span>
                                   </div>
                                 </button>
@@ -6217,6 +6244,32 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                       </div>
                       <p className="text-[11px] text-slate-300">
                         Oitavas de Final (Março) em ida e volta dentro de cada conferência (1ºx8º, 4ºx5º, 2ºx7º, 3ºx6º; sem regra do gol fora, empate vai direto aos pênaltis). Quartas de Final (cruzamento Oeste x Leste), Semifinais e Grande Final (01/05) em jogo único centralizados na Arábia Saudita (Jeddah e Riyadh).
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedComp === 'libertadores' && (
+                  <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3.5 text-xs text-amber-100/90 flex flex-wrap items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="font-black text-amber-300">
+                        🌎 Mata-Mata Oficial · CONMEBOL Libertadores ({saSeasonYear ?? seasonYear})
+                      </div>
+                      <p className="text-[11px] text-slate-300">
+                        Os 2 primeiros de cada grupo (16 clubes) disputam Oitavas, Quartas e Semifinais em jogos de ida e volta até a Grande Final em jogo único. Os 8 terceiros colocados dos grupos avançam aos Playoffs da Copa Sul-Americana.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedComp === 'sulamericana' && (
+                  <div className="rounded-xl bg-cyan-500/10 border border-cyan-500/30 p-3.5 text-xs text-cyan-100/90 flex flex-wrap items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="font-black text-cyan-300">
+                        🌐 Playoffs &amp; Mata-Mata · CONMEBOL Sul-Americana ({saSeasonYear ?? seasonYear})
+                      </div>
+                      <p className="text-[11px] text-slate-300">
+                        Os 8 líderes de grupo entram direto nas Oitavas de Final (decidindo a volta em casa). Nos Playoffs (Ida e Volta), os 8 segundos colocados da Sul-Americana enfrentam os 8 terceiros colocados dos grupos da Libertadores — os 8 vencedores completam as Oitavas de Final.
                       </p>
                     </div>
                   </div>

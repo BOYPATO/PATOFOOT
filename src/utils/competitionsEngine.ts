@@ -79,7 +79,7 @@ export const COMPETITIONS_CATALOG: Record<CompetitionType, CompetitionMeta> = {
     name: 'Campeonato Brasileiro Série A',
     shortName: 'Série A',
     description:
-      'A elite nacional com os 20 clubes oficiais de 2026 em 38 rodadas de turno e returno. G-6 vai à Libertadores e Z-4 cai para a Série B.',
+      'A elite nacional com os 20 clubes oficiais de 2026 em 38 rodadas de turno e returno. G-4 vai à Libertadores (mais o campeão da Copa do Brasil), os 4 seguintes vão à Sul-Americana e Z-4 cai para a Série B.',
     badgeEmoji: '🏆',
     logoUrl: SOCCERWIKI_COMPETITION_LOGOS.serie_a,
     primaryColor: '#38bdf8',
@@ -154,28 +154,28 @@ export const COMPETITIONS_CATALOG: Record<CompetitionType, CompetitionMeta> = {
     name: 'CONMEBOL Libertadores',
     shortName: 'Libertadores',
     description:
-      'A Glória Eterna com os 32 clubes da Fase de Grupos 2026 distribuídos em 8 grupos (A–H), seguidos de Oitavas, Quartas, Semifinal e Final Única.',
+      'A Glória Eterna com 32 clubes em 8 grupos (A–H). Os 2 primeiros de cada grupo avançam às Oitavas de Final, e os 8 terceiros colocados disputam os Playoffs da Copa Sul-Americana.',
     badgeEmoji: '🌎',
     primaryColor: '#eab308',
     secondaryColor: '#ca8a04',
     isCup: true,
     category: 'continental',
     officialClubsCount: 32,
-    formatSummary: '32 clubes · 8 grupos (A–H) + Mata-Mata',
+    formatSummary: '32 clubes · 8 grupos · 1º–2º Oitavas · 3º Playoff Sul-Americana',
   },
   sulamericana: {
     id: 'sulamericana',
     name: 'CONMEBOL Sul-Americana',
     shortName: 'Sul-Americana',
     description:
-      'A Grande Conquista com 32 clubes sul-americanos em 8 grupos (A–H), avançando às Oitavas, Quartas, Semifinal e Final em campo neutro.',
+      'A Grande Conquista com 32 clubes em 8 grupos (A–H). O 1º de cada grupo vai direto às Oitavas; o 2º disputa os Playoffs (Ida e Volta) contra os 3º colocados da Libertadores pelas 8 vagas restantes nas Oitavas.',
     badgeEmoji: '🌐',
     primaryColor: '#06b6d4',
     secondaryColor: '#0891b2',
     isCup: true,
     category: 'continental',
     officialClubsCount: 32,
-    formatSummary: '32 clubes · 8 grupos (A–H) + Mata-Mata',
+    formatSummary: '32 clubes · 8 grupos · 1º Oitavas · 2º Playoff (vs 3º Lib)',
   },
   supercopa_brasil: {
     id: 'supercopa_brasil',
@@ -299,14 +299,14 @@ export const COMPETITIONS_CATALOG: Record<CompetitionType, CompetitionMeta> = {
     name: 'Liga Profesional Argentina (AFA)',
     shortName: 'Liga Argentina',
     description:
-      'A primeira divisão oficial da Argentina (AFA) com 20 clubes em 38 rodadas. Os 5 primeiros garantem vaga na CONMEBOL Libertadores e do 6º ao 11º classificam-se para a CONMEBOL Sul-Americana.',
+      'A primeira divisão oficial da Argentina (AFA) com 30 clubes em 29 rodadas. Os 4 primeiros (G-4) garantem vaga na CONMEBOL Libertadores (além de 1 vaga para o campeão da Copa Argentina) e os 4 seguintes classificam-se para a CONMEBOL Sul-Americana.',
     badgeEmoji: '🇦🇷',
     primaryColor: '#38bdf8',
     secondaryColor: '#0284c7',
     isCup: false,
     category: 'south_america',
-    officialClubsCount: 20,
-    formatSummary: '20 clubes · 38 rodadas · G-5 Libertadores / 6º–11º Sul-Americana',
+    officialClubsCount: 30,
+    formatSummary: '30 clubes · 29 rodadas · G-4 + Copa Arg (Libertadores) / 4 vagas Sul-Americana',
   },
   liga_col: {
     id: 'liga_col',
@@ -369,56 +369,56 @@ export const COMPETITIONS_CATALOG: Record<CompetitionType, CompetitionMeta> = {
     name: 'Copa de Primera APF (Paraguai)',
     shortName: 'Liga Paraguai',
     description:
-      'A tradicional elite paraguaia (APF) com 12 clubes em 22 rodadas. G-3 vai à CONMEBOL Libertadores e 4º e 5º disputam a CONMEBOL Sul-Americana.',
+      'A tradicional elite paraguaia (APF) com 12 clubes em 22 rodadas. G-3 vai à CONMEBOL Libertadores e do 4º ao 6º disputam a CONMEBOL Sul-Americana.',
     badgeEmoji: '🇵🇾',
     primaryColor: '#f87171',
     secondaryColor: '#1e40af',
     isCup: false,
     category: 'south_america',
     officialClubsCount: 12,
-    formatSummary: '12 clubes · 22 rodadas · G-3 Libertadores / 4º–5º Sul-Americana',
+    formatSummary: '12 clubes · 22 rodadas · G-3 Libertadores / 4º–6º Sul-Americana',
   },
   liga_per: {
     id: 'liga_per',
     name: 'Liga 1 Te Apuesto (Peru)',
     shortName: 'Liga Peru',
     description:
-      'O campeonato nacional peruano (FPF) com 18 clubes em 34 rodadas acumuladas. Campeão e vice vão à CONMEBOL Libertadores e 3º e 4º à CONMEBOL Sul-Americana.',
+      'O campeonato nacional peruano (FPF) com 18 clubes em 34 rodadas acumuladas. G-3 vai à CONMEBOL Libertadores e do 4º ao 6º à CONMEBOL Sul-Americana.',
     badgeEmoji: '🇵🇪',
     primaryColor: '#dc2626',
     secondaryColor: '#ffffff',
     isCup: false,
     category: 'south_america',
     officialClubsCount: 18,
-    formatSummary: '18 clubes · 34 rodadas · G-2 Libertadores / 3º–4º Sul-Americana',
+    formatSummary: '18 clubes · 34 rodadas · G-3 Libertadores / 4º–6º Sul-Americana',
   },
   liga_bol: {
     id: 'liga_bol',
     name: 'División Profesional Boliviana (FBF)',
     shortName: 'Liga Bolívia',
     description:
-      'A liga nacional da Bolívia (FBF) com 16 clubes em 30 rodadas entre altitude e planície. G-2 vai à CONMEBOL Libertadores e 3º e 4º à CONMEBOL Sul-Americana.',
+      'A liga nacional da Bolívia (FBF) com 16 clubes em 30 rodadas entre altitude e planície. G-2 vai à CONMEBOL Libertadores e do 3º ao 5º à CONMEBOL Sul-Americana.',
     badgeEmoji: '🇧🇴',
     primaryColor: '#16a34a',
     secondaryColor: '#eab308',
     isCup: false,
     category: 'south_america',
     officialClubsCount: 16,
-    formatSummary: '16 clubes · 30 rodadas · G-2 Libertadores / 3º–4º Sul-Americana',
+    formatSummary: '16 clubes · 30 rodadas · G-2 Libertadores / 3º–5º Sul-Americana',
   },
   liga_ven: {
     id: 'liga_ven',
     name: 'Liga FUTVE Primera División (Venezuela)',
     shortName: 'Liga Venezuela',
     description:
-      'A primeira divisão venezuelana (FVF / Liga FUTVE) com 14 clubes em 26 rodadas. G-2 garante vaga na CONMEBOL Libertadores e 3º e 4º disputam a CONMEBOL Sul-Americana.',
+      'A primeira divisão venezuelana (FVF / Liga FUTVE) com 14 clubes em 26 rodadas. G-2 garante vaga na CONMEBOL Libertadores e do 3º ao 5º disputam a CONMEBOL Sul-Americana.',
     badgeEmoji: '🇻🇪',
     primaryColor: '#9f1239',
     secondaryColor: '#facc15',
     isCup: false,
     category: 'south_america',
     officialClubsCount: 14,
-    formatSummary: '14 clubes · 26 rodadas · G-2 Libertadores / 3º–4º Sul-Americana',
+    formatSummary: '14 clubes · 26 rodadas · G-2 Libertadores / 3º–5º Sul-Americana',
   },
   champions_league: {
     id: 'champions_league',
@@ -1110,14 +1110,14 @@ export const COMPETITIONS_CATALOG: Record<CompetitionType, CompetitionMeta> = {
     name: 'Copa Argentina (AFA)',
     shortName: 'Copa Argentina',
     description:
-      'A tradicional e emocionante Copa Argentina! Mata-mata eliminatório com 16 clubes da Liga Profesional e decisão em campo neutro no Mario Alberto Kempes.',
+      'A tradicional Copa Argentina! Mata-mata eliminatório com 16 clubes da Liga Profesional, decisão em campo neutro no Mario Alberto Kempes e vaga direta para o campeão na CONMEBOL Libertadores.',
     badgeEmoji: '🇦🇷',
     primaryColor: '#38bdf8',
     secondaryColor: '#ffffff',
     isCup: true,
     category: 'south_america',
     officialClubsCount: 16,
-    formatSummary: '16 clubes · Mata-mata direto · Final em campo neutro em Córdoba',
+    formatSummary: '16 clubes · Mata-mata direto · Campeão vai à Libertadores',
   },
   sa_supercopa_argentina: {
     id: 'sa_supercopa_argentina',
@@ -2773,15 +2773,56 @@ export function build32ClubContinentalCompetition(
       fallbackTime,
     });
 
-  // Oitavas de Final — 8 two-legged ties (Top 2 from each of 8 groups = 16 clubs)
+  const hasPlayoffs = competition === 'sulamericana';
+  const roundOffset = hasPlayoffs ? 2 : 0;
+
+  if (hasPlayoffs) {
+    // Playoffs da Sul-Americana — 8 confrontos de ida e volta (8 segundos colocados da Sul-Americana vs 8 terceiros colocados da Libertadores)
+    const playoffIdaDate = conmebolSched.playoffIdaDate;
+    const playoffVoltaDate = conmebolSched.playoffVoltaDate;
+    for (let i = 0; i < 8; i++) {
+      const idaSlot = conmebolKoSlot(playoffIdaDate, i, 7, defaultKickoffTime);
+      const voltaSlot = conmebolKoSlot(playoffVoltaDate, i, 8, defaultKickoffTime);
+      fixtures.push({
+        id: `${prefix}_playoffs_m${i}_ida`,
+        round: 7,
+        competition,
+        cupPhase: 'Playoffs da Sul-Americana',
+        leg: 1,
+        homeTeamId: 'tbd',
+        awayTeamId: 'tbd',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: idaSlot.date,
+        time: idaSlot.time,
+      });
+      fixtures.push({
+        id: `${prefix}_playoffs_m${i}_volta`,
+        round: 8,
+        competition,
+        cupPhase: 'Playoffs da Sul-Americana',
+        leg: 2,
+        homeTeamId: 'tbd',
+        awayTeamId: 'tbd',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: voltaSlot.date,
+        time: voltaSlot.time,
+      });
+    }
+  }
+
+  // Oitavas de Final — 8 two-legged ties (16 clubs)
   const oitavasIdaDate = conmebolSched.oitavasIdaDate;
   const oitavasVoltaDate = conmebolSched.oitavasVoltaDate;
   for (let i = 0; i < 8; i++) {
-    const idaSlot = conmebolKoSlot(oitavasIdaDate, i, 7, '21:30');
-    const voltaSlot = conmebolKoSlot(oitavasVoltaDate, i, 8, '21:30');
+    const idaSlot = conmebolKoSlot(oitavasIdaDate, i, 7 + roundOffset, '21:30');
+    const voltaSlot = conmebolKoSlot(oitavasVoltaDate, i, 8 + roundOffset, '21:30');
     fixtures.push({
       id: `${prefix}_oitavas_m${i}_ida`,
-      round: 7,
+      round: 7 + roundOffset,
       competition,
       cupPhase: 'Oitavas de Final',
       leg: 1,
@@ -2795,7 +2836,7 @@ export function build32ClubContinentalCompetition(
     });
     fixtures.push({
       id: `${prefix}_oitavas_m${i}_volta`,
-      round: 8,
+      round: 8 + roundOffset,
       competition,
       cupPhase: 'Oitavas de Final',
       leg: 2,
@@ -2813,11 +2854,11 @@ export function build32ClubContinentalCompetition(
   const quartasIdaDate = conmebolSched.quartasIdaDate;
   const quartasVoltaDate = conmebolSched.quartasVoltaDate;
   for (let q = 0; q < 4; q++) {
-    const idaSlot = conmebolKoSlot(quartasIdaDate, q, 9, '21:30');
-    const voltaSlot = conmebolKoSlot(quartasVoltaDate, q, 10, '21:30');
+    const idaSlot = conmebolKoSlot(quartasIdaDate, q, 9 + roundOffset, '21:30');
+    const voltaSlot = conmebolKoSlot(quartasVoltaDate, q, 10 + roundOffset, '21:30');
     fixtures.push({
       id: `${prefix}_quartas_m${q}_ida`,
-      round: 9,
+      round: 9 + roundOffset,
       competition,
       cupPhase: 'Quartas de Final',
       leg: 1,
@@ -2831,7 +2872,7 @@ export function build32ClubContinentalCompetition(
     });
     fixtures.push({
       id: `${prefix}_quartas_m${q}_volta`,
-      round: 10,
+      round: 10 + roundOffset,
       competition,
       cupPhase: 'Quartas de Final',
       leg: 2,
@@ -2862,11 +2903,11 @@ export function build32ClubContinentalCompetition(
       : 'Semifinal da Conference League';
 
   for (let s = 0; s < 2; s++) {
-    const idaSlot = conmebolKoSlot(semiIdaDate, s, 11, defaultKickoffTime);
-    const voltaSlot = conmebolKoSlot(semiVoltaDate, s, 12, defaultKickoffTime);
+    const idaSlot = conmebolKoSlot(semiIdaDate, s, 11 + roundOffset, defaultKickoffTime);
+    const voltaSlot = conmebolKoSlot(semiVoltaDate, s, 12 + roundOffset, defaultKickoffTime);
     fixtures.push({
       id: `${prefix}_semi_${s + 1}_ida`,
-      round: 11,
+      round: 11 + roundOffset,
       competition,
       cupPhase: semiPhaseTitle,
       leg: 1,
@@ -2880,7 +2921,7 @@ export function build32ClubContinentalCompetition(
     });
     fixtures.push({
       id: `${prefix}_semi_${s + 1}_volta`,
-      round: 12,
+      round: 12 + roundOffset,
       competition,
       cupPhase: semiPhaseTitle,
       leg: 2,
@@ -2897,7 +2938,7 @@ export function build32ClubContinentalCompetition(
   // Grande Final — Jogo Único em Campo Neutro
   fixtures.push({
     id: finalFixtureId,
-    round: 13,
+    round: 13 + roundOffset,
     competition,
     cupPhase: finalPhaseTitle,
     homeTeamId: 'tbd',
@@ -2930,9 +2971,9 @@ function buildDynamicContinentalPools(
     .sort((a, b) => b.reputation - a.reputation || b.stadium.capacity - a.stadium.capacity);
 
   const libBr = (
-    qualifiedLibBrIds && qualifiedLibBrIds.length >= 6
-      ? qualifiedLibBrIds.filter((id) => clubSet.has(id)).slice(0, 6)
-      : serieAClubs.slice(0, 6).map((c) => c.id)
+    qualifiedLibBrIds && qualifiedLibBrIds.length >= 5
+      ? qualifiedLibBrIds.filter((id) => clubSet.has(id)).slice(0, 5)
+      : serieAClubs.slice(0, 5).map((c) => c.id)
   );
   const libBrSet = new Set(libBr);
 
@@ -2944,11 +2985,11 @@ function buildDynamicContinentalPools(
   const libSet = new Set(libTeams);
 
   const sulaBrCandidates =
-    qualifiedSulaBrIds && qualifiedSulaBrIds.length >= 7
-      ? qualifiedSulaBrIds.filter((id) => clubSet.has(id) && !libSet.has(id)).slice(0, 7)
+    qualifiedSulaBrIds && qualifiedSulaBrIds.length >= 4
+      ? qualifiedSulaBrIds.filter((id) => clubSet.has(id) && !libSet.has(id)).slice(0, 4)
       : serieAClubs
           .filter((c) => !libSet.has(c.id))
-          .slice(0, 7)
+          .slice(0, 4)
           .map((c) => c.id);
   const sulaBrSet = new Set(sulaBrCandidates);
 

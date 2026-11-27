@@ -98,6 +98,12 @@ export const CUP_PRIZES_CATALOG: CupPhasePrize[] = [
   // CONMEBOL Sul-Americana 2026
   {
     competition: 'sulamericana',
+    phaseMatchString: 'playoff',
+    phaseDisplayName: 'Classificação às Oitavas da Sul-Americana',
+    winnerPrize: 2800000,
+  },
+  {
+    competition: 'sulamericana',
     phaseMatchString: 'oitavas',
     phaseDisplayName: 'Classificação às Quartas da Sul-Americana',
     winnerPrize: 3800000,

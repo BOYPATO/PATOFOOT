@@ -52,32 +52,34 @@ export const SOUTH_AMERICAN_LEAGUE_IDS: SouthAmericanLeagueId[] = [
 
 /**
  * Configuração Oficial CONMEBOL do Brasil (Série A + Copa do Brasil):
- * - 7 vagas na Libertadores: 5 diretas na Fase de Grupos (G-4 + Copa do Brasil) + 2 na Pré-Libertadores Fase 2 (5º e Vice da Copa / 6º).
- * - 6 vagas na Sul-Americana: todas diretas na Fase de Grupos (6º ao 11º da Série A).
+ * - 5 vagas na Libertadores: Campeão da Copa do Brasil + 4 primeiros colocados do Brasileirão Série A (Fase de Grupos).
+ * - 4 vagas na Sul-Americana: 4 clubes logo após as vagas da Libertadores no Brasileirão Série A (Fase de Grupos).
  */
 export const BRAZIL_CONMEBOL_CONFIG = {
   country: 'Brasil',
   flagCode: 'BRA',
   flagEmoji: '🇧🇷',
   leagueId: 'serie_a' as CompetitionType,
-  libertadoresTotal: 7,
+  libertadoresTotal: 5,
   libertadoresDirectBerths: 5,
-  libertadoresPhase2Berths: 2,
+  libertadoresPhase2Berths: 0,
   libertadoresPhase1Berths: 0,
-  sulamericanaTotal: 6,
-  sulamericanaDirectBerths: 6,
+  sulamericanaTotal: 4,
+  sulamericanaDirectBerths: 4,
   sulamericanaPreliminaryBerths: 0,
   criteriaLibertadores:
-    'G-4 Série A + Campeão Copa do Brasil (Fase de Grupos); 5º Série A + Vice da Copa do Brasil (Pré-Libertadores Fase 2). Se o campeão da Copa terminar no G-4, o vice herda a vaga direta nos grupos e o 6º entra na Fase 2.',
+    'Campeão da Copa do Brasil + 4 primeiros colocados do Brasileirão Série A (se o campeão da Copa terminar no G-4, o 5º colocado herda a vaga).',
   criteriaSulamericana:
-    '6º ao 11º da Série A entram direto na Fase de Grupos (a zona se estende caso clubes acima vençam Libertadores, Sul-Americana ou Copa do Brasil).',
+    'Os 4 clubes imediatamente abaixo da zona da Libertadores no Brasileirão Série A.',
 };
 
 /**
- * Configuração realista e oficial das 9 Ligas Nacionais da CONMEBOL (além do Brasileirão).
- * Distribuição rigorosa conforme o Regulamento CONMEBOL:
- * - Libertadores (47 vagas fixas): Brasil (7) + Argentina (6) + Bolívia (4) + Chile (4) + Colômbia (4) + Equador (4) + Paraguai (4) + Peru (4) + Uruguai (4) + Venezuela (4) + 2 Campeões Continentais = 47 vagas.
- * - Sul-Americana (44 vagas nacionais): Brasil (6 diretas) + Argentina (6 diretas) + 8 países x 4 (Fase Preliminar) = 44 vagas. (Mais 4 eliminados da Fase 3 da Pré-Libertadores nos grupos).
+ * Configuração das 9 Ligas Nacionais da CONMEBOL (além do Brasileirão).
+ * Distribuição exata de 32 vagas na Libertadores e 32 vagas na Sul-Americana:
+ * - Libertadores (32 vagas diretas): Brasil (5: CdB + G-4), Argentina (5: Copa Argentina + G-4),
+ *   Uruguai (3), Equador (3), Colômbia (3), Chile (3), Paraguai (3), Peru (3), Bolívia (2), Venezuela (2).
+ * - Sul-Americana (32 vagas diretas): Brasil (4), Argentina (4), Uruguai (3), Equador (3),
+ *   Colômbia (3), Chile (3), Paraguai (3), Peru (3), Bolívia (3), Venezuela (3) — sempre os times logo após as vagas da Libertadores.
  */
 export const SOUTH_AMERICAN_LEAGUES_META: Record<SouthAmericanLeagueId, SouthAmericanLeagueConfig> = {
   liga_arg: {
@@ -90,12 +92,12 @@ export const SOUTH_AMERICAN_LEAGUES_META: Record<SouthAmericanLeagueId, SouthAme
     federation: 'AFA',
     clubsCount: 30,
     totalRounds: 29,
-    libertadoresBerths: 6,
+    libertadoresBerths: 5,
     libertadoresDirectBerths: 5,
-    libertadoresPhase2Berths: 1,
+    libertadoresPhase2Berths: 0,
     libertadoresPhase1Berths: 0,
-    sulamericanaBerths: 6,
-    sulamericanaDirectBerths: 6,
+    sulamericanaBerths: 4,
+    sulamericanaDirectBerths: 4,
     sulamericanaPreliminaryBerths: 0,
     relegationSlots: 2,
     championPrize: 38_000_000,
@@ -103,9 +105,9 @@ export const SOUTH_AMERICAN_LEAGUES_META: Record<SouthAmericanLeagueId, SouthAme
     primaryColor: '#38bdf8',
     secondaryColor: '#0284c7',
     formatSummary:
-      '30 clubes em turno único corrido (29 rodadas). 6 vagas na Libertadores (5 Grupos + 1 Pré F2) e 6 vagas na Sul-Americana (Fase de Grupos).',
+      '30 clubes em turno único corrido (29 rodadas). 5 vagas na Libertadores (Copa Argentina + G-4) e 4 vagas na Sul-Americana.',
     continentalCriteriaSummary:
-      'Libertadores: Campeão Apertura/Clausura + Campeão da Copa Argentina + Top da tabela anual (5 Grupos); 3º melhor da tabela sem vaga direta entra na Fase 2. Sul-Americana: 6 melhores da tabela anual abaixo da Libertadores entram direto na Fase de Grupos.',
+      'Libertadores: Campeão da Copa Argentina + 4 primeiros do Campeonato Argentino (se o campeão da Copa terminar no G-4, o 5º herda a vaga). Sul-Americana: os 4 clubes logo após as vagas da Libertadores.',
   },
   liga_col: {
     id: 'liga_col',
@@ -117,22 +119,22 @@ export const SOUTH_AMERICAN_LEAGUES_META: Record<SouthAmericanLeagueId, SouthAme
     federation: 'FCF / Dimayor',
     clubsCount: 20,
     totalRounds: 38,
-    libertadoresBerths: 4,
-    libertadoresDirectBerths: 2,
-    libertadoresPhase2Berths: 2,
+    libertadoresBerths: 3,
+    libertadoresDirectBerths: 3,
+    libertadoresPhase2Berths: 0,
     libertadoresPhase1Berths: 0,
-    sulamericanaBerths: 4,
-    sulamericanaDirectBerths: 0,
-    sulamericanaPreliminaryBerths: 4,
+    sulamericanaBerths: 3,
+    sulamericanaDirectBerths: 3,
+    sulamericanaPreliminaryBerths: 0,
     relegationSlots: 2,
     championPrize: 24_000_000,
     runnerUpPrize: 13_000_000,
     primaryColor: '#facc15',
     secondaryColor: '#1d4ed8',
     formatSummary:
-      '20 clubes na Reclasificación anual (38 rodadas). 4 vagas na Libertadores (2 Grupos + 2 Pré F2) e 4 vagas na Sul-Americana (Fase Preliminar).',
+      '20 clubes em 38 rodadas. 3 vagas diretas na Libertadores (1º–3º) e 3 vagas na Sul-Americana (4º–6º).',
     continentalCriteriaSummary:
-      'Libertadores: Campeão Apertura e Finalización (ou 1º e 2º da Reclasificación) na Fase de Grupos; 3º e 4º da Reclasificación na Fase 2. Sul-Americana: Campeão da Copa Colômbia + 3 melhores da Reclasificación disputam a Fase Preliminar nacional em jogo único.',
+      'Libertadores: 1º ao 3º colocado do Campeonato Colombiano. Sul-Americana: 4º ao 6º colocado (logo após as vagas da Libertadores).',
   },
   liga_uru: {
     id: 'liga_uru',
@@ -144,22 +146,22 @@ export const SOUTH_AMERICAN_LEAGUES_META: Record<SouthAmericanLeagueId, SouthAme
     federation: 'AUF',
     clubsCount: 16,
     totalRounds: 30,
-    libertadoresBerths: 4,
-    libertadoresDirectBerths: 2,
-    libertadoresPhase2Berths: 1,
-    libertadoresPhase1Berths: 1,
-    sulamericanaBerths: 4,
-    sulamericanaDirectBerths: 0,
-    sulamericanaPreliminaryBerths: 4,
+    libertadoresBerths: 3,
+    libertadoresDirectBerths: 3,
+    libertadoresPhase2Berths: 0,
+    libertadoresPhase1Berths: 0,
+    sulamericanaBerths: 3,
+    sulamericanaDirectBerths: 3,
+    sulamericanaPreliminaryBerths: 0,
     relegationSlots: 3,
     championPrize: 20_000_000,
     runnerUpPrize: 11_000_000,
     primaryColor: '#60a5fa',
     secondaryColor: '#1e3a8a',
     formatSummary:
-      '16 clubes na Tabla Anual (30 rodadas). 4 vagas na Libertadores (2 Grupos + 1 Pré F2 + 1 Pré F1) e 4 vagas na Sul-Americana (Fase Preliminar).',
+      '16 clubes em 30 rodadas. 3 vagas diretas na Libertadores (1º–3º) e 3 vagas na Sul-Americana (4º–6º).',
     continentalCriteriaSummary:
-      'Libertadores: Campeão e Vice do Campeonato Uruguaio (Fase de Grupos); 3º da Tabla Anual (Fase 2); 4º da Tabla Anual (Fase 1). Sul-Americana: 5º ao 8º da Tabla Anual disputam a Fase Preliminar nacional em jogo único.',
+      'Libertadores: 1º ao 3º colocado do Campeonato Uruguaio. Sul-Americana: 4º ao 6º colocado (logo após as vagas da Libertadores).',
   },
   liga_equ: {
     id: 'liga_equ',
@@ -171,22 +173,22 @@ export const SOUTH_AMERICAN_LEAGUES_META: Record<SouthAmericanLeagueId, SouthAme
     federation: 'FEF / LigaPro',
     clubsCount: 16,
     totalRounds: 30,
-    libertadoresBerths: 4,
-    libertadoresDirectBerths: 2,
-    libertadoresPhase2Berths: 1,
-    libertadoresPhase1Berths: 1,
-    sulamericanaBerths: 4,
-    sulamericanaDirectBerths: 0,
-    sulamericanaPreliminaryBerths: 4,
+    libertadoresBerths: 3,
+    libertadoresDirectBerths: 3,
+    libertadoresPhase2Berths: 0,
+    libertadoresPhase1Berths: 0,
+    sulamericanaBerths: 3,
+    sulamericanaDirectBerths: 3,
+    sulamericanaPreliminaryBerths: 0,
     relegationSlots: 2,
     championPrize: 22_000_000,
     runnerUpPrize: 12_000_000,
     primaryColor: '#fbbf24',
     secondaryColor: '#1e40af',
     formatSummary:
-      '16 clubes na tabela acumulada LigaPro (30 rodadas). 4 vagas na Libertadores (2 Grupos + 1 Pré F2 + 1 Pré F1) e 4 vagas na Sul-Americana (Fase Preliminar).',
+      '16 clubes em 30 rodadas. 3 vagas diretas na Libertadores (1º–3º) e 3 vagas na Sul-Americana (4º–6º).',
     continentalCriteriaSummary:
-      'Libertadores: Campeão e Vice da LigaPro (Fase de Grupos); 3º colocado geral (Fase 2); Campeão da Copa Ecuador (ou 4º da tabela) na Fase 1. Sul-Americana: 4 melhores da tabela da LigaPro fora da Libertadores disputam a Fase Preliminar nacional.',
+      'Libertadores: 1º ao 3º colocado do Campeonato Equatoriano. Sul-Americana: 4º ao 6º colocado (logo após as vagas da Libertadores).',
   },
   liga_chi: {
     id: 'liga_chi',
@@ -198,22 +200,22 @@ export const SOUTH_AMERICAN_LEAGUES_META: Record<SouthAmericanLeagueId, SouthAme
     federation: 'ANFP',
     clubsCount: 16,
     totalRounds: 30,
-    libertadoresBerths: 4,
-    libertadoresDirectBerths: 2,
-    libertadoresPhase2Berths: 2,
+    libertadoresBerths: 3,
+    libertadoresDirectBerths: 3,
+    libertadoresPhase2Berths: 0,
     libertadoresPhase1Berths: 0,
-    sulamericanaBerths: 4,
-    sulamericanaDirectBerths: 0,
-    sulamericanaPreliminaryBerths: 4,
+    sulamericanaBerths: 3,
+    sulamericanaDirectBerths: 3,
+    sulamericanaPreliminaryBerths: 0,
     relegationSlots: 2,
     championPrize: 21_000_000,
     runnerUpPrize: 11_500_000,
     primaryColor: '#ef4444',
     secondaryColor: '#1d4ed8',
     formatSummary:
-      '16 clubes em 30 rodadas. 4 vagas na Libertadores (2 Grupos + 2 Pré F2) e 4 vagas na Sul-Americana (Fase Preliminar).',
+      '16 clubes em 30 rodadas. 3 vagas diretas na Libertadores (1º–3º) e 3 vagas na Sul-Americana (4º–6º).',
     continentalCriteriaSummary:
-      'Libertadores: Campeão e Vice da Primera División (Fase de Grupos); 3º colocado e Campeão da Copa Chile (Fase 2, com descida para o 4º se a Copa tiver vaga). Sul-Americana: 4º ao 7º da Primera División disputam a Fase Preliminar nacional.',
+      'Libertadores: 1º ao 3º colocado do Campeonato Chileno. Sul-Americana: 4º ao 6º colocado (logo após as vagas da Libertadores).',
   },
   liga_par: {
     id: 'liga_par',
@@ -225,22 +227,22 @@ export const SOUTH_AMERICAN_LEAGUES_META: Record<SouthAmericanLeagueId, SouthAme
     federation: 'APF',
     clubsCount: 12,
     totalRounds: 22,
-    libertadoresBerths: 4,
-    libertadoresDirectBerths: 2,
-    libertadoresPhase2Berths: 1,
-    libertadoresPhase1Berths: 1,
-    sulamericanaBerths: 4,
-    sulamericanaDirectBerths: 0,
-    sulamericanaPreliminaryBerths: 4,
+    libertadoresBerths: 3,
+    libertadoresDirectBerths: 3,
+    libertadoresPhase2Berths: 0,
+    libertadoresPhase1Berths: 0,
+    sulamericanaBerths: 3,
+    sulamericanaDirectBerths: 3,
+    sulamericanaPreliminaryBerths: 0,
     relegationSlots: 2,
     championPrize: 19_000_000,
     runnerUpPrize: 10_000_000,
     primaryColor: '#f87171',
     secondaryColor: '#1e40af',
     formatSummary:
-      '12 clubes na tabela anual APF (22 rodadas). 4 vagas na Libertadores (2 Grupos + 1 Pré F2 + 1 Pré F1) e 4 vagas na Sul-Americana (Fase Preliminar).',
+      '12 clubes em 22 rodadas. 3 vagas diretas na Libertadores (1º–3º) e 3 vagas na Sul-Americana (4º–6º).',
     continentalCriteriaSummary:
-      'Libertadores: Campeão Apertura e Clausura / Top 2 da tabela anual (Fase de Grupos); 3º da tabela anual (Fase 2); Campeão da Copa Paraguay (ou 4º da tabela) na Fase 1. Sul-Americana: 4 melhores da tabela anual abaixo da Libertadores disputam a Fase Preliminar.',
+      'Libertadores: 1º ao 3º colocado do Campeonato Paraguaio. Sul-Americana: 4º ao 6º colocado (logo após as vagas da Libertadores).',
   },
   liga_per: {
     id: 'liga_per',
@@ -252,22 +254,22 @@ export const SOUTH_AMERICAN_LEAGUES_META: Record<SouthAmericanLeagueId, SouthAme
     federation: 'FPF',
     clubsCount: 18,
     totalRounds: 34,
-    libertadoresBerths: 4,
-    libertadoresDirectBerths: 2,
-    libertadoresPhase2Berths: 1,
-    libertadoresPhase1Berths: 1,
-    sulamericanaBerths: 4,
-    sulamericanaDirectBerths: 0,
-    sulamericanaPreliminaryBerths: 4,
+    libertadoresBerths: 3,
+    libertadoresDirectBerths: 3,
+    libertadoresPhase2Berths: 0,
+    libertadoresPhase1Berths: 0,
+    sulamericanaBerths: 3,
+    sulamericanaDirectBerths: 3,
+    sulamericanaPreliminaryBerths: 0,
     relegationSlots: 3,
     championPrize: 17_500_000,
     runnerUpPrize: 9_500_000,
     primaryColor: '#dc2626',
     secondaryColor: '#ffffff',
     formatSummary:
-      '18 clubes no acumulado da Liga 1 (34 rodadas). 4 vagas na Libertadores (2 Grupos + 1 Pré F2 + 1 Pré F1) e 4 vagas na Sul-Americana (Fase Preliminar).',
+      '18 clubes em 34 rodadas. 3 vagas diretas na Libertadores (1º–3º) e 3 vagas na Sul-Americana (4º–6º).',
     continentalCriteriaSummary:
-      'Libertadores: Campeão e Vice da Liga 1 (Fase de Grupos); 3º colocado (Fase 2); 4º colocado na classificação geral (Fase 1). Sul-Americana: 5º ao 8º da tabela anual disputam a Fase Preliminar nacional em jogo único.',
+      'Libertadores: 1º ao 3º colocado do Campeonato Peruano. Sul-Americana: 4º ao 6º colocado (logo após as vagas da Libertadores).',
   },
   liga_bol: {
     id: 'liga_bol',
@@ -279,22 +281,22 @@ export const SOUTH_AMERICAN_LEAGUES_META: Record<SouthAmericanLeagueId, SouthAme
     federation: 'FBF',
     clubsCount: 16,
     totalRounds: 30,
-    libertadoresBerths: 4,
+    libertadoresBerths: 2,
     libertadoresDirectBerths: 2,
-    libertadoresPhase2Berths: 1,
-    libertadoresPhase1Berths: 1,
-    sulamericanaBerths: 4,
-    sulamericanaDirectBerths: 0,
-    sulamericanaPreliminaryBerths: 4,
+    libertadoresPhase2Berths: 0,
+    libertadoresPhase1Berths: 0,
+    sulamericanaBerths: 3,
+    sulamericanaDirectBerths: 3,
+    sulamericanaPreliminaryBerths: 0,
     relegationSlots: 2,
     championPrize: 15_000_000,
     runnerUpPrize: 8_000_000,
     primaryColor: '#16a34a',
     secondaryColor: '#eab308',
     formatSummary:
-      '16 clubes na tabela acumulada (30 rodadas). 4 vagas na Libertadores (2 Grupos + 1 Pré F2 + 1 Pré F1) e 4 vagas na Sul-Americana (Fase Preliminar).',
+      '16 clubes em 30 rodadas. 2 vagas diretas na Libertadores (1º–2º) e 3 vagas na Sul-Americana (3º–5º).',
     continentalCriteriaSummary:
-      'Libertadores: Campeão Apertura e Clausura / Top 2 da tabela acumulada (Fase de Grupos); 3º da tabela acumulada (Fase 2); 4º da tabela acumulada (Fase 1). Sul-Americana: 4 melhores clubes seguintes da tabela acumulada disputam a Fase Preliminar nacional.',
+      'Libertadores: 1º e 2º colocado do Campeonato Boliviano. Sul-Americana: 3º ao 5º colocado (logo após as vagas da Libertadores).',
   },
   liga_ven: {
     id: 'liga_ven',
@@ -306,22 +308,22 @@ export const SOUTH_AMERICAN_LEAGUES_META: Record<SouthAmericanLeagueId, SouthAme
     federation: 'FVF / Liga FUTVE',
     clubsCount: 14,
     totalRounds: 26,
-    libertadoresBerths: 4,
+    libertadoresBerths: 2,
     libertadoresDirectBerths: 2,
-    libertadoresPhase2Berths: 1,
-    libertadoresPhase1Berths: 1,
-    sulamericanaBerths: 4,
-    sulamericanaDirectBerths: 0,
-    sulamericanaPreliminaryBerths: 4,
+    libertadoresPhase2Berths: 0,
+    libertadoresPhase1Berths: 0,
+    sulamericanaBerths: 3,
+    sulamericanaDirectBerths: 3,
+    sulamericanaPreliminaryBerths: 0,
     relegationSlots: 2,
     championPrize: 14_500_000,
     runnerUpPrize: 7_500_000,
     primaryColor: '#9f1239',
     secondaryColor: '#facc15',
     formatSummary:
-      '14 clubes na tabela anual Liga FUTVE (26 rodadas). 4 vagas na Libertadores (2 Grupos + 1 Pré F2 + 1 Pré F1) e 4 vagas na Sul-Americana (Fase Preliminar).',
+      '14 clubes em 26 rodadas. 2 vagas diretas na Libertadores (1º–2º) e 3 vagas na Sul-Americana (3º–5º).',
     continentalCriteriaSummary:
-      'Libertadores: Campeão da final absoluta e líder da tabela anual (Fase de Grupos); Vice-campeão / 3º colocado (Fase 2); 4º da tabela anual (Fase 1). Sul-Americana: 5º ao 8º da tabela anual disputam a Fase Preliminar nacional em jogo único.',
+      'Libertadores: 1º e 2º colocado do Campeonato Venezuelano. Sul-Americana: 3º ao 5º colocado (logo após as vagas da Libertadores).',
   },
 };
 
@@ -550,6 +552,7 @@ export interface QualifiedClubEntry {
     | 'Campeão da Libertadores'
     | 'Campeão da Sul-Americana'
     | 'Campeão da Copa do Brasil'
+    | 'Campeão da Copa Argentina'
     | 'Vice da Copa do Brasil'
     | 'Campeão da Copa Nacional'
     | 'Campeão Nacional'
@@ -629,204 +632,166 @@ export const CONMEBOL_COUNTRY_DISTRIBUTION_TABLE: ConmebolCountrySlotConfig[] = 
     flagCode: 'BRA',
     flagEmoji: '🇧🇷',
     leagueId: 'serie_a',
-    libertadoresTotal: 7,
+    libertadoresTotal: 5,
     libertadoresGrupos: 5,
-    libertadoresPreFase2: 2,
+    libertadoresPreFase2: 0,
     libertadoresPreFase1: 0,
-    sulamericanaTotal: 6,
-    sulamericanaGrupos: 6,
+    sulamericanaTotal: 4,
+    sulamericanaGrupos: 4,
     sulamericanaPreliminar: 0,
     criteriaLibertadores:
-      'G-4 da Série A + Campeão da Copa do Brasil (Fase de Grupos); 5º da Série A + Vice da Copa do Brasil (Pré-Libertadores Fase 2). Se o campeão da Copa terminar no G-4, o vice herda a vaga direta nos grupos e o 6º entra na Fase 2.',
+      'Campeão da Copa do Brasil + 4 primeiros colocados do Brasileirão Série A (se o campeão da Copa terminar no G-4, o 5º colocado herda a vaga).',
     criteriaSulamericana:
-      '6º ao 11º da Série A entram direto na Fase de Grupos (zona se estende caso clubes acima vençam Libertadores, Sul-Americana ou Copa do Brasil).',
+      'Os 4 clubes imediatamente abaixo da zona da Libertadores no Brasileirão Série A.',
   },
   {
     country: 'Argentina',
     flagCode: 'ARG',
     flagEmoji: '🇦🇷',
     leagueId: 'liga_arg',
-    libertadoresTotal: 6,
+    libertadoresTotal: 5,
     libertadoresGrupos: 5,
-    libertadoresPreFase2: 1,
+    libertadoresPreFase2: 0,
     libertadoresPreFase1: 0,
-    sulamericanaTotal: 6,
-    sulamericanaGrupos: 6,
+    sulamericanaTotal: 4,
+    sulamericanaGrupos: 4,
     sulamericanaPreliminar: 0,
     criteriaLibertadores:
-      'Campeão Apertura/Clausura + Campeão da Copa Argentina + Top da tabela anual acumulada (Fase de Grupos); 3º melhor da tabela anual sem vaga direta entra na Pré-Libertadores Fase 2.',
+      'Campeão da Copa Argentina + 4 primeiros colocados do Campeonato Argentino (se o campeão da Copa terminar no G-4, o 5º colocado herda a vaga).',
     criteriaSulamericana:
-      'Os 6 melhores times da tabela anual acumulada imediatamente abaixo da zona da Libertadores entram direto na Fase de Grupos.',
-  },
-  {
-    country: 'Bolívia',
-    flagCode: 'BOL',
-    flagEmoji: '🇧🇴',
-    leagueId: 'liga_bol',
-    libertadoresTotal: 4,
-    libertadoresGrupos: 2,
-    libertadoresPreFase2: 1,
-    libertadoresPreFase1: 1,
-    sulamericanaTotal: 4,
-    sulamericanaGrupos: 0,
-    sulamericanaPreliminar: 4,
-    criteriaLibertadores:
-      'Campeão e vice da Primera División (Fase de Grupos); 3º da tabela acumulada (Pré-Libertadores Fase 2); 4º da tabela acumulada (Pré-Libertadores Fase 1).',
-    criteriaSulamericana:
-      'Os 4 melhores da tabela acumulada fora da Libertadores disputam a Fase Preliminar nacional em jogo único (2 avançam aos grupos).',
-  },
-  {
-    country: 'Chile',
-    flagCode: 'CHI',
-    flagEmoji: '🇨🇱',
-    leagueId: 'liga_chi',
-    libertadoresTotal: 4,
-    libertadoresGrupos: 2,
-    libertadoresPreFase2: 2,
-    libertadoresPreFase1: 0,
-    sulamericanaTotal: 4,
-    sulamericanaGrupos: 0,
-    sulamericanaPreliminar: 4,
-    criteriaLibertadores:
-      'Campeão e vice da Primera División (Fase de Grupos); 3º da Primera División e Campeão da Copa Chile (Pré-Libertadores Fase 2). Se o campeão da Copa já tiver vaga, o 4º da liga herda.',
-    criteriaSulamericana:
-      '4º ao 7º da Primera División disputam a Fase Preliminar nacional em jogo único (2 avançam aos grupos).',
-  },
-  {
-    country: 'Colômbia',
-    flagCode: 'COL',
-    flagEmoji: '🇨🇴',
-    leagueId: 'liga_col',
-    libertadoresTotal: 4,
-    libertadoresGrupos: 2,
-    libertadoresPreFase2: 2,
-    libertadoresPreFase1: 0,
-    sulamericanaTotal: 4,
-    sulamericanaGrupos: 0,
-    sulamericanaPreliminar: 4,
-    criteriaLibertadores:
-      '1º e 2º colocados da Reclasificación (Fase de Grupos); 3º e 4º colocados da Reclasificación (Pré-Libertadores Fase 2).',
-    criteriaSulamericana:
-      'Campeão da Copa Colômbia + 3 melhores da Reclasificación sem vaga na Libertadores disputam a Fase Preliminar nacional (2 avançam aos grupos).',
-  },
-  {
-    country: 'Equador',
-    flagCode: 'EQU',
-    flagEmoji: '🇪🇨',
-    leagueId: 'liga_equ',
-    libertadoresTotal: 4,
-    libertadoresGrupos: 2,
-    libertadoresPreFase2: 1,
-    libertadoresPreFase1: 1,
-    sulamericanaTotal: 4,
-    sulamericanaGrupos: 0,
-    sulamericanaPreliminar: 4,
-    criteriaLibertadores:
-      'Campeão e vice da LigaPro (Fase de Grupos); 3º colocado geral (Pré-Libertadores Fase 2); Campeão da Copa Ecuador (ou 4º da tabela) entra na Pré-Libertadores Fase 1.',
-    criteriaSulamericana:
-      'Os 4 melhores da tabela acumulada da LigaPro fora da Libertadores disputam a Fase Preliminar nacional (2 avançam aos grupos).',
-  },
-  {
-    country: 'Paraguai',
-    flagCode: 'PAR',
-    flagEmoji: '🇵🇾',
-    leagueId: 'liga_par',
-    libertadoresTotal: 4,
-    libertadoresGrupos: 2,
-    libertadoresPreFase2: 1,
-    libertadoresPreFase1: 1,
-    sulamericanaTotal: 4,
-    sulamericanaGrupos: 0,
-    sulamericanaPreliminar: 4,
-    criteriaLibertadores:
-      'Campeão e vice da Primera División (Fase de Grupos); 3º da tabela anual fora campeões (Pré-Libertadores Fase 2); Campeão da Copa Paraguay (ou 4º da tabela) entra na Pré-Libertadores Fase 1.',
-    criteriaSulamericana:
-      'Os 4 melhores da tabela anual imediatamente abaixo dos classificados à Libertadores disputam a Fase Preliminar nacional (2 avançam aos grupos).',
-  },
-  {
-    country: 'Peru',
-    flagCode: 'PER',
-    flagEmoji: '🇵🇪',
-    leagueId: 'liga_per',
-    libertadoresTotal: 4,
-    libertadoresGrupos: 2,
-    libertadoresPreFase2: 1,
-    libertadoresPreFase1: 1,
-    sulamericanaTotal: 4,
-    sulamericanaGrupos: 0,
-    sulamericanaPreliminar: 4,
-    criteriaLibertadores:
-      'Campeão e vice da Liga 1 (Fase de Grupos); 3º colocado da Liga 1 (Pré-Libertadores Fase 2); 4º colocado na classificação geral (Pré-Libertadores Fase 1).',
-    criteriaSulamericana:
-      '5º ao 8º colocado da tabela acumulada anual da Liga 1 disputam a Fase Preliminar nacional (2 avançam aos grupos).',
+      'Os 4 clubes imediatamente abaixo da zona da Libertadores no Campeonato Argentino.',
   },
   {
     country: 'Uruguai',
     flagCode: 'URU',
     flagEmoji: '🇺🇾',
     leagueId: 'liga_uru',
-    libertadoresTotal: 4,
+    libertadoresTotal: 3,
+    libertadoresGrupos: 3,
+    libertadoresPreFase2: 0,
+    libertadoresPreFase1: 0,
+    sulamericanaTotal: 3,
+    sulamericanaGrupos: 3,
+    sulamericanaPreliminar: 0,
+    criteriaLibertadores: 'Os 3 primeiros colocados (1º–3º) do Campeonato Uruguaio.',
+    criteriaSulamericana: 'Os 3 clubes logo após a Libertadores (4º–6º) no Campeonato Uruguaio.',
+  },
+  {
+    country: 'Equador',
+    flagCode: 'EQU',
+    flagEmoji: '🇪🇨',
+    leagueId: 'liga_equ',
+    libertadoresTotal: 3,
+    libertadoresGrupos: 3,
+    libertadoresPreFase2: 0,
+    libertadoresPreFase1: 0,
+    sulamericanaTotal: 3,
+    sulamericanaGrupos: 3,
+    sulamericanaPreliminar: 0,
+    criteriaLibertadores: 'Os 3 primeiros colocados (1º–3º) do Campeonato Equatoriano.',
+    criteriaSulamericana: 'Os 3 clubes logo após a Libertadores (4º–6º) no Campeonato Equatoriano.',
+  },
+  {
+    country: 'Colômbia',
+    flagCode: 'COL',
+    flagEmoji: '🇨🇴',
+    leagueId: 'liga_col',
+    libertadoresTotal: 3,
+    libertadoresGrupos: 3,
+    libertadoresPreFase2: 0,
+    libertadoresPreFase1: 0,
+    sulamericanaTotal: 3,
+    sulamericanaGrupos: 3,
+    sulamericanaPreliminar: 0,
+    criteriaLibertadores: 'Os 3 primeiros colocados (1º–3º) do Campeonato Colombiano.',
+    criteriaSulamericana: 'Os 3 clubes logo após a Libertadores (4º–6º) no Campeonato Colombiano.',
+  },
+  {
+    country: 'Chile',
+    flagCode: 'CHI',
+    flagEmoji: '🇨🇱',
+    leagueId: 'liga_chi',
+    libertadoresTotal: 3,
+    libertadoresGrupos: 3,
+    libertadoresPreFase2: 0,
+    libertadoresPreFase1: 0,
+    sulamericanaTotal: 3,
+    sulamericanaGrupos: 3,
+    sulamericanaPreliminar: 0,
+    criteriaLibertadores: 'Os 3 primeiros colocados (1º–3º) do Campeonato Chileno.',
+    criteriaSulamericana: 'Os 3 clubes logo após a Libertadores (4º–6º) no Campeonato Chileno.',
+  },
+  {
+    country: 'Paraguai',
+    flagCode: 'PAR',
+    flagEmoji: '🇵🇾',
+    leagueId: 'liga_par',
+    libertadoresTotal: 3,
+    libertadoresGrupos: 3,
+    libertadoresPreFase2: 0,
+    libertadoresPreFase1: 0,
+    sulamericanaTotal: 3,
+    sulamericanaGrupos: 3,
+    sulamericanaPreliminar: 0,
+    criteriaLibertadores: 'Os 3 primeiros colocados (1º–3º) do Campeonato Paraguaio.',
+    criteriaSulamericana: 'Os 3 clubes logo após a Libertadores (4º–6º) no Campeonato Paraguaio.',
+  },
+  {
+    country: 'Peru',
+    flagCode: 'PER',
+    flagEmoji: '🇵🇪',
+    leagueId: 'liga_per',
+    libertadoresTotal: 3,
+    libertadoresGrupos: 3,
+    libertadoresPreFase2: 0,
+    libertadoresPreFase1: 0,
+    sulamericanaTotal: 3,
+    sulamericanaGrupos: 3,
+    sulamericanaPreliminar: 0,
+    criteriaLibertadores: 'Os 3 primeiros colocados (1º–3º) do Campeonato Peruano.',
+    criteriaSulamericana: 'Os 3 clubes logo após a Libertadores (4º–6º) no Campeonato Peruano.',
+  },
+  {
+    country: 'Bolívia',
+    flagCode: 'BOL',
+    flagEmoji: '🇧🇴',
+    leagueId: 'liga_bol',
+    libertadoresTotal: 2,
     libertadoresGrupos: 2,
-    libertadoresPreFase2: 1,
-    libertadoresPreFase1: 1,
-    sulamericanaTotal: 4,
-    sulamericanaGrupos: 0,
-    sulamericanaPreliminar: 4,
-    criteriaLibertadores:
-      'Campeão e vice do Campeonato Uruguaio (Fase de Grupos); 3º melhor da Tabla Anual (Pré-Libertadores Fase 2); 4º melhor da Tabla Anual (Pré-Libertadores Fase 1).',
-    criteriaSulamericana:
-      '5º ao 8º melhor da Tabla Anual sem vaga na Libertadores disputam a Fase Preliminar nacional (2 avançam aos grupos).',
+    libertadoresPreFase2: 0,
+    libertadoresPreFase1: 0,
+    sulamericanaTotal: 3,
+    sulamericanaGrupos: 3,
+    sulamericanaPreliminar: 0,
+    criteriaLibertadores: 'Os 2 primeiros colocados (1º e 2º) do Campeonato Boliviano.',
+    criteriaSulamericana: 'Os 3 clubes logo após a Libertadores (3º–5º) no Campeonato Boliviano.',
   },
   {
     country: 'Venezuela',
     flagCode: 'VEN',
     flagEmoji: '🇻🇪',
     leagueId: 'liga_ven',
-    libertadoresTotal: 4,
+    libertadoresTotal: 2,
     libertadoresGrupos: 2,
-    libertadoresPreFase2: 1,
-    libertadoresPreFase1: 1,
-    sulamericanaTotal: 4,
-    sulamericanaGrupos: 0,
-    sulamericanaPreliminar: 4,
-    criteriaLibertadores:
-      'Campeão da Liga FUTVE + líder da tabela anual (Fase de Grupos); Vice-campeão / 3º colocado (Pré-Libertadores Fase 2); 4º da tabela anual (Pré-Libertadores Fase 1).',
-    criteriaSulamericana:
-      '5º ao 8º colocado da tabela acumulada anual sem vaga na Libertadores disputam a Fase Preliminar nacional (2 avançam aos grupos).',
+    libertadoresPreFase2: 0,
+    libertadoresPreFase1: 0,
+    sulamericanaTotal: 3,
+    sulamericanaGrupos: 3,
+    sulamericanaPreliminar: 0,
+    criteriaLibertadores: 'Os 2 primeiros colocados (1º e 2º) do Campeonato Venezuelano.',
+    criteriaSulamericana: 'Os 3 clubes logo após a Libertadores (3º–5º) no Campeonato Venezuelano.',
   },
 ];
 
 /**
- * Função auxiliar que resolve o vencedor de um duelo eliminatório preliminar
- * baseado no rating/força e reputação dos clubes.
- */
-function resolveSimulatedKnockoutWinner(
-  idA: string,
-  idB: string,
-  clubMap: Map<string, Club>,
-  tieBreakerSeed: number = 0
-): { winnerId: string; loserId: string } {
-  const clubA = clubMap.get(idA);
-  const clubB = clubMap.get(idB);
-
-  const ratingA = clubA ? (clubA.reputation || 50) + (clubA.stadium?.capacity ? clubA.stadium.capacity / 1000 : 20) : 50;
-  const ratingB = clubB ? (clubB.reputation || 50) + (clubB.stadium?.capacity ? clubB.stadium.capacity / 1000 : 20) : 50;
-
-  // Adiciona variabilidade determinística por seed
-  const modA = Math.sin(tieBreakerSeed * 17 + (idA.charCodeAt(0) || 0)) * 5;
-  const modB = Math.cos(tieBreakerSeed * 13 + (idB.charCodeAt(0) || 0)) * 5;
-
-  if (ratingA + modA >= ratingB + modB) {
-    return { winnerId: idA, loserId: idB };
-  }
-  return { winnerId: idB, loserId: idA };
-}
-
-/**
- * Calcula o sistema oficial de classificação continental da CONMEBOL:
- * - 47 vagas da Copa Libertadores (28 Fase de Grupos direta + 19 Pré-Libertadores em Fases 1, 2 e 3).
- * - 44 vagas da Copa Sul-Americana (12 diretas nos grupos + 32 na Fase Preliminar nacional).
- * - Os 4 eliminados da Fase 3 da Pré-Libertadores completam os 32 da Fase de Grupos da Sul-Americana!
+ * Calcula o sistema de classificação continental da CONMEBOL (vagas diretas por país):
+ * - Copa Libertadores (exatas 32 vagas diretas na Fase de Grupos):
+ *   · Brasil (5): Campeão da Copa do Brasil + 4 primeiros do Brasileirão Série A
+ *   · Argentina (5): Campeão da Copa Argentina + 4 primeiros do Campeonato Argentino
+ *   · Uruguai, Equador, Colômbia, Chile, Paraguai, Peru (3 cada): 3 primeiros das ligas nacionais
+ *   · Bolívia, Venezuela (2 cada): 2 primeiros das ligas nacionais
+ * - Copa Sul-Americana (exatas 32 vagas diretas na Fase de Grupos):
+ *   · Brasil (4), Argentina (4), demais 8 países (3 cada) — sempre os clubes imediatamente após as vagas da Libertadores nas ligas nacionais.
  */
 export function computeConmebolContinentalQualifiers(params: {
   clubs: Club[];
@@ -842,53 +807,25 @@ export function computeConmebolContinentalQualifiers(params: {
     clubs,
     standingsA,
     standingsSouthAmerica,
-    libertadoresChampId,
-    sulamericanaChampId,
     copaBrasilChampId,
-    copaBrasilRunnerUpId,
     domesticCupChampions = {},
   } = params;
 
   const clubMap = new Map<string, Club>();
   clubs.forEach((c) => clubMap.set(c.id, c));
 
-  // Mapa de copas nacionais por país
-  const domesticCupByCountry: Record<string, string | undefined> = {
-    Argentina: domesticCupChampions.sa_copa_argentina,
-    Chile: domesticCupChampions.sa_copa_chile,
-    'Colômbia': domesticCupChampions.sa_copa_colombia,
-    Equador: domesticCupChampions.sa_copa_ecuador,
-    Paraguai: domesticCupChampions.sa_copa_paraguay,
-    Peru: domesticCupChampions.sa_copa_peru,
-    Bolívia: domesticCupChampions.sa_copa_bolivia,
-    Uruguai: domesticCupChampions.sa_copa_uruguay,
-    Venezuela: domesticCupChampions.sa_copa_venezuela,
-  };
-
   const byLeague: Partial<Record<CompetitionType, CountryContinentalSummary>> = {};
   const orderedCountries: CountryContinentalSummary[] = [];
 
   const allLibertadoresEntries: QualifiedClubEntry[] = [];
   const allSulamericanaEntries: QualifiedClubEntry[] = [];
-
-  const preFase1Pool: Array<{ clubId: string; country: string }> = [];
-  const preFase2DirectPool: Array<{ clubId: string; country: string }> = [];
   const directLibertadoresGroupPool: string[] = [];
+  const directSulamericanaGroupPool: string[] = [];
 
-  // Vagas continentais prioritárias da temporada anterior
-  const titleHoldersAssigned = new Set<string>();
-  if (libertadoresChampId && clubMap.has(libertadoresChampId)) {
-    directLibertadoresGroupPool.push(libertadoresChampId);
-    titleHoldersAssigned.add(libertadoresChampId);
-  }
-  if (sulamericanaChampId && clubMap.has(sulamericanaChampId) && !titleHoldersAssigned.has(sulamericanaChampId)) {
-    directLibertadoresGroupPool.push(sulamericanaChampId);
-    titleHoldersAssigned.add(sulamericanaChampId);
-  }
-
-  // Itera cada país configurado
+  // Itera cada um dos 10 países configurados
   for (const cfg of CONMEBOL_COUNTRY_DISTRIBUTION_TABLE) {
     const isBrazil = cfg.country === 'Brasil';
+    const isArgentina = cfg.country === 'Argentina';
     const leagueStandings = isBrazil
       ? standingsA && standingsA.length > 0
         ? standingsA
@@ -907,186 +844,56 @@ export function computeConmebolContinentalQualifiers(params: {
 
     const countryLibClubs: QualifiedClubEntry[] = [];
     const countrySulaClubs: QualifiedClubEntry[] = [];
-    const countryLibGrupos: QualifiedClubEntry[] = [];
-    const countryLibPreF2: QualifiedClubEntry[] = [];
-    const countryLibPreF1: QualifiedClubEntry[] = [];
-    const countrySulaGrupos: QualifiedClubEntry[] = [];
-    const countrySulaPrelim: QualifiedClubEntry[] = [];
-
     const allocatedThisCountry = new Set<string>();
 
-    // 1. Títulos continentais pertencentes a este país
-    if (libertadoresChampId && !allocatedThisCountry.has(libertadoresChampId)) {
-      const cObj = clubMap.get(libertadoresChampId);
-      if (cObj && (cObj.country === cfg.country || (isBrazil && (!cObj.country || cObj.country === 'Brasil')))) {
-        allocatedThisCountry.add(libertadoresChampId);
-        const entry: QualifiedClubEntry = {
-          clubId: libertadoresChampId,
-          country: cfg.country,
-          leagueId: cfg.leagueId,
-          positionInLeague: posMap.get(libertadoresChampId) || 0,
-          competition: 'libertadores',
-          stage: 'libertadores_grupos',
-          stageName: 'Fase de Grupos',
-          reason: 'Campeão da Libertadores',
-        };
-        countryLibClubs.push(entry);
-        countryLibGrupos.push(entry);
-      }
-    }
-    if (sulamericanaChampId && !allocatedThisCountry.has(sulamericanaChampId)) {
-      const cObj = clubMap.get(sulamericanaChampId);
-      if (cObj && (cObj.country === cfg.country || (isBrazil && (!cObj.country || cObj.country === 'Brasil')))) {
-        allocatedThisCountry.add(sulamericanaChampId);
-        const entry: QualifiedClubEntry = {
-          clubId: sulamericanaChampId,
-          country: cfg.country,
-          leagueId: cfg.leagueId,
-          positionInLeague: posMap.get(sulamericanaChampId) || 0,
-          competition: 'libertadores',
-          stage: 'libertadores_grupos',
-          stageName: 'Fase de Grupos',
-          reason: 'Campeão da Sul-Americana',
-        };
-        countryLibClubs.push(entry);
-        countryLibGrupos.push(entry);
-      }
-    }
-
-    // 2. Regras de Copa Nacional
-    const cupChampId = isBrazil ? copaBrasilChampId : domesticCupByCountry[cfg.country];
-
-    if (isBrazil) {
-      // BRASIL: 5 Grupos (G-4 + Copa do Brasil), 2 Pré F2 (5º + Vice Copa / 6º)
-      if (cupChampId && clubMap.has(cupChampId)) {
-        allocatedThisCountry.add(cupChampId);
-        const entry: QualifiedClubEntry = {
-          clubId: cupChampId,
-          country: cfg.country,
-          leagueId: cfg.leagueId,
-          positionInLeague: posMap.get(cupChampId) || 0,
-          competition: 'libertadores',
-          stage: 'libertadores_grupos',
-          stageName: 'Fase de Grupos',
-          reason: 'Campeão da Copa do Brasil',
-        };
-        countryLibClubs.push(entry);
-        countryLibGrupos.push(entry);
-        directLibertadoresGroupPool.push(cupChampId);
-      }
-
-      // Se campeão da Copa do Brasil terminou no G-4 da Série A, vice herda a vaga direta
-      const cupChampPos = cupChampId ? posMap.get(cupChampId) || 99 : 99;
-      const cupChampInG4 = cupChampPos <= 4;
-
-      if (copaBrasilRunnerUpId && clubMap.has(copaBrasilRunnerUpId) && !allocatedThisCountry.has(copaBrasilRunnerUpId)) {
-        allocatedThisCountry.add(copaBrasilRunnerUpId);
-        if (cupChampInG4) {
-          const entry: QualifiedClubEntry = {
-            clubId: copaBrasilRunnerUpId,
-            country: cfg.country,
-            leagueId: cfg.leagueId,
-            positionInLeague: posMap.get(copaBrasilRunnerUpId) || 0,
-            competition: 'libertadores',
-            stage: 'libertadores_grupos',
-            stageName: 'Fase de Grupos',
-            reason: 'Vice da Copa do Brasil',
-          };
-          countryLibClubs.push(entry);
-          countryLibGrupos.push(entry);
-          directLibertadoresGroupPool.push(copaBrasilRunnerUpId);
-        } else {
-          const entry: QualifiedClubEntry = {
-            clubId: copaBrasilRunnerUpId,
-            country: cfg.country,
-            leagueId: cfg.leagueId,
-            positionInLeague: posMap.get(copaBrasilRunnerUpId) || 0,
-            competition: 'libertadores',
-            stage: 'libertadores_pre_fase2',
-            stageName: 'Pré-Libertadores (Fase 2)',
-            reason: 'Vice da Copa do Brasil',
-          };
-          countryLibClubs.push(entry);
-          countryLibPreF2.push(entry);
-          preFase2DirectPool.push({ clubId: copaBrasilRunnerUpId, country: cfg.country });
-        }
-      }
-    } else if (cfg.country === 'Argentina') {
-      // ARGENTINA: Copa Argentina dá vaga direta na Fase de Grupos
-      if (cupChampId && clubMap.has(cupChampId) && !allocatedThisCountry.has(cupChampId)) {
-        allocatedThisCountry.add(cupChampId);
-        const entry: QualifiedClubEntry = {
-          clubId: cupChampId,
-          country: cfg.country,
-          leagueId: cfg.leagueId,
-          positionInLeague: posMap.get(cupChampId) || 0,
-          competition: 'libertadores',
-          stage: 'libertadores_grupos',
-          stageName: 'Fase de Grupos',
-          reason: 'Campeão da Copa Nacional',
-        };
-        countryLibClubs.push(entry);
-        countryLibGrupos.push(entry);
-        directLibertadoresGroupPool.push(cupChampId);
-      }
-    } else if (cfg.country === 'Chile') {
-      // CHILE: Copa Chile dá vaga na Pré-Libertadores Fase 2
-      if (cupChampId && clubMap.has(cupChampId) && !allocatedThisCountry.has(cupChampId)) {
-        allocatedThisCountry.add(cupChampId);
-        const entry: QualifiedClubEntry = {
-          clubId: cupChampId,
-          country: cfg.country,
-          leagueId: cfg.leagueId,
-          positionInLeague: posMap.get(cupChampId) || 0,
-          competition: 'libertadores',
-          stage: 'libertadores_pre_fase2',
-          stageName: 'Pré-Libertadores (Fase 2)',
-          reason: 'Campeão da Copa Nacional',
-        };
-        countryLibClubs.push(entry);
-        countryLibPreF2.push(entry);
-        preFase2DirectPool.push({ clubId: cupChampId, country: cfg.country });
-      }
-    } else if (cfg.country === 'Colômbia') {
-      // COLÔMBIA: Copa Colômbia dá vaga na Copa Sul-Americana (Fase Preliminar)
-      if (cupChampId && clubMap.has(cupChampId) && !allocatedThisCountry.has(cupChampId)) {
-        allocatedThisCountry.add(cupChampId);
-        const entry: QualifiedClubEntry = {
-          clubId: cupChampId,
-          country: cfg.country,
-          leagueId: cfg.leagueId,
-          positionInLeague: posMap.get(cupChampId) || 0,
-          competition: 'sulamericana',
-          stage: 'sulamericana_preliminar',
-          stageName: 'Sul-Americana (Fase Preliminar)',
-          reason: 'Campeão da Copa Nacional',
-        };
-        countrySulaClubs.push(entry);
-        countrySulaPrelim.push(entry);
-      }
-    } else if (cfg.country === 'Equador' || cfg.country === 'Paraguai') {
-      // EQUADOR e PARAGUAI: Copa Ecuador e Copa Paraguay dão vaga na Pré-Libertadores Fase 1
-      if (cupChampId && clubMap.has(cupChampId) && !allocatedThisCountry.has(cupChampId)) {
-        allocatedThisCountry.add(cupChampId);
-        const entry: QualifiedClubEntry = {
-          clubId: cupChampId,
-          country: cfg.country,
-          leagueId: cfg.leagueId,
-          positionInLeague: posMap.get(cupChampId) || 0,
-          competition: 'libertadores',
-          stage: 'libertadores_pre_fase1',
-          stageName: 'Pré-Libertadores (Fase 1)',
-          reason: 'Campeão da Copa Nacional',
-        };
-        countryLibClubs.push(entry);
-        countryLibPreF1.push(entry);
-        preFase1Pool.push({ clubId: cupChampId, country: cfg.country });
-      }
+    // 1. Vaga via Copa Nacional (exclusivamente Brasil = Copa do Brasil, Argentina = Copa Argentina)
+    let hasCupSpotAllocated = false;
+    if (isBrazil && copaBrasilChampId && clubMap.has(copaBrasilChampId)) {
+      allocatedThisCountry.add(copaBrasilChampId);
+      hasCupSpotAllocated = true;
+      const entry: QualifiedClubEntry = {
+        clubId: copaBrasilChampId,
+        country: cfg.country,
+        leagueId: cfg.leagueId,
+        positionInLeague: posMap.get(copaBrasilChampId) || 0,
+        competition: 'libertadores',
+        stage: 'libertadores_grupos',
+        stageName: 'Fase de Grupos',
+        reason: 'Campeão da Copa do Brasil',
+      };
+      countryLibClubs.push(entry);
+      directLibertadoresGroupPool.push(copaBrasilChampId);
+    } else if (
+      isArgentina &&
+      domesticCupChampions.sa_copa_argentina &&
+      clubMap.has(domesticCupChampions.sa_copa_argentina)
+    ) {
+      const copaArgId = domesticCupChampions.sa_copa_argentina;
+      allocatedThisCountry.add(copaArgId);
+      hasCupSpotAllocated = true;
+      const entry: QualifiedClubEntry = {
+        clubId: copaArgId,
+        country: cfg.country,
+        leagueId: cfg.leagueId,
+        positionInLeague: posMap.get(copaArgId) || 0,
+        competition: 'libertadores',
+        stage: 'libertadores_grupos',
+        stageName: 'Fase de Grupos',
+        reason: 'Campeão da Copa Argentina',
+      };
+      countryLibClubs.push(entry);
+      directLibertadoresGroupPool.push(copaArgId);
     }
 
-    // 3. Preenchimento pela Liga Nacional
+    // 2. Preenchimento pela Liga Nacional (Libertadores primeiro, depois Sul-Americana logo abaixo)
+    // Enquanto a Copa do Brasil / Copa Argentina não tem campeão definido, apenas os 4 primeiros da liga
+    // (G-4) ocupam vagas da Libertadores; a 5ª vaga fica reservada para o campeão da Copa Nacional.
+    const libTargetCount =
+      (isBrazil || isArgentina) && !hasCupSpotAllocated
+        ? Math.max(0, cfg.libertadoresGrupos - 1)
+        : cfg.libertadoresGrupos;
+
     let effectiveLibDirectCutoff = 0;
-    let effectiveLibPreCutoff = 0;
     let effectiveSulaCutoff = 0;
 
     for (let i = 0; i < leagueStandings.length; i++) {
@@ -1095,11 +902,9 @@ export function computeConmebolContinentalQualifiers(params: {
 
       const pos = i + 1;
 
-      // Aloca Vagas Diretas na Fase de Grupos da Libertadores
-      if (countryLibGrupos.length < cfg.libertadoresGrupos) {
+      if (countryLibClubs.length < libTargetCount) {
         allocatedThisCountry.add(cid);
         effectiveLibDirectCutoff = pos;
-        effectiveLibPreCutoff = pos;
         const entry: QualifiedClubEntry = {
           clubId: cid,
           country: cfg.country,
@@ -1108,78 +913,33 @@ export function computeConmebolContinentalQualifiers(params: {
           competition: 'libertadores',
           stage: 'libertadores_grupos',
           stageName: 'Fase de Grupos',
-          reason: pos === 1 ? 'Campeão Nacional' : pos === 2 ? 'Vice-Campeão Nacional' : 'Vaga Direta Liga',
+          reason:
+            pos === 1
+              ? 'Campeão Nacional'
+              : pos === 2
+              ? 'Vice-Campeão Nacional'
+              : 'Vaga Direta Liga',
         };
         countryLibClubs.push(entry);
-        countryLibGrupos.push(entry);
         directLibertadoresGroupPool.push(cid);
         continue;
       }
 
-      // Aloca Vagas na Pré-Libertadores Fase 2
-      if (countryLibPreF2.length < cfg.libertadoresPreFase2) {
-        allocatedThisCountry.add(cid);
-        effectiveLibPreCutoff = pos;
-        const entry: QualifiedClubEntry = {
-          clubId: cid,
-          country: cfg.country,
-          leagueId: cfg.leagueId,
-          positionInLeague: pos,
-          competition: 'libertadores',
-          stage: 'libertadores_pre_fase2',
-          stageName: 'Pré-Libertadores (Fase 2)',
-          reason: 'Pré-Libertadores Liga',
-        };
-        countryLibClubs.push(entry);
-        countryLibPreF2.push(entry);
-        preFase2DirectPool.push({ clubId: cid, country: cfg.country });
-        continue;
-      }
-
-      // Aloca Vagas na Pré-Libertadores Fase 1
-      if (countryLibPreF1.length < cfg.libertadoresPreFase1) {
-        allocatedThisCountry.add(cid);
-        effectiveLibPreCutoff = pos;
-        const entry: QualifiedClubEntry = {
-          clubId: cid,
-          country: cfg.country,
-          leagueId: cfg.leagueId,
-          positionInLeague: pos,
-          competition: 'libertadores',
-          stage: 'libertadores_pre_fase1',
-          stageName: 'Pré-Libertadores (Fase 1)',
-          reason: 'Pré-Libertadores Liga',
-        };
-        countryLibClubs.push(entry);
-        countryLibPreF1.push(entry);
-        preFase1Pool.push({ clubId: cid, country: cfg.country });
-        continue;
-      }
-
-      // Aloca Vagas na Sul-Americana (Fase de Grupos para BRA/ARG; Fase Preliminar para os outros 8)
       if (countrySulaClubs.length < cfg.sulamericanaTotal) {
         allocatedThisCountry.add(cid);
         effectiveSulaCutoff = pos;
-        const stage: ConmebolEntryStage =
-          cfg.sulamericanaGrupos > 0 ? 'sulamericana_grupos' : 'sulamericana_preliminar';
-        const stageName =
-          cfg.sulamericanaGrupos > 0 ? 'Sul-Americana (Fase de Grupos)' : 'Sul-Americana (Fase Preliminar)';
         const entry: QualifiedClubEntry = {
           clubId: cid,
           country: cfg.country,
           leagueId: cfg.leagueId,
           positionInLeague: pos,
           competition: 'sulamericana',
-          stage,
-          stageName,
+          stage: 'sulamericana_grupos',
+          stageName: 'Fase de Grupos',
           reason: 'Sul-Americana Liga',
         };
         countrySulaClubs.push(entry);
-        if (cfg.sulamericanaGrupos > 0) {
-          countrySulaGrupos.push(entry);
-        } else {
-          countrySulaPrelim.push(entry);
-        }
+        directSulamericanaGroupPool.push(cid);
         continue;
       }
     }
@@ -1195,27 +955,29 @@ export function computeConmebolContinentalQualifiers(params: {
       flagCode: cfg.flagCode,
       flagEmoji: cfg.flagEmoji,
       leagueId: cfg.leagueId,
-      leagueName: isBrazil ? 'Brasileirão Série A' : SOUTH_AMERICAN_LEAGUES_META[cfg.leagueId as SouthAmericanLeagueId]?.name || cfg.country,
+      leagueName: isBrazil
+        ? 'Brasileirão Série A'
+        : SOUTH_AMERICAN_LEAGUES_META[cfg.leagueId as SouthAmericanLeagueId]?.name || cfg.country,
       totalLibertadoresBerths: cfg.libertadoresTotal,
       libertadoresDirectBerths: cfg.libertadoresGrupos,
-      libertadoresPhase2Berths: cfg.libertadoresPreFase2,
-      libertadoresPhase1Berths: cfg.libertadoresPreFase1,
+      libertadoresPhase2Berths: 0,
+      libertadoresPhase1Berths: 0,
       totalSulamericanaBerths: cfg.sulamericanaTotal,
       sulamericanaDirectBerths: cfg.sulamericanaGrupos,
-      sulamericanaPreliminaryBerths: cfg.sulamericanaPreliminar,
+      sulamericanaPreliminaryBerths: 0,
       effectiveLibertadoresDirectCutoff: effectiveLibDirectCutoff,
-      effectiveLibertadoresPreCutoff: effectiveLibPreCutoff,
+      effectiveLibertadoresPreCutoff: effectiveLibDirectCutoff,
       effectiveSulamericanaCutoff: effectiveSulaCutoff,
       libertadoresClubs: countryLibClubs,
       sulamericanaClubs: countrySulaClubs,
-      libertadoresGrupos: countryLibGrupos,
-      libertadoresPreFase2: countryLibPreF2,
-      libertadoresPreFase1: countryLibPreF1,
-      sulamericanaGrupos: countrySulaGrupos,
-      sulamericanaPreliminar: countrySulaPrelim,
+      libertadoresGrupos: countryLibClubs,
+      libertadoresPreFase2: [],
+      libertadoresPreFase1: [],
+      sulamericanaGrupos: countrySulaClubs,
+      sulamericanaPreliminar: [],
       baseLibertadoresBerths: cfg.libertadoresTotal,
       baseSulamericanaBerths: cfg.sulamericanaTotal,
-      effectiveLibertadoresPositionCutoff: effectiveLibPreCutoff || effectiveLibDirectCutoff,
+      effectiveLibertadoresPositionCutoff: effectiveLibDirectCutoff,
       effectiveSulamericanaPositionCutoff: effectiveSulaCutoff,
       criteriaLibertadores: cfg.criteriaLibertadores,
       criteriaSulamericana: cfg.criteriaSulamericana,
@@ -1225,116 +987,47 @@ export function computeConmebolContinentalQualifiers(params: {
     orderedCountries.push(summary);
   }
 
-  // ==============================================================
-  // 4. SIMULAÇÃO DAS ETAPAS PRELIMINARES DA CONMEBOL
-  // ==============================================================
-
-  // A. PRÉ-LIBERTADORES FASE 1 (6 equipes: 1 de cada país: BOL, EQU, PAR, PER, URU, VEN) -> 3 avançam
-  const fase1TeamIds = preFase1Pool.map((p) => p.clubId);
-  while (fase1TeamIds.length < 6) {
-    const fallback = clubs.find((c) => !fase1TeamIds.includes(c.id));
-    if (fallback) fase1TeamIds.push(fallback.id);
-    else break;
-  }
-  const fase1Winners: string[] = [];
-  for (let i = 0; i < 3; i++) {
-    const tA = fase1TeamIds[i * 2];
-    const tB = fase1TeamIds[i * 2 + 1];
-    if (tA && tB) {
-      const { winnerId } = resolveSimulatedKnockoutWinner(tA, tB, clubMap, i + 1);
-      fase1Winners.push(winnerId);
-    } else if (tA) {
-      fase1Winners.push(tA);
-    }
-  }
-
-  // B. PRÉ-LIBERTADORES FASE 2 (16 equipes: 3 da Fase 1 + 13 que entram direto) -> 8 avançam
-  const fase2TeamIds = [...fase1Winners, ...preFase2DirectPool.map((p) => p.clubId)];
-  while (fase2TeamIds.length < 16) {
-    const fallback = clubs.find((c) => !fase2TeamIds.includes(c.id));
-    if (fallback) fase2TeamIds.push(fallback.id);
-    else break;
-  }
-  const fase2Winners: string[] = [];
-  for (let i = 0; i < 8; i++) {
-    const tA = fase2TeamIds[i * 2];
-    const tB = fase2TeamIds[i * 2 + 1];
-    if (tA && tB) {
-      const { winnerId } = resolveSimulatedKnockoutWinner(tA, tB, clubMap, 10 + i);
-      fase2Winners.push(winnerId);
-    } else if (tA) {
-      fase2Winners.push(tA);
-    }
-  }
-
-  // C. PRÉ-LIBERTADORES FASE 3 (8 equipes em 4 confrontos):
-  // - Os 4 vencedores entram na Fase de Grupos da Copa Libertadores!
-  // - Os 4 eliminados vão diretamente para a Fase de Grupos da Copa Sul-Americana!
-  const fase3Winners: string[] = [];
-  const preLibPhase3EliminatedIds: string[] = [];
-
-  for (let i = 0; i < 4; i++) {
-    const tA = fase2Winners[i * 2];
-    const tB = fase2Winners[i * 2 + 1];
-    if (tA && tB) {
-      const { winnerId, loserId } = resolveSimulatedKnockoutWinner(tA, tB, clubMap, 20 + i);
-      fase3Winners.push(winnerId);
-      preLibPhase3EliminatedIds.push(loserId);
-    } else if (tA) {
-      fase3Winners.push(tA);
-    }
-  }
-
-  // D. FASE DE GRUPOS DA LIBERTADORES (Exatos 32 clubes: 28 diretos + 4 vencedores Fase 3)
-  const finalLibertadores32Ids = Array.from(
-    new Set([...directLibertadoresGroupPool, ...fase3Winners])
-  );
-  // Fallback se necessário até 32
+  // Exatos 32 clubes na Fase de Grupos da Libertadores (5+5+3+3+3+3+3+3+2+2 = 32)
+  const directSulaSet = new Set(directSulamericanaGroupPool);
+  const finalLibertadores32Ids = Array.from(new Set(directLibertadoresGroupPool));
   if (finalLibertadores32Ids.length < 32) {
-    for (const entry of allLibertadoresEntries) {
-      if (!finalLibertadores32Ids.includes(entry.clubId)) {
-        finalLibertadores32Ids.push(entry.clubId);
+    // Primeiro tenta completar sem remover clubes já classificados à Sul-Americana
+    for (const c of clubs) {
+      if (
+        (c.division === 'A' || c.division === 'SA') &&
+        !finalLibertadores32Ids.includes(c.id) &&
+        !directSulaSet.has(c.id)
+      ) {
+        finalLibertadores32Ids.push(c.id);
         if (finalLibertadores32Ids.length >= 32) break;
       }
     }
   }
-
-  // E. FASE PRELIMINAR DA SUL-AMERICANA (32 clubes: 4 de cada um dos 8 países fora BRA e ARG)
-  // Cada país disputa 2 duelos nacionais em jogo único -> 2 avançam por país (16 classificados no total)
-  const sulamericanaPrelimWinners: string[] = [];
-  for (const countrySummary of orderedCountries) {
-    if (countrySummary.country === 'Brasil' || countrySummary.country === 'Argentina') {
-      continue;
-    }
-    const countryPrelim = countrySummary.sulamericanaPreliminar.map((e) => e.clubId);
-    if (countryPrelim.length >= 4) {
-      const { winnerId: w1 } = resolveSimulatedKnockoutWinner(countryPrelim[0], countryPrelim[3], clubMap, 30);
-      const { winnerId: w2 } = resolveSimulatedKnockoutWinner(countryPrelim[1], countryPrelim[2], clubMap, 31);
-      sulamericanaPrelimWinners.push(w1, w2);
-    } else {
-      sulamericanaPrelimWinners.push(...countryPrelim.slice(0, 2));
+  if (finalLibertadores32Ids.length < 32) {
+    for (const c of clubs) {
+      if (
+        (c.division === 'A' || c.division === 'SA') &&
+        !finalLibertadores32Ids.includes(c.id)
+      ) {
+        finalLibertadores32Ids.push(c.id);
+        if (finalLibertadores32Ids.length >= 32) break;
+      }
     }
   }
+  const lib32Set = new Set(finalLibertadores32Ids.slice(0, 32));
 
-  // F. FASE DE GRUPOS DA SUL-AMERICANA (Exatos 32 clubes):
-  // 6 do Brasil + 6 da Argentina + 4 eliminados da Fase 3 da Pré-Libertadores + 16 vencedores da Fase Preliminar nacional!
-  const brazilSulaIds = (byLeague.serie_a?.sulamericanaGrupos || []).map((e) => e.clubId);
-  const argSulaIds = (byLeague.liga_arg?.sulamericanaGrupos || []).map((e) => e.clubId);
-
-  const finalSulamericana32Ids = Array.from(
-    new Set([
-      ...brazilSulaIds,
-      ...argSulaIds,
-      ...preLibPhase3EliminatedIds,
-      ...sulamericanaPrelimWinners,
-    ])
+  // Exatos 32 clubes na Fase de Grupos da Sul-Americana (4+4+3+3+3+3+3+3+3+3 = 32)
+  const finalSulamericana32Ids = Array.from(new Set(directSulamericanaGroupPool)).filter(
+    (id) => !lib32Set.has(id)
   );
-
-  // Fallback se necessário até 32
   if (finalSulamericana32Ids.length < 32) {
-    for (const entry of allSulamericanaEntries) {
-      if (!finalSulamericana32Ids.includes(entry.clubId) && !finalLibertadores32Ids.includes(entry.clubId)) {
-        finalSulamericana32Ids.push(entry.clubId);
+    for (const c of clubs) {
+      if (
+        (c.division === 'A' || c.division === 'SA') &&
+        !lib32Set.has(c.id) &&
+        !finalSulamericana32Ids.includes(c.id)
+      ) {
+        finalSulamericana32Ids.push(c.id);
         if (finalSulamericana32Ids.length >= 32) break;
       }
     }
@@ -1359,7 +1052,6 @@ export function computeConmebolContinentalQualifiers(params: {
   const sulamericanaEntriesFinal = finalSulamericana32Ids.slice(0, 32).map((id) => {
     const existing = allSulamericanaEntries.find((e) => e.clubId === id);
     if (existing) return existing;
-    const isTransferredFromLib = preLibPhase3EliminatedIds.includes(id);
     const cObj = clubMap.get(id);
     return {
       clubId: id,
@@ -1368,10 +1060,8 @@ export function computeConmebolContinentalQualifiers(params: {
       positionInLeague: 0,
       competition: 'sulamericana' as const,
       stage: 'sulamericana_grupos' as ConmebolEntryStage,
-      stageName: 'Sul-Americana (Fase de Grupos)',
-      reason: isTransferredFromLib
-        ? ('Classificado Fase 3 (Repescagem)' as const)
-        : ('Vaga Direta Liga' as const),
+      stageName: 'Fase de Grupos',
+      reason: 'Sul-Americana Liga' as const,
     };
   });
 
@@ -1382,7 +1072,7 @@ export function computeConmebolContinentalQualifiers(params: {
     sulamericanaEntries: sulamericanaEntriesFinal,
     allLibertadoresEntries,
     allSulamericanaEntries,
-    preLibertadoresPhase3EliminatedIds: preLibPhase3EliminatedIds,
+    preLibertadoresPhase3EliminatedIds: [],
     byLeague,
     orderedCountries,
   };

@@ -1,4 +1,4 @@
-import { Club, CompetitionType, Fixture, GameSave, Standing } from '../types/game';
+import { Club, CompetitionType, Fixture, GameSave, SouthAmericanCupId, Standing } from '../types/game';
 import {
   build32ClubContinentalCompetition,
   build36ClubUefaLeagueCompetition,
@@ -376,6 +376,14 @@ export function regenerateClubCompetitionDraw(
   if (competition === 'libertadores') {
     const libChampId = resolveCupChampionId(save.fixturesLibertadores);
     const sulaChampId = resolveCupChampionId(save.fixturesSulamericana);
+    const cdbChampId = resolveCupChampionId(save.fixturesCopaBrasil);
+    const domesticCupChamps: Partial<Record<SouthAmericanCupId, string>> = {};
+    if (save.fixturesSouthAmericanCups) {
+      for (const [cId, fixList] of Object.entries(save.fixturesSouthAmericanCups)) {
+        const champ = resolveCupChampionId(fixList);
+        if (champ) domesticCupChamps[cId as SouthAmericanCupId] = champ;
+      }
+    }
     let ids = existingStandings.map((s) => s.teamId).filter((id) => clubsMap.has(id));
     if (ids.length < 32) {
       ids = computeConmebolContinentalQualifiers({
@@ -384,6 +392,8 @@ export function regenerateClubCompetitionDraw(
         standingsSouthAmerica: save.standingsSouthAmerica,
         libertadoresChampId: libChampId,
         sulamericanaChampId: sulaChampId,
+        copaBrasilChampId: cdbChampId,
+        domesticCupChampions: domesticCupChamps,
       }).libertadoresIds;
     }
     const seededGroups = seedContinentalGroupsWithCountryProtection(
@@ -423,6 +433,14 @@ export function regenerateClubCompetitionDraw(
   if (competition === 'sulamericana') {
     const libChampId = resolveCupChampionId(save.fixturesLibertadores);
     const sulaChampId = resolveCupChampionId(save.fixturesSulamericana);
+    const cdbChampId = resolveCupChampionId(save.fixturesCopaBrasil);
+    const domesticCupChamps: Partial<Record<SouthAmericanCupId, string>> = {};
+    if (save.fixturesSouthAmericanCups) {
+      for (const [cId, fixList] of Object.entries(save.fixturesSouthAmericanCups)) {
+        const champ = resolveCupChampionId(fixList);
+        if (champ) domesticCupChamps[cId as SouthAmericanCupId] = champ;
+      }
+    }
     let ids = existingStandings.map((s) => s.teamId).filter((id) => clubsMap.has(id));
     if (ids.length < 32) {
       ids = computeConmebolContinentalQualifiers({
@@ -431,6 +449,8 @@ export function regenerateClubCompetitionDraw(
         standingsSouthAmerica: save.standingsSouthAmerica,
         libertadoresChampId: libChampId,
         sulamericanaChampId: sulaChampId,
+        copaBrasilChampId: cdbChampId,
+        domesticCupChampions: domesticCupChamps,
       }).sulamericanaIds;
     }
     const seededGroups = seedContinentalGroupsWithCountryProtection(

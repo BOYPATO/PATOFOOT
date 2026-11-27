@@ -1664,7 +1664,15 @@ function syncContinental32Bracket(
   if (hasOitavas) {
     if (allGroupPlayed) {
       const topTwoOf = (grp: string): [string | undefined, string | undefined] => {
-        const ordered = standings.filter((s) => s.group === grp);
+        const ordered = standings
+          .filter((s) => s.group === grp)
+          .sort(
+            (a, b) =>
+              b.points - a.points ||
+              b.won - a.won ||
+              b.goalDifference - a.goalDifference ||
+              b.goalsFor - a.goalsFor
+          );
         return [ordered[0]?.teamId, ordered[1]?.teamId];
       };
 
@@ -1759,6 +1767,187 @@ function syncContinental32Bracket(
   const fin1 = resolveTieWinner(getFix(`${prefix}_semi_1_ida`), getFix(`${prefix}_semi_1_volta`));
   const fin2 = resolveTieWinner(getFix(`${prefix}_semi_2_ida`), getFix(`${prefix}_semi_2_volta`));
   list = assignSingleLegSlots(list, finalId, fin1, fin2);
+
+  return list;
+}
+
+/**
+ * Sincroniza o chaveamento oficial CONMEBOL da Copa Sul-Americana:
+ * - Fase de Grupos (8 grupos A–H):
+ *   · 1º de cada grupo (8 clubes): classificam-se DIRETO às Oitavas de Final (decidem a Volta em casa)
+ *   · 2º de cada grupo (8 clubes): disputam os Playoffs (Ida e Volta) contra os 8 terceiros colocados
+ *     dos grupos da Copa Libertadores (2º da Sul-Americana decide a Volta em casa)
+ *   · 3º e 4º de cada grupo: eliminados
+ * - Os 8 vencedores dos Playoffs avançam às Oitavas de Final contra os 8 líderes de grupo da Sul-Americana.
+ */
+function syncSulamericanaWithPlayoffsBracket(
+  sulaFixtures: Fixture[],
+  sulaStandings: Standing[],
+  libFixtures: Fixture[],
+  libStandings: Standing[]
+): Fixture[] {
+  const hasPlayoffs = sulaFixtures.some((f) => f.id === 'sula_playoffs_m0_ida');
+  if (!hasPlayoffs) {
+    return syncContinental32Bracket(sulaFixtures, sulaStandings, 'sula', 'sula_final');
+  }
+
+  let list = [...sulaFixtures];
+  const getFix = (id: string) => list.find((f) => f.id === id);
+
+  const compareStandings = (a: Standing, b: Standing) =>
+    b.points - a.points ||
+    b.won - a.won ||
+    b.goalDifference - a.goalDifference ||
+    b.goalsFor - a.goalsFor;
+
+  const groupNames = [
+    'Grupo A',
+    'Grupo B',
+    'Grupo C',
+    'Grupo D',
+    'Grupo E',
+    'Grupo F',
+    'Grupo G',
+    'Grupo H',
+  ];
+
+  const sulaGroupGames = list.filter((f) => isStandingsFixture(f));
+  const allSulaGroupPlayed = sulaGroupGames.length > 0 && sulaGroupGames.every((f) => f.played);
+
+  const libGroupGames = libFixtures.filter((f) => isStandingsFixture(f));
+  const allLibGroupPlayed = libGroupGames.length > 0 && libGroupGames.every((f) => f.played);
+
+  // Ordem estilo tênis para cabeças de chave (1º e 2º em lados opostos até a Final)
+  const top8SeedOrder = [0, 7, 4, 3, 1, 6, 5, 2];
+  // Ordem olímpica dos 8 segundos colocados da Sul-Americana vs 8 terceiros colocados da Libertadores:
+  // Melhor 2º Sula vs Pior 3º Lib, 2º melhor 2º Sula vs 7º melhor 3º Lib, ..., Pior 2º Sula vs Melhor 3º Lib
+  const sulaSecondOrder = [0, 7, 3, 4, 1, 6, 2, 5];
+  const libThirdOrder = [7, 0, 4, 3, 6, 1, 5, 2];
+
+  if (allSulaGroupPlayed) {
+    const sulaFirsts: Standing[] = [];
+    const sulaSeconds: Standing[] = [];
+
+    groupNames.forEach((grp) => {
+      const ordered = sulaStandings.filter((s) => s.group === grp).sort(compareStandings);
+      if (ordered[0]) sulaFirsts.push(ordered[0]);
+      if (ordered[1]) sulaSeconds.push(ordered[1]);
+    });
+
+    sulaFirsts.sort(compareStandings);
+    sulaSeconds.sort(compareStandings);
+
+    // 1º colocados de cada grupo da Sul-Americana já entram direto nas Oitavas (decidindo a Volta em casa)
+    for (let idx = 0; idx < 8; idx++) {
+      const leaderId = sulaFirsts[top8SeedOrder[idx]]?.teamId;
+      if (leaderId) {
+        list = assignTwoLeggedSlots(
+          list,
+          `sula_oitavas_m${idx}_ida`,
+          `sula_oitavas_m${idx}_volta`,
+          undefined,
+          leaderId
+        );
+      }
+    }
+
+    // 2º colocados de cada grupo da Sul-Americana entram nos Playoffs decidindo a Volta em casa
+    for (let idx = 0; idx < 8; idx++) {
+      const runnerUpId = sulaSeconds[sulaSecondOrder[idx]]?.teamId;
+      if (runnerUpId) {
+        list = assignTwoLeggedSlots(
+          list,
+          `sula_playoffs_m${idx}_ida`,
+          `sula_playoffs_m${idx}_volta`,
+          undefined,
+          runnerUpId
+        );
+      }
+    }
+  }
+
+  if (allLibGroupPlayed) {
+    const libThirds: Standing[] = [];
+    groupNames.forEach((grp) => {
+      const ordered = libStandings.filter((s) => s.group === grp).sort(compareStandings);
+      if (ordered[2]) libThirds.push(ordered[2]);
+    });
+    libThirds.sort(compareStandings);
+
+    // 3º colocados de cada grupo da Libertadores disputam os Playoffs da Sul-Americana (mandando a Ida em casa)
+    for (let idx = 0; idx < 8; idx++) {
+      const thirdId = libThirds[libThirdOrder[idx]]?.teamId;
+      if (thirdId) {
+        list = assignTwoLeggedSlots(
+          list,
+          `sula_playoffs_m${idx}_ida`,
+          `sula_playoffs_m${idx}_volta`,
+          thirdId,
+          undefined
+        );
+      }
+    }
+  }
+
+  // Vencedores dos Playoffs (m0..7) avançam às Oitavas (mandam a Ida contra os 1º colocados dos grupos)
+  for (let idx = 0; idx < 8; idx++) {
+    const playoffWinner = resolveTieWinner(
+      getFix(`sula_playoffs_m${idx}_ida`),
+      getFix(`sula_playoffs_m${idx}_volta`)
+    );
+    if (playoffWinner) {
+      list = assignTwoLeggedSlots(
+        list,
+        `sula_oitavas_m${idx}_ida`,
+        `sula_oitavas_m${idx}_volta`,
+        playoffWinner,
+        undefined
+      );
+    }
+  }
+
+  // Oitavas (m0..7) -> Quartas (m0..3)
+  for (let q = 0; q < 4; q++) {
+    const w1 = resolveTieWinner(
+      getFix(`sula_oitavas_m${q * 2}_ida`),
+      getFix(`sula_oitavas_m${q * 2}_volta`)
+    );
+    const w2 = resolveTieWinner(
+      getFix(`sula_oitavas_m${q * 2 + 1}_ida`),
+      getFix(`sula_oitavas_m${q * 2 + 1}_volta`)
+    );
+    list = assignTwoLeggedSlots(
+      list,
+      `sula_quartas_m${q}_ida`,
+      `sula_quartas_m${q}_volta`,
+      w1,
+      w2
+    );
+  }
+
+  // Quartas (m0..3) -> Semifinal (1..2)
+  for (let s = 0; s < 2; s++) {
+    const w1 = resolveTieWinner(
+      getFix(`sula_quartas_m${s * 2}_ida`),
+      getFix(`sula_quartas_m${s * 2}_volta`)
+    );
+    const w2 = resolveTieWinner(
+      getFix(`sula_quartas_m${s * 2 + 1}_ida`),
+      getFix(`sula_quartas_m${s * 2 + 1}_volta`)
+    );
+    list = assignTwoLeggedSlots(
+      list,
+      `sula_semi_${s + 1}_ida`,
+      `sula_semi_${s + 1}_volta`,
+      w1,
+      w2
+    );
+  }
+
+  // Semifinal -> Grande Final (Jogo Único)
+  const fin1 = resolveTieWinner(getFix('sula_semi_1_ida'), getFix('sula_semi_1_volta'));
+  const fin2 = resolveTieWinner(getFix('sula_semi_2_ida'), getFix('sula_semi_2_volta'));
+  list = assignSingleLegSlots(list, 'sula_final', fin1, fin2);
 
   return list;
 }
@@ -2500,12 +2689,12 @@ export function syncDynamicKnockoutBrackets(state: {
     'lib_grande_final'
   );
 
-  // 3. Sul-Americana 2026 (8 groups -> Oitavas -> Quartas -> Semifinal -> Final Única)
-  const sula = syncContinental32Bracket(
+  // 3. Sul-Americana 2026 (8 groups -> 1º direto às Oitavas; 2º x 3º Libertadores nos Playoffs -> Oitavas -> Quartas -> Semifinal -> Final Única)
+  const sula = syncSulamericanaWithPlayoffsBracket(
     state.fixturesSulamericana,
     state.standingsSulamericana,
-    'sula',
-    'sula_final'
+    lib,
+    state.standingsLibertadores
   );
 
   // 4. Brasileirão Série D 2027 (16 grupos A01–A16 -> Top 4 = 64 clubes -> 2ª Fase cruzamento olímpico ->
