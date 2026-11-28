@@ -1,5 +1,5 @@
 import { Club, Fixture, EuropeanCupId, EuropeanLeagueId } from '../types/game';
-import { getClubsForEuropeanLeague } from './europeLeaguesEngine';
+import { getClubEuropeanLeagueId, getClubsForEuropeanLeague } from './europeLeaguesEngine';
 import {
   getEuropeanLeagueScheduleDates,
   getSeasonFifaBlockedDatesSet,
@@ -19,6 +19,7 @@ export const EUROPEAN_CUP_IDS: EuropeanCupId[] = [
   'ita_coppa_italia',
   'ita_supercoppa',
   'por_taca_portugal',
+  'por_taca_liga',
   'por_supertaca',
   'ned_knvb_beker',
   'ned_johan_cruyff',
@@ -550,19 +551,301 @@ export function generateDfbPokalFixtures(clubs: Club[], seasonYear: number = 202
   const nextYear = seasonYear + 1;
   const bld1 = getClubsForEuropeanLeague(clubs, 'ger_bundesliga');
   const bld2 = getClubsForEuropeanLeague(clubs, 'ger_bundesliga2');
+  const ger3Clubs = clubs.filter((c) => c.id.startsWith('eu_ger3_'));
   const shuffled1 = pseudoShuffle(bld1, seasonYear * 37);
   const shuffled2 = pseudoShuffle(bld2, seasonYear * 53);
+  const shuffled3 = pseudoShuffle(ger3Clubs, seasonYear * 71);
   const fixtures: Fixture[] = [];
 
-  // Formato oficial com 36 clubes (18 Bundesliga + 18 2. Bundesliga):
-  // - 1ª Fase (Preliminar): 8 clubes da 2. Bundesliga (4 jogos únicos -> 4 avançam)
-  // - 2ª Fase (16-avos · 32 clubes): 18 da Bundesliga + 10 diretos da 2. Bundesliga + 4 vencedores da 1ª Fase (16 jogos únicos)
-  // - Oitavas (16) -> Quartas (8) -> Semifinal (4) -> Grande Final no Olympiastadion (Berlim)
+  // Formato oficial completo com 64 clubes (18 Bundesliga + 18 2. Bundesliga + 28 clubes da 3. Liga/Regionalliga):
+  // - Todos os 64 clubes iniciam na Primeira Fase (32 confrontos Ida e Volta = 64 jogos)
+  // - Regra de chaveamento: Clubes da Bundesliga (Série A) NÃO podem se enfrentar na 1ª Fase nem na 2ª Fase (somente a partir das Oitavas)
+  // - Todas as fases em Ida e Volta, exceto a Grande Final em Jogo Único no Olympiastadion (Berlim)
+  // - Datas oficiais 2026/27:
+  //   1ª Fase: 21–24/08/2026 (Ida) e 01–02/09/2026 (Volta) — 64 jogos
+  //   2ª Fase: 06–07/10/2026 (Ida) e 27–28/10/2026 (Volta) — 32 jogos
+  //   Oitavas: 01–02/12/2026 (Ida) e 15–16/12/2026 (Volta) — 16 jogos
+  //   Quartas: 02–03/02/2027 (Ida) e 09–10/02/2027 (Volta) — 8 jogos
+  //   Semifinal: 20–21/04/2027 (Ida) e 11–12/05/2027 (Volta) — 4 jogos
+  //   Final: 29/05/2027 (Jogo Único em Berlim) — 1 jogo
+  //   Total: 125 jogos
+  if (shuffled1.length >= 18 && shuffled2.length >= 18 && shuffled3.length >= 28) {
+    const b1Pool = shuffled1.slice(0, 18); // 18 Bundesliga
+    const lowerPool = pseudoShuffle(
+      [...shuffled2.slice(0, 18), ...shuffled3.slice(0, 28)],
+      seasonYear * 89
+    ); // 46 clubes fora da Bundesliga
+
+    // Monta os 32 confrontos da 1ª Fase garantindo ZERO duelos Bundesliga x Bundesliga:
+    // 18 confrontos: clube de divisão inferior (manda Ida) x clube da Bundesliga (manda Volta)
+    // 14 confrontos: clube inferior x clube inferior
+    const rawTies: Array<{ homeIda: Club; awayIda: Club }> = [];
+    for (let i = 0; i < 18; i++) {
+      rawTies.push({ homeIda: lowerPool[i], awayIda: b1Pool[i] });
+    }
+    for (let i = 0; i < 14; i++) {
+      rawTies.push({
+        homeIda: lowerPool[18 + i * 2],
+        awayIda: lowerPool[18 + i * 2 + 1],
+      });
+    }
+
+    // Move confrontos de Bayern (eu_bay) e Dortmund (eu_bvb) para os últimos 8 slots (24..31),
+    // que jogam a Ida em 24/08/2026 (evitando qualquer conflito com a Supercopa em 22/08/2026).
+    const supercupTeams = new Set(['eu_bay', 'eu_bvb']);
+    const supercupTies = rawTies.filter(
+      (t) => supercupTeams.has(t.homeIda.id) || supercupTeams.has(t.awayIda.id)
+    );
+    const otherTies = rawTies.filter(
+      (t) => !supercupTeams.has(t.homeIda.id) && !supercupTeams.has(t.awayIda.id)
+    );
+    const orderedTies = [...otherTies, ...supercupTies];
+
+    const p1IdaDates = [
+      `${seasonYear}-08-21`,
+      `${seasonYear}-08-22`,
+      `${seasonYear}-08-23`,
+      `${seasonYear}-08-24`,
+    ];
+    const p1VoltaDates = [`${seasonYear}-09-01`, `${seasonYear}-09-02`];
+
+    // 1ª Fase (64 clubes -> 32 confrontos Ida e Volta = 64 jogos)
+    for (let i = 0; i < 32; i++) {
+      const { homeIda, awayIda } = orderedTies[i];
+      const idaDate = p1IdaDates[Math.floor(i / 8)];
+      const voltaDate = p1VoltaDates[i < 16 ? 0 : 1];
+      const idaTime = i % 2 === 0 ? '15:30' : '18:00';
+      const voltaTime = i % 2 === 0 ? '18:30' : '20:45';
+
+      fixtures.push({
+        id: `ger_dfb_p1_m${i}_ida`,
+        round: 1,
+        leg: 1,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: homeIda?.id || 'tbd',
+        awayTeamId: awayIda?.id || 'tbd',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: idaDate,
+        time: idaTime,
+        stadiumName: getClubStadiumName(homeIda),
+        cupPhase: 'Primeira Fase (Ida)',
+        groupName: 'DFB-Pokal · Primeira Fase (Ida · 64 Clubes)',
+      });
+      fixtures.push({
+        id: `ger_dfb_p1_m${i}_volta`,
+        round: 2,
+        leg: 2,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: awayIda?.id || 'tbd',
+        awayTeamId: homeIda?.id || 'tbd',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: voltaDate,
+        time: voltaTime,
+        stadiumName: getClubStadiumName(awayIda),
+        cupPhase: 'Primeira Fase (Volta)',
+        groupName: 'DFB-Pokal · Primeira Fase (Volta · 64 Clubes)',
+      });
+    }
+
+    // 2ª Fase (32 clubes -> 16 confrontos Ida e Volta = 32 jogos)
+    // Os pares são sorteados dinamicamente no sincronizador ao término da 1ª Fase,
+    // separando clubes da Bundesliga para evitar confrontos entre times da Série A antes das Oitavas!
+    for (let i = 0; i < 16; i++) {
+      const idaDate = i < 8 ? `${seasonYear}-10-06` : `${seasonYear}-10-07`;
+      const voltaDate = i < 8 ? `${seasonYear}-10-27` : `${seasonYear}-10-28`;
+      const time = i % 2 === 0 ? '18:30' : '20:45';
+      const slotA = `TBD_DFB_P1_${i * 2}`;
+      const slotB = `TBD_DFB_P1_${i * 2 + 1}`;
+
+      fixtures.push({
+        id: `ger_dfb_r32_m${i}_ida`,
+        round: 3,
+        leg: 1,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: slotA,
+        awayTeamId: slotB,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: idaDate,
+        time,
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Segunda Fase (Ida)',
+        groupName: 'DFB-Pokal · Segunda Fase (Ida · 32 Clubes)',
+      });
+      fixtures.push({
+        id: `ger_dfb_r32_m${i}_volta`,
+        round: 4,
+        leg: 2,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: slotB,
+        awayTeamId: slotA,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: voltaDate,
+        time,
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Segunda Fase (Volta)',
+        groupName: 'DFB-Pokal · Segunda Fase (Volta · 32 Clubes)',
+      });
+    }
+
+    // Oitavas de Final (16 clubes -> 8 confrontos Ida e Volta = 16 jogos)
+    // A partir desta fase clubes da Bundesliga podem se enfrentar livremente.
+    for (let i = 0; i < 8; i++) {
+      const idaDate = i < 4 ? `${seasonYear}-12-01` : `${seasonYear}-12-02`;
+      const voltaDate = i < 4 ? `${seasonYear}-12-15` : `${seasonYear}-12-16`;
+      const time = i % 2 === 0 ? '18:30' : '20:45';
+      const slotA = `TBD_DFB_R32_${i * 2}`;
+      const slotB = `TBD_DFB_R32_${i * 2 + 1}`;
+
+      fixtures.push({
+        id: `ger_dfb_r16_m${i}_ida`,
+        round: 5,
+        leg: 1,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: slotA,
+        awayTeamId: slotB,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: idaDate,
+        time,
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Oitavas de Final (Ida)',
+        groupName: 'DFB-Pokal · Oitavas de Final (Ida)',
+      });
+      fixtures.push({
+        id: `ger_dfb_r16_m${i}_volta`,
+        round: 6,
+        leg: 2,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: slotB,
+        awayTeamId: slotA,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: voltaDate,
+        time,
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Oitavas de Final (Volta)',
+        groupName: 'DFB-Pokal · Oitavas de Final (Volta)',
+      });
+    }
+
+    // Quartas de Final (8 clubes -> 4 confrontos Ida e Volta = 8 jogos)
+    for (let i = 0; i < 4; i++) {
+      const idaDate = i < 2 ? `${nextYear}-02-02` : `${nextYear}-02-03`;
+      const voltaDate = i < 2 ? `${nextYear}-02-09` : `${nextYear}-02-10`;
+      const time = i % 2 === 0 ? '18:30' : '20:45';
+      const slotA = `TBD_DFB_R16_${i * 2}`;
+      const slotB = `TBD_DFB_R16_${i * 2 + 1}`;
+
+      fixtures.push({
+        id: `ger_dfb_qf_m${i}_ida`,
+        round: 7,
+        leg: 1,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: slotA,
+        awayTeamId: slotB,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: idaDate,
+        time,
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Quartas de Final (Ida)',
+        groupName: 'DFB-Pokal · Quartas de Final (Ida)',
+      });
+      fixtures.push({
+        id: `ger_dfb_qf_m${i}_volta`,
+        round: 8,
+        leg: 2,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: slotB,
+        awayTeamId: slotA,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: voltaDate,
+        time,
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Quartas de Final (Volta)',
+        groupName: 'DFB-Pokal · Quartas de Final (Volta)',
+      });
+    }
+
+    // Semifinal (4 clubes -> 2 confrontos Ida e Volta = 4 jogos)
+    for (let i = 0; i < 2; i++) {
+      const idaDate = i === 0 ? `${nextYear}-04-20` : `${nextYear}-04-21`;
+      const voltaDate = i === 0 ? `${nextYear}-05-11` : `${nextYear}-05-12`;
+      const slotA = `TBD_DFB_QF_${i * 2}`;
+      const slotB = `TBD_DFB_QF_${i * 2 + 1}`;
+
+      fixtures.push({
+        id: `ger_dfb_sf_m${i}_ida`,
+        round: 9,
+        leg: 1,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: slotA,
+        awayTeamId: slotB,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: idaDate,
+        time: '20:45',
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Semifinal (Ida)',
+        groupName: 'DFB-Pokal · Semifinal (Ida)',
+      });
+      fixtures.push({
+        id: `ger_dfb_sf_m${i}_volta`,
+        round: 10,
+        leg: 2,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: slotB,
+        awayTeamId: slotA,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: voltaDate,
+        time: '20:45',
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Semifinal (Volta)',
+        groupName: 'DFB-Pokal · Semifinal (Volta)',
+      });
+    }
+
+    // Grande Final em Jogo Único no Olympiastadion (Berlim) — 29 de maio de 2027
+    fixtures.push({
+      id: 'ger_dfb_final',
+      round: 11,
+      competition: 'ger_dfb_pokal',
+      homeTeamId: 'TBD_DFB_SF0',
+      awayTeamId: 'TBD_DFB_SF1',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: `${nextYear}-05-29`,
+      time: '20:00',
+      stadiumName: 'Olympiastadion (Berlin)',
+      cupPhase: 'Grande Final',
+      groupName: 'DFB-Pokal · Grande Decisão em Jogo Único (Berlim)',
+    });
+
+    return fixtures;
+  }
+
+  // Fallback legado com 36 clubes (18 Bundesliga + 18 2. Bundesliga):
   if (shuffled2.length >= 18 && shuffled1.length >= 18) {
     const prelimClubs = shuffled2.slice(10, 18); // 8 clubes da 2. Bundesliga
     const directBld2 = shuffled2.slice(0, 10); // 10 clubes da 2. Bundesliga entram nos 16-avos
 
-    // 1ª Fase (Preliminar): 4 jogos únicos entre clubes da 2. Bundesliga
     for (let i = 0; i < 4; i++) {
       const home = prelimClubs[i * 2];
       const away = prelimClubs[i * 2 + 1];
@@ -583,11 +866,6 @@ export function generateDfbPokalFixtures(clubs: Club[], seasonYear: number = 202
       });
     }
 
-    // 2ª Fase (16-avos · 32 clubes -> 16 confrontos):
-    // Regra tradicional da DFB-Pokal: clubes da 2. Bundesliga jogam em casa contra clubes da Bundesliga!
-    // Jogos 0..3: Vencedor Preliminar (2. Bundesliga) em casa vs Bundesliga[0..3]
-    // Jogos 4..13: directBld2[0..9] em casa vs Bundesliga[4..13]
-    // Jogos 14..15: Bundesliga[14] vs Bundesliga[15] e Bundesliga[16] vs Bundesliga[17]
     for (let i = 0; i < 16; i++) {
       let homeId = 'tbd';
       let awayId = 'tbd';
@@ -622,7 +900,6 @@ export function generateDfbPokalFixtures(clubs: Club[], seasonYear: number = 202
       });
     }
 
-    // Oitavas de Final (8 jogos)
     for (let i = 0; i < 8; i++) {
       fixtures.push({
         id: `ger_dfb_r16_m${i}`,
@@ -641,7 +918,6 @@ export function generateDfbPokalFixtures(clubs: Club[], seasonYear: number = 202
       });
     }
 
-    // Quartas de Final (4 jogos)
     for (let i = 0; i < 4; i++) {
       fixtures.push({
         id: `ger_dfb_qf_m${i}`,
@@ -660,7 +936,6 @@ export function generateDfbPokalFixtures(clubs: Club[], seasonYear: number = 202
       });
     }
 
-    // Semifinais (2 jogos)
     for (let i = 0; i < 2; i++) {
       fixtures.push({
         id: `ger_dfb_sf_m${i}`,
@@ -679,7 +954,6 @@ export function generateDfbPokalFixtures(clubs: Club[], seasonYear: number = 202
       });
     }
 
-    // Grande Final em Berlim
     fixtures.push({
       id: 'ger_dfb_final',
       round: 6,
@@ -801,23 +1075,23 @@ export function generateDfbPokalFixtures(clubs: Club[], seasonYear: number = 202
 
 export function generateGermanSupercupFixtures(clubs: Club[], seasonYear: number = 2026): Fixture[] {
   const bld = getClubsForEuropeanLeague(clubs, 'ger_bundesliga');
-  const bvb = bld.find((c) => c.id === 'eu_bvb')?.id || 'eu_bvb';
   const bay = bld.find((c) => c.id === 'eu_bay')?.id || 'eu_bay';
+  const bvb = bld.find((c) => c.id === 'eu_bvb')?.id || 'eu_bvb';
 
-  // 22 de agosto de 2026: Borussia Dortmund x Bayern de Munique
+  // 22 de agosto de 2026: Bayern de Munique x Borussia Dortmund
   return [
     {
       id: 'ger_supercup_final',
       round: 1,
       competition: 'ger_supercup',
-      homeTeamId: bvb,
-      awayTeamId: bay,
+      homeTeamId: bay,
+      awayTeamId: bvb,
       homeScore: null,
       awayScore: null,
       played: false,
       date: `${seasonYear}-08-22`,
       time: '20:30',
-      stadiumName: 'Signal Iduna Park (Dortmund)',
+      stadiumName: 'Allianz Arena (Munique)',
       cupPhase: 'Franz Beckenbauer Supercup',
       groupName: 'Supercopa da Alemanha · Franz Beckenbauer Supercup',
     },
@@ -1670,128 +1944,333 @@ export function generateItalianSupercupFixtures(clubs: Club[], seasonYear: numbe
 }
 
 // ==========================================
-// 5. PORTUGAL: Taça de Portugal & Supertaça
+// 5. PORTUGAL: Taça de Portugal, Taça da Liga & Supertaça
 // ==========================================
 
 export function generateTacaDePortugalFixtures(clubs: Club[], seasonYear: number = 2026): Fixture[] {
   const nextYear = seasonYear + 1;
+  const clubMap = new Map<string, Club>(clubs.map((c) => [c.id, c]));
   const por = getClubsForEuropeanLeague(clubs, 'por_primeira');
-  const shuffled = pseudoShuffle(por, seasonYear * 47);
+  const porExtra = clubs.filter((c) => c.id.startsWith('eu_por2_') || c.id === 'eu_sp1_tor');
   const fixtures: Fixture[] = [];
 
-  const prelim = shuffled.slice(14, 18);
-  const directR16 = shuffled.slice(0, 14);
+  const addQuartasToFinal = () => {
+    // Quartas de Final (3 e 4 de fevereiro · 4 jogos em jogo único)
+    const qfDates = [`${nextYear}-02-03`, `${nextYear}-02-03`, `${nextYear}-02-04`, `${nextYear}-02-04`];
+    for (let i = 0; i < 4; i++) {
+      fixtures.push({
+        id: `por_tp_qf_m${i}`,
+        round: 3,
+        competition: 'por_taca_portugal',
+        homeTeamId: `TBD_TP_R16_W${i * 2}`,
+        awayTeamId: `TBD_TP_R16_W${i * 2 + 1}`,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: qfDates[i],
+        time: i % 2 === 0 ? '18:45' : '20:45',
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Quartas de Final',
+        groupName: 'Taça de Portugal · Quartas de Final (Jogo Único)',
+      });
+    }
 
-  for (let i = 0; i < 2; i++) {
-    const home = prelim[i * 2];
-    const away = prelim[i * 2 + 1];
+    // Semifinais (22 e 23 de maio · 2 jogos em jogo único)
+    const sfDates = [`${nextYear}-05-22`, `${nextYear}-05-23`];
+    for (let i = 0; i < 2; i++) {
+      fixtures.push({
+        id: `por_tp_sf_m${i}`,
+        round: 4,
+        competition: 'por_taca_portugal',
+        homeTeamId: `TBD_TP_QF_W${i * 2}`,
+        awayTeamId: `TBD_TP_QF_W${i * 2 + 1}`,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: sfDates[i],
+        time: '20:45',
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Semifinal',
+        groupName: 'Taça de Portugal · Semifinal (Jogo Único)',
+      });
+    }
+
+    // Grande Final (30 de maio · Estádio Nacional do Jamor)
+    fixtures.push({
+      id: 'por_tp_final',
+      round: 5,
+      competition: 'por_taca_portugal',
+      homeTeamId: 'TBD_TP_SF_W0',
+      awayTeamId: 'TBD_TP_SF_W1',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: `${nextYear}-05-30`,
+      time: '17:15',
+      stadiumName: 'Estádio Nacional do Jamor (Oeiras)',
+      cupPhase: 'Grande Final',
+      groupName: 'Taça de Portugal · Festa da Taça no Jamor',
+    });
+  };
+
+  // === TEMPORADA 2026/27: TABELA OFICIAL EXATA DA TAÇA DE PORTUGAL (32 CLUBES · 31 JOGOS) ===
+  if (seasonYear === 2026 && porExtra.length >= 19) {
+    // 1ª Fase (16-avos · 20/11 a 22/11/2026 · 16 jogos)
+    const r1Official: Array<[string, string, string, string]> = [
+      // 20/11/2026 (1 jogo)
+      ['eu_fcp', 'eu_por2_par', '2026-11-20', '20:45'],      // m0: FC Porto x USC Paredes
+      // 21/11/2026 (7 jogos)
+      ['eu_por2_acp', 'eu_cas_pt', '2026-11-21', '14:00'],   // m1: Atlético CP x Casa Pia AC
+      ['eu_por2_maf', 'eu_aro', '2026-11-21', '15:00'],      // m2: CD Mafra x FC Arouca
+      ['eu_por2_afs', 'eu_por2_ton', '2026-11-21', '15:00'], // m3: AFS x CD Tondela
+      ['eu_eto', 'eu_por2_fel', '2026-11-21', '16:00'],      // m4: Estoril Praia x FC Felgueiras
+      ['eu_mar', 'eu_por2_cha', '2026-11-21', '17:00'],      // m5: Marítimo x GD Chaves
+      ['eu_scp', 'eu_por2_uds', '2026-11-21', '18:30'],      // m6: Sporting x União da Serra
+      ['eu_vit', 'eu_bra', '2026-11-21', '20:45'],           // m7: Vitória SC x SC Braga
+      // 22/11/2026 (8 jogos)
+      ['eu_por2_san', 'eu_por2_oaf', '2026-11-22', '11:00'], // m8: AD Sanjoanense x Académica OAF
+      ['eu_gil_pt', 'eu_por2_olh', '2026-11-22', '14:00'],   // m9: Gil Vicente x Olhanense
+      ['eu_por2_via', 'eu_rio', '2026-11-22', '15:00'],      // m10: Vianense x Rio Ave
+      ['eu_por2_vse', 'eu_por2_lus', '2026-11-22', '15:00'], // m11: Vitória Sernache x Lusitânia de Lourosa
+      ['eu_por2_far', 'eu_por2_fat', '2026-11-22', '16:00'], // m12: Farense x CD Fátima
+      ['eu_est_pt', 'eu_por2_ptm', '2026-11-22', '17:00'],   // m13: Est. Amadora x Portimonense
+      ['eu_por2_lei', 'eu_por2_lec', '2026-11-22', '18:00'], // m14: UD Leiria x Leça FC
+      ['eu_sp1_tor', 'eu_slb', '2026-11-22', '20:45'],       // m15: Torreense x Benfica
+    ];
+
+    r1Official.forEach(([homeId, awayId, date, time], i) => {
+      fixtures.push({
+        id: `por_tp_r1_m${i}`,
+        round: 1,
+        competition: 'por_taca_portugal',
+        homeTeamId: homeId,
+        awayTeamId: awayId,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date,
+        time,
+        stadiumName: getClubStadiumName(clubMap.get(homeId)),
+        cupPhase: '1ª Fase (16-avos)',
+        groupName: 'Taça de Portugal · 1ª Fase (Jogo Único)',
+      });
+    });
+
+    // Oitavas de Final (16/12, 17/12, 31/12/2026 e 03/01/2027 · 8 jogos)
+    const r16Official: Array<[string, string, string, string]> = [
+      // 16/12/2026 (3 jogos)
+      ['TBD_TP_R1_W10', 'TBD_TP_R1_W2', '2026-12-16', '11:00'],  // Vianense x CD Mafra
+      ['TBD_TP_R1_W5', 'TBD_TP_R1_W11', '2026-12-16', '15:00'],  // Marítimo x Lusitânia de Lourosa
+      ['TBD_TP_R1_W6', 'TBD_TP_R1_W1', '2026-12-16', '17:45'],   // Sporting x Atlético CP
+      // 17/12/2026 (2 jogos)
+      ['TBD_TP_R1_W14', 'TBD_TP_R1_W0', '2026-12-17', '16:00'],  // UD Leiria x FC Porto
+      ['TBD_TP_R1_W15', 'TBD_TP_R1_W3', '2026-12-17', '17:45'],  // Benfica x CD Tondela
+      // 31/12/2026 (1 jogo)
+      ['TBD_TP_R1_W4', 'TBD_TP_R1_W13', '2026-12-31', '08:00'],  // FC Felgueiras x Est. Amadora
+      // 03/01/2027 (2 jogos)
+      ['TBD_TP_R1_W12', 'TBD_TP_R1_W8', '2027-01-03', '12:30'],  // Farense x Académica OAF
+      ['TBD_TP_R1_W9', 'TBD_TP_R1_W7', '2027-01-03', '15:00'],   // Gil Vicente x SC Braga
+    ];
+
+    r16Official.forEach(([homeId, awayId, date, time], i) => {
+      fixtures.push({
+        id: `por_tp_r16_m${i}`,
+        round: 2,
+        competition: 'por_taca_portugal',
+        homeTeamId: homeId,
+        awayTeamId: awayId,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date,
+        time,
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Oitavas de Final',
+        groupName: 'Taça de Portugal · Oitavas de Final (Jogo Único)',
+      });
+    });
+
+    addQuartasToFinal();
+    return fixtures;
+  }
+
+  // === TEMPORADAS FUTURAS (2027+): 32 CLUBES (PRIMEIRA LIGA + DIVISÕES INFERIORES) · 31 JOGOS ===
+  const shuffledPor = pseudoShuffle(por, seasonYear * 47);
+  const shuffledExtra = pseudoShuffle(porExtra, seasonYear * 53);
+  const pool32 = pseudoShuffle([...shuffledPor.slice(0, 18), ...shuffledExtra].slice(0, 32), seasonYear * 59);
+
+  const r1Dates = [`${seasonYear}-11-20`, `${seasonYear}-11-21`, `${seasonYear}-11-22`];
+  for (let i = 0; i < 16; i++) {
+    const home = pool32[i * 2];
+    const away = pool32[i * 2 + 1];
+    const d = i === 0 ? r1Dates[0] : i < 8 ? r1Dates[1] : r1Dates[2];
     fixtures.push({
       id: `por_tp_r1_m${i}`,
       round: 1,
       competition: 'por_taca_portugal',
-      homeTeamId: home?.id || 'tbd',
-      awayTeamId: away?.id || 'tbd',
+      homeTeamId: home?.id || `TBD_TP_R1_H${i}`,
+      awayTeamId: away?.id || `TBD_TP_R1_A${i}`,
       homeScore: null,
       awayScore: null,
       played: false,
-      date: `${seasonYear}-10-28`,
-      time: '20:15',
+      date: d,
+      time: i === 0 || i === 7 || i === 15 ? '20:45' : '15:00',
       stadiumName: getClubStadiumName(home),
-      cupPhase: '1ª Eliminatória',
-      groupName: 'Taça de Portugal · 1ª Fase',
+      cupPhase: '1ª Fase (16-avos)',
+      groupName: 'Taça de Portugal · 1ª Fase (Jogo Único)',
     });
   }
 
+  const r16Dates = [
+    `${seasonYear}-12-16`,
+    `${seasonYear}-12-16`,
+    `${seasonYear}-12-16`,
+    `${seasonYear}-12-17`,
+    `${seasonYear}-12-17`,
+    `${seasonYear}-12-31`,
+    `${nextYear}-01-03`,
+    `${nextYear}-01-03`,
+  ];
   for (let i = 0; i < 8; i++) {
-    const pairIdx = 2 + (i - 2) * 2;
-    const home = i < 2 ? directR16[i] : directR16[pairIdx];
-    const awayId = i < 2 ? 'TBD_TP_R1' : directR16[pairIdx + 1]?.id || 'tbd';
     fixtures.push({
       id: `por_tp_r16_m${i}`,
       round: 2,
       competition: 'por_taca_portugal',
-      homeTeamId: home?.id || 'tbd',
+      homeTeamId: `TBD_TP_R1_W${i * 2}`,
+      awayTeamId: `TBD_TP_R1_W${i * 2 + 1}`,
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: r16Dates[i],
+      time: i % 2 === 0 ? '15:00' : '17:45',
+      stadiumName: 'Estádio a definir',
+      cupPhase: 'Oitavas de Final',
+      groupName: 'Taça de Portugal · Oitavas de Final (Jogo Único)',
+    });
+  }
+
+  addQuartasToFinal();
+  return fixtures;
+}
+
+/**
+ * TAÇA DA LIGA DE PORTUGAL (Allianz Cup)
+ * 8 clubes qualificados (Top 6 da Primeira Liga + Top 2 da Liga Portugal 2):
+ * - Quartas de Final (29/08 e 30/08): 4 jogos em jogo único (melhores classificados em casa)
+ * - Semifinais / Final Four (19/09 e 20/09): 2 jogos em jogo único em Leiria
+ * - Grande Final (17/10): Jogo único em Leiria
+ */
+export function generateTacaDaLigaPortugalFixtures(
+  clubs: Club[],
+  seasonYear: number = 2026
+): Fixture[] {
+  const clubMap = new Map<string, Club>(clubs.map((c) => [c.id, c]));
+  const por = getClubsForEuropeanLeague(clubs, 'por_primeira');
+  const porExtra = clubs.filter((c) => c.id.startsWith('eu_por2_'));
+  const FINAL_FOUR_STADIUM = 'Estádio Dr. Magalhães Pessoa, Leiria';
+
+  let qfPairs: Array<[string, string, string, string]>;
+
+  if (seasonYear === 2026) {
+    // 2026/27 Oficial: 1º Porto, 2º Sporting, 3º Benfica, 4º Braga, 5º Famalicão, 6º Gil Vicente + L2: Marítimo, Ac. Viseu
+    qfPairs = [
+      ['eu_scp', 'eu_mar', '2026-08-30', '20:30'],    // m0: Sporting CP x Marítimo (Lisboa)
+      ['eu_fcp', 'eu_aca', '2026-08-30', '18:00'],    // m1: FC Porto x Académico de Viseu (Porto)
+      ['eu_bra', 'eu_fam', '2026-08-29', '18:00'],    // m2: SC Braga x Famalicão (Braga)
+      ['eu_slb', 'eu_gil_pt', '2026-08-29', '20:30'], // m3: SL Benfica x Gil Vicente (Lisboa)
+    ];
+  } else {
+    // 2027+: Top 6 Primeira Liga + 2 melhores Liga Portugal 2 (Marítimo/Ac. Viseu ou topo eu_por2_)
+    const sortedPrimeira = [...por].sort((a, b) => (b.reputation || 0) - (a.reputation || 0));
+    const top6 = sortedPrimeira.slice(0, 6);
+    const top6Ids = new Set(top6.map((c) => c.id));
+    const l2Pool = pseudoShuffle(
+      [
+        ...por.filter((c) => !top6Ids.has(c.id)),
+        ...porExtra,
+      ],
+      seasonYear * 71
+    ).slice(0, 2);
+
+    // 1º x 2º L2, 2º x 1º L2, 3º x 6º, 4º x 5º (melhores classificados em casa)
+    qfPairs = [
+      [top6[1]?.id || 'eu_scp', l2Pool[0]?.id || 'eu_mar', `${seasonYear}-08-30`, '20:30'],
+      [top6[0]?.id || 'eu_fcp', l2Pool[1]?.id || 'eu_aca', `${seasonYear}-08-30`, '18:00'],
+      [top6[3]?.id || 'eu_bra', top6[4]?.id || 'eu_fam', `${seasonYear}-08-29`, '18:00'],
+      [top6[2]?.id || 'eu_slb', top6[5]?.id || 'eu_gil_pt', `${seasonYear}-08-29`, '20:30'],
+    ];
+  }
+
+  const fixtures: Fixture[] = [];
+
+  // Quartas de Final (4 jogos)
+  qfPairs.forEach(([homeId, awayId, date, time], i) => {
+    fixtures.push({
+      id: `por_tl_qf_m${i}`,
+      round: 1,
+      competition: 'por_taca_liga',
+      homeTeamId: homeId,
       awayTeamId: awayId,
       homeScore: null,
       awayScore: null,
       played: false,
-      date: `${nextYear}-01-13`,
-      time: '20:45',
-      stadiumName: getClubStadiumName(home),
-      cupPhase: 'Oitavas de Final',
-      groupName: 'Taça de Portugal · Oitavas de Final',
+      date,
+      time,
+      stadiumName: getClubStadiumName(clubMap.get(homeId)),
+      cupPhase: 'Quartas de Final',
+      groupName: 'Taça da Liga · Quartas de Final (Jogo Único)',
     });
-  }
+  });
 
-  for (let i = 0; i < 4; i++) {
-    fixtures.push({
-      id: `por_tp_qf_m${i}`,
-      round: 3,
-      competition: 'por_taca_portugal',
-      homeTeamId: 'TBD_TP_R16',
-      awayTeamId: 'TBD_TP_R16',
+  // Semifinais (19/09: Vencedor Porto/Viseu x Vencedor Benfica/Gil Vicente; 20/09: Vencedor Sporting/Marítimo x Vencedor Braga/Famalicão)
+  fixtures.push(
+    {
+      id: 'por_tl_sf_m0',
+      round: 2,
+      competition: 'por_taca_liga',
+      homeTeamId: 'TBD_TL_QF_W1',
+      awayTeamId: 'TBD_TL_QF_W3',
       homeScore: null,
       awayScore: null,
       played: false,
-      date: `${nextYear}-02-03`,
-      time: '20:45',
-      stadiumName: 'Estádio a definir',
-      cupPhase: 'Quartas de Final',
-      groupName: 'Taça de Portugal · Quartas de Final',
-    });
-  }
+      date: `${seasonYear}-09-19`,
+      time: '19:45',
+      stadiumName: FINAL_FOUR_STADIUM,
+      cupPhase: 'Semifinal',
+      groupName: 'Taça da Liga · Final Four (Semifinal 1)',
+    },
+    {
+      id: 'por_tl_sf_m1',
+      round: 2,
+      competition: 'por_taca_liga',
+      homeTeamId: 'TBD_TL_QF_W0',
+      awayTeamId: 'TBD_TL_QF_W2',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: `${seasonYear}-09-20`,
+      time: '19:45',
+      stadiumName: FINAL_FOUR_STADIUM,
+      cupPhase: 'Semifinal',
+      groupName: 'Taça da Liga · Final Four (Semifinal 2)',
+    }
+  );
 
-  for (let i = 0; i < 2; i++) {
-    fixtures.push(
-      {
-        id: `por_tp_sf_m${i}_ida`,
-        round: 4,
-        competition: 'por_taca_portugal',
-        homeTeamId: 'TBD_TP_QF',
-        awayTeamId: 'TBD_TP_QF',
-        homeScore: null,
-        awayScore: null,
-        played: false,
-        date: `${nextYear}-03-03`,
-        time: '20:45',
-        stadiumName: 'Estádio a definir',
-        cupPhase: 'Semifinal (Ida)',
-        groupName: 'Taça de Portugal · Semifinal Ida',
-        leg: 1,
-      },
-      {
-        id: `por_tp_sf_m${i}_volta`,
-        round: 5,
-        competition: 'por_taca_portugal',
-        homeTeamId: 'TBD_TP_QF',
-        awayTeamId: 'TBD_TP_QF',
-        homeScore: null,
-        awayScore: null,
-        played: false,
-        date: `${nextYear}-04-21`,
-        time: '20:45',
-        stadiumName: 'Estádio a definir',
-        cupPhase: 'Semifinal (Volta)',
-        groupName: 'Taça de Portugal · Semifinal Volta',
-        leg: 2,
-      }
-    );
-  }
-
+  // Grande Final (17/10)
   fixtures.push({
-    id: 'por_tp_final',
-    round: 6,
-    competition: 'por_taca_portugal',
-    homeTeamId: 'TBD_TP_SF0',
-    awayTeamId: 'TBD_TP_SF1',
+    id: 'por_tl_final',
+    round: 3,
+    competition: 'por_taca_liga',
+    homeTeamId: 'TBD_TL_SF_W0',
+    awayTeamId: 'TBD_TL_SF_W1',
     homeScore: null,
     awayScore: null,
     played: false,
-    date: `${nextYear}-05-23`,
-    time: '17:15',
-    stadiumName: 'Estádio Nacional do Jamor (Oeiras)',
+    date: `${seasonYear}-10-17`,
+    time: '19:45',
+    stadiumName: FINAL_FOUR_STADIUM,
     cupPhase: 'Grande Final',
-    groupName: 'Taça de Portugal · Festa da Taça no Jamor',
+    groupName: 'Taça da Liga · Grande Final em Leiria',
   });
 
   return fixtures;
@@ -2982,6 +3461,7 @@ const CUP_TO_EUROPEAN_LEAGUE: Record<EuropeanCupId, EuropeanLeagueId> = {
   ita_coppa_italia: 'ita_serie_a',
   ita_supercoppa: 'ita_serie_a',
   por_taca_portugal: 'por_primeira',
+  por_taca_liga: 'por_primeira',
   por_supertaca: 'por_primeira',
   ned_knvb_beker: 'ned_eredivisie',
   ned_johan_cruyff: 'ned_eredivisie',
@@ -3041,7 +3521,7 @@ export function resolveEuropeanCupsMapConflicts(
     'ger_supercup', 'ger_dfb_pokal',
     'fra_trophee_champions', 'fra_coupe_de_france',
     'ita_supercoppa', 'ita_coppa_italia',
-    'por_supertaca', 'por_taca_portugal',
+    'por_supertaca', 'por_taca_liga', 'por_taca_portugal',
     'ned_johan_cruyff', 'ned_knvb_beker',
     'bel_supercup', 'bel_croky_cup',
     'tur_super_kupa', 'tur_turkiye_kupasi',
@@ -3065,14 +3545,18 @@ export function resolveEuropeanCupsMapConflicts(
   for (const [lid, cupIds] of cupsByLeague.entries()) {
     const blocked = getLeagueBlockedDates(lid, clubs, seasonYear, fixturesEurope);
     for (const cupId of cupIds) {
-      // Copas com calendário oficial fixo definido por regulamento (Espanha, Itália e França)
+      // Copas com calendário oficial fixo definido por regulamento (Espanha, Itália, França, Alemanha e Portugal)
       if (
         cupId === 'esp_copa_del_rey' ||
         cupId === 'esp_supercopa' ||
         cupId === 'ita_coppa_italia' ||
         cupId === 'ita_supercoppa' ||
         cupId === 'fra_coupe_de_france' ||
-        cupId === 'fra_trophee_champions'
+        cupId === 'fra_trophee_champions' ||
+        cupId === 'ger_dfb_pokal' ||
+        cupId === 'ger_supercup' ||
+        cupId === 'por_taca_portugal' ||
+        cupId === 'por_taca_liga'
       ) {
         const fixedCup = resolved[cupId] || [];
         resolved[cupId] = fixedCup;
@@ -3113,6 +3597,7 @@ export function generateAllEuropeanCupsFixtures(
     ita_coppa_italia: generateCoppaItaliaFixtures(clubs, seasonYear),
     ita_supercoppa: generateItalianSupercupFixtures(clubs, seasonYear),
     por_taca_portugal: generateTacaDePortugalFixtures(clubs, seasonYear),
+    por_taca_liga: generateTacaDaLigaPortugalFixtures(clubs, seasonYear),
     por_supertaca: generatePortugueseSupercupFixtures(clubs, seasonYear),
     ned_knvb_beker: generateKnvbBekerFixtures(clubs, seasonYear),
     ned_johan_cruyff: generateDutchSupercupFixtures(clubs, seasonYear),
@@ -3312,54 +3797,168 @@ export function syncEuropeanCupsKnockoutBrackets(params: {
     result.esp_copa_del_rey = cdr;
   }
 
-  // 3. ALEMANHA - DFB-Pokal (suporta formato 36 clubes com 2. Bundesliga e legado 18 clubes)
+  // 3. ALEMANHA - DFB-Pokal (suporta formato 64 clubes ida e volta, legado 36 clubes e legado 18 clubes)
   if (result.ger_dfb_pokal) {
     let dfb = [...result.ger_dfb_pokal];
+    const has64TwoLegFormat = dfb.some((f) => f.id === 'ger_dfb_p1_m0_ida');
     const has36ClubFormat = dfb.some((f) => f.id === 'ger_dfb_r0_m0');
-    if (has36ClubFormat) {
-      // 1ª Fase Preliminar (4 jogos) -> 2ª Fase (16-avos, mando do clube da 2. Bundesliga)
-      for (let i = 0; i < 4; i++) {
-        const w = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r0_m${i}`));
-        if (w) {
-          dfb = assignSingleLegSlots(dfb, `ger_dfb_r1_m${i}`, w, undefined);
-          dfb = updateStadiumIfKnown(dfb, `ger_dfb_r1_m${i}`, w);
+
+    if (has64TwoLegFormat) {
+      // Primeira Fase (32 confrontos ida e volta) -> Segunda Fase (16 confrontos ida e volta)
+      // Regra oficial: Clubes da Bundesliga NÃO se enfrentam na Segunda Fase (somente a partir das Oitavas).
+      // Assim que todos os 32 vencedores da 1ª Fase forem definidos, emparelha-se Bundesliga vs não-Bundesliga.
+      const p1Winners: string[] = [];
+      for (let i = 0; i < 32; i++) {
+        const w = resolveTieWinner(
+          getFix(dfb, `ger_dfb_p1_m${i}_ida`),
+          getFix(dfb, `ger_dfb_p1_m${i}_volta`)
+        );
+        if (w) p1Winners.push(w);
+      }
+
+      const firstR32 = getFix(dfb, 'ger_dfb_r32_m0_ida');
+      const r32NeedsDraw =
+        !!firstR32 &&
+        (firstR32.homeTeamId.startsWith('TBD_') || firstR32.awayTeamId.startsWith('TBD_'));
+
+      if (p1Winners.length === 32 && r32NeedsDraw) {
+        const b1Winners = p1Winners.filter(
+          (id) => getClubEuropeanLeagueId(clubsMap.get(id)) === 'ger_bundesliga'
+        );
+        const nonB1Winners = p1Winners.filter(
+          (id) => getClubEuropeanLeagueId(clubsMap.get(id)) !== 'ger_bundesliga'
+        );
+
+        const r32Pairs: Array<[string, string]> = [];
+        const crossPairs = Math.min(b1Winners.length, nonB1Winners.length);
+        // Clube de divisão inferior manda o jogo de Ida; clube da Bundesliga manda a Volta
+        for (let k = 0; k < crossPairs; k++) {
+          r32Pairs.push([nonB1Winners[k], b1Winners[k]]);
+        }
+        const remainingNonB1 = nonB1Winners.slice(crossPairs);
+        for (let k = 0; k + 1 < remainingNonB1.length; k += 2) {
+          r32Pairs.push([remainingNonB1[k], remainingNonB1[k + 1]]);
+        }
+        const remainingB1 = b1Winners.slice(crossPairs);
+        for (let k = 0; k + 1 < remainingB1.length; k += 2) {
+          r32Pairs.push([remainingB1[k], remainingB1[k + 1]]);
+        }
+
+        for (let i = 0; i < Math.min(16, r32Pairs.length); i++) {
+          const [homeIda, awayIda] = r32Pairs[i];
+          dfb = assignTwoLeggedSlots(dfb, `ger_dfb_r32_m${i}_ida`, `ger_dfb_r32_m${i}_volta`, homeIda, awayIda);
+          dfb = updateStadiumIfKnown(dfb, `ger_dfb_r32_m${i}_ida`, homeIda);
+          dfb = updateStadiumIfKnown(dfb, `ger_dfb_r32_m${i}_volta`, awayIda);
         }
       }
-      // 2ª Fase (16 jogos) -> Oitavas (8 jogos)
+
+      // Segunda Fase (16 confrontos ida e volta) -> Oitavas de Final (8 confrontos ida e volta)
       for (let i = 0; i < 8; i++) {
-        const w0 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r1_m${i * 2}`));
-        const w1 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r1_m${i * 2 + 1}`));
+        const w0 = resolveTieWinner(
+          getFix(dfb, `ger_dfb_r32_m${i * 2}_ida`),
+          getFix(dfb, `ger_dfb_r32_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(dfb, `ger_dfb_r32_m${i * 2 + 1}_ida`),
+          getFix(dfb, `ger_dfb_r32_m${i * 2 + 1}_volta`)
+        );
         if (w0 || w1) {
-          dfb = assignSingleLegSlots(dfb, `ger_dfb_r16_m${i}`, w0, w1);
-          dfb = updateStadiumIfKnown(dfb, `ger_dfb_r16_m${i}`, w0);
+          dfb = assignTwoLeggedSlots(dfb, `ger_dfb_r16_m${i}_ida`, `ger_dfb_r16_m${i}_volta`, w0, w1);
+          dfb = updateStadiumIfKnown(dfb, `ger_dfb_r16_m${i}_ida`, w0);
+          dfb = updateStadiumIfKnown(dfb, `ger_dfb_r16_m${i}_volta`, w1);
         }
+      }
+
+      // Oitavas de Final (8 confrontos ida e volta) -> Quartas de Final (4 confrontos ida e volta)
+      for (let i = 0; i < 4; i++) {
+        const w0 = resolveTieWinner(
+          getFix(dfb, `ger_dfb_r16_m${i * 2}_ida`),
+          getFix(dfb, `ger_dfb_r16_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(dfb, `ger_dfb_r16_m${i * 2 + 1}_ida`),
+          getFix(dfb, `ger_dfb_r16_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          dfb = assignTwoLeggedSlots(dfb, `ger_dfb_qf_m${i}_ida`, `ger_dfb_qf_m${i}_volta`, w0, w1);
+          dfb = updateStadiumIfKnown(dfb, `ger_dfb_qf_m${i}_ida`, w0);
+          dfb = updateStadiumIfKnown(dfb, `ger_dfb_qf_m${i}_volta`, w1);
+        }
+      }
+
+      // Quartas de Final (4 confrontos ida e volta) -> Semifinal (2 confrontos ida e volta)
+      for (let i = 0; i < 2; i++) {
+        const w0 = resolveTieWinner(
+          getFix(dfb, `ger_dfb_qf_m${i * 2}_ida`),
+          getFix(dfb, `ger_dfb_qf_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(dfb, `ger_dfb_qf_m${i * 2 + 1}_ida`),
+          getFix(dfb, `ger_dfb_qf_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          dfb = assignTwoLeggedSlots(dfb, `ger_dfb_sf_m${i}_ida`, `ger_dfb_sf_m${i}_volta`, w0, w1);
+          dfb = updateStadiumIfKnown(dfb, `ger_dfb_sf_m${i}_ida`, w0);
+          dfb = updateStadiumIfKnown(dfb, `ger_dfb_sf_m${i}_volta`, w1);
+        }
+      }
+
+      // Semifinal (2 confrontos ida e volta) -> Grande Final (Jogo Único em Berlim)
+      const sf0W = resolveTieWinner(
+        getFix(dfb, 'ger_dfb_sf_m0_ida'),
+        getFix(dfb, 'ger_dfb_sf_m0_volta')
+      );
+      const sf1W = resolveTieWinner(
+        getFix(dfb, 'ger_dfb_sf_m1_ida'),
+        getFix(dfb, 'ger_dfb_sf_m1_volta')
+      );
+      if (sf0W || sf1W) {
+        dfb = assignSingleLegSlots(dfb, 'ger_dfb_final', sf0W, sf1W);
       }
     } else {
+      if (has36ClubFormat) {
+        for (let i = 0; i < 4; i++) {
+          const w = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r0_m${i}`));
+          if (w) {
+            dfb = assignSingleLegSlots(dfb, `ger_dfb_r1_m${i}`, w, undefined);
+            dfb = updateStadiumIfKnown(dfb, `ger_dfb_r1_m${i}`, w);
+          }
+        }
+        for (let i = 0; i < 8; i++) {
+          const w0 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r1_m${i * 2}`));
+          const w1 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r1_m${i * 2 + 1}`));
+          if (w0 || w1) {
+            dfb = assignSingleLegSlots(dfb, `ger_dfb_r16_m${i}`, w0, w1);
+            dfb = updateStadiumIfKnown(dfb, `ger_dfb_r16_m${i}`, w0);
+          }
+        }
+      } else {
+        for (let i = 0; i < 2; i++) {
+          const w = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r1_m${i}`));
+          if (w) dfb = assignSingleLegSlots(dfb, `ger_dfb_r16_m${i}`, undefined, w);
+        }
+      }
+      for (let i = 0; i < 4; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r16_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r16_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          dfb = assignSingleLegSlots(dfb, `ger_dfb_qf_m${i}`, w0, w1);
+          dfb = updateStadiumIfKnown(dfb, `ger_dfb_qf_m${i}`, w0);
+        }
+      }
       for (let i = 0; i < 2; i++) {
-        const w = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r1_m${i}`));
-        if (w) dfb = assignSingleLegSlots(dfb, `ger_dfb_r16_m${i}`, undefined, w);
+        const w0 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_qf_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_qf_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          dfb = assignSingleLegSlots(dfb, `ger_dfb_sf_m${i}`, w0, w1);
+          dfb = updateStadiumIfKnown(dfb, `ger_dfb_sf_m${i}`, w0);
+        }
       }
-    }
-    for (let i = 0; i < 4; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r16_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r16_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        dfb = assignSingleLegSlots(dfb, `ger_dfb_qf_m${i}`, w0, w1);
-        dfb = updateStadiumIfKnown(dfb, `ger_dfb_qf_m${i}`, w0);
+      const sf0W = resolveTieWinner(undefined, getFix(dfb, 'ger_dfb_sf_m0'));
+      const sf1W = resolveTieWinner(undefined, getFix(dfb, 'ger_dfb_sf_m1'));
+      if (sf0W || sf1W) {
+        dfb = assignSingleLegSlots(dfb, 'ger_dfb_final', sf0W, sf1W);
       }
-    }
-    for (let i = 0; i < 2; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_qf_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_qf_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        dfb = assignSingleLegSlots(dfb, `ger_dfb_sf_m${i}`, w0, w1);
-        dfb = updateStadiumIfKnown(dfb, `ger_dfb_sf_m${i}`, w0);
-      }
-    }
-    const sf0W = resolveTieWinner(undefined, getFix(dfb, 'ger_dfb_sf_m0'));
-    const sf1W = resolveTieWinner(undefined, getFix(dfb, 'ger_dfb_sf_m1'));
-    if (sf0W || sf1W) {
-      dfb = assignSingleLegSlots(dfb, 'ger_dfb_final', sf0W, sf1W);
     }
     result.ger_dfb_pokal = dfb;
   }
@@ -3628,33 +4227,130 @@ export function syncEuropeanCupsKnockoutBrackets(params: {
   // 6. PORTUGAL - Taça de Portugal
   if (result.por_taca_portugal) {
     let tp = [...result.por_taca_portugal];
-    for (let i = 0; i < 2; i++) {
-      const w = resolveTieWinner(undefined, getFix(tp, `por_tp_r1_m${i}`));
-      if (w) tp = assignSingleLegSlots(tp, `por_tp_r16_m${i}`, undefined, w);
-    }
-    for (let i = 0; i < 4; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(tp, `por_tp_r16_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(tp, `por_tp_r16_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        tp = assignSingleLegSlots(tp, `por_tp_qf_m${i}`, w0, w1);
-        tp = updateStadiumIfKnown(tp, `por_tp_qf_m${i}`, w0);
+    const has32Format = tp.some((f) => f.id === 'por_tp_r1_m15');
+
+    if (has32Format) {
+      const tpTokens = new Map<string, string>();
+      const applyTpTokens = (list: Fixture[]): Fixture[] => {
+        if (tpTokens.size === 0) return list;
+        let changed = false;
+        const next = list.map((f) => {
+          const nextHome = tpTokens.get(f.homeTeamId) ?? f.homeTeamId;
+          const nextAway = tpTokens.get(f.awayTeamId) ?? f.awayTeamId;
+          if (nextHome === f.homeTeamId && nextAway === f.awayTeamId) return f;
+          changed = true;
+          let nextStadium = f.stadiumName;
+          if (
+            nextHome !== f.homeTeamId &&
+            clubsMap.has(nextHome) &&
+            f.id !== 'por_tp_final' &&
+            (f.stadiumName || '').includes('definir')
+          ) {
+            nextStadium = getClubStadiumName(clubsMap.get(nextHome));
+          }
+          return {
+            ...f,
+            homeTeamId: nextHome,
+            awayTeamId: nextAway,
+            stadiumName: nextStadium,
+          };
+        });
+        return changed ? next : list;
+      };
+
+      // 1ª Fase (16) -> Oitavas (8)
+      for (let i = 0; i < 16; i++) {
+        const w = resolveTieWinner(undefined, getFix(tp, `por_tp_r1_m${i}`));
+        if (w) tpTokens.set(`TBD_TP_R1_W${i}`, w);
       }
-    }
-    for (let i = 0; i < 2; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(tp, `por_tp_qf_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(tp, `por_tp_qf_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        tp = assignTwoLeggedSlots(tp, `por_tp_sf_m${i}_ida`, `por_tp_sf_m${i}_volta`, w0, w1);
-        tp = updateStadiumIfKnown(tp, `por_tp_sf_m${i}_ida`, w0);
-        tp = updateStadiumIfKnown(tp, `por_tp_sf_m${i}_volta`, w1);
+      tp = applyTpTokens(tp);
+
+      // Oitavas (8) -> Quartas (4)
+      for (let i = 0; i < 8; i++) {
+        const w = resolveTieWinner(undefined, getFix(tp, `por_tp_r16_m${i}`));
+        if (w) tpTokens.set(`TBD_TP_R16_W${i}`, w);
       }
-    }
-    const sf0W = resolveTieWinner(getFix(tp, 'por_tp_sf_m0_ida'), getFix(tp, 'por_tp_sf_m0_volta'));
-    const sf1W = resolveTieWinner(getFix(tp, 'por_tp_sf_m1_ida'), getFix(tp, 'por_tp_sf_m1_volta'));
-    if (sf0W || sf1W) {
-      tp = assignSingleLegSlots(tp, 'por_tp_final', sf0W, sf1W);
+      tp = applyTpTokens(tp);
+
+      // Quartas (4) -> Semifinais (2)
+      for (let i = 0; i < 4; i++) {
+        const w = resolveTieWinner(undefined, getFix(tp, `por_tp_qf_m${i}`));
+        if (w) tpTokens.set(`TBD_TP_QF_W${i}`, w);
+      }
+      tp = applyTpTokens(tp);
+
+      // Semifinais (2) -> Final no Jamor (1)
+      for (let i = 0; i < 2; i++) {
+        const w = resolveTieWinner(undefined, getFix(tp, `por_tp_sf_m${i}`));
+        if (w) tpTokens.set(`TBD_TP_SF_W${i}`, w);
+      }
+      tp = applyTpTokens(tp);
+    } else {
+      // Compatibilidade com saves antigos (18 clubes + Semifinal ida e volta)
+      for (let i = 0; i < 2; i++) {
+        const w = resolveTieWinner(undefined, getFix(tp, `por_tp_r1_m${i}`));
+        if (w) tp = assignSingleLegSlots(tp, `por_tp_r16_m${i}`, undefined, w);
+      }
+      for (let i = 0; i < 4; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(tp, `por_tp_r16_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(tp, `por_tp_r16_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          tp = assignSingleLegSlots(tp, `por_tp_qf_m${i}`, w0, w1);
+          tp = updateStadiumIfKnown(tp, `por_tp_qf_m${i}`, w0);
+        }
+      }
+      for (let i = 0; i < 2; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(tp, `por_tp_qf_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(tp, `por_tp_qf_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          tp = assignTwoLeggedSlots(tp, `por_tp_sf_m${i}_ida`, `por_tp_sf_m${i}_volta`, w0, w1);
+          tp = updateStadiumIfKnown(tp, `por_tp_sf_m${i}_ida`, w0);
+          tp = updateStadiumIfKnown(tp, `por_tp_sf_m${i}_volta`, w1);
+        }
+      }
+      const sf0W = resolveTieWinner(getFix(tp, 'por_tp_sf_m0_ida'), getFix(tp, 'por_tp_sf_m0_volta'));
+      const sf1W = resolveTieWinner(getFix(tp, 'por_tp_sf_m1_ida'), getFix(tp, 'por_tp_sf_m1_volta'));
+      if (sf0W || sf1W) {
+        tp = assignSingleLegSlots(tp, 'por_tp_final', sf0W, sf1W);
+      }
     }
     result.por_taca_portugal = tp;
+  }
+
+  // 6b. PORTUGAL - Taça da Liga de Portugal (Allianz Cup)
+  if (result.por_taca_liga) {
+    let tl = [...result.por_taca_liga];
+    const tlTokens = new Map<string, string>();
+    const applyTlTokens = (list: Fixture[]): Fixture[] => {
+      if (tlTokens.size === 0) return list;
+      let changed = false;
+      const next = list.map((f) => {
+        const nextHome = tlTokens.get(f.homeTeamId) ?? f.homeTeamId;
+        const nextAway = tlTokens.get(f.awayTeamId) ?? f.awayTeamId;
+        if (nextHome === f.homeTeamId && nextAway === f.awayTeamId) return f;
+        changed = true;
+        return {
+          ...f,
+          homeTeamId: nextHome,
+          awayTeamId: nextAway,
+        };
+      });
+      return changed ? next : list;
+    };
+
+    for (let i = 0; i < 4; i++) {
+      const w = resolveTieWinner(undefined, getFix(tl, `por_tl_qf_m${i}`));
+      if (w) tlTokens.set(`TBD_TL_QF_W${i}`, w);
+    }
+    tl = applyTlTokens(tl);
+
+    for (let i = 0; i < 2; i++) {
+      const w = resolveTieWinner(undefined, getFix(tl, `por_tl_sf_m${i}`));
+      if (w) tlTokens.set(`TBD_TL_SF_W${i}`, w);
+    }
+    tl = applyTlTokens(tl);
+
+    result.por_taca_liga = tl;
   }
 
   // 7. HOLANDA - KNVB Beker

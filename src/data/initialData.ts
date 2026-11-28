@@ -65,6 +65,9 @@ import { SERIE_B_ITA_LEAGUE_2026 } from './serieBIta_2026Rosters';
 import { SPAIN_COPA_EXTRA_2026 } from './spainCopaExtra2026';
 import { ITALY_COPA_EXTRA_2026 } from './italyCopaExtra2026';
 import { FRANCE_COPA_EXTRA_2026 } from './franceCopaExtra2026';
+import { GERMANY_COPA_EXTRA_2026 } from './germanyCopaExtra2026';
+import { ENGLAND_FACUP_EXTRA_2026 } from './englandFaCupExtra2026';
+import { PORTUGAL_COPA_EXTRA_2026 } from './portugalCopaExtra2026';
 import {
   FREE_AGENTS_2026_SPECS,
   CURRENT_FREE_AGENTS_2026_VERSION,
@@ -1462,6 +1465,63 @@ function buildAllEuropeanClubs(): Club[] {
         stadiumName: c.stadiumName,
         tuples: c.players,
         tag: 'fra3_26',
+      })
+    );
+  }
+
+  // 28 clubes alemães da 3. Liga / Regionalliga exclusivos da DFB-Pokal (Copa da Alemanha)
+  for (const c of GERMANY_COPA_EXTRA_2026) {
+    euClubs.push(
+      buildEuClub({
+        id: c.id,
+        name: c.name,
+        shortName: c.shortName,
+        country: 'Alemanha',
+        state: 'GER',
+        reputation: c.reputation,
+        primaryColor: c.primaryColor,
+        managerName: c.managerName,
+        stadiumName: c.stadiumName,
+        tuples: c.players,
+        tag: 'ger3_26',
+      })
+    );
+  }
+
+  // 32 clubes ingleses Non-League (National League L5–L8) exclusivos da Emirates FA Cup
+  for (const c of ENGLAND_FACUP_EXTRA_2026) {
+    euClubs.push(
+      buildEuClub({
+        id: c.id,
+        name: c.name,
+        shortName: c.shortName,
+        country: 'Inglaterra',
+        state: 'ENG',
+        reputation: c.reputation,
+        primaryColor: c.primaryColor,
+        managerName: c.managerName,
+        stadiumName: c.stadiumName,
+        tuples: c.players,
+        tag: 'eng5_26',
+      })
+    );
+  }
+
+  // 19 clubes portugueses de divisões inferiores (L2–L5) exclusivos da Taça de Portugal
+  for (const c of PORTUGAL_COPA_EXTRA_2026) {
+    euClubs.push(
+      buildEuClub({
+        id: c.id,
+        name: c.name,
+        shortName: c.shortName,
+        country: 'Portugal',
+        state: 'POR',
+        reputation: c.reputation,
+        primaryColor: c.primaryColor,
+        managerName: c.managerName,
+        stadiumName: c.stadiumName,
+        tuples: c.players,
+        tag: 'por2_26',
       })
     );
   }

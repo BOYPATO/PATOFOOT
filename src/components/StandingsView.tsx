@@ -252,8 +252,8 @@ export const EUROPE_COUNTRY_FOLDERS: EuropeCountryFolder[] = [
     id: 'POR',
     name: 'Portugal',
     flag: '🇵🇹',
-    competitions: ['por_primeira', 'por_taca_portugal', 'por_supertaca'],
-    description: 'Liga Portugal Betclic, Taça de Portugal & Supertaça Cândido de Oliveira (3 competições)',
+    competitions: ['por_primeira', 'por_taca_portugal', 'por_taca_liga', 'por_supertaca'],
+    description: 'Liga Portugal Betclic, Taça de Portugal, Taça da Liga & Supertaça Cândido de Oliveira (4 competições)',
   },
   {
     id: 'NED',
@@ -362,6 +362,7 @@ export const EUROPE_COUNTRY_FOLDERS: EuropeCountryFolder[] = [
       'fra_trophee_champions',
       'por_primeira',
       'por_taca_portugal',
+      'por_taca_liga',
       'por_supertaca',
       'ned_eredivisie',
       'ned_knvb_beker',

@@ -1,0 +1,90 @@
+FA CUP 128 TIMES
+
+1ª Rodada
+06/11	(L4) Bristol Rovers	Bristol Rovers	2-0	Cambridge United	Cambridge United (L3)				
+ 	(L6) Oxford City	Oxford City	2-4	Leicester City	Leicester City (L3)				
+07/11	(L4) Newport County	Newport County	3-1	Walsall	Walsall (L4)				
+ 	(L3) Oxford United	Oxford United	0-1	Stevenage	Stevenage (L3)				
+ 	(L3) Bromley	Bromley	0-2	Rotherham	Rotherham (L4)				
+ 	(L3) Burton Albion	Burton Albion	4-0	AFC Rushden & Diamonds	AFC Rushden & Diamonds (L8)				
+ 	(L6) Dover Athletic	Dover Athletic	2-0	Wealdstone	Wealdstone (L5)				
+ 	(L4) Barnet	Barnet	3-0	Tranmere Rovers	Tranmere Rovers (L4)				
+ 	(L3) Bradford City	Bradford City	7-0	Marine AFC	Marine AFC (L6)				
+ 	(L3) Mansfield Town	Mansfield Town	3-0	Macclesfield FC	Macclesfield FC (L6)				
+ 	(L4) Fleetwood Town	Fleetwood Town	1-2
+Pro.
+Rochdale	Rochdale (L4)				
+ 	(L4) Port Vale	Port Vale	4-2	Scunthorpe United	Scunthorpe United (L5)				
+ 	(L3) Huddersfield Town	Huddersfield Town	1-2	Exeter City	Exeter City (L4)				
+ 	(L4) York City	York City	4-0	Northampton Town	Northampton Town (L4)				
+ 	(L5) Boreham Wood	Boreham Wood	0-3	Wigan Athletic	Wigan Athletic (L3)				
+ 	(L3) Barnsley	Barnsley	7-2	Aldershot Town	Aldershot Town (L5)				
+ 	(L4) Cheltenham Town	Cheltenham Town	2-0	Halifax Town	Halifax Town (L5)				
+ 	(L5) Carlisle United	Carlisle United	1-0	Salford City	Salford City (L4)				
+ 	(L6) Salisbury FC	Salisbury FC	6-0	Sholing	Sholing (L7)				
+ 	(L3) Luton Town	Luton Town	2-0	Forest Green Rovers	Forest Green Rovers (L5)				
+ 	(L4) Colchester	Colchester	1-0	Worcester City	Worcester City (L7)				
+ 	(L5) Eastleigh	Eastleigh	1-2	Shrewsbury Town	Shrewsbury Town (L4)				
+ 	(L4) Chesterfield	Chesterfield	4-3	Yeovil Town	Yeovil Town (L5)				
+ 	(L5) Kidderminster	Kidderminster	3-0	Doncaster Rovers	Doncaster Rovers (L3)				
+ 	(L3) Leyton Orient	Leyton Orient	5-1	Harborough Town	Harborough Town (L6)				
+ 	(L4) Gillingham	Gillingham	0-1	Barrow AFC	Barrow AFC (L5)				
+ 	(L3) Plymouth Argyle	Plymouth Argyle	4-0	Alvechurch	Alvechurch (L7)				
+ 	(L4) Accrington Stanley	Accrington Stanley	0-2	Wycombe Wanderers	Wycombe Wanderers (L3)				
+ 	(L5) Hornchurch	Hornchurch	1-2
+Pro.
+Blackpool	Blackpool (L3)				
+ 	(L5) Harrogate Town	Harrogate Town	1-4	AFC Fylde	AFC Fylde (L5)				
+ 	(L7) Guiseley AFC	Guiseley AFC	1-0	Sutton United	Sutton United (L5)				
+ 	(L3) MK Dons	MK Dons	2-1	Swindon Town	Swindon Town (L4)				
+ 	(L4) Crewe Alexandra	Crewe Alexandra	2-1	AFC Wimbledon	AFC Wimbledon (L3)				
+ 	(L5) Altrincham	Altrincham	2-2
+(2-3 Pen.)
+Notts County	Notts County (L3)				
+ 	(L3) Peterborough United	Peterborough United	0-5	Reading	Reading (L3)				
+08/11	(L8) Stafford Rangers	Stafford Rangers	3-3
+(2-3 Pen.)
+Grimsby Town	Grimsby Town (L4)				
+ 	(L7) Cray Wanderers	Cray Wanderers	2-3
+Pro.
+Stockport County	Stockport County (L3)				
+ 	(L7) Wimborne Town	Wimborne Town	2-0	Crawley Town	Crawley Town (L4)				
+ 	(L4) Oldham Athletic	Oldham Athletic	2-1
+Pro.
+Sheffield Wed.	Sheffield Wed. (L3)				
+09/11	(L7) Plymouth Parkway	Plymouth Parkway	2-1
+Pro.
+Berkhamsted FC	Berkhamsted FC (L7)
+
+2ª Rodada
+04/12	(L7) Wimborne Town	Wimborne Town	16:30	Bradford City	Bradford City (L3)				cd
+ 	(L3) Wycombe Wanderers	Wycombe Wanderers	16:45	MK Dons	MK Dons (L3)				cd
+05/12	(L4) Rotherham	Rotherham	12:00	Bristol Rovers	Bristol Rovers (L4)				cd
+ 	(L3) Reading	Reading	12:00	Stockport County	Stockport County (L3)				cd
+ 	(L4) Chesterfield	Chesterfield	12:00	Cheltenham Town	Cheltenham Town (L4)				cd
+ 	(L3) Wigan Athletic	Wigan Athletic	12:00	Barnsley	Barnsley (L3)				cd
+ 	(L4) Exeter City	Exeter City	12:00	Stevenage	Stevenage (L3)				cd
+ 	(L4) York City	York City	12:00	Carlisle United	Carlisle United (L5)				cd
+ 	(L4) Colchester	Colchester	12:00	Mansfield Town	Mansfield Town (L3)				cd
+ 	(L4) Rochdale	Rochdale	12:00	Newport County	Newport County (L4)				cd
+ 	(L4) Port Vale	Port Vale	12:00	Leyton Orient	Leyton Orient (L3)				cd
+ 	(L4) Grimsby Town	Grimsby Town	12:00	Oldham Athletic	Oldham Athletic (L4)				cd
+ 	(L4) Shrewsbury Town	Shrewsbury Town	12:00	Burton Albion	Burton Albion (L3)				cd
+ 	(L6) Dover Athletic	Dover Athletic	14:15	Leicester City	Leicester City (L3)				cd
+ 	(L5) Barrow AFC	Barrow AFC	17:00	Kidderminster	Kidderminster (L5)				cd
+06/12	(L6) Salisbury FC	Salisbury FC	09:15	Blackpool	Blackpool (L3)				cd
+ 	(L5) AFC Fylde	AFC Fylde	11:30	Luton Town	Luton Town (L3)				cd
+ 	(L4) Crewe Alexandra	Crewe Alexandra	12:15	Plymouth Argyle	Plymouth Argyle (L3)				cd
+ 	(L7) Plymouth Parkway	Plymouth Parkway	14:30	Barnet	Barnet (L4)				cd
+07/12	(L7) Guiseley AFC	Guiseley AFC	16:30	Notts County	Notts County (L3)				cd
+
+Terceira rodada	9 de janeiro de 2027
+Quarta rodada	13 de fevereiro de 2027
+Oitavas de final 6 de março de 2027
+Quartas de final 3 de abril de 2027
+Semifinais	24 de abril de 2027
+Final	22 de maio de 2027
+
+times que entra na terceira fase
+20 times da Premier League
+24 times da EFL Championship

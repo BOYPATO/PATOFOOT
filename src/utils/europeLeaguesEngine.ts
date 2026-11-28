@@ -839,7 +839,10 @@ export function getClubEuropeanLeagueId(club?: Club | null): EuropeanLeagueId | 
     club.id === 'eu_ucr' ||
     club.id.startsWith('eu_esp3_') ||
     club.id.startsWith('eu_ita3_') ||
-    club.id.startsWith('eu_fra3_')
+    club.id.startsWith('eu_fra3_') ||
+    club.id.startsWith('eu_ger3_') ||
+    club.id.startsWith('eu_eng5_') ||
+    club.id.startsWith('eu_por2_')
   ) {
     return null; // Participantes exclusivos continentais UEFA ou copas nacionais (divisões inferiores)
   }

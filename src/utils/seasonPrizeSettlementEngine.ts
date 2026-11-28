@@ -583,6 +583,7 @@ const DOMESTIC_CUP_DISPLAY_NAMES: Record<string, string> = {
   ger_dfb_pokal: 'DFB-Pokal',
   fra_coupe_de_france: 'Coupe de France',
   por_taca_portugal: 'Taça de Portugal',
+  por_taca_liga: 'Taça da Liga de Portugal',
   ned_knvb_beker: 'KNVB Beker',
   bel_croky_cup: 'Croky Cup',
   tur_turkiye_kupasi: 'Türkiye Kupası',

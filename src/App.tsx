@@ -1467,7 +1467,10 @@ function sanitizeSave(save: GameSave): GameSave {
         clubWorking.id === 'eu_sp1_cel' ||
         clubWorking.id.startsWith('eu_esp3_') ||
         clubWorking.id.startsWith('eu_ita3_') ||
-        clubWorking.id.startsWith('eu_fra3_')
+        clubWorking.id.startsWith('eu_fra3_') ||
+        clubWorking.id.startsWith('eu_ger3_') ||
+        clubWorking.id.startsWith('eu_eng5_') ||
+        clubWorking.id.startsWith('eu_por2_')
           ? undefined
           : clubWorking.europeanLeagueId || templateClub?.europeanLeagueId,
       southAmericanLeagueId: clubWorking.southAmericanLeagueId || templateClub?.southAmericanLeagueId,

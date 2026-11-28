@@ -673,7 +673,7 @@ export const CUP_PRIZES_CATALOG: CupPhasePrize[] = [
     runnerUpPrize: 6000000,
   },
 
-  // Portugal: Taça de Portugal & Supertaça
+  // Portugal: Taça de Portugal, Taça da Liga & Supertaça
   {
     competition: 'por_taca_portugal',
     phaseMatchString: 'semi',
@@ -686,6 +686,19 @@ export const CUP_PRIZES_CATALOG: CupPhasePrize[] = [
     phaseDisplayName: 'Título da Taça de Portugal no Estádio Nacional do Jamor',
     winnerPrize: 35000000,
     runnerUpPrize: 15000000,
+  },
+  {
+    competition: 'por_taca_liga',
+    phaseMatchString: 'semi',
+    phaseDisplayName: 'Classificação à Final da Taça da Liga de Portugal',
+    winnerPrize: 7000000,
+  },
+  {
+    competition: 'por_taca_liga',
+    phaseMatchString: 'final',
+    phaseDisplayName: 'Título da Taça da Liga de Portugal (Allianz Cup)',
+    winnerPrize: 18000000,
+    runnerUpPrize: 8000000,
   },
   {
     competition: 'por_supertaca',

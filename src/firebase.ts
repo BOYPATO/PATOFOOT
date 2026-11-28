@@ -21,7 +21,7 @@ function createFirestoreInstance(): Firestore {
     return initializeFirestore(
       app,
       {
-        ...(typeof window !== 'undefined' ? { experimentalForceLongPolling: true } : {}),
+        experimentalAutoDetectLongPolling: true,
         ignoreUndefinedProperties: true,
       },
       firebaseConfig.firestoreDatabaseId
@@ -40,16 +40,27 @@ setPersistence(auth, browserLocalPersistence).catch((err) => {
   console.warn('[Firebase Auth Persistence Warning]:', err);
 });
 
-async function testConnection() {
+async function testConnection(attempt: number = 0): Promise<void> {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     return;
   }
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
+    const code = (error as { code?: string } | null)?.code || '';
+    const message = error instanceof Error ? error.message : String(error);
     if (
-      error instanceof Error &&
-      error.message.includes('the client is offline') &&
+      attempt === 0 &&
+      (code === 'unavailable' || message.includes('unavailable')) &&
+      (typeof navigator === 'undefined' || navigator.onLine !== false)
+    ) {
+      setTimeout(() => {
+        void testConnection(1);
+      }, 1500);
+      return;
+    }
+    if (
+      message.includes('the client is offline') &&
       (typeof navigator === 'undefined' || navigator.onLine !== false)
     ) {
       console.error('Please check your Firebase configuration.');
@@ -57,7 +68,13 @@ async function testConnection() {
   }
 }
 
-testConnection();
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    void testConnection();
+  }, 250);
+} else {
+  void testConnection();
+}
 
 export enum OperationType {
   CREATE = 'create',

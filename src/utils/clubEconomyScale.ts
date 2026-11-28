@@ -58,7 +58,10 @@ function resolveEuLeagueId(club?: ClubEconomyContext | null): EuropeanLeagueId |
     club.id === 'eu_ucr' ||
     club.id?.startsWith('eu_esp3_') ||
     club.id?.startsWith('eu_ita3_') ||
-    club.id?.startsWith('eu_fra3_')
+    club.id?.startsWith('eu_fra3_') ||
+    club.id?.startsWith('eu_ger3_') ||
+    club.id?.startsWith('eu_eng5_') ||
+    club.id?.startsWith('eu_por2_')
   ) {
     return null;
   }
@@ -703,9 +706,12 @@ export function resolveClubEconomyTier(club?: ClubEconomyContext | null): Econom
   if (club.division === 'C') return 'BR_C';
   if (club.division === 'B') return 'BR_B';
   if (club.division === 'EU') {
+    if (club.id?.startsWith('eu_eng5_')) return 'EU_4';
     return club.id?.startsWith('eu_esp3_') ||
       club.id?.startsWith('eu_ita3_') ||
-      club.id?.startsWith('eu_fra3_')
+      club.id?.startsWith('eu_fra3_') ||
+      club.id?.startsWith('eu_ger3_') ||
+      club.id?.startsWith('eu_por2_')
       ? 'EU_3'
       : 'EU_2';
   }
@@ -802,6 +808,27 @@ export function getClubEconomyProfile(club?: ClubEconomyContext | null): ClubEco
     return {
       ...base,
       tierLabel: 'Championnat National (FRA)',
+    };
+  }
+
+  if (club?.id?.startsWith('eu_ger3_')) {
+    return {
+      ...base,
+      tierLabel: '3. Liga / Regionalliga (ALE)',
+    };
+  }
+
+  if (club?.id?.startsWith('eu_eng5_')) {
+    return {
+      ...base,
+      tierLabel: 'Non-League / National League (ING)',
+    };
+  }
+
+  if (club?.id?.startsWith('eu_por2_')) {
+    return {
+      ...base,
+      tierLabel: 'Liga Portugal 2 / Liga 3 (POR)',
     };
   }
 

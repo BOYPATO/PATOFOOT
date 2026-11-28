@@ -81,6 +81,7 @@ export type EuropeanCupId =
   | 'ita_coppa_italia'
   | 'ita_supercoppa'
   | 'por_taca_portugal'
+  | 'por_taca_liga'
   | 'por_supertaca'
   | 'ned_knvb_beker'
   | 'ned_johan_cruyff'

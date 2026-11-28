@@ -261,6 +261,19 @@ export async function syncTrainerProfileToFirestore(
       existingData = snap.data() as Record<string, unknown>;
     }
   } catch (err) {
+    const errCode = getFirebaseErrorCode(err);
+    const errMsg = err instanceof Error ? err.message.toLowerCase() : String(err).toLowerCase();
+    if (
+      errCode === 'unavailable' ||
+      errMsg.includes('offline') ||
+      errMsg.includes('could not reach cloud firestore')
+    ) {
+      return {
+        displayName,
+        usernameKey: fallbackKey,
+        favoriteClubId,
+      };
+    }
     handleFirestoreError(err, OperationType.GET, docPath);
   }
 

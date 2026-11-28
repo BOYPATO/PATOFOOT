@@ -64,13 +64,14 @@ const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const EUROPEAN_CUP_MIN_COUNTS: Record<EuropeanCupId, number> = {
   esp_copa_del_rey: 133,
   esp_supercopa: 3,
-  ger_dfb_pokal: 35,
+  ger_dfb_pokal: 125,
   ger_supercup: 1,
   fra_coupe_de_france: 109,
   fra_trophee_champions: 1,
   ita_coppa_italia: 85,
   ita_supercoppa: 1,
-  por_taca_portugal: 19,
+  por_taca_portugal: 31,
+  por_taca_liga: 7,
   por_supertaca: 1,
   ned_knvb_beker: 17,
   ned_johan_cruyff: 1,
@@ -308,14 +309,14 @@ export function ensureEuropeanAndDomesticSchedulesInSave(state: GameSave): GameS
   );
   const needsEflCup = !isFixturePoolHealthy(
     state.fixturesEngEflCup,
-    90,
+    93,
     euMinDate,
     euMaxDate,
     false
   );
   const needsFaCup = !isFixturePoolHealthy(
     state.fixturesEngFaCup,
-    95,
+    123,
     euMinDate,
     euMaxDate,
     false

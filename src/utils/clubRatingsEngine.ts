@@ -395,10 +395,14 @@ export function getBaselineClubSectorTarget(
   } else if (club.division === 'SA') {
     base = club.reputation >= 5 ? 80 : club.reputation === 4 ? 75 : club.reputation === 3 ? 70 : 65;
   } else if (club.division === 'EU') {
-    if (
+    if (club.id.startsWith('eu_eng5_')) {
+      base = club.reputation >= 2 ? 56 : 51;
+    } else if (
       club.id.startsWith('eu_esp3_') ||
       club.id.startsWith('eu_ita3_') ||
-      club.id.startsWith('eu_fra3_')
+      club.id.startsWith('eu_fra3_') ||
+      club.id.startsWith('eu_ger3_') ||
+      club.id.startsWith('eu_por2_')
     ) {
       base = club.reputation >= 3 ? 66 : 62;
     } else if (club.europeanLeagueId === 'eng_league_two') {
@@ -777,10 +781,14 @@ export function calibrateClubSquadRealism(
     // Limites realistas por divisão para evitar distorções absurdas no início
     const minDiv =
       club.division === 'EU'
-        ? club.id.startsWith('eu_esp3_') ||
-          club.id.startsWith('eu_ita3_') ||
-          club.id.startsWith('eu_fra3_')
-          ? 56
+        ? club.id.startsWith('eu_eng5_')
+          ? 46
+          : club.id.startsWith('eu_esp3_') ||
+            club.id.startsWith('eu_ita3_') ||
+            club.id.startsWith('eu_fra3_') ||
+            club.id.startsWith('eu_ger3_') ||
+            club.id.startsWith('eu_por2_')
+          ? 52
           : club.europeanLeagueId === 'eng_league_two'
           ? 52
           : club.europeanLeagueId === 'eng_league_one'
@@ -814,9 +822,13 @@ export function calibrateClubSquadRealism(
       canBypassDivCap
         ? 94
         : club.division === 'EU'
-        ? club.id.startsWith('eu_esp3_') ||
-          club.id.startsWith('eu_ita3_') ||
-          club.id.startsWith('eu_fra3_')
+        ? club.id.startsWith('eu_eng5_')
+          ? 65
+          : club.id.startsWith('eu_esp3_') ||
+            club.id.startsWith('eu_ita3_') ||
+            club.id.startsWith('eu_fra3_') ||
+            club.id.startsWith('eu_ger3_') ||
+            club.id.startsWith('eu_por2_')
           ? 73
           : club.europeanLeagueId === 'eng_league_two'
           ? 68
