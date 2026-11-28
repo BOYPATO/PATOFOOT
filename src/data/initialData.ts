@@ -68,6 +68,8 @@ import { FRANCE_COPA_EXTRA_2026 } from './franceCopaExtra2026';
 import { GERMANY_COPA_EXTRA_2026 } from './germanyCopaExtra2026';
 import { ENGLAND_FACUP_EXTRA_2026 } from './englandFaCupExtra2026';
 import { PORTUGAL_COPA_EXTRA_2026 } from './portugalCopaExtra2026';
+import { NETHERLANDS_COPA_EXTRA_2026 } from './netherlandsCopaExtra2026';
+import { BELGIUM_COPA_EXTRA_2026 } from './belgiumCopaExtra2026';
 import {
   FREE_AGENTS_2026_SPECS,
   CURRENT_FREE_AGENTS_2026_VERSION,
@@ -1522,6 +1524,44 @@ function buildAllEuropeanClubs(): Club[] {
         stadiumName: c.stadiumName,
         tuples: c.players,
         tag: 'por2_26',
+      })
+    );
+  }
+
+  // 14 clubes holandeses da 2ª divisão (Keuken Kampioen Divisie) exclusivos da KNVB Beker (32 clubes)
+  for (const c of NETHERLANDS_COPA_EXTRA_2026) {
+    euClubs.push(
+      buildEuClub({
+        id: c.id,
+        name: c.name,
+        shortName: c.shortName,
+        country: 'Holanda',
+        state: 'NED',
+        reputation: c.reputation,
+        primaryColor: c.primaryColor,
+        managerName: c.managerName,
+        stadiumName: c.stadiumName,
+        tuples: c.players,
+        tag: 'ned2_26',
+      })
+    );
+  }
+
+  // 14 clubes belgas de divisões inferiores (Challenger Pro League / Nacional) exclusivos da Croky Cup (32 clubes)
+  for (const c of BELGIUM_COPA_EXTRA_2026) {
+    euClubs.push(
+      buildEuClub({
+        id: c.id,
+        name: c.name,
+        shortName: c.shortName,
+        country: 'Bélgica',
+        state: 'BEL',
+        reputation: c.reputation,
+        primaryColor: c.primaryColor,
+        managerName: c.managerName,
+        stadiumName: c.stadiumName,
+        tuples: c.players,
+        tag: 'bel2_26',
       })
     );
   }

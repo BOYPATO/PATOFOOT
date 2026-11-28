@@ -1470,7 +1470,9 @@ function sanitizeSave(save: GameSave): GameSave {
         clubWorking.id.startsWith('eu_fra3_') ||
         clubWorking.id.startsWith('eu_ger3_') ||
         clubWorking.id.startsWith('eu_eng5_') ||
-        clubWorking.id.startsWith('eu_por2_')
+        clubWorking.id.startsWith('eu_por2_') ||
+        clubWorking.id.startsWith('eu_ned2_') ||
+        clubWorking.id.startsWith('eu_bel2_')
           ? undefined
           : clubWorking.europeanLeagueId || templateClub?.europeanLeagueId,
       southAmericanLeagueId: clubWorking.southAmericanLeagueId || templateClub?.southAmericanLeagueId,

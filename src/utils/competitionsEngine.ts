@@ -1001,8 +1001,8 @@ export const COMPETITIONS_CATALOG: Record<CompetitionType, CompetitionMeta> = {
     secondaryColor: '#1e3a8a',
     isCup: true,
     category: 'europe',
-    officialClubsCount: 18,
-    formatSummary: '18 clubes · Mata-mata em jogo único · Final no De Kuip',
+    officialClubsCount: 32,
+    formatSummary: '32 clubes · Mata-mata em ida e volta · Final única no De Kuip',
   },
   ned_johan_cruyff: {
     id: 'ned_johan_cruyff',
@@ -1022,14 +1022,14 @@ export const COMPETITIONS_CATALOG: Record<CompetitionType, CompetitionMeta> = {
     name: 'Croky Cup (Copa da Bélgica)',
     shortName: 'Croky Cup',
     description:
-      'A Copa da Bélgica com semifinais em ida e volta e final no King Baudouin Stadium em Bruxelas.',
+      'A Copa da Bélgica com 32 clubes em mata-mata de ida e volta e final única no King Baudouin Stadium em Bruxelas.',
     badgeEmoji: '🇧🇪',
     primaryColor: '#dc2626',
     secondaryColor: '#eab308',
     isCup: true,
     category: 'europe',
-    officialClubsCount: 18,
-    formatSummary: '18 clubes · Semifinais Ida e Volta · Final em Bruxelas',
+    officialClubsCount: 32,
+    formatSummary: '32 clubes · Mata-mata em ida e volta · Final única em Bruxelas',
   },
   bel_supercup: {
     id: 'bel_supercup',

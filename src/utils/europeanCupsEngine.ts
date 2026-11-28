@@ -2306,96 +2306,197 @@ export function generatePortugueseSupercupFixtures(clubs: Club[], seasonYear: nu
 
 export function generateKnvbBekerFixtures(clubs: Club[], seasonYear: number = 2026): Fixture[] {
   const nextYear = seasonYear + 1;
-  const ned = getClubsForEuropeanLeague(clubs, 'ned_eredivisie');
-  const shuffled = pseudoShuffle(ned, seasonYear * 53);
+  const nedDiv1 = getClubsForEuropeanLeague(clubs, 'ned_eredivisie').slice(0, 18);
+  const nedDiv2 = clubs.filter((c) => c.id.startsWith('eu_ned2_')).slice(0, 14);
   const fixtures: Fixture[] = [];
 
-  const prelim = shuffled.slice(14, 18);
-  const directR16 = shuffled.slice(0, 14);
+  // Regra da 1ª Fase: clubes da 1ª Divisão (Eredivisie) não se enfrentam na 1ª fase.
+  // Emparelha todos os clubes da 2ª Divisão (14) contra os 14 principais clubes da 1ª Divisão
+  // (maior reputação primeiro), minimizando ao máximo qualquer confronto entre clubes da Eredivisie
+  // (restam apenas os 4 clubes de menor reputação da 1ª Divisão em 2 chaves, pois 18 > 16).
+  const sortedDiv1 = [...nedDiv1].sort(
+    (a, b) => (b.reputation || 0) - (a.reputation || 0) || a.id.localeCompare(b.id)
+  );
+  const crossCount = Math.min(sortedDiv1.length, nedDiv2.length);
+  const potDiv1 = pseudoShuffle(sortedDiv1.slice(0, crossCount), seasonYear * 53 + 7);
+  const potDiv2 = pseudoShuffle(nedDiv2.slice(0, crossCount), seasonYear * 53 + 19);
+  const remainingClubs = pseudoShuffle(
+    [...sortedDiv1.slice(crossCount), ...nedDiv2.slice(crossCount)],
+    seasonYear * 53 + 31
+  );
 
-  for (let i = 0; i < 2; i++) {
-    const home = prelim[i * 2];
-    const away = prelim[i * 2 + 1];
+  const rawPairs: Array<[Club | undefined, Club | undefined]> = [];
+  for (let i = 0; i < crossCount; i++) {
+    // Clube da 2ª Divisão manda a partida de ida; clube da 1ª Divisão decide em casa na volta
+    rawPairs.push([potDiv2[i], potDiv1[i]]);
+  }
+  for (let i = 0; i + 1 < remainingClubs.length && rawPairs.length < 16; i += 2) {
+    rawPairs.push([remainingClubs[i], remainingClubs[i + 1]]);
+  }
+  const r32Pairs = pseudoShuffle(rawPairs, seasonYear * 53 + 47);
+
+  // 1ª FASE (16avos de Final) - 32 clubes, 16 confrontos em IDA E VOLTA (32 jogos)
+  const r32IdaDates = [`${seasonYear}-10-27`, `${seasonYear}-10-28`, `${seasonYear}-10-29`];
+  const r32VoltaDates = [`${seasonYear}-11-10`, `${seasonYear}-11-11`, `${seasonYear}-11-12`];
+  for (let i = 0; i < 16; i++) {
+    const [home, away] = r32Pairs[i] || [undefined, undefined];
+    const idaDate = r32IdaDates[i % r32IdaDates.length];
+    const voltaDate = r32VoltaDates[i % r32VoltaDates.length];
     fixtures.push({
-      id: `ned_kb_r1_m${i}`,
+      id: `ned_kb_r32_m${i}_ida`,
       round: 1,
+      leg: 1,
       competition: 'ned_knvb_beker',
       homeTeamId: home?.id || 'tbd',
       awayTeamId: away?.id || 'tbd',
       homeScore: null,
       awayScore: null,
       played: false,
-      date: `${seasonYear}-10-28`,
-      time: '20:00',
+      date: idaDate,
+      time: i % 2 === 0 ? '19:30' : '21:00',
       stadiumName: getClubStadiumName(home),
-      cupPhase: '1ª Rodada',
-      groupName: 'KNVB Beker · 1ª Fase Eliminatória',
+      cupPhase: '1ª Fase - Ida',
+      groupName: 'KNVB Beker · 1ª Fase (Ida)',
     });
-  }
-
-  for (let i = 0; i < 8; i++) {
-    const pairIdx = 2 + (i - 2) * 2;
-    const home = i < 2 ? directR16[i] : directR16[pairIdx];
-    const awayId = i < 2 ? 'TBD_KB_R1' : directR16[pairIdx + 1]?.id || 'tbd';
     fixtures.push({
-      id: `ned_kb_r16_m${i}`,
+      id: `ned_kb_r32_m${i}_volta`,
       round: 2,
+      leg: 2,
       competition: 'ned_knvb_beker',
-      homeTeamId: home?.id || 'tbd',
-      awayTeamId: awayId,
+      homeTeamId: away?.id || 'tbd',
+      awayTeamId: home?.id || 'tbd',
       homeScore: null,
       awayScore: null,
       played: false,
-      date: `${nextYear}-01-13`,
-      time: '20:00',
-      stadiumName: getClubStadiumName(home),
-      cupPhase: 'Oitavas de Final',
-      groupName: 'KNVB Beker · Oitavas de Final',
+      date: voltaDate,
+      time: i % 2 === 0 ? '19:30' : '21:00',
+      stadiumName: getClubStadiumName(away),
+      cupPhase: '1ª Fase - Volta',
+      groupName: 'KNVB Beker · 1ª Fase (Volta)',
     });
   }
 
+  // OITAVAS DE FINAL - 8 confrontos em IDA E VOLTA (16 jogos)
+  const r16IdaDates = [`${seasonYear}-12-15`, `${seasonYear}-12-16`];
+  const r16VoltaDates = [`${nextYear}-01-12`, `${nextYear}-01-13`];
+  for (let i = 0; i < 8; i++) {
+    fixtures.push({
+      id: `ned_kb_r16_m${i}_ida`,
+      round: 3,
+      leg: 1,
+      competition: 'ned_knvb_beker',
+      homeTeamId: `TBD_KB_R32_W${i * 2}`,
+      awayTeamId: `TBD_KB_R32_W${i * 2 + 1}`,
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: r16IdaDates[i % r16IdaDates.length],
+      time: i % 2 === 0 ? '19:30' : '21:00',
+      stadiumName: 'Estádio a definir',
+      cupPhase: 'Oitavas de Final - Ida',
+      groupName: 'KNVB Beker · Oitavas de Final (Ida)',
+    });
+    fixtures.push({
+      id: `ned_kb_r16_m${i}_volta`,
+      round: 4,
+      leg: 2,
+      competition: 'ned_knvb_beker',
+      homeTeamId: `TBD_KB_R32_W${i * 2 + 1}`,
+      awayTeamId: `TBD_KB_R32_W${i * 2}`,
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: r16VoltaDates[i % r16VoltaDates.length],
+      time: i % 2 === 0 ? '19:30' : '21:00',
+      stadiumName: 'Estádio a definir',
+      cupPhase: 'Oitavas de Final - Volta',
+      groupName: 'KNVB Beker · Oitavas de Final (Volta)',
+    });
+  }
+
+  // QUARTAS DE FINAL - 4 confrontos em IDA E VOLTA (8 jogos)
+  const qfIdaDates = [`${nextYear}-02-02`, `${nextYear}-02-03`];
+  const qfVoltaDates = [`${nextYear}-02-17`, `${nextYear}-02-18`];
   for (let i = 0; i < 4; i++) {
     fixtures.push({
-      id: `ned_kb_qf_m${i}`,
-      round: 3,
+      id: `ned_kb_qf_m${i}_ida`,
+      round: 5,
+      leg: 1,
       competition: 'ned_knvb_beker',
-      homeTeamId: 'TBD_KB_R16',
-      awayTeamId: 'TBD_KB_R16',
+      homeTeamId: `TBD_KB_R16_W${i * 2}`,
+      awayTeamId: `TBD_KB_R16_W${i * 2 + 1}`,
       homeScore: null,
       awayScore: null,
       played: false,
-      date: `${nextYear}-02-10`,
+      date: qfIdaDates[i % qfIdaDates.length],
       time: '20:00',
       stadiumName: 'Estádio a definir',
-      cupPhase: 'Quartas de Final',
-      groupName: 'KNVB Beker · Quartas de Final',
+      cupPhase: 'Quartas de Final - Ida',
+      groupName: 'KNVB Beker · Quartas de Final (Ida)',
+    });
+    fixtures.push({
+      id: `ned_kb_qf_m${i}_volta`,
+      round: 6,
+      leg: 2,
+      competition: 'ned_knvb_beker',
+      homeTeamId: `TBD_KB_R16_W${i * 2 + 1}`,
+      awayTeamId: `TBD_KB_R16_W${i * 2}`,
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: qfVoltaDates[i % qfVoltaDates.length],
+      time: '20:00',
+      stadiumName: 'Estádio a definir',
+      cupPhase: 'Quartas de Final - Volta',
+      groupName: 'KNVB Beker · Quartas de Final (Volta)',
     });
   }
 
+  // SEMIFINAL - 2 confrontos em IDA E VOLTA (4 jogos)
+  const sfIdaDates = [`${nextYear}-03-03`, `${nextYear}-03-04`];
+  const sfVoltaDates = [`${nextYear}-04-06`, `${nextYear}-04-07`];
   for (let i = 0; i < 2; i++) {
     fixtures.push({
-      id: `ned_kb_sf_m${i}`,
-      round: 4,
+      id: `ned_kb_sf_m${i}_ida`,
+      round: 7,
+      leg: 1,
       competition: 'ned_knvb_beker',
-      homeTeamId: 'TBD_KB_QF',
-      awayTeamId: 'TBD_KB_QF',
+      homeTeamId: `TBD_KB_QF_W${i * 2}`,
+      awayTeamId: `TBD_KB_QF_W${i * 2 + 1}`,
       homeScore: null,
       awayScore: null,
       played: false,
-      date: `${nextYear}-04-07`,
+      date: sfIdaDates[i % sfIdaDates.length],
       time: '20:00',
       stadiumName: 'Estádio a definir',
-      cupPhase: 'Semifinal',
-      groupName: 'KNVB Beker · Semifinal',
+      cupPhase: 'Semifinal - Ida',
+      groupName: 'KNVB Beker · Semifinal (Ida)',
+    });
+    fixtures.push({
+      id: `ned_kb_sf_m${i}_volta`,
+      round: 8,
+      leg: 2,
+      competition: 'ned_knvb_beker',
+      homeTeamId: `TBD_KB_QF_W${i * 2 + 1}`,
+      awayTeamId: `TBD_KB_QF_W${i * 2}`,
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: sfVoltaDates[i % sfVoltaDates.length],
+      time: '20:00',
+      stadiumName: 'Estádio a definir',
+      cupPhase: 'Semifinal - Volta',
+      groupName: 'KNVB Beker · Semifinal (Volta)',
     });
   }
 
+  // GRANDE FINAL - JOGO ÚNICO NO DE KUIP (1 jogo)
   fixtures.push({
     id: 'ned_kb_final',
-    round: 5,
+    round: 9,
     competition: 'ned_knvb_beker',
-    homeTeamId: 'TBD_KB_SF0',
-    awayTeamId: 'TBD_KB_SF1',
+    homeTeamId: 'TBD_KB_SF_W0',
+    awayTeamId: 'TBD_KB_SF_W1',
     homeScore: null,
     awayScore: null,
     played: false,
@@ -2403,7 +2504,7 @@ export function generateKnvbBekerFixtures(clubs: Club[], seasonYear: number = 20
     time: '18:00',
     stadiumName: "Stadion Feijenoord 'De Kuip' (Rotterdam)",
     cupPhase: 'Grande Final',
-    groupName: 'KNVB Beker · Final no De Kuip',
+    groupName: 'KNVB Beker · Final Única no De Kuip',
   });
 
   return fixtures;
@@ -2439,115 +2540,204 @@ export function generateDutchSupercupFixtures(clubs: Club[], seasonYear: number 
 
 export function generateCrokyCupFixtures(clubs: Club[], seasonYear: number = 2026): Fixture[] {
   const nextYear = seasonYear + 1;
-  const bel = getClubsForEuropeanLeague(clubs, 'bel_pro_league');
-  const shuffled = pseudoShuffle(bel, seasonYear * 59);
+  const belDiv1 = getClubsForEuropeanLeague(clubs, 'bel_pro_league').slice(0, 18);
+  const belDiv2 = clubs.filter((c) => c.id.startsWith('eu_bel2_')).slice(0, 14);
   const fixtures: Fixture[] = [];
 
-  const prelim = shuffled.slice(14, 18);
-  const directR16 = shuffled.slice(0, 14);
+  // Regra da 1ª Fase: clubes da 1ª Divisão (Jupiler Pro League) não se enfrentam na 1ª fase.
+  // Emparelha todos os 14 clubes das divisões inferiores contra os 14 principais clubes da 1ª Divisão
+  // (maior reputação/força primeiro), minimizando ao máximo qualquer confronto entre equipes da 1ª Divisão
+  // (restam apenas os 4 clubes de menor ranking da 1ª Divisão em 2 chaves, pois 18 > 16).
+  const avgSquadOvr = (c: Club) =>
+    c.squad && c.squad.length > 0
+      ? c.squad.reduce((acc, p) => acc + (p.overall || 0), 0) / c.squad.length
+      : 0;
+  const sortedDiv1 = [...belDiv1].sort(
+    (a, b) =>
+      (b.reputation || 0) - (a.reputation || 0) ||
+      avgSquadOvr(b) - avgSquadOvr(a) ||
+      a.id.localeCompare(b.id)
+  );
+  const crossCount = Math.min(sortedDiv1.length, belDiv2.length);
+  const potDiv1 = pseudoShuffle(sortedDiv1.slice(0, crossCount), seasonYear * 59 + 7);
+  const potDiv2 = pseudoShuffle(belDiv2.slice(0, crossCount), seasonYear * 59 + 19);
+  const remainingClubs = pseudoShuffle(
+    [...sortedDiv1.slice(crossCount), ...belDiv2.slice(crossCount)],
+    seasonYear * 59 + 31
+  );
 
-  for (let i = 0; i < 2; i++) {
-    const home = prelim[i * 2];
-    const away = prelim[i * 2 + 1];
+  const rawPairs: Array<[Club | undefined, Club | undefined]> = [];
+  for (let i = 0; i < crossCount; i++) {
+    // Clube de divisão inferior manda a ida; clube da 1ª Divisão decide em casa na volta
+    rawPairs.push([potDiv2[i], potDiv1[i]]);
+  }
+  for (let i = 0; i + 1 < remainingClubs.length && rawPairs.length < 16; i += 2) {
+    rawPairs.push([remainingClubs[i], remainingClubs[i + 1]]);
+  }
+  const r32Pairs = pseudoShuffle(rawPairs, seasonYear * 59 + 47);
+
+  // 1ª FASE (16avos de Final) - 32 clubes, 16 confrontos em IDA E VOLTA (32 jogos)
+  const r32IdaDates = [`${seasonYear}-10-27`, `${seasonYear}-10-28`, `${seasonYear}-10-29`];
+  const r32VoltaDates = [`${seasonYear}-11-10`, `${seasonYear}-11-11`, `${seasonYear}-11-12`];
+  for (let i = 0; i < 16; i++) {
+    const [home, away] = r32Pairs[i] || [undefined, undefined];
+    const idaDate = r32IdaDates[i % r32IdaDates.length];
+    const voltaDate = r32VoltaDates[i % r32VoltaDates.length];
     fixtures.push({
-      id: `bel_cc_r1_m${i}`,
+      id: `bel_cc_r32_m${i}_ida`,
       round: 1,
+      leg: 1,
       competition: 'bel_croky_cup',
       homeTeamId: home?.id || 'tbd',
       awayTeamId: away?.id || 'tbd',
       homeScore: null,
       awayScore: null,
       played: false,
-      date: `${seasonYear}-10-28`,
-      time: '20:30',
+      date: idaDate,
+      time: i % 2 === 0 ? '20:00' : '20:45',
       stadiumName: getClubStadiumName(home),
-      cupPhase: '1ª Fase',
-      groupName: 'Croky Cup · 1ª Fase Eliminatória',
+      cupPhase: '1ª Fase - Ida',
+      groupName: 'Croky Cup · 1ª Fase (Ida)',
     });
-  }
-
-  for (let i = 0; i < 8; i++) {
-    const pairIdx = 2 + (i - 2) * 2;
-    const home = i < 2 ? directR16[i] : directR16[pairIdx];
-    const awayId = i < 2 ? 'TBD_CC_R1' : directR16[pairIdx + 1]?.id || 'tbd';
     fixtures.push({
-      id: `bel_cc_r16_m${i}`,
+      id: `bel_cc_r32_m${i}_volta`,
       round: 2,
+      leg: 2,
       competition: 'bel_croky_cup',
-      homeTeamId: home?.id || 'tbd',
-      awayTeamId: awayId,
+      homeTeamId: away?.id || 'tbd',
+      awayTeamId: home?.id || 'tbd',
       homeScore: null,
       awayScore: null,
       played: false,
-      date: `${nextYear}-01-13`,
-      time: '20:30',
-      stadiumName: getClubStadiumName(home),
-      cupPhase: 'Oitavas de Final',
-      groupName: 'Croky Cup · Oitavas de Final',
+      date: voltaDate,
+      time: i % 2 === 0 ? '20:00' : '20:45',
+      stadiumName: getClubStadiumName(away),
+      cupPhase: '1ª Fase - Volta',
+      groupName: 'Croky Cup · 1ª Fase (Volta)',
     });
   }
 
-  for (let i = 0; i < 4; i++) {
+  // OITAVAS DE FINAL - 8 confrontos em IDA E VOLTA (16 jogos)
+  const r16IdaDates = [`${seasonYear}-12-15`, `${seasonYear}-12-16`];
+  const r16VoltaDates = [`${nextYear}-01-12`, `${nextYear}-01-13`];
+  for (let i = 0; i < 8; i++) {
     fixtures.push({
-      id: `bel_cc_qf_m${i}`,
+      id: `bel_cc_r16_m${i}_ida`,
       round: 3,
+      leg: 1,
       competition: 'bel_croky_cup',
-      homeTeamId: 'TBD_CC_R16',
-      awayTeamId: 'TBD_CC_R16',
+      homeTeamId: `TBD_CC_R32_W${i * 2}`,
+      awayTeamId: `TBD_CC_R32_W${i * 2 + 1}`,
       homeScore: null,
       awayScore: null,
       played: false,
-      date: `${nextYear}-02-03`,
+      date: r16IdaDates[i % r16IdaDates.length],
       time: '20:30',
       stadiumName: 'Estádio a definir',
-      cupPhase: 'Quartas de Final',
-      groupName: 'Croky Cup · Quartas de Final',
+      cupPhase: 'Oitavas de Final - Ida',
+      groupName: 'Croky Cup · Oitavas de Final (Ida)',
+    });
+    fixtures.push({
+      id: `bel_cc_r16_m${i}_volta`,
+      round: 4,
+      leg: 2,
+      competition: 'bel_croky_cup',
+      homeTeamId: `TBD_CC_R32_W${i * 2 + 1}`,
+      awayTeamId: `TBD_CC_R32_W${i * 2}`,
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: r16VoltaDates[i % r16VoltaDates.length],
+      time: '20:30',
+      stadiumName: 'Estádio a definir',
+      cupPhase: 'Oitavas de Final - Volta',
+      groupName: 'Croky Cup · Oitavas de Final (Volta)',
     });
   }
 
-  for (let i = 0; i < 2; i++) {
-    fixtures.push(
-      {
-        id: `bel_cc_sf_m${i}_ida`,
-        round: 4,
-        competition: 'bel_croky_cup',
-        homeTeamId: 'TBD_CC_QF',
-        awayTeamId: 'TBD_CC_QF',
-        homeScore: null,
-        awayScore: null,
-        played: false,
-        date: `${nextYear}-03-03`,
-        time: '20:30',
-        stadiumName: 'Estádio a definir',
-        cupPhase: 'Semifinal (Ida)',
-        groupName: 'Croky Cup · Semifinal Ida',
-        leg: 1,
-      },
-      {
-        id: `bel_cc_sf_m${i}_volta`,
-        round: 5,
-        competition: 'bel_croky_cup',
-        homeTeamId: 'TBD_CC_QF',
-        awayTeamId: 'TBD_CC_QF',
-        homeScore: null,
-        awayScore: null,
-        played: false,
-        date: `${nextYear}-04-21`,
-        time: '20:30',
-        stadiumName: 'Estádio a definir',
-        cupPhase: 'Semifinal (Volta)',
-        groupName: 'Croky Cup · Semifinal Volta',
-        leg: 2,
-      }
-    );
+  // QUARTAS DE FINAL - 4 confrontos em IDA E VOLTA (8 jogos)
+  const qfIdaDates = [`${nextYear}-02-02`, `${nextYear}-02-03`];
+  const qfVoltaDates = [`${nextYear}-02-17`, `${nextYear}-02-18`];
+  for (let i = 0; i < 4; i++) {
+    fixtures.push({
+      id: `bel_cc_qf_m${i}_ida`,
+      round: 5,
+      leg: 1,
+      competition: 'bel_croky_cup',
+      homeTeamId: `TBD_CC_R16_W${i * 2}`,
+      awayTeamId: `TBD_CC_R16_W${i * 2 + 1}`,
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: qfIdaDates[i % qfIdaDates.length],
+      time: '20:30',
+      stadiumName: 'Estádio a definir',
+      cupPhase: 'Quartas de Final - Ida',
+      groupName: 'Croky Cup · Quartas de Final (Ida)',
+    });
+    fixtures.push({
+      id: `bel_cc_qf_m${i}_volta`,
+      round: 6,
+      leg: 2,
+      competition: 'bel_croky_cup',
+      homeTeamId: `TBD_CC_R16_W${i * 2 + 1}`,
+      awayTeamId: `TBD_CC_R16_W${i * 2}`,
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: qfVoltaDates[i % qfVoltaDates.length],
+      time: '20:30',
+      stadiumName: 'Estádio a definir',
+      cupPhase: 'Quartas de Final - Volta',
+      groupName: 'Croky Cup · Quartas de Final (Volta)',
+    });
   }
 
+  // SEMIFINAL - 2 confrontos em IDA E VOLTA (4 jogos)
+  const sfIdaDates = [`${nextYear}-03-03`, `${nextYear}-03-04`];
+  const sfVoltaDates = [`${nextYear}-04-06`, `${nextYear}-04-07`];
+  for (let i = 0; i < 2; i++) {
+    fixtures.push({
+      id: `bel_cc_sf_m${i}_ida`,
+      round: 7,
+      leg: 1,
+      competition: 'bel_croky_cup',
+      homeTeamId: `TBD_CC_QF_W${i * 2}`,
+      awayTeamId: `TBD_CC_QF_W${i * 2 + 1}`,
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: sfIdaDates[i % sfIdaDates.length],
+      time: '20:30',
+      stadiumName: 'Estádio a definir',
+      cupPhase: 'Semifinal - Ida',
+      groupName: 'Croky Cup · Semifinal (Ida)',
+    });
+    fixtures.push({
+      id: `bel_cc_sf_m${i}_volta`,
+      round: 8,
+      leg: 2,
+      competition: 'bel_croky_cup',
+      homeTeamId: `TBD_CC_QF_W${i * 2 + 1}`,
+      awayTeamId: `TBD_CC_QF_W${i * 2}`,
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: sfVoltaDates[i % sfVoltaDates.length],
+      time: '20:30',
+      stadiumName: 'Estádio a definir',
+      cupPhase: 'Semifinal - Volta',
+      groupName: 'Croky Cup · Semifinal (Volta)',
+    });
+  }
+
+  // GRANDE FINAL - JOGO ÚNICO EM BRUXELAS (1 jogo)
   fixtures.push({
     id: 'bel_cc_final',
-    round: 6,
+    round: 9,
     competition: 'bel_croky_cup',
-    homeTeamId: 'TBD_CC_SF0',
-    awayTeamId: 'TBD_CC_SF1',
+    homeTeamId: 'TBD_CC_SF_W0',
+    awayTeamId: 'TBD_CC_SF_W1',
     homeScore: null,
     awayScore: null,
     played: false,
@@ -2555,7 +2745,7 @@ export function generateCrokyCupFixtures(clubs: Club[], seasonYear: number = 202
     time: '20:30',
     stadiumName: 'King Baudouin Stadium (Bruxelas)',
     cupPhase: 'Grande Final',
-    groupName: 'Croky Cup · Final no King Baudouin Stadium',
+    groupName: 'Croky Cup · Final Única no King Baudouin Stadium',
   });
 
   return fixtures;
@@ -4353,65 +4543,181 @@ export function syncEuropeanCupsKnockoutBrackets(params: {
     result.por_taca_liga = tl;
   }
 
-  // 7. HOLANDA - KNVB Beker
+  // 7. HOLANDA - KNVB Beker (32 clubes ida e volta + final única; com suporte ao formato legado 18 clubes)
   if (result.ned_knvb_beker) {
     let kb = [...result.ned_knvb_beker];
-    for (let i = 0; i < 2; i++) {
-      const w = resolveTieWinner(undefined, getFix(kb, `ned_kb_r1_m${i}`));
-      if (w) kb = assignSingleLegSlots(kb, `ned_kb_r16_m${i}`, undefined, w);
-    }
-    for (let i = 0; i < 4; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(kb, `ned_kb_r16_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(kb, `ned_kb_r16_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        kb = assignSingleLegSlots(kb, `ned_kb_qf_m${i}`, w0, w1);
-        kb = updateStadiumIfKnown(kb, `ned_kb_qf_m${i}`, w0);
+    const has32TwoLegFormat = kb.some((f) => f.id === 'ned_kb_r32_m0_ida');
+    if (has32TwoLegFormat) {
+      // 1ª Fase (16 confrontos ida e volta) -> Oitavas de Final (8 confrontos ida e volta)
+      for (let i = 0; i < 8; i++) {
+        const w0 = resolveTieWinner(
+          getFix(kb, `ned_kb_r32_m${i * 2}_ida`),
+          getFix(kb, `ned_kb_r32_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(kb, `ned_kb_r32_m${i * 2 + 1}_ida`),
+          getFix(kb, `ned_kb_r32_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          kb = assignTwoLeggedSlots(kb, `ned_kb_r16_m${i}_ida`, `ned_kb_r16_m${i}_volta`, w0, w1);
+          kb = updateStadiumIfKnown(kb, `ned_kb_r16_m${i}_ida`, w0);
+          kb = updateStadiumIfKnown(kb, `ned_kb_r16_m${i}_volta`, w1);
+        }
       }
-    }
-    for (let i = 0; i < 2; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(kb, `ned_kb_qf_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(kb, `ned_kb_qf_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        kb = assignSingleLegSlots(kb, `ned_kb_sf_m${i}`, w0, w1);
-        kb = updateStadiumIfKnown(kb, `ned_kb_sf_m${i}`, w0);
+      // Oitavas de Final (8 confrontos ida e volta) -> Quartas de Final (4 confrontos ida e volta)
+      for (let i = 0; i < 4; i++) {
+        const w0 = resolveTieWinner(
+          getFix(kb, `ned_kb_r16_m${i * 2}_ida`),
+          getFix(kb, `ned_kb_r16_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(kb, `ned_kb_r16_m${i * 2 + 1}_ida`),
+          getFix(kb, `ned_kb_r16_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          kb = assignTwoLeggedSlots(kb, `ned_kb_qf_m${i}_ida`, `ned_kb_qf_m${i}_volta`, w0, w1);
+          kb = updateStadiumIfKnown(kb, `ned_kb_qf_m${i}_ida`, w0);
+          kb = updateStadiumIfKnown(kb, `ned_kb_qf_m${i}_volta`, w1);
+        }
       }
-    }
-    const sf0W = resolveTieWinner(undefined, getFix(kb, 'ned_kb_sf_m0'));
-    const sf1W = resolveTieWinner(undefined, getFix(kb, 'ned_kb_sf_m1'));
-    if (sf0W || sf1W) {
-      kb = assignSingleLegSlots(kb, 'ned_kb_final', sf0W, sf1W);
+      // Quartas de Final (4 confrontos ida e volta) -> Semifinal (2 confrontos ida e volta)
+      for (let i = 0; i < 2; i++) {
+        const w0 = resolveTieWinner(
+          getFix(kb, `ned_kb_qf_m${i * 2}_ida`),
+          getFix(kb, `ned_kb_qf_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(kb, `ned_kb_qf_m${i * 2 + 1}_ida`),
+          getFix(kb, `ned_kb_qf_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          kb = assignTwoLeggedSlots(kb, `ned_kb_sf_m${i}_ida`, `ned_kb_sf_m${i}_volta`, w0, w1);
+          kb = updateStadiumIfKnown(kb, `ned_kb_sf_m${i}_ida`, w0);
+          kb = updateStadiumIfKnown(kb, `ned_kb_sf_m${i}_volta`, w1);
+        }
+      }
+      // Semifinal (ida e volta) -> Grande Final (jogo único no De Kuip)
+      const sf0W = resolveTieWinner(getFix(kb, 'ned_kb_sf_m0_ida'), getFix(kb, 'ned_kb_sf_m0_volta'));
+      const sf1W = resolveTieWinner(getFix(kb, 'ned_kb_sf_m1_ida'), getFix(kb, 'ned_kb_sf_m1_volta'));
+      if (sf0W || sf1W) {
+        kb = assignSingleLegSlots(kb, 'ned_kb_final', sf0W, sf1W);
+      }
+    } else {
+      for (let i = 0; i < 2; i++) {
+        const w = resolveTieWinner(undefined, getFix(kb, `ned_kb_r1_m${i}`));
+        if (w) kb = assignSingleLegSlots(kb, `ned_kb_r16_m${i}`, undefined, w);
+      }
+      for (let i = 0; i < 4; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(kb, `ned_kb_r16_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(kb, `ned_kb_r16_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          kb = assignSingleLegSlots(kb, `ned_kb_qf_m${i}`, w0, w1);
+          kb = updateStadiumIfKnown(kb, `ned_kb_qf_m${i}`, w0);
+        }
+      }
+      for (let i = 0; i < 2; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(kb, `ned_kb_qf_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(kb, `ned_kb_qf_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          kb = assignSingleLegSlots(kb, `ned_kb_sf_m${i}`, w0, w1);
+          kb = updateStadiumIfKnown(kb, `ned_kb_sf_m${i}`, w0);
+        }
+      }
+      const sf0W = resolveTieWinner(undefined, getFix(kb, 'ned_kb_sf_m0'));
+      const sf1W = resolveTieWinner(undefined, getFix(kb, 'ned_kb_sf_m1'));
+      if (sf0W || sf1W) {
+        kb = assignSingleLegSlots(kb, 'ned_kb_final', sf0W, sf1W);
+      }
     }
     result.ned_knvb_beker = kb;
   }
 
-  // 8. BÉLGICA - Croky Cup
+  // 8. BÉLGICA - Croky Cup (32 clubes ida e volta + final única; com suporte ao formato legado 18 clubes)
   if (result.bel_croky_cup) {
     let cc = [...result.bel_croky_cup];
-    for (let i = 0; i < 2; i++) {
-      const w = resolveTieWinner(undefined, getFix(cc, `bel_cc_r1_m${i}`));
-      if (w) cc = assignSingleLegSlots(cc, `bel_cc_r16_m${i}`, undefined, w);
-    }
-    for (let i = 0; i < 4; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(cc, `bel_cc_r16_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(cc, `bel_cc_r16_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        cc = assignSingleLegSlots(cc, `bel_cc_qf_m${i}`, w0, w1);
-        cc = updateStadiumIfKnown(cc, `bel_cc_qf_m${i}`, w0);
+    const has32TwoLegFormat = cc.some((f) => f.id === 'bel_cc_r32_m0_ida');
+    if (has32TwoLegFormat) {
+      // 1ª Fase (16 confrontos ida e volta) -> Oitavas de Final (8 confrontos ida e volta)
+      for (let i = 0; i < 8; i++) {
+        const w0 = resolveTieWinner(
+          getFix(cc, `bel_cc_r32_m${i * 2}_ida`),
+          getFix(cc, `bel_cc_r32_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(cc, `bel_cc_r32_m${i * 2 + 1}_ida`),
+          getFix(cc, `bel_cc_r32_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          cc = assignTwoLeggedSlots(cc, `bel_cc_r16_m${i}_ida`, `bel_cc_r16_m${i}_volta`, w0, w1);
+          cc = updateStadiumIfKnown(cc, `bel_cc_r16_m${i}_ida`, w0);
+          cc = updateStadiumIfKnown(cc, `bel_cc_r16_m${i}_volta`, w1);
+        }
       }
-    }
-    for (let i = 0; i < 2; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(cc, `bel_cc_qf_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(cc, `bel_cc_qf_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        cc = assignTwoLeggedSlots(cc, `bel_cc_sf_m${i}_ida`, `bel_cc_sf_m${i}_volta`, w0, w1);
-        cc = updateStadiumIfKnown(cc, `bel_cc_sf_m${i}_ida`, w0);
-        cc = updateStadiumIfKnown(cc, `bel_cc_sf_m${i}_volta`, w1);
+      // Oitavas de Final (8 confrontos ida e volta) -> Quartas de Final (4 confrontos ida e volta)
+      for (let i = 0; i < 4; i++) {
+        const w0 = resolveTieWinner(
+          getFix(cc, `bel_cc_r16_m${i * 2}_ida`),
+          getFix(cc, `bel_cc_r16_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(cc, `bel_cc_r16_m${i * 2 + 1}_ida`),
+          getFix(cc, `bel_cc_r16_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          cc = assignTwoLeggedSlots(cc, `bel_cc_qf_m${i}_ida`, `bel_cc_qf_m${i}_volta`, w0, w1);
+          cc = updateStadiumIfKnown(cc, `bel_cc_qf_m${i}_ida`, w0);
+          cc = updateStadiumIfKnown(cc, `bel_cc_qf_m${i}_volta`, w1);
+        }
       }
-    }
-    const sf0W = resolveTieWinner(getFix(cc, 'bel_cc_sf_m0_ida'), getFix(cc, 'bel_cc_sf_m0_volta'));
-    const sf1W = resolveTieWinner(getFix(cc, 'bel_cc_sf_m1_ida'), getFix(cc, 'bel_cc_sf_m1_volta'));
-    if (sf0W || sf1W) {
-      cc = assignSingleLegSlots(cc, 'bel_cc_final', sf0W, sf1W);
+      // Quartas de Final (4 confrontos ida e volta) -> Semifinal (2 confrontos ida e volta)
+      for (let i = 0; i < 2; i++) {
+        const w0 = resolveTieWinner(
+          getFix(cc, `bel_cc_qf_m${i * 2}_ida`),
+          getFix(cc, `bel_cc_qf_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(cc, `bel_cc_qf_m${i * 2 + 1}_ida`),
+          getFix(cc, `bel_cc_qf_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          cc = assignTwoLeggedSlots(cc, `bel_cc_sf_m${i}_ida`, `bel_cc_sf_m${i}_volta`, w0, w1);
+          cc = updateStadiumIfKnown(cc, `bel_cc_sf_m${i}_ida`, w0);
+          cc = updateStadiumIfKnown(cc, `bel_cc_sf_m${i}_volta`, w1);
+        }
+      }
+      // Semifinal (ida e volta) -> Grande Final (jogo único em Bruxelas)
+      const sf0W = resolveTieWinner(getFix(cc, 'bel_cc_sf_m0_ida'), getFix(cc, 'bel_cc_sf_m0_volta'));
+      const sf1W = resolveTieWinner(getFix(cc, 'bel_cc_sf_m1_ida'), getFix(cc, 'bel_cc_sf_m1_volta'));
+      if (sf0W || sf1W) {
+        cc = assignSingleLegSlots(cc, 'bel_cc_final', sf0W, sf1W);
+      }
+    } else {
+      for (let i = 0; i < 2; i++) {
+        const w = resolveTieWinner(undefined, getFix(cc, `bel_cc_r1_m${i}`));
+        if (w) cc = assignSingleLegSlots(cc, `bel_cc_r16_m${i}`, undefined, w);
+      }
+      for (let i = 0; i < 4; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(cc, `bel_cc_r16_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(cc, `bel_cc_r16_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          cc = assignSingleLegSlots(cc, `bel_cc_qf_m${i}`, w0, w1);
+          cc = updateStadiumIfKnown(cc, `bel_cc_qf_m${i}`, w0);
+        }
+      }
+      for (let i = 0; i < 2; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(cc, `bel_cc_qf_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(cc, `bel_cc_qf_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          cc = assignTwoLeggedSlots(cc, `bel_cc_sf_m${i}_ida`, `bel_cc_sf_m${i}_volta`, w0, w1);
+          cc = updateStadiumIfKnown(cc, `bel_cc_sf_m${i}_ida`, w0);
+          cc = updateStadiumIfKnown(cc, `bel_cc_sf_m${i}_volta`, w1);
+        }
+      }
+      const sf0W = resolveTieWinner(getFix(cc, 'bel_cc_sf_m0_ida'), getFix(cc, 'bel_cc_sf_m0_volta'));
+      const sf1W = resolveTieWinner(getFix(cc, 'bel_cc_sf_m1_ida'), getFix(cc, 'bel_cc_sf_m1_volta'));
+      if (sf0W || sf1W) {
+        cc = assignSingleLegSlots(cc, 'bel_cc_final', sf0W, sf1W);
+      }
     }
     result.bel_croky_cup = cc;
   }

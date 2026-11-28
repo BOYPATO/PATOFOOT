@@ -711,6 +711,24 @@ export const CUP_PRIZES_CATALOG: CupPhasePrize[] = [
   // Holanda: KNVB Beker & Johan Cruijff Schaal
   {
     competition: 'ned_knvb_beker',
+    phaseMatchString: '1ª fase',
+    phaseDisplayName: 'Classificação às Oitavas de Final da KNVB Beker',
+    winnerPrize: 1500000,
+  },
+  {
+    competition: 'ned_knvb_beker',
+    phaseMatchString: 'oitavas',
+    phaseDisplayName: 'Classificação às Quartas de Final da KNVB Beker',
+    winnerPrize: 3000000,
+  },
+  {
+    competition: 'ned_knvb_beker',
+    phaseMatchString: 'quartas',
+    phaseDisplayName: 'Classificação à Semifinal da KNVB Beker',
+    winnerPrize: 5500000,
+  },
+  {
+    competition: 'ned_knvb_beker',
     phaseMatchString: 'semi',
     phaseDisplayName: 'Classificação à Grande Final da KNVB Beker em De Kuip',
     winnerPrize: 10000000,
@@ -731,6 +749,24 @@ export const CUP_PRIZES_CATALOG: CupPhasePrize[] = [
   },
 
   // Bélgica: Croky Cup & Supercopa da Bélgica
+  {
+    competition: 'bel_croky_cup',
+    phaseMatchString: '1ª fase',
+    phaseDisplayName: 'Classificação às Oitavas de Final da Croky Cup',
+    winnerPrize: 1200000,
+  },
+  {
+    competition: 'bel_croky_cup',
+    phaseMatchString: 'oitavas',
+    phaseDisplayName: 'Classificação às Quartas de Final da Croky Cup',
+    winnerPrize: 2500000,
+  },
+  {
+    competition: 'bel_croky_cup',
+    phaseMatchString: 'quartas',
+    phaseDisplayName: 'Classificação à Semifinal da Croky Cup',
+    winnerPrize: 4500000,
+  },
   {
     competition: 'bel_croky_cup',
     phaseMatchString: 'semi',

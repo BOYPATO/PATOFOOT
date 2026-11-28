@@ -402,7 +402,9 @@ export function getBaselineClubSectorTarget(
       club.id.startsWith('eu_ita3_') ||
       club.id.startsWith('eu_fra3_') ||
       club.id.startsWith('eu_ger3_') ||
-      club.id.startsWith('eu_por2_')
+      club.id.startsWith('eu_por2_') ||
+      club.id.startsWith('eu_ned2_') ||
+      club.id.startsWith('eu_bel2_')
     ) {
       base = club.reputation >= 3 ? 66 : 62;
     } else if (club.europeanLeagueId === 'eng_league_two') {
@@ -787,7 +789,9 @@ export function calibrateClubSquadRealism(
             club.id.startsWith('eu_ita3_') ||
             club.id.startsWith('eu_fra3_') ||
             club.id.startsWith('eu_ger3_') ||
-            club.id.startsWith('eu_por2_')
+            club.id.startsWith('eu_por2_') ||
+            club.id.startsWith('eu_ned2_') ||
+            club.id.startsWith('eu_bel2_')
           ? 52
           : club.europeanLeagueId === 'eng_league_two'
           ? 52
@@ -828,7 +832,9 @@ export function calibrateClubSquadRealism(
             club.id.startsWith('eu_ita3_') ||
             club.id.startsWith('eu_fra3_') ||
             club.id.startsWith('eu_ger3_') ||
-            club.id.startsWith('eu_por2_')
+            club.id.startsWith('eu_por2_') ||
+            club.id.startsWith('eu_ned2_') ||
+            club.id.startsWith('eu_bel2_')
           ? 73
           : club.europeanLeagueId === 'eng_league_two'
           ? 68

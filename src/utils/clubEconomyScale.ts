@@ -61,7 +61,9 @@ function resolveEuLeagueId(club?: ClubEconomyContext | null): EuropeanLeagueId |
     club.id?.startsWith('eu_fra3_') ||
     club.id?.startsWith('eu_ger3_') ||
     club.id?.startsWith('eu_eng5_') ||
-    club.id?.startsWith('eu_por2_')
+    club.id?.startsWith('eu_por2_') ||
+    club.id?.startsWith('eu_ned2_') ||
+    club.id?.startsWith('eu_bel2_')
   ) {
     return null;
   }
@@ -711,7 +713,9 @@ export function resolveClubEconomyTier(club?: ClubEconomyContext | null): Econom
       club.id?.startsWith('eu_ita3_') ||
       club.id?.startsWith('eu_fra3_') ||
       club.id?.startsWith('eu_ger3_') ||
-      club.id?.startsWith('eu_por2_')
+      club.id?.startsWith('eu_por2_') ||
+      club.id?.startsWith('eu_ned2_') ||
+      club.id?.startsWith('eu_bel2_')
       ? 'EU_3'
       : 'EU_2';
   }
@@ -829,6 +833,20 @@ export function getClubEconomyProfile(club?: ClubEconomyContext | null): ClubEco
     return {
       ...base,
       tierLabel: 'Liga Portugal 2 / Liga 3 (POR)',
+    };
+  }
+
+  if (club?.id?.startsWith('eu_ned2_')) {
+    return {
+      ...base,
+      tierLabel: 'Keuken Kampioen Divisie (2ª HOL)',
+    };
+  }
+
+  if (club?.id?.startsWith('eu_bel2_')) {
+    return {
+      ...base,
+      tierLabel: 'Challenger Pro League (2ª BEL)',
     };
   }
 
