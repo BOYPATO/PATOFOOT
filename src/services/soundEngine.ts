@@ -9,6 +9,13 @@ class SoundEngine {
   private masterGain: GainNode | null = null;
   private isMuted: boolean = false;
   private masterVolume: number = 0.8; // 0.0 to 1.0
+  private ambientCrowdEnabled: boolean = true;
+  private ambientCrowdVolume: number = 0.45; // 0.0 to 1.0
+  private ambientNodes: {
+    source: AudioBufferSourceNode;
+    lfo: OscillatorNode;
+    gain: GainNode;
+  } | null = null;
 
   constructor() {
     try {
@@ -20,6 +27,12 @@ class SoundEngine {
         }
         if (typeof parsed.masterVolume === 'number') {
           this.masterVolume = Math.max(0, Math.min(1, parsed.masterVolume / 100));
+        }
+        if (typeof parsed.ambientCrowdEnabled === 'boolean') {
+          this.ambientCrowdEnabled = parsed.ambientCrowdEnabled;
+        }
+        if (typeof parsed.ambientCrowdVolume === 'number') {
+          this.ambientCrowdVolume = Math.max(0, Math.min(1, parsed.ambientCrowdVolume / 100));
         }
       } else {
         const savedMute = localStorage.getItem('brasfoot_muted');
@@ -100,6 +113,137 @@ class SoundEngine {
 
   public getVolume(): number {
     return Math.round(this.masterVolume * 100);
+  }
+
+  public setAmbientCrowdEnabled(enabled: boolean): void {
+    this.ambientCrowdEnabled = enabled;
+    if (!enabled) {
+      this.stopStadiumAmbience();
+    }
+  }
+
+  public setAmbientCrowdVolume(volumePercent: number): void {
+    const clamped = Math.max(0, Math.min(100, Math.round(volumePercent)));
+    this.ambientCrowdVolume = clamped / 100;
+    if (this.ambientNodes && this.ctx) {
+      const target = this.ambientCrowdEnabled && !this.isMuted ? this.ambientCrowdVolume * 0.14 : 0;
+      this.ambientNodes.gain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.15);
+    }
+  }
+
+  /**
+   * Starts a subtle, organic procedural stadium crowd murmur loop during live matches.
+   */
+  public startStadiumAmbience(): void {
+    if (this.isMuted || this.masterVolume <= 0 || !this.ambientCrowdEnabled || this.ambientCrowdVolume <= 0) {
+      this.stopStadiumAmbience();
+      return;
+    }
+    if (this.ambientNodes) return;
+
+    this.initContext();
+    const out = this.getOutputNode();
+    if (!this.ctx || !out) return;
+
+    try {
+      const duration = 4.0;
+      const sampleRate = this.ctx.sampleRate;
+      const bufferSize = Math.floor(sampleRate * duration);
+      const buffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
+      const data = buffer.getChannelData(0);
+
+      // Soft pink-ish filtered noise for warm stadium crowd murmur
+      let b0 = 0;
+      let b1 = 0;
+      let b2 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.997 * b0 + white * 0.029;
+        b1 = 0.985 * b1 + white * 0.032;
+        b2 = 0.95 * b2 + white * 0.048;
+        data[i] = (b0 + b1 + b2 + white * 0.015) * 0.65;
+      }
+
+      const source = this.ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+
+      const bandpass = this.ctx.createBiquadFilter();
+      bandpass.type = 'bandpass';
+      bandpass.frequency.setValueAtTime(520, this.ctx.currentTime);
+      bandpass.Q.setValueAtTime(0.9, this.ctx.currentTime);
+
+      const lowpass = this.ctx.createBiquadFilter();
+      lowpass.type = 'lowpass';
+      lowpass.frequency.setValueAtTime(1250, this.ctx.currentTime);
+
+      const gain = this.ctx.createGain();
+      const targetGain = this.ambientCrowdVolume * 0.14;
+      gain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(targetGain, this.ctx.currentTime + 0.8);
+
+      // Subtle slow breathing LFO on filter cutoff so the crowd feels alive
+      const lfo = this.ctx.createOscillator();
+      const lfoGain = this.ctx.createGain();
+      lfo.frequency.setValueAtTime(0.22, this.ctx.currentTime);
+      lfoGain.gain.setValueAtTime(95, this.ctx.currentTime);
+      lfo.connect(lfoGain);
+      lfoGain.connect(bandpass.frequency);
+
+      source.connect(bandpass);
+      bandpass.connect(lowpass);
+      lowpass.connect(gain);
+      gain.connect(out);
+
+      source.start();
+      lfo.start();
+      this.ambientNodes = { source, lfo, gain };
+    } catch {
+      this.ambientNodes = null;
+    }
+  }
+
+  /**
+   * Briefly swells the stadium crowd during exciting attacks or shots on target.
+   */
+  public pulseStadiumAmbience(intensity: number = 1.6): void {
+    if (!this.ambientNodes || !this.ctx || this.isMuted || !this.ambientCrowdEnabled) return;
+    const now = this.ctx.currentTime;
+    const base = this.ambientCrowdVolume * 0.14;
+    const peak = Math.min(0.32, base * intensity);
+    try {
+      this.ambientNodes.gain.gain.cancelScheduledValues(now);
+      this.ambientNodes.gain.gain.setTargetAtTime(peak, now, 0.12);
+      this.ambientNodes.gain.gain.setTargetAtTime(base, now + 0.7, 0.5);
+    } catch {
+      // ignore audio scheduling edge cases
+    }
+  }
+
+  public stopStadiumAmbience(): void {
+    if (!this.ambientNodes) return;
+    const nodes = this.ambientNodes;
+    this.ambientNodes = null;
+    try {
+      if (this.ctx) {
+        const now = this.ctx.currentTime;
+        nodes.gain.gain.cancelScheduledValues(now);
+        nodes.gain.gain.setTargetAtTime(0.0001, now, 0.1);
+      }
+      setTimeout(() => {
+        try {
+          nodes.source.stop();
+          nodes.lfo.stop();
+          nodes.source.disconnect();
+          nodes.lfo.disconnect();
+          nodes.gain.disconnect();
+        } catch {
+          // already stopped
+        }
+      }, 280);
+    } catch {
+      // ignore teardown errors
+    }
   }
 
   /**

@@ -145,7 +145,11 @@ export function computeSuperMundial32Qualifiers(state: {
       !meta ||
       lid === 'eng_championship' ||
       lid === 'eng_league_one' ||
-      lid === 'eng_league_two'
+      lid === 'eng_league_two' ||
+      lid === 'ger_bundesliga2' ||
+      lid === 'fra_ligue2' ||
+      lid === 'esp_laliga2' ||
+      lid === 'ita_serie_b'
     ) {
       continue;
     }

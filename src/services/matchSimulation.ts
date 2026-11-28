@@ -323,7 +323,11 @@ export function simulateQuickMatch(
     fixture.competition === 'concacaf_champions' ||
     (fixture.competition === 'afc_champions' && (fixture.leg !== undefined || fixture.round >= 9)) ||
     (fixture.competition === 'usa_mls' && fixture.id.includes('_po_')) ||
+    fixture.id.includes('_playoff_') ||
     fixture.leg !== undefined ||
+    phaseLower.includes('play-off') ||
+    phaseLower.includes('playoff') ||
+    phaseLower.includes('barrage') ||
     phaseLower.includes('1ª fase') ||
     phaseLower.includes('2ª fase') ||
     phaseLower.includes('3ª fase') ||

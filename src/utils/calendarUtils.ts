@@ -2097,21 +2097,34 @@ export function getEuropeanLeagueScheduleDates(
     // 14 a 16 de agosto de 2026 até 30 de maio de 2027
     startSunday = `${seasonYear}-08-16`;
     endSunday = `${nextYear}-05-30`;
+  } else if (leagueId === 'esp_laliga2') {
+    // 15 de agosto de 2026 até 16 de maio de 2027 (42 rodadas antes dos Play-offs 3º–6º em Ida e Volta)
+    startSunday = `${seasonYear}-08-16`;
+    endSunday = `${nextYear}-05-16`;
   } else if (leagueId === 'eng_premier') {
     // 21 e 22 de agosto de 2026 até 30 de maio de 2027
     startSunday = `${seasonYear}-08-23`;
     endSunday = `${nextYear}-05-30`;
   } else if (leagueId === 'fra_ligue1') {
-    // 21 a 23 de agosto de 2026 até 29 de maio de 2027
+    // 21 a 23 de agosto de 2026 até 22 de maio de 2027 (antes do Barrage Ligue 1 x Ligue 2)
     startSunday = `${seasonYear}-08-23`;
-    endSunday = `${nextYear}-05-29`;
+    endSunday = `${nextYear}-05-22`;
+    finalDayOfWeek = 6;
+  } else if (leagueId === 'fra_ligue2') {
+    // 15 de agosto de 2026 até 15 de maio de 2027 (antes dos Play-offs 3º–5º e Barrage Ida/Volta)
+    startSunday = `${seasonYear}-08-16`;
+    endSunday = `${nextYear}-05-15`;
     finalDayOfWeek = 6;
   } else if (leagueId === 'ita_serie_a') {
     // 22 e 23 de agosto de 2026 até 30 de maio de 2027
     startSunday = `${seasonYear}-08-23`;
     endSunday = `${nextYear}-05-30`;
-  } else if (leagueId === 'ger_bundesliga') {
-    // 28 de agosto de 2026 até 22 de maio de 2027
+  } else if (leagueId === 'ita_serie_b') {
+    // 16 de agosto de 2026 até 10 de maio de 2027 (38 rodadas antes dos Playoffs 3º–8º e Playout 16º×17º)
+    startSunday = `${seasonYear}-08-16`;
+    endSunday = `${nextYear}-05-10`;
+  } else if (leagueId === 'ger_bundesliga' || leagueId === 'ger_bundesliga2') {
+    // 28 de agosto de 2026 até 22 de maio de 2027 (antes do Playoff de Acesso/Rebaixamento)
     startSunday = `${seasonYear}-08-30`;
     endSunday = `${nextYear}-05-22`;
     finalDayOfWeek = 6;
@@ -2154,7 +2167,7 @@ export function getEuropeanLeagueScheduleDates(
   // Specific cup / supercup pauses per country
   if (leagueId === 'esp_laliga') {
     fifaPauses.push([`${nextYear}-02-02`, `${nextYear}-02-07`]); // Supercopa da Espanha
-  } else if (leagueId === 'ger_bundesliga') {
+  } else if (leagueId === 'ger_bundesliga' || leagueId === 'ger_bundesliga2') {
     // German winter break (late Dec to mid Jan)
     fifaPauses.push([`${seasonYear}-12-21`, `${nextYear}-01-08`]);
   }

@@ -62,14 +62,14 @@ import { addDays } from './calendarUtils';
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const EUROPEAN_CUP_MIN_COUNTS: Record<EuropeanCupId, number> = {
-  esp_copa_del_rey: 21,
+  esp_copa_del_rey: 133,
   esp_supercopa: 3,
-  ger_dfb_pokal: 17,
+  ger_dfb_pokal: 35,
   ger_supercup: 1,
-  fra_coupe_de_france: 17,
+  fra_coupe_de_france: 109,
   fra_trophee_champions: 1,
-  ita_coppa_italia: 21,
-  ita_supercoppa: 3,
+  ita_coppa_italia: 85,
+  ita_supercoppa: 1,
   por_taca_portugal: 19,
   por_supertaca: 1,
   ned_knvb_beker: 17,

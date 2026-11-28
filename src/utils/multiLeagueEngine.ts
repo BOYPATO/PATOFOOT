@@ -2330,6 +2330,386 @@ function syncLeagueTwoPlayoffBracket(
 }
 
 /**
+ * Sincroniza o Playoff de Acesso/Rebaixamento da Alemanha (Ida e Volta):
+ * - 16º colocado da Bundesliga vs 3º colocado da 2. Bundesliga
+ * - Ida na casa do 16º da Bundesliga, Volta na casa do 3º da 2. Bundesliga
+ * - O vencedor no placar agregado (ou pênaltis na volta) disputa a 1ª Divisão na temporada seguinte.
+ */
+function syncGermanRelegationPlayoffBracket(
+  bl2Fixtures: Fixture[],
+  bl1Fixtures?: Fixture[],
+  bl1Standings?: Standing[],
+  bl2Standings?: Standing[]
+): Fixture[] {
+  const hasPlayoff = bl2Fixtures.some((f) => f.id === 'ger_bundesliga2_playoff_ida');
+  if (!hasPlayoff) return bl2Fixtures;
+
+  let list = [...bl2Fixtures];
+  const bl2RegularGames = list.filter((f) => isStandingsFixture(f));
+  const bl2RegularDone = bl2RegularGames.length > 0 && bl2RegularGames.every((f) => f.played);
+
+  const bl1RegularGames = (bl1Fixtures || []).filter((f) => isStandingsFixture(f));
+  const bl1RegularDone = bl1RegularGames.length > 0 && bl1RegularGames.every((f) => f.played);
+
+  if (
+    bl1RegularDone &&
+    bl2RegularDone &&
+    bl1Standings &&
+    bl1Standings.length >= 16 &&
+    bl2Standings &&
+    bl2Standings.length >= 3
+  ) {
+    const sortTable = (table: Standing[]) =>
+      [...table].sort(
+        (a, b) =>
+          b.points - a.points ||
+          b.won - a.won ||
+          b.goalDifference - a.goalDifference ||
+          b.goalsFor - a.goalsFor
+      );
+
+    const bl1Ordered = sortTable(bl1Standings);
+    const bl2Ordered = sortTable(bl2Standings);
+
+    const bl1Sixteenth = bl1Ordered[15]?.teamId;
+    const bl2Third = bl2Ordered[2]?.teamId;
+
+    if (bl1Sixteenth && bl2Third) {
+      // Ida na casa do 16º da Bundesliga, Volta na casa do 3º da 2. Bundesliga
+      list = assignTwoLeggedSlots(
+        list,
+        'ger_bundesliga2_playoff_ida',
+        'ger_bundesliga2_playoff_volta',
+        bl1Sixteenth,
+        bl2Third
+      );
+    }
+  }
+
+  return list;
+}
+
+/**
+ * Sincroniza os Play-offs Internos da Ligue 2 (3º ao 5º) e o Barrage Acesso/Rebaixamento (Ligue 1 16º × Ligue 2):
+ * - Play-off 1 (Jogo Único): 4º colocado (casa) × 5º colocado
+ * - Play-off 2 (Jogo Único): 3º colocado (casa) × Vencedor Play-off 1
+ * - Barrage (Ida e Volta): Ida na casa do Vencedor Play-off 2, Volta na casa do 16º da Ligue 1
+ */
+function syncFrenchPlayoffAndBarrageBracket(
+  l2Fixtures: Fixture[],
+  l1Fixtures?: Fixture[],
+  l1Standings?: Standing[],
+  l2Standings?: Standing[]
+): Fixture[] {
+  const hasPlayoff = l2Fixtures.some((f) => f.id === 'fra_ligue2_playoff_r1');
+  if (!hasPlayoff) return l2Fixtures;
+
+  let list = [...l2Fixtures];
+  const getFix = (id: string) => list.find((f) => f.id === id);
+
+  const l2RegularGames = list.filter((f) => isStandingsFixture(f));
+  const l2RegularDone = l2RegularGames.length > 0 && l2RegularGames.every((f) => f.played);
+
+  const l1RegularGames = (l1Fixtures || []).filter((f) => isStandingsFixture(f));
+  const l1RegularDone = l1RegularGames.length > 0 && l1RegularGames.every((f) => f.played);
+
+  const sortTable = (table: Standing[]) =>
+    [...table].sort(
+      (a, b) =>
+        b.points - a.points ||
+        b.won - a.won ||
+        b.goalDifference - a.goalDifference ||
+        b.goalsFor - a.goalsFor
+    );
+
+  if (l2RegularDone && l2Standings && l2Standings.length >= 5) {
+    const l2Ordered = sortTable(l2Standings);
+    const team3 = l2Ordered[2]?.teamId;
+    const team4 = l2Ordered[3]?.teamId;
+    const team5 = l2Ordered[4]?.teamId;
+
+    // Play-off 1: 4º (casa) x 5º (jogo único)
+    list = assignSingleLegSlots(list, 'fra_ligue2_playoff_r1', team4, team5);
+
+    // Play-off 2: 3º (casa) x Vencedor Play-off 1 (jogo único)
+    const po1Winner = resolveTieWinner(undefined, getFix('fra_ligue2_playoff_r1'));
+    if (team3 || po1Winner) {
+      list = assignSingleLegSlots(list, 'fra_ligue2_playoff_r2', team3, po1Winner);
+    }
+
+    // Barrage (Ida e Volta): Vencedor Play-off 2 (manda a Ida) x 16º da Ligue 1 (manda a Volta)
+    const po2Winner = resolveTieWinner(undefined, getFix('fra_ligue2_playoff_r2'));
+    const l1Sixteenth =
+      l1RegularDone && l1Standings && l1Standings.length >= 16
+        ? sortTable(l1Standings)[15]?.teamId
+        : undefined;
+
+    if (po2Winner || l1Sixteenth) {
+      list = assignTwoLeggedSlots(
+        list,
+        'fra_ligue2_playoff_barrage_ida',
+        'fra_ligue2_playoff_barrage_volta',
+        po2Winner,
+        l1Sixteenth
+      );
+    }
+  }
+
+  return list;
+}
+
+/**
+ * Sincroniza os Play-offs de Acesso da LALIGA HYPERMOTION (2ª Divisão da Espanha):
+ * - 1º e 2º sobem direto à LaLiga EA Sports
+ * - 3º ao 6º disputam Play-offs em Ida e Volta:
+ *   Semifinal 1: 6º (Ida) × 3º (Volta)
+ *   Semifinal 2: 5º (Ida) × 4º (Volta)
+ *   Final (Ida e Volta): Melhor campanha na fase regular decide a volta em casa
+ */
+function syncSpanishLaLiga2PlayoffBracket(
+  l2Fixtures: Fixture[],
+  l2Standings?: Standing[]
+): Fixture[] {
+  const hasPlayoff = l2Fixtures.some((f) => f.id === 'esp_laliga2_playoff_semi1_ida');
+  if (!hasPlayoff) return l2Fixtures;
+
+  let list = [...l2Fixtures];
+  const getFix = (id: string) => list.find((f) => f.id === id);
+
+  const regularGames = list.filter((f) => isStandingsFixture(f));
+  const regularDone = regularGames.length > 0 && regularGames.every((f) => f.played);
+
+  if (regularDone && l2Standings && l2Standings.length >= 6) {
+    const ordered = [...l2Standings].sort(
+      (a, b) =>
+        b.points - a.points ||
+        b.won - a.won ||
+        b.goalDifference - a.goalDifference ||
+        b.goalsFor - a.goalsFor
+    );
+    const seedRank = new Map<string, number>();
+    ordered.forEach((row, idx) => seedRank.set(row.teamId, idx));
+
+    const team3 = ordered[2]?.teamId;
+    const team4 = ordered[3]?.teamId;
+    const team5 = ordered[4]?.teamId;
+    const team6 = ordered[5]?.teamId;
+
+    // Semifinal 1: 6º manda Ida, 3º manda Volta
+    list = assignTwoLeggedSlots(
+      list,
+      'esp_laliga2_playoff_semi1_ida',
+      'esp_laliga2_playoff_semi1_volta',
+      team6,
+      team3
+    );
+
+    // Semifinal 2: 5º manda Ida, 4º manda Volta
+    list = assignTwoLeggedSlots(
+      list,
+      'esp_laliga2_playoff_semi2_ida',
+      'esp_laliga2_playoff_semi2_volta',
+      team5,
+      team4
+    );
+
+    const semi1Winner = resolveTieWinner(
+      getFix('esp_laliga2_playoff_semi1_ida'),
+      getFix('esp_laliga2_playoff_semi1_volta')
+    );
+    const semi2Winner = resolveTieWinner(
+      getFix('esp_laliga2_playoff_semi2_ida'),
+      getFix('esp_laliga2_playoff_semi2_volta')
+    );
+
+    if (semi1Winner && semi2Winner) {
+      const rank1 = seedRank.get(semi1Winner) ?? 99;
+      const rank2 = seedRank.get(semi2Winner) ?? 99;
+      // Melhor campanha na fase regular decide a Volta em casa; pior campanha manda a Ida
+      const higherSeed = rank1 <= rank2 ? semi1Winner : semi2Winner;
+      const lowerSeed = rank1 <= rank2 ? semi2Winner : semi1Winner;
+      list = assignTwoLeggedSlots(
+        list,
+        'esp_laliga2_playoff_final_ida',
+        'esp_laliga2_playoff_final_volta',
+        lowerSeed,
+        higherSeed
+      );
+    } else if (semi1Winner || semi2Winner) {
+      // Atribui parcialmente o classificado já conhecido
+      const known = semi1Winner || semi2Winner;
+      const knownRank = known ? seedRank.get(known) ?? 99 : 99;
+      if (knownRank === 2) {
+        // 3º colocado é sempre melhor campanha na final (decide a Volta em casa)
+        list = assignTwoLeggedSlots(
+          list,
+          'esp_laliga2_playoff_final_ida',
+          'esp_laliga2_playoff_final_volta',
+          undefined,
+          known
+        );
+      } else if (knownRank === 5) {
+        // 6º colocado é sempre pior campanha na final (manda a Ida em casa)
+        list = assignTwoLeggedSlots(
+          list,
+          'esp_laliga2_playoff_final_ida',
+          'esp_laliga2_playoff_final_volta',
+          known,
+          undefined
+        );
+      }
+    }
+  }
+
+  return list;
+}
+
+/**
+ * Sincroniza Playoffs de Acesso (3º–8º em Ida e Volta) e Playout de Rebaixamento (16º × 17º em Ida e Volta)
+ * da Serie BKT (2ª Divisão da Itália · 20 clubes · 38 rodadas):
+ * - Regra da diferença de pontos: se 3º abrir 15+ pontos sobre o 4º, não há playoffs de acesso (3º sobe direto)
+ * - Quartas: 8º (Ida) × 5º (Volta) e 7º (Ida) × 6º (Volta)
+ * - Semifinais: Venc. 6º/7º (Ida) × 3º (Volta) e Venc. 5º/8º (Ida) × 4º (Volta)
+ * - Final (Ida e Volta): pior campanha manda a Ida, melhor campanha decide a Volta em casa
+ * - Playout de Rebaixamento (Ida e Volta): 17º (Ida) × 16º (Volta)
+ */
+function syncItalianSerieBPlayoffBracket(
+  sbFixtures: Fixture[],
+  sbStandings?: Standing[]
+): Fixture[] {
+  const hasPlayoff = sbFixtures.some((f) => f.id === 'ita_serie_b_playoff_qf1_ida');
+  if (!hasPlayoff) return sbFixtures;
+
+  let list = [...sbFixtures];
+  const getFix = (id: string) => list.find((f) => f.id === id);
+
+  const regularGames = list.filter((f) => isStandingsFixture(f));
+  const allRegularPlayed = regularGames.length > 0 && regularGames.every((f) => f.played);
+
+  if (allRegularPlayed && sbStandings && sbStandings.length >= 17) {
+    const ordered = [...sbStandings].sort(
+      (a, b) =>
+        b.points - a.points ||
+        b.won - a.won ||
+        b.goalDifference - a.goalDifference ||
+        b.goalsFor - a.goalsFor
+    );
+    const seedRank = new Map<string, number>();
+    ordered.forEach((st, idx) => seedRank.set(st.teamId, idx));
+
+    const team3 = ordered[2]?.teamId;
+    const team4 = ordered[3]?.teamId;
+    const team5 = ordered[4]?.teamId;
+    const team6 = ordered[5]?.teamId;
+    const team7 = ordered[6]?.teamId;
+    const team8 = ordered[7]?.teamId;
+    const team16 = ordered[15]?.teamId;
+    const team17 = ordered[16]?.teamId;
+
+    // Playout de Rebaixamento (16º × 17º em Ida e Volta; 16º decide a Volta em casa)
+    list = assignTwoLeggedSlots(
+      list,
+      'ita_serie_b_playoff_playout_ida',
+      'ita_serie_b_playoff_playout_volta',
+      team17,
+      team16
+    );
+
+    // Regra oficial dos 15 pontos: se o 3º abrir > 14 pts (>= 15 pts) sobre o 4º, não há playoffs de acesso
+    const gap3vs4 = (ordered[2]?.points ?? 0) - (ordered[3]?.points ?? 0);
+    if (gap3vs4 < 15) {
+      // Quartas 1: 8º (Ida) × 5º (Volta)
+      list = assignTwoLeggedSlots(
+        list,
+        'ita_serie_b_playoff_qf1_ida',
+        'ita_serie_b_playoff_qf1_volta',
+        team8,
+        team5
+      );
+      // Quartas 2: 7º (Ida) × 6º (Volta)
+      list = assignTwoLeggedSlots(
+        list,
+        'ita_serie_b_playoff_qf2_ida',
+        'ita_serie_b_playoff_qf2_volta',
+        team7,
+        team6
+      );
+
+      const qf1Winner = resolveTieWinner(
+        getFix('ita_serie_b_playoff_qf1_ida'),
+        getFix('ita_serie_b_playoff_qf1_volta')
+      );
+      const qf2Winner = resolveTieWinner(
+        getFix('ita_serie_b_playoff_qf2_ida'),
+        getFix('ita_serie_b_playoff_qf2_volta')
+      );
+
+      // Semifinal 1: Vencedor 6º/7º (Ida) × 3º (Volta)
+      list = assignTwoLeggedSlots(
+        list,
+        'ita_serie_b_playoff_sf1_ida',
+        'ita_serie_b_playoff_sf1_volta',
+        qf2Winner,
+        team3
+      );
+      // Semifinal 2: Vencedor 5º/8º (Ida) × 4º (Volta)
+      list = assignTwoLeggedSlots(
+        list,
+        'ita_serie_b_playoff_sf2_ida',
+        'ita_serie_b_playoff_sf2_volta',
+        qf1Winner,
+        team4
+      );
+
+      const sf1Winner = resolveTieWinner(
+        getFix('ita_serie_b_playoff_sf1_ida'),
+        getFix('ita_serie_b_playoff_sf1_volta')
+      );
+      const sf2Winner = resolveTieWinner(
+        getFix('ita_serie_b_playoff_sf2_ida'),
+        getFix('ita_serie_b_playoff_sf2_volta')
+      );
+
+      if (sf1Winner && sf2Winner) {
+        const rank1 = seedRank.get(sf1Winner) ?? 99;
+        const rank2 = seedRank.get(sf2Winner) ?? 99;
+        const higherSeed = rank1 <= rank2 ? sf1Winner : sf2Winner;
+        const lowerSeed = rank1 <= rank2 ? sf2Winner : sf1Winner;
+        list = assignTwoLeggedSlots(
+          list,
+          'ita_serie_b_playoff_final_ida',
+          'ita_serie_b_playoff_final_volta',
+          lowerSeed,
+          higherSeed
+        );
+      } else if (sf1Winner || sf2Winner) {
+        const known = sf1Winner || sf2Winner;
+        const knownRank = known ? seedRank.get(known) ?? 99 : 99;
+        if (knownRank === 2) {
+          list = assignTwoLeggedSlots(
+            list,
+            'ita_serie_b_playoff_final_ida',
+            'ita_serie_b_playoff_final_volta',
+            undefined,
+            known
+          );
+        } else if (knownRank === 7) {
+          list = assignTwoLeggedSlots(
+            list,
+            'ita_serie_b_playoff_final_ida',
+            'ita_serie_b_playoff_final_volta',
+            known,
+            undefined
+          );
+        }
+      }
+    }
+  }
+
+  return list;
+}
+
+/**
  * Sincroniza o Playoff de Acesso do Brasileirão Série C (24 clubes · 46 rodadas):
  * - 1º ao 3º colocados sobem direto à Série B
  * - 4º colocado vs 7º colocado (Semifinal 1 em Ida e Volta - 4º decide em casa)
@@ -3375,6 +3755,34 @@ export function syncDynamicKnockoutBrackets(state: {
       state.standingsEurope.eng_league_two
     );
   }
+  if (fixturesEurope.ger_bundesliga2 && state.standingsEurope?.ger_bundesliga2) {
+    fixturesEurope.ger_bundesliga2 = syncGermanRelegationPlayoffBracket(
+      fixturesEurope.ger_bundesliga2,
+      fixturesEurope.ger_bundesliga,
+      state.standingsEurope.ger_bundesliga,
+      state.standingsEurope.ger_bundesliga2
+    );
+  }
+  if (fixturesEurope.fra_ligue2 && state.standingsEurope?.fra_ligue2) {
+    fixturesEurope.fra_ligue2 = syncFrenchPlayoffAndBarrageBracket(
+      fixturesEurope.fra_ligue2,
+      fixturesEurope.fra_ligue1,
+      state.standingsEurope.fra_ligue1,
+      state.standingsEurope.fra_ligue2
+    );
+  }
+  if (fixturesEurope.esp_laliga2 && state.standingsEurope?.esp_laliga2) {
+    fixturesEurope.esp_laliga2 = syncSpanishLaLiga2PlayoffBracket(
+      fixturesEurope.esp_laliga2,
+      state.standingsEurope.esp_laliga2
+    );
+  }
+  if (fixturesEurope.ita_serie_b && state.standingsEurope?.ita_serie_b) {
+    fixturesEurope.ita_serie_b = syncItalianSerieBPlayoffBracket(
+      fixturesEurope.ita_serie_b,
+      state.standingsEurope.ita_serie_b
+    );
+  }
 
   // 9. Copas Inglesas (Community Shield, Carabao Cup & FA Cup)
   const englishCupsSynced = syncEnglishCupsKnockoutBracket({
@@ -3802,6 +4210,14 @@ export function simulateCpuFixturesUpToDate(
     (f.competition === 'serie_b' && f.round >= 38) ||
     f.id.startsWith('serie_c_playoff_') ||
     (f.competition === 'serie_c' && f.round >= 46) ||
+    f.id.startsWith('ger_bundesliga2_playoff_') ||
+    ((f.competition === 'ger_bundesliga' || f.competition === 'ger_bundesliga2') && f.round >= 34) ||
+    f.id.startsWith('fra_ligue2_playoff_') ||
+    ((f.competition === 'fra_ligue1' || f.competition === 'fra_ligue2') && f.round >= 34) ||
+    f.id.startsWith('esp_laliga2_playoff_') ||
+    (f.competition === 'esp_laliga2' && f.round >= 42) ||
+    f.id.startsWith('ita_serie_b_playoff_') ||
+    (f.competition === 'ita_serie_b' && f.round >= 38) ||
     isMlsPlayoffFixture(f) ||
     isEuropeanCup(f.competition) ||
     isSouthAmericanCup(f.competition) ||

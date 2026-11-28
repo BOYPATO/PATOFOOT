@@ -31,7 +31,13 @@ function getClubLeaguePrestige(club: Club): { label: string; multiplier: number 
       euId === 'ger_bundesliga' ||
       euId === 'fra_ligue1';
     const isSecondTier =
-      euId === 'eng_championship' || euId === 'eng_league_one' || euId === 'eng_league_two';
+      euId === 'eng_championship' ||
+      euId === 'eng_league_one' ||
+      euId === 'eng_league_two' ||
+      euId === 'ger_bundesliga2' ||
+      euId === 'fra_ligue2' ||
+      euId === 'esp_laliga2' ||
+      euId === 'ita_serie_b';
     return {
       label: meta ? meta.shortName : 'Europa',
       multiplier: isTop5 ? 1.12 : isSecondTier ? 0.88 : 1.03,

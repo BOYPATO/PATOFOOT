@@ -876,7 +876,11 @@ export function computeInitialManagerReputation(club: Club): number {
         ? 36
         : club.europeanLeagueId === 'eng_league_one'
         ? 46
-        : club.europeanLeagueId === 'eng_championship'
+        : club.europeanLeagueId === 'eng_championship' ||
+          club.europeanLeagueId === 'ger_bundesliga2' ||
+          club.europeanLeagueId === 'fra_ligue2' ||
+          club.europeanLeagueId === 'esp_laliga2' ||
+          club.europeanLeagueId === 'ita_serie_b'
         ? 58
         : 70
       : club.division === 'WL'

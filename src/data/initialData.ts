@@ -58,6 +58,13 @@ import { SPECIAL_LEAGUE_2_2026 } from './specialLeague2Rosters';
 import { CHAMPIONSHIP_LEAGUE_2026 } from './championship2026Rosters';
 import { LEAGUE_ONE_2026 } from './leagueOne2026Rosters';
 import { LEAGUE_TWO_2026 } from './leagueTwo2026Rosters';
+import { BUNDESLIGA2_LEAGUE_2026 } from './bundesliga2_2026Rosters';
+import { LIGUE2_LEAGUE_2026 } from './ligue2_2026Rosters';
+import { LALIGA2_LEAGUE_2026 } from './laliga2_2026Rosters';
+import { SERIE_B_ITA_LEAGUE_2026 } from './serieBIta_2026Rosters';
+import { SPAIN_COPA_EXTRA_2026 } from './spainCopaExtra2026';
+import { ITALY_COPA_EXTRA_2026 } from './italyCopaExtra2026';
+import { FRANCE_COPA_EXTRA_2026 } from './franceCopaExtra2026';
 import {
   FREE_AGENTS_2026_SPECS,
   CURRENT_FREE_AGENTS_2026_VERSION,
@@ -1252,7 +1259,8 @@ function buildEuClub(params: {
   reputation: number;
   primaryColor: string;
   managerName: string;
-  europeanLeagueId: EuropeanLeagueId;
+  europeanLeagueId?: EuropeanLeagueId;
+  stadiumName?: string;
   tuples: Array<CuratedPlayerTuple | Top5PlayerTuple>;
   tag?: string;
 }): Club {
@@ -1312,7 +1320,7 @@ function buildEuClub(params: {
       text,
     },
     stadium: {
-      name: `${params.shortName} Arena`,
+      name: params.stadiumName || `${params.shortName} Arena`,
       capacity,
       ticketPrice: econ.refTicket,
       level: finances.stadiumLevel,
@@ -1396,6 +1404,67 @@ function buildAllEuropeanClubs(): Club[] {
   pushEuLeague(CHAMPIONSHIP_LEAGUE_2026, 'eng_championship', 'Inglaterra', 'ENG');
   pushEuLeague(LEAGUE_ONE_2026, 'eng_league_one', 'Inglaterra', 'ENG');
   pushEuLeague(LEAGUE_TWO_2026, 'eng_league_two', 'Inglaterra', 'ENG');
+  pushEuLeague(BUNDESLIGA2_LEAGUE_2026, 'ger_bundesliga2', 'Alemanha', 'GER');
+  pushEuLeague(LIGUE2_LEAGUE_2026, 'fra_ligue2', 'França', 'FRA');
+  pushEuLeague(LALIGA2_LEAGUE_2026, 'esp_laliga2', 'Espanha', 'ESP');
+  pushEuLeague(SERIE_B_ITA_LEAGUE_2026, 'ita_serie_b', 'Itália', 'ITA');
+
+  // 27 clubes espanhóis de divisões inferiores (Primera/Segunda Federación) exclusivos da Copa del Rey
+  for (const c of SPAIN_COPA_EXTRA_2026) {
+    euClubs.push(
+      buildEuClub({
+        id: c.id,
+        name: c.name,
+        shortName: c.shortName,
+        country: 'Espanha',
+        state: 'ESP',
+        reputation: c.reputation,
+        primaryColor: c.primaryColor,
+        managerName: c.managerName,
+        stadiumName: c.stadiumName,
+        tuples: c.players,
+        tag: 'esp3_26',
+      })
+    );
+  }
+
+  // 4 clubes italianos da Serie C exclusivos da Coppa Italia (Catânia, Potência, Ravenna, União Brescia)
+  for (const c of ITALY_COPA_EXTRA_2026) {
+    euClubs.push(
+      buildEuClub({
+        id: c.id,
+        name: c.name,
+        shortName: c.shortName,
+        country: 'Itália',
+        state: 'ITA',
+        reputation: c.reputation,
+        primaryColor: c.primaryColor,
+        managerName: c.managerName,
+        stadiumName: c.stadiumName,
+        tuples: c.players,
+        tag: 'ita3_26',
+      })
+    );
+  }
+
+  // 20 clubes franceses do Championnat National / N2 exclusivos da Coupe de France
+  for (const c of FRANCE_COPA_EXTRA_2026) {
+    euClubs.push(
+      buildEuClub({
+        id: c.id,
+        name: c.name,
+        shortName: c.shortName,
+        country: 'França',
+        state: 'FRA',
+        reputation: c.reputation,
+        primaryColor: c.primaryColor,
+        managerName: c.managerName,
+        stadiumName: c.stadiumName,
+        tuples: c.players,
+        tag: 'fra3_26',
+      })
+    );
+  }
 
   return euClubs;
 }

@@ -395,11 +395,23 @@ export function getBaselineClubSectorTarget(
   } else if (club.division === 'SA') {
     base = club.reputation >= 5 ? 80 : club.reputation === 4 ? 75 : club.reputation === 3 ? 70 : 65;
   } else if (club.division === 'EU') {
-    if (club.europeanLeagueId === 'eng_league_two') {
+    if (
+      club.id.startsWith('eu_esp3_') ||
+      club.id.startsWith('eu_ita3_') ||
+      club.id.startsWith('eu_fra3_')
+    ) {
+      base = club.reputation >= 3 ? 66 : 62;
+    } else if (club.europeanLeagueId === 'eng_league_two') {
       base = club.reputation >= 2 ? 60 : 57;
     } else if (club.europeanLeagueId === 'eng_league_one') {
       base = club.reputation >= 3 ? 67 : 63;
-    } else if (club.europeanLeagueId === 'eng_championship') {
+    } else if (
+      club.europeanLeagueId === 'eng_championship' ||
+      club.europeanLeagueId === 'ger_bundesliga2' ||
+      club.europeanLeagueId === 'fra_ligue2' ||
+      club.europeanLeagueId === 'esp_laliga2' ||
+      club.europeanLeagueId === 'ita_serie_b'
+    ) {
       base = club.reputation >= 4 ? 75 : 71;
     } else {
       base = club.reputation >= 5 ? 86 : club.reputation === 4 ? 79 : club.reputation === 3 ? 74 : 70;
@@ -765,11 +777,19 @@ export function calibrateClubSquadRealism(
     // Limites realistas por divisão para evitar distorções absurdas no início
     const minDiv =
       club.division === 'EU'
-        ? club.europeanLeagueId === 'eng_league_two'
+        ? club.id.startsWith('eu_esp3_') ||
+          club.id.startsWith('eu_ita3_') ||
+          club.id.startsWith('eu_fra3_')
+          ? 56
+          : club.europeanLeagueId === 'eng_league_two'
           ? 52
           : club.europeanLeagueId === 'eng_league_one'
           ? 57
-          : club.europeanLeagueId === 'eng_championship'
+          : club.europeanLeagueId === 'eng_championship' ||
+            club.europeanLeagueId === 'ger_bundesliga2' ||
+            club.europeanLeagueId === 'fra_ligue2' ||
+            club.europeanLeagueId === 'esp_laliga2' ||
+            club.europeanLeagueId === 'ita_serie_b'
           ? 63
           : 66
         : club.division === 'WL'
@@ -794,11 +814,19 @@ export function calibrateClubSquadRealism(
       canBypassDivCap
         ? 94
         : club.division === 'EU'
-        ? club.europeanLeagueId === 'eng_league_two'
+        ? club.id.startsWith('eu_esp3_') ||
+          club.id.startsWith('eu_ita3_') ||
+          club.id.startsWith('eu_fra3_')
+          ? 73
+          : club.europeanLeagueId === 'eng_league_two'
           ? 68
           : club.europeanLeagueId === 'eng_league_one'
           ? 74
-          : club.europeanLeagueId === 'eng_championship'
+          : club.europeanLeagueId === 'eng_championship' ||
+            club.europeanLeagueId === 'ger_bundesliga2' ||
+            club.europeanLeagueId === 'fra_ligue2' ||
+            club.europeanLeagueId === 'esp_laliga2' ||
+            club.europeanLeagueId === 'ita_serie_b'
           ? 81
           : 93
         : club.division === 'WL'

@@ -82,6 +82,9 @@ import {
   KeyRound,
   Mail,
   ArrowLeft,
+  Trophy,
+  Zap,
+  MessageSquareHeart,
 } from 'lucide-react';
 import {
   useTrainerAuth,
@@ -119,6 +122,8 @@ interface TitleScreenProps {
   onOpenSettings: () => void;
   onOpenGuide?: (tab?: 'guide' | 'changelog') => void;
   onOpenOfficialSite?: () => void;
+  onOpenLeaderboard?: () => void;
+  onOpenSupport?: () => void;
   onOpenOct2026GlobalSyncModal?: () => void;
   isSyncingOct2026Global?: boolean;
   oct2026SyncedCount?: number;
@@ -360,6 +365,8 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
   onOpenSettings,
   onOpenGuide,
   onOpenOfficialSite,
+  onOpenLeaderboard,
+  onOpenSupport,
   onOpenOct2026GlobalSyncModal,
   isSyncingOct2026Global = false,
   oct2026SyncedCount = 0,
@@ -419,6 +426,44 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
   const [backedUpSlotNum, setBackedUpSlotNum] = useState<SaveSlotNumber | null>(null);
   const [selectedSpecialty, setSelectedSpecialty] = useState<ManagerSpecialtyId>('TATICO');
   const [selectedChallenge, setSelectedChallenge] = useState<CareerChallengeId>('LIVRE');
+  const [pendingQuickChallengeId, setPendingQuickChallengeId] =
+    useState<CareerChallengeId | null>(null);
+
+  // Launch 1-click challenge immediately once club catalog is ready
+  useEffect(() => {
+    if (!pendingQuickChallengeId || clubs.length === 0) return;
+    const challengeId = pendingQuickChallengeId;
+    setPendingQuickChallengeId(null);
+    const recommended = pickRecommendedClubForChallenge(challengeId, clubs) || clubs[0];
+    if (!recommended) return;
+    const chosenManager = (authSession?.displayName || managerName || 'Alex Dantas').trim();
+    const chosenSlot = findFirstAvailableSlotSync();
+    onStartCareer(recommended.id, chosenManager, chosenSlot, {
+      managerSpecialty: selectedSpecialty,
+      challengeId,
+    });
+  }, [
+    pendingQuickChallengeId,
+    clubs,
+    authSession?.displayName,
+    managerName,
+    selectedSpecialty,
+    onStartCareer,
+  ]);
+
+  const handleLaunchQuickChallenge = useCallback(
+    (challengeId: CareerChallengeId) => {
+      soundEngine.playClick();
+      onRequestClubsCatalog?.();
+      setPendingQuickChallengeId(challengeId);
+    },
+    [onRequestClubsCatalog]
+  );
+
+  const quickLaunchChallenges = useMemo(
+    () => CAREER_CHALLENGES.filter((c) => c.id !== 'LIVRE').slice(0, 4),
+    []
+  );
 
   // Hydrate all 5 career slot summaries lightweight on mount and after save modal changes
   useEffect(() => {
@@ -2072,8 +2117,65 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
               </section>
             )}
 
+            {/* 1-Click Career Challenges Launcher */}
+            <section className="w-full bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+                  <h3 className="text-xs sm:text-sm font-extrabold text-white">
+                    Desafios Rápidos (Iniciar em 1 Clique)
+                  </h3>
+                </div>
+                <span className="text-[11px] text-slate-400">
+                  Escolhe clube ideal e abre a carreira na hora
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                {quickLaunchChallenges.map((ch) => {
+                  const isLaunching = pendingQuickChallengeId === ch.id;
+                  return (
+                    <button
+                      key={ch.id}
+                      type="button"
+                      disabled={pendingQuickChallengeId !== null}
+                      onClick={() => handleLaunchQuickChallenge(ch.id)}
+                      className="group p-3 rounded-xl bg-slate-900/85 hover:bg-slate-800/90 border border-slate-800 hover:border-amber-400/60 text-left flex flex-col justify-between gap-2 transition-colors cursor-pointer disabled:opacity-60"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-300">
+                            {ch.shortLabel}
+                          </span>
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                              ch.difficultyLabel === 'Extremo'
+                                ? 'bg-rose-950/50 border-rose-500/40 text-rose-300'
+                                : 'bg-amber-950/50 border-amber-500/40 text-amber-300'
+                            }`}
+                          >
+                            {ch.difficultyLabel}
+                          </span>
+                        </div>
+                        <div className="text-xs font-extrabold text-white mt-1 group-hover:text-amber-200 transition-colors">
+                          {ch.title}
+                        </div>
+                        <p className="text-[11px] text-slate-400 leading-snug mt-1 line-clamp-2">
+                          {ch.description}
+                        </p>
+                      </div>
+                      <div className="text-[11px] font-bold text-sky-400 group-hover:text-amber-300 flex items-center gap-1 pt-1 border-t border-slate-800/80">
+                        <Play className="w-3 h-3 shrink-0" />
+                        <span>{isLaunching ? 'Preparando clube...' : 'Jogar Desafio'}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
             {/* Compact Quick Tools Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
               <button
                 type="button"
                 onClick={() => {
@@ -2087,6 +2189,20 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
                   {hasAnySlotSave ? 'Gerenciar Saves / Nuvem' : 'Nuvem & Backup (.json)'}
                 </span>
               </button>
+
+              {onOpenLeaderboard && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    onOpenLeaderboard();
+                  }}
+                  className="py-2.5 px-3.5 rounded-xl bg-slate-950/90 hover:bg-slate-900 border border-amber-500/30 text-xs font-bold text-amber-200 hover:text-white flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <Trophy className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="truncate">Ranking Global</span>
+                </button>
+              )}
 
               <button
                 type="button"
@@ -2122,7 +2238,22 @@ export const TitleScreen: React.FC<TitleScreenProps> = React.memo(({
       <footer className="relative z-10 border-t border-slate-900 bg-black/80 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4 text-xs text-slate-500">
           <span>PATOFOOT · Simulador de Futebol Manager</span>
-          <span>Calendário Completo · Lei Bosman · Olheiros · Seleção Brasileira</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span>Calendário Completo · Lei Bosman · Olheiros · Seleção Brasileira</span>
+            {onOpenSupport && (
+              <button
+                type="button"
+                onClick={() => {
+                  soundEngine.playClick();
+                  onOpenSupport();
+                }}
+                className="text-sky-400 hover:text-sky-300 font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <MessageSquareHeart className="w-3.5 h-3.5 shrink-0" />
+                <span>Suporte &amp; Privacidade</span>
+              </button>
+            )}
+          </div>
         </div>
       </footer>
 

@@ -42,6 +42,8 @@ export function getAutoSaveIntervalLabel(minutes: AutoSaveIntervalMinutes): stri
 export interface GameSettings {
   masterVolume: number; // 0 to 100
   isMuted: boolean;
+  ambientCrowdEnabled?: boolean;
+  ambientCrowdVolume?: number; // 0 to 100
   defaultMatchSpeed: 1 | 2 | 4;
   defaultShowSectorMap: boolean;
   pauseAtHalftime: boolean;
@@ -60,6 +62,8 @@ const SETTINGS_STORAGE_KEY = 'patofoot_game_settings_v1';
 export const DEFAULT_GAME_SETTINGS: GameSettings = {
   masterVolume: 80,
   isMuted: false,
+  ambientCrowdEnabled: true,
+  ambientCrowdVolume: 45,
   defaultMatchSpeed: 1,
   defaultShowSectorMap: true,
   pauseAtHalftime: true,
@@ -165,6 +169,14 @@ export function loadGameSettings(): GameSettings {
         typeof parsed.isMuted === 'boolean'
           ? parsed.isMuted
           : legacyMuted === 'true',
+      ambientCrowdEnabled:
+        typeof parsed.ambientCrowdEnabled === 'boolean'
+          ? parsed.ambientCrowdEnabled
+          : DEFAULT_GAME_SETTINGS.ambientCrowdEnabled,
+      ambientCrowdVolume:
+        typeof parsed.ambientCrowdVolume === 'number'
+          ? Math.max(0, Math.min(100, Math.round(parsed.ambientCrowdVolume)))
+          : DEFAULT_GAME_SETTINGS.ambientCrowdVolume,
       defaultMatchSpeed: speed,
       defaultShowSectorMap:
         typeof parsed.defaultShowSectorMap === 'boolean'

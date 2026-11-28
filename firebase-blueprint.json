@@ -389,6 +389,204 @@
         "createdAt",
         "updatedAt"
       ]
+    },
+    "ManagerLeaderboardEntry": {
+      "title": "ManagerLeaderboardEntry",
+      "description": "Entrada publica sem PII do treinador no Ranking Global do PATOFOOT.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "UID do treinador proprietario da entrada.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Nome de exibicao publico do treinador.",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "clubId": {
+          "type": "string",
+          "description": "ID do clube atual da carreira publicada.",
+          "minLength": 2,
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "clubName": {
+          "type": "string",
+          "description": "Nome do clube atual do treinador.",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "clubShortName": {
+          "type": "string",
+          "description": "Sigla ou nome curto do clube.",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "clubPrimaryColor": {
+          "type": "string",
+          "description": "Cor primaria do clube.",
+          "minLength": 4,
+          "maxLength": 16
+        },
+        "clubSecondaryColor": {
+          "type": "string",
+          "description": "Cor secundaria do clube.",
+          "minLength": 4,
+          "maxLength": 16
+        },
+        "division": {
+          "type": "string",
+          "description": "Divisao ou liga atual do clube.",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "careerScore": {
+          "type": "number",
+          "description": "Pontuacao total calculada da carreira do treinador."
+        },
+        "trophiesCount": {
+          "type": "number",
+          "description": "Total de titulos oficiais conquistados na carreira."
+        },
+        "seasonsPlayed": {
+          "type": "number",
+          "description": "Quantidade de temporadas disputadas na carreira."
+        },
+        "winsCount": {
+          "type": "number",
+          "description": "Total de vitorias oficiais acumuladas."
+        },
+        "challengesCompleted": {
+          "type": "number",
+          "description": "Quantidade de desafios de carreira concluidos."
+        },
+        "isPublic": {
+          "type": "boolean",
+          "description": "Indica que o treinador optou por aparecer no Ranking Global."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp do servidor da primeira publicacao no ranking."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp do servidor da ultima atualizacao no ranking."
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "clubId",
+        "clubName",
+        "clubShortName",
+        "clubPrimaryColor",
+        "clubSecondaryColor",
+        "division",
+        "careerScore",
+        "trophiesCount",
+        "seasonsPlayed",
+        "winsCount",
+        "challengesCompleted",
+        "isPublic",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PlayerFeedback": {
+      "title": "PlayerFeedback",
+      "description": "Relato de bug ou sugestao enviado por um jogador autenticado no PATOFOOT.",
+      "type": "object",
+      "properties": {
+        "feedbackId": {
+          "type": "string",
+          "description": "Identificador unico do feedback.",
+          "minLength": 4,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "uid": {
+          "type": "string",
+          "description": "UID do jogador que enviou o feedback.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Nome do treinador no momento do envio.",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "category": {
+          "type": "string",
+          "description": "Categoria do feedback enviado.",
+          "enum": ["bug", "suggestion", "balance", "praise"],
+          "minLength": 3,
+          "maxLength": 16
+        },
+        "title": {
+          "type": "string",
+          "description": "Titulo resumido do relato ou sugestao.",
+          "minLength": 3,
+          "maxLength": 120
+        },
+        "message": {
+          "type": "string",
+          "description": "Descricao detalhada do bug ou sugestao.",
+          "minLength": 10,
+          "maxLength": 1500
+        },
+        "appVersion": {
+          "type": "string",
+          "description": "Versao atual do aplicativo.",
+          "minLength": 1,
+          "maxLength": 24,
+          "pattern": "^[a-zA-Z0-9._\\-]+$"
+        },
+        "context": {
+          "type": "string",
+          "description": "Tela ou contexto ativo do jogo no envio.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "status": {
+          "type": "string",
+          "description": "Estado de triagem do feedback.",
+          "enum": ["open", "reviewed", "resolved"],
+          "minLength": 4,
+          "maxLength": 16
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp do servidor de criacao do relato."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp do servidor da ultima atualizacao do relato."
+        }
+      },
+      "required": [
+        "feedbackId",
+        "uid",
+        "displayName",
+        "category",
+        "title",
+        "message",
+        "appVersion",
+        "context",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
     }
   },
   "firestore": {
@@ -407,6 +605,14 @@
     "/errorLogs/{logId}": {
       "schema": "ErrorLog",
       "description": "Logs em tempo real de excecoes criticas e estabilidade por dispositivo."
+    },
+    "/managerLeaderboard/{userId}": {
+      "schema": "ManagerLeaderboardEntry",
+      "description": "Ranking global publico (sem PII) das carreiras dos treinadores do PATOFOOT."
+    },
+    "/playerFeedback/{feedbackId}": {
+      "schema": "PlayerFeedback",
+      "description": "Relatos de bugs e sugestoes enviados pelos jogadores para triagem."
     }
   }
 }

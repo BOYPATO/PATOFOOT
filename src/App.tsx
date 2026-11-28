@@ -148,11 +148,9 @@ import {
   upgradeSaveWithSoccerWikiEngland,
 } from './utils/soccerWikiEnglandEngine';
 import { soundEngine } from './services/soundEngine';
-import { TitleScreen } from './components/TitleScreen';
 import { Header } from './components/Header';
 import { GameSidebar } from './components/GameSidebar';
 import { MobileBottomNav } from './components/MobileBottomNav';
-import { ClubHubDashboard } from './components/ClubHubDashboard';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { PlayerInspectionProvider } from './context/PlayerInspectionContext';
 import { LanguageProvider } from './i18n/LanguageContext';
@@ -160,7 +158,18 @@ import type { RecentUpdatedClubItem } from './components/Oct2026GlobalSyncModal'
 import type { InstantMatchSummaryData } from './components/InstantMatchResultModal';
 import type { CelebrationPayload } from './components/CelebrationModal';
 
-// Code-split heavy views & modals (Etapa 2: faster initial load & smaller main chunk)
+// Code-split heavy views & modals (faster initial load & smaller main chunk)
+const TitleScreen = lazy(() =>
+  import('./components/TitleScreen').then((m) => ({ default: m.TitleScreen }))
+);
+const ClubHubDashboard = lazy(() =>
+  import('./components/ClubHubDashboard').then((m) => ({ default: m.ClubHubDashboard }))
+);
+const GlobalLeaderboardModal = lazy(() =>
+  import('./components/GlobalLeaderboardModal').then((m) => ({
+    default: m.GlobalLeaderboardModal,
+  }))
+);
 const OfficialWebsiteView = lazy(() =>
   import('./components/OfficialWebsiteView').then((m) => ({ default: m.OfficialWebsiteView }))
 );
@@ -679,6 +688,7 @@ import {
   cancelScheduledAutoSave,
   clearAllCareerSaves,
   deleteCareerSave,
+  downloadSaveAsJsonFile,
   hasAnySavedCareerSlotSync,
   hasSavedAutosaveHintSync,
   initializeCareerSaveStorage,
@@ -1454,7 +1464,10 @@ function sanitizeSave(save: GameSave): GameSave {
       division: resolvedDivision,
       country: clubCountry,
       europeanLeagueId:
-        clubWorking.id === 'eu_sp1_cel'
+        clubWorking.id === 'eu_sp1_cel' ||
+        clubWorking.id.startsWith('eu_esp3_') ||
+        clubWorking.id.startsWith('eu_ita3_') ||
+        clubWorking.id.startsWith('eu_fra3_')
           ? undefined
           : clubWorking.europeanLeagueId || templateClub?.europeanLeagueId,
       southAmericanLeagueId: clubWorking.southAmericanLeagueId || templateClub?.southAmericanLeagueId,
@@ -2796,9 +2809,10 @@ export default function App() {
   const [isRivalryAlertOpen, setIsRivalryAlertOpen] = useState<boolean>(false);
   const [preMatchDerbyPosture, setPreMatchDerbyPosture] = useState<PreMatchDerbyPosture>('PADRAO');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
+  const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [settingsInitialSection, setSettingsInitialSection] = useState<
-    'audio' | 'match' | 'career' | 'stability'
+    'audio' | 'match' | 'career' | 'support' | 'stability'
   >('audio');
 
   const hasActiveCareer = Boolean(gameState);
@@ -3045,6 +3059,9 @@ export default function App() {
         } else if (isGuideModalOpen) {
           e.preventDefault();
           setIsGuideModalOpen(false);
+        } else if (isLeaderboardModalOpen) {
+          e.preventDefault();
+          setIsLeaderboardModalOpen(false);
         } else if (isSettingsModalOpen) {
           e.preventDefault();
           setIsSettingsModalOpen(false);
@@ -3065,11 +3082,17 @@ export default function App() {
     isRivalryAlertOpen,
     isOct2026ModalOpen,
     isGuideModalOpen,
+    isLeaderboardModalOpen,
     isSettingsModalOpen,
     isSaveModalOpen,
   ]);
 
-  // Keep document performance profile synced across PC, Mobile & Web
+  // Keep document performance profile & stadium ambience audio synced across PC, Mobile & Web
+  useEffect(() => {
+    soundEngine.setAmbientCrowdEnabled(gameSettings.ambientCrowdEnabled ?? true);
+    soundEngine.setAmbientCrowdVolume(gameSettings.ambientCrowdVolume ?? 45);
+  }, [gameSettings.ambientCrowdEnabled, gameSettings.ambientCrowdVolume]);
+
   useEffect(() => {
     const syncPerf = () => {
       applyPerformanceModeToDocument(gameSettings.performanceMode);
@@ -3088,6 +3111,8 @@ export default function App() {
       const wasAutoSaveEnabled = prev.autoSaveEnabled;
       saveGameSettings(next);
       applyPerformanceModeToDocument(next.performanceMode);
+      soundEngine.setAmbientCrowdEnabled(next.ambientCrowdEnabled ?? true);
+      soundEngine.setAmbientCrowdVolume(next.ambientCrowdVolume ?? 45);
       setIsMuted(next.isMuted);
 
       if (wasAutoSaveEnabled && !next.autoSaveEnabled) {
@@ -4629,29 +4654,36 @@ export default function App() {
         language={gameSettings.language || 'pt-BR'}
         onChangeLanguage={handleChangeLanguage}
       >
-        <TitleScreen
-          clubs={titleInitialClubs}
-          savedCareer={gameState}
-          hasAnySlotSave={hasAnySlotSave}
-          slotsRefreshKey={titleSlotsRefreshKey}
-          initialOpenClubPicker={openClubPickerOnTitle}
-          onConsumeInitialPicker={handleConsumeTitlePicker}
-          onRequestClubsCatalog={handleRequestTitleClubsCatalog}
-          onStartCareer={handleStartCareer}
-          onLoadSave={handleLoadSaveFromTitle}
-          onResumeSavedGame={handleResumeSavedGameOnTitle}
-          onOpenSaveManager={handleOpenTitleSaveManager}
-          onOpenSettings={handleOpenTitleSettings}
-          onOpenGuide={(tab: GameGuideTab = 'guide') => {
-            setGuideInitialTab(tab);
-            setIsGuideModalOpen(true);
-          }}
-          onOpenOfficialSite={() => handleOpenOfficialSite()}
-          onOpenOct2026GlobalSyncModal={handleOpenTitleOct2026Modal}
-          isSyncingOct2026Global={isSyncingOct2026Global}
-          oct2026SyncedCount={titleCoverage.syncedClubs}
-          oct2026TotalClubsCount={titleCoverage.totalClubs}
-        />
+        <Suspense fallback={<div className="min-h-screen bg-black" />}>
+          <TitleScreen
+            clubs={titleInitialClubs}
+            savedCareer={gameState}
+            hasAnySlotSave={hasAnySlotSave}
+            slotsRefreshKey={titleSlotsRefreshKey}
+            initialOpenClubPicker={openClubPickerOnTitle}
+            onConsumeInitialPicker={handleConsumeTitlePicker}
+            onRequestClubsCatalog={handleRequestTitleClubsCatalog}
+            onStartCareer={handleStartCareer}
+            onLoadSave={handleLoadSaveFromTitle}
+            onResumeSavedGame={handleResumeSavedGameOnTitle}
+            onOpenSaveManager={handleOpenTitleSaveManager}
+            onOpenSettings={handleOpenTitleSettings}
+            onOpenGuide={(tab: GameGuideTab = 'guide') => {
+              setGuideInitialTab(tab);
+              setIsGuideModalOpen(true);
+            }}
+            onOpenOfficialSite={() => handleOpenOfficialSite()}
+            onOpenLeaderboard={() => setIsLeaderboardModalOpen(true)}
+            onOpenSupport={() => {
+              setSettingsInitialSection('support');
+              setIsSettingsModalOpen(true);
+            }}
+            onOpenOct2026GlobalSyncModal={handleOpenTitleOct2026Modal}
+            isSyncingOct2026Global={isSyncingOct2026Global}
+            oct2026SyncedCount={titleCoverage.syncedClubs}
+            oct2026TotalClubsCount={titleCoverage.totalClubs}
+          />
+        </Suspense>
 
         <Suspense fallback={null}>
         {isSaveModalOpen && (
@@ -4679,12 +4711,20 @@ export default function App() {
           />
         )}
 
+        {isLeaderboardModalOpen && (
+          <GlobalLeaderboardModal
+            currentSave={gameState}
+            onClose={() => setIsLeaderboardModalOpen(false)}
+          />
+        )}
+
         {isSettingsModalOpen && (
           <SettingsModal
             settings={gameSettings}
             onUpdateSettings={handleUpdateSettings}
             onClearAllSavedData={handleClearAllSavedData}
             initialSection={settingsInitialSection}
+            supportContextLabel="Tela Inicial"
             isInGame={false}
             onClose={() => setIsSettingsModalOpen(false)}
           />
@@ -11305,6 +11345,7 @@ export default function App() {
             setGuideInitialTab('guide');
             setIsGuideModalOpen(true);
           }}
+          onOpenLeaderboard={() => setIsLeaderboardModalOpen(true)}
           onOpenOfficialSite={() => handleOpenOfficialSite()}
           onOpenGlobalSearch={() => setIsGlobalSearchOpen(true)}
           onSaveAndExitToTitle={handleSaveAndExitToTitle}
@@ -11485,6 +11526,7 @@ export default function App() {
           )}
 
           <TabErrorBoundary resetKey={activeTab} onRecoverToHub={() => setActiveTab('hub')}>
+          <Suspense fallback={<LazyViewFallback />}>
           {/* Tab: Central do Clube (Executive Hub Dashboard) */}
           {activeTab === 'hub' && (
             <ClubHubDashboard
@@ -11548,7 +11590,6 @@ export default function App() {
             />
           )}
 
-          <Suspense fallback={<LazyViewFallback />}>
           {/* Tab: Meus Jogadores (Streamlined Player Directory) */}
           {activeTab === 'players' && (
             <MyPlayersView
@@ -12296,6 +12337,14 @@ export default function App() {
         />
       )}
 
+      {/* Global Manager Leaderboard Modal */}
+      {isLeaderboardModalOpen && (
+        <GlobalLeaderboardModal
+          currentSave={gameState}
+          onClose={() => setIsLeaderboardModalOpen(false)}
+        />
+      )}
+
       {/* Game Settings Modal */}
       {isSettingsModalOpen && (
         <SettingsModal
@@ -12303,6 +12352,10 @@ export default function App() {
           onUpdateSettings={handleUpdateSettings}
           initialSection={settingsInitialSection}
           isInGame={true}
+          supportContextLabel={`${userClub.shortName} · ${gameState.currentSeasonYear} · R${gameState.currentRound}`}
+          onQuickExportJson={() => {
+            downloadSaveAsJsonFile(gameState, userClub.shortName.toLowerCase());
+          }}
           onSaveAndExitToTitle={handleSaveAndExitToTitle}
           onClearAllSavedData={handleClearAllSavedData}
           onClose={() => setIsSettingsModalOpen(false)}

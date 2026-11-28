@@ -13,6 +13,7 @@ import {
 import { soundEngine } from '../services/soundEngine';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { ErrorLogsMonitorPanel } from './ErrorLogsMonitorPanel';
+import { FeedbackPrivacyPanel } from './FeedbackPrivacyPanel';
 import {
   Activity,
   Settings,
@@ -29,14 +30,19 @@ import {
   Database,
   Clock,
   Globe,
+  Download,
+  MessageSquareHeart,
+  Radio,
 } from 'lucide-react';
 
 interface SettingsModalProps {
   settings: GameSettings;
   onUpdateSettings: (next: GameSettings) => void;
   onClose: () => void;
-  initialSection?: 'audio' | 'match' | 'career' | 'stability';
+  initialSection?: 'audio' | 'match' | 'career' | 'support' | 'stability';
   isInGame?: boolean;
+  supportContextLabel?: string;
+  onQuickExportJson?: () => void;
   onSaveAndExitToTitle?: () => void;
   onClearAllSavedData?: () => void;
 }
@@ -47,14 +53,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
   onClose,
   initialSection = 'audio',
   isInGame = false,
+  supportContextLabel,
+  onQuickExportJson,
   onSaveAndExitToTitle,
   onClearAllSavedData,
 }) => {
-  const [activeSection, setActiveSection] = useState<'audio' | 'match' | 'career' | 'stability'>(
+  const [activeSection, setActiveSection] = useState<'audio' | 'match' | 'career' | 'support' | 'stability'>(
     initialSection
   );
   const [confirmClearAll, setConfirmClearAll] = useState<boolean>(false);
   const [statusBanner, setStatusBanner] = useState<string | null>(null);
+  const [testingAmbience, setTestingAmbience] = useState<boolean>(false);
 
   const showFeedback = (msg: string) => {
     setStatusBanner(msg);
@@ -84,9 +93,50 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
   const handleResetDefaults = () => {
     soundEngine.setVolume(DEFAULT_GAME_SETTINGS.masterVolume);
     soundEngine.setMuted(DEFAULT_GAME_SETTINGS.isMuted);
+    soundEngine.setAmbientCrowdEnabled(DEFAULT_GAME_SETTINGS.ambientCrowdEnabled ?? true);
+    soundEngine.setAmbientCrowdVolume(DEFAULT_GAME_SETTINGS.ambientCrowdVolume ?? 45);
     onUpdateSettings({ ...DEFAULT_GAME_SETTINGS });
     soundEngine.playClick();
     showFeedback('Configurações restauradas para o padrão oficial.');
+  };
+
+  const ambientEnabled = settings.ambientCrowdEnabled ?? true;
+  const ambientVolume = settings.ambientCrowdVolume ?? 45;
+
+  const handleToggleAmbientCrowd = () => {
+    const nextEnabled = !ambientEnabled;
+    soundEngine.setAmbientCrowdEnabled(nextEnabled);
+    onUpdateSettings({
+      ...settings,
+      ambientCrowdEnabled: nextEnabled,
+    });
+    soundEngine.playClick();
+  };
+
+  const handleAmbientVolumeChange = (val: number) => {
+    soundEngine.setAmbientCrowdVolume(val);
+    onUpdateSettings({
+      ...settings,
+      ambientCrowdVolume: val,
+      ambientCrowdEnabled: val > 0 ? true : false,
+    });
+  };
+
+  const handleTestAmbience = () => {
+    if (testingAmbience) {
+      soundEngine.stopStadiumAmbience();
+      setTestingAmbience(false);
+      return;
+    }
+    setTestingAmbience(true);
+    soundEngine.startStadiumAmbience();
+    setTimeout(() => {
+      soundEngine.pulseStadiumAmbience(1.65);
+    }, 900);
+    setTimeout(() => {
+      soundEngine.stopStadiumAmbience();
+      setTestingAmbience(false);
+    }, 3000);
   };
 
   const difficultyOptions: Array<{
@@ -198,6 +248,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
             type="button"
             onClick={() => {
               soundEngine.playClick();
+              setActiveSection('support');
+            }}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+              activeSection === 'support'
+                ? 'bg-sky-400 text-slate-950 font-bold'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <MessageSquareHeart className="w-3.5 h-3.5 shrink-0" />
+            <span>Suporte</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              soundEngine.playClick();
               setActiveSection('stability');
             }}
             className={`flex-1 flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
@@ -287,6 +353,57 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                 </div>
               </div>
 
+              {/* Stadium Ambient Crowd Sound */}
+              <div className="space-y-3 pb-5 border-b border-slate-800/80">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <Radio className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <h4 className="text-sm font-semibold text-white">
+                        Áudio Ambiente do Estádio (Torcida Contínua)
+                      </h4>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Murmúrio contínuo de arquibancada durante os 90 minutos, com vibração nos lances de perigo.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleToggleAmbientCrowd}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                      ambientEnabled && !settings.isMuted
+                        ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300 hover:bg-emerald-950/60'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {ambientEnabled ? 'Ativada' : 'Desativada'}
+                  </button>
+                </div>
+
+                <div
+                  className={`space-y-2 transition-opacity ${
+                    ambientEnabled && !settings.isMuted ? 'opacity-100' : 'opacity-45 pointer-events-none'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400">Intensidade da Arquibancada</span>
+                    <span className="font-mono font-bold text-emerald-400 tabular-nums">
+                      {ambientVolume}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={5}
+                    value={ambientVolume}
+                    onChange={(e) => handleAmbientVolumeChange(Number(e.target.value))}
+                    className="w-full accent-emerald-400 h-2 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                </div>
+              </div>
+
               {/* Audio Test Buttons */}
               <div className="space-y-2.5">
                 <h4 className="text-xs font-semibold text-slate-300">
@@ -308,6 +425,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                   >
                     <Play className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Testar Grito de Gol</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleTestAmbience}
+                    className={`px-3.5 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+                      testingAmbience
+                        ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-200'
+                        : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-200'
+                    }`}
+                  >
+                    <Radio className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{testingAmbience ? 'Parar Torcida' : 'Testar Torcida (3s)'}</span>
                   </button>
                   <button
                     type="button"
@@ -816,16 +945,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                 </div>
               </div>
 
-              {/* Reset & Clear Storage */}
+              {/* Reset, Quick Backup & Clear Storage */}
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={handleResetDefaults}
-                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Restaurar Padrões</span>
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResetDefaults}
+                    className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Restaurar Padrões</span>
+                  </button>
+
+                  {isInGame && onQuickExportJson && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundEngine.playClick();
+                        onQuickExportJson();
+                        showFeedback('Backup local (.json) da carreira baixado com sucesso!');
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-950/60 border border-emerald-500/35 text-xs font-semibold text-emerald-300 hover:text-white flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                    >
+                      <Download className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Backup Local (.json)</span>
+                    </button>
+                  )}
+                </div>
 
                 {onClearAllSavedData && (
                   <div className="flex items-center gap-2">
@@ -871,6 +1017,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                 )}
               </div>
             </div>
+          )}
+
+          {activeSection === 'support' && (
+            <FeedbackPrivacyPanel contextLabel={supportContextLabel} />
           )}
 
           {activeSection === 'stability' && <ErrorLogsMonitorPanel />}

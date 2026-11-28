@@ -69,14 +69,304 @@ function pseudoShuffle<T>(arr: T[], seedSalt: number = 42): T[] {
 export function generateCopaDelReyFixtures(clubs: Club[], seasonYear: number = 2026): Fixture[] {
   const nextYear = seasonYear + 1;
   const laLigaClubs = getClubsForEuropeanLeague(clubs, 'esp_laliga');
-  const shuffled = pseudoShuffle(laLigaClubs, seasonYear * 31);
+  const laLiga2Clubs = getClubsForEuropeanLeague(clubs, 'esp_laliga2');
+  const esp3Clubs = clubs.filter((c) => c.id.startsWith('eu_esp3_'));
+  const shuffled1 = pseudoShuffle(laLigaClubs, seasonYear * 31);
   const fixtures: Fixture[] = [];
 
-  // 20 clubes: 8 clubes disputam a 1ª Fase (Preliminar) -> 4 avançam; 12 clubes entram direto nas Oitavas.
-  const prelimClubs = shuffled.slice(12, 20); // 8 clubes
-  const directR16Clubs = shuffled.slice(0, 12); // 12 clubes
+  // Formato oficial completo (68 clubes · 133 jogos):
+  // - Primeira Fase (48 clubes = 21 LaLiga 2 [sem Real Sociedad B] + 27 divisões inferiores): 24 confrontos Ida e Volta (48 jogos) -> 24 avançam
+  //   Datas: Ida 25 e 26/08, Volta 01 e 02/09
+  // - Segunda Fase (24 clubes): 12 confrontos Ida e Volta (24 jogos) -> 12 avançam
+  //   Datas: Ida 26 e 27/09, Volta 03 e 04/10
+  // - 1/16 de Final (32 clubes = 12 classificados + 20 LaLiga): 16 confrontos Ida e Volta (32 jogos) -> 16 avançam
+  //   Datas: Ida 27/10, Volta 18/11
+  // - Oitavas de Final (16 clubes): 8 confrontos Ida e Volta (16 jogos) -> 8 avançam
+  //   Datas: Ida 02/12, Volta 16/12
+  // - Quartas de Final (8 clubes): 4 confrontos Ida e Volta (8 jogos) -> 4 avançam
+  //   Datas: Ida 06/01, Volta 13/01
+  // - Semifinal (4 clubes): 2 confrontos Ida e Volta (4 jogos) -> 2 avançam
+  //   Datas: Ida 10/02, Volta 03/03
+  // - Grande Final (Jogo Único): 24/04 no Estadio de La Cartuja (Sevilha)
+  const eligibleL2 = laLiga2Clubs.filter((c) => c.id !== 'eu_rsob').slice(0, 21);
+  const primeiraFasePool = [...eligibleL2, ...esp3Clubs];
 
-  // Preliminar: 4 confrontos em jogo único
+  if (shuffled1.length >= 20 && primeiraFasePool.length >= 48) {
+    const shuffledP1 = pseudoShuffle(primeiraFasePool.slice(0, 48), seasonYear * 47);
+
+    // 1. PRIMEIRA FASE: 48 times -> 24 confrontos Ida e Volta (48 jogos)
+    for (let i = 0; i < 24; i++) {
+      const home = shuffledP1[i * 2];
+      const away = shuffledP1[i * 2 + 1];
+      const idaDate = i < 12 ? `${seasonYear}-08-25` : `${seasonYear}-08-26`;
+      const voltaDate = i < 12 ? `${seasonYear}-09-01` : `${seasonYear}-09-02`;
+      fixtures.push(
+        {
+          id: `esp_cdr_p1_m${i}_ida`,
+          round: 1,
+          competition: 'esp_copa_del_rey',
+          homeTeamId: home?.id || 'tbd',
+          awayTeamId: away?.id || 'tbd',
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: idaDate,
+          time: '20:00',
+          stadiumName: getClubStadiumName(home),
+          cupPhase: 'Primeira Fase (Ida)',
+          groupName: 'Copa del Rey · Primeira Fase (48 clubes) · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `esp_cdr_p1_m${i}_volta`,
+          round: 2,
+          competition: 'esp_copa_del_rey',
+          homeTeamId: away?.id || 'tbd',
+          awayTeamId: home?.id || 'tbd',
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: voltaDate,
+          time: '20:00',
+          stadiumName: getClubStadiumName(away),
+          cupPhase: 'Primeira Fase (Volta)',
+          groupName: 'Copa del Rey · Primeira Fase (48 clubes) · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 2. SEGUNDA FASE: 24 times -> 12 confrontos Ida e Volta (24 jogos)
+    for (let i = 0; i < 12; i++) {
+      const idaDate = i < 6 ? `${seasonYear}-09-26` : `${seasonYear}-09-27`;
+      const voltaDate = i < 6 ? `${seasonYear}-10-03` : `${seasonYear}-10-04`;
+      fixtures.push(
+        {
+          id: `esp_cdr_p2_m${i}_ida`,
+          round: 3,
+          competition: 'esp_copa_del_rey',
+          homeTeamId: `TBD_CDR_P1_${i * 2}`,
+          awayTeamId: `TBD_CDR_P1_${i * 2 + 1}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: idaDate,
+          time: '19:00',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Segunda Fase (Ida)',
+          groupName: 'Copa del Rey · Segunda Fase (24 clubes) · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `esp_cdr_p2_m${i}_volta`,
+          round: 4,
+          competition: 'esp_copa_del_rey',
+          homeTeamId: `TBD_CDR_P1_${i * 2 + 1}`,
+          awayTeamId: `TBD_CDR_P1_${i * 2}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: voltaDate,
+          time: '19:00',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Segunda Fase (Volta)',
+          groupName: 'Copa del Rey · Segunda Fase (24 clubes) · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 3. 1/16 DE FINAL: 32 times (12 classificados da 2ª Fase + 20 LaLiga) -> 16 confrontos Ida e Volta (32 jogos)
+    for (let i = 0; i < 16; i++) {
+      let idaHomeId = 'tbd';
+      let idaAwayId = 'tbd';
+      let idaHomeClub: Club | undefined;
+      let idaAwayClub: Club | undefined;
+      if (i < 12) {
+        idaHomeId = `TBD_CDR_P2_${i}`;
+        idaAwayClub = shuffled1[i];
+        idaAwayId = idaAwayClub?.id || 'tbd';
+      } else {
+        const l1Idx = 12 + (i - 12) * 2;
+        idaHomeClub = shuffled1[l1Idx];
+        idaAwayClub = shuffled1[l1Idx + 1];
+        idaHomeId = idaHomeClub?.id || 'tbd';
+        idaAwayId = idaAwayClub?.id || 'tbd';
+      }
+      fixtures.push(
+        {
+          id: `esp_cdr_r32_m${i}_ida`,
+          round: 5,
+          competition: 'esp_copa_del_rey',
+          homeTeamId: idaHomeId,
+          awayTeamId: idaAwayId,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${seasonYear}-10-27`,
+          time: '20:30',
+          stadiumName: idaHomeClub ? getClubStadiumName(idaHomeClub) : 'Estádio a definir',
+          cupPhase: '1/16 de Final (Ida)',
+          groupName: 'Copa del Rey · 1/16 de Final (32 clubes) · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `esp_cdr_r32_m${i}_volta`,
+          round: 6,
+          competition: 'esp_copa_del_rey',
+          homeTeamId: idaAwayId,
+          awayTeamId: idaHomeId,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${seasonYear}-11-18`,
+          time: '20:30',
+          stadiumName: idaAwayClub ? getClubStadiumName(idaAwayClub) : 'Estádio a definir',
+          cupPhase: '1/16 de Final (Volta)',
+          groupName: 'Copa del Rey · 1/16 de Final (32 clubes) · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 4. OITAVAS DE FINAL: 16 times -> 8 confrontos Ida e Volta (16 jogos)
+    for (let i = 0; i < 8; i++) {
+      fixtures.push(
+        {
+          id: `esp_cdr_r16_m${i}_ida`,
+          round: 7,
+          competition: 'esp_copa_del_rey',
+          homeTeamId: `TBD_CDR_R32_${i * 2}`,
+          awayTeamId: `TBD_CDR_R32_${i * 2 + 1}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${seasonYear}-12-02`,
+          time: '20:30',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Oitavas de Final (Ida)',
+          groupName: 'Copa del Rey · Oitavas de Final · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `esp_cdr_r16_m${i}_volta`,
+          round: 8,
+          competition: 'esp_copa_del_rey',
+          homeTeamId: `TBD_CDR_R32_${i * 2 + 1}`,
+          awayTeamId: `TBD_CDR_R32_${i * 2}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${seasonYear}-12-16`,
+          time: '20:30',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Oitavas de Final (Volta)',
+          groupName: 'Copa del Rey · Oitavas de Final · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 5. QUARTAS DE FINAL: 8 times -> 4 confrontos Ida e Volta (8 jogos)
+    for (let i = 0; i < 4; i++) {
+      fixtures.push(
+        {
+          id: `esp_cdr_qf_m${i}_ida`,
+          round: 9,
+          competition: 'esp_copa_del_rey',
+          homeTeamId: `TBD_CDR_R16_${i * 2}`,
+          awayTeamId: `TBD_CDR_R16_${i * 2 + 1}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${nextYear}-01-06`,
+          time: '21:00',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Quartas de Final (Ida)',
+          groupName: 'Copa del Rey · Quartas de Final · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `esp_cdr_qf_m${i}_volta`,
+          round: 10,
+          competition: 'esp_copa_del_rey',
+          homeTeamId: `TBD_CDR_R16_${i * 2 + 1}`,
+          awayTeamId: `TBD_CDR_R16_${i * 2}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${nextYear}-01-13`,
+          time: '21:00',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Quartas de Final (Volta)',
+          groupName: 'Copa del Rey · Quartas de Final · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 6. SEMIFINAL: 4 times -> 2 confrontos Ida e Volta (4 jogos)
+    for (let i = 0; i < 2; i++) {
+      fixtures.push(
+        {
+          id: `esp_cdr_sf_m${i}_ida`,
+          round: 11,
+          competition: 'esp_copa_del_rey',
+          homeTeamId: `TBD_CDR_QF_${i * 2}`,
+          awayTeamId: `TBD_CDR_QF_${i * 2 + 1}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${nextYear}-02-10`,
+          time: '21:00',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Semifinal (Ida)',
+          groupName: 'Copa del Rey · Semifinal · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `esp_cdr_sf_m${i}_volta`,
+          round: 12,
+          competition: 'esp_copa_del_rey',
+          homeTeamId: `TBD_CDR_QF_${i * 2 + 1}`,
+          awayTeamId: `TBD_CDR_QF_${i * 2}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${nextYear}-03-03`,
+          time: '21:00',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Semifinal (Volta)',
+          groupName: 'Copa del Rey · Semifinal · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 7. GRANDE FINAL (Jogo Único) - 24 de abril de 2027
+    fixtures.push({
+      id: 'esp_cdr_final',
+      round: 13,
+      competition: 'esp_copa_del_rey',
+      homeTeamId: 'TBD_CDR_SF0',
+      awayTeamId: 'TBD_CDR_SF1',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: `${nextYear}-04-24`,
+      time: '21:30',
+      stadiumName: 'Estadio de La Cartuja (Sevilla)',
+      cupPhase: 'Grande Final',
+      groupName: 'Copa del Rey · Grande Final (Jogo Único) · Estadio de La Cartuja',
+    });
+
+    return fixtures;
+  }
+
+  // Fallback legado (20 clubes): 8 clubes disputam a 1ª Fase (Preliminar) -> 4 avançam; 12 clubes entram direto nas Oitavas.
+  const prelimClubs = shuffled1.slice(12, 20);
+  const directR16Clubs = shuffled1.slice(0, 12);
+
   for (let i = 0; i < 4; i++) {
     const home = prelimClubs[i * 2];
     const away = prelimClubs[i * 2 + 1];
@@ -97,7 +387,6 @@ export function generateCopaDelReyFixtures(clubs: Club[], seasonYear: number = 2
     });
   }
 
-  // Oitavas de Final: 8 confrontos (4 com 1 clube direto vs vencedor preliminar, 4 com 2 clubes diretos)
   for (let i = 0; i < 8; i++) {
     const home = directR16Clubs[i] || directR16Clubs[0];
     const awayId = i < 4 ? 'TBD_CDR_R1' : directR16Clubs[i + 4]?.id || 'tbd';
@@ -118,7 +407,6 @@ export function generateCopaDelReyFixtures(clubs: Club[], seasonYear: number = 2
     });
   }
 
-  // Quartas de Final: 4 confrontos
   for (let i = 0; i < 4; i++) {
     fixtures.push({
       id: `esp_cdr_qf_m${i}`,
@@ -137,7 +425,6 @@ export function generateCopaDelReyFixtures(clubs: Club[], seasonYear: number = 2
     });
   }
 
-  // Semifinais: 2 confrontos em IDA E VOLTA (tradição espanhola)
   for (let i = 0; i < 2; i++) {
     fixtures.push(
       {
@@ -175,7 +462,6 @@ export function generateCopaDelReyFixtures(clubs: Club[], seasonYear: number = 2
     );
   }
 
-  // Grande Final em Sevilha (Estadio de La Cartuja)
   fixtures.push({
     id: 'esp_cdr_final',
     round: 6,
@@ -199,9 +485,9 @@ export function generateSpanishSupercupFixtures(clubs: Club[], seasonYear: numbe
   const nextYear = seasonYear + 1;
   const laLiga = getClubsForEuropeanLeague(clubs, 'esp_laliga');
 
-  // Semifinal 1: 02/02/2027 Barcelona x Atlético de Madrid
-  // Semifinal 2: 03/02/2027 Real Sociedad x Real Madrid
-  // Final: 06/02/2027
+  // Semifinal 1: 02/02/2027 (Istambul) Barcelona x Atlético de Madrid
+  // Semifinal 2: 03/02/2027 (Istambul) Real Sociedad x Real Madrid
+  // Final: 06/02/2027 (Istambul)
   const bcn = laLiga.find((c) => c.id === 'eu_fcb')?.id || 'eu_fcb';
   const atm = laLiga.find((c) => c.id === 'eu_atm')?.id || 'eu_atm';
   const rso = laLiga.find((c) => c.id === 'eu_rso')?.id || 'eu_rso';
@@ -219,9 +505,9 @@ export function generateSpanishSupercupFixtures(clubs: Club[], seasonYear: numbe
       played: false,
       date: `${nextYear}-02-02`,
       time: '20:00',
-      stadiumName: 'King Fahd International Stadium',
+      stadiumName: 'Atatürk Olympic Stadium (Istambul)',
       cupPhase: 'Semifinal 1',
-      groupName: 'Supercopa de España · Semifinal 1',
+      groupName: 'Supercopa de España · Semifinal 1 · Istambul',
     },
     {
       id: 'esp_super_sf1',
@@ -234,9 +520,9 @@ export function generateSpanishSupercupFixtures(clubs: Club[], seasonYear: numbe
       played: false,
       date: `${nextYear}-02-03`,
       time: '20:00',
-      stadiumName: 'King Fahd International Stadium',
+      stadiumName: 'Atatürk Olympic Stadium (Istambul)',
       cupPhase: 'Semifinal 2',
-      groupName: 'Supercopa de España · Semifinal 2',
+      groupName: 'Supercopa de España · Semifinal 2 · Istambul',
     },
     {
       id: 'esp_super_final',
@@ -249,9 +535,9 @@ export function generateSpanishSupercupFixtures(clubs: Club[], seasonYear: numbe
       played: false,
       date: `${nextYear}-02-06`,
       time: '20:00',
-      stadiumName: 'King Fahd International Stadium',
+      stadiumName: 'Atatürk Olympic Stadium (Istambul)',
       cupPhase: 'Grande Final',
-      groupName: 'Supercopa de España · Grande Decisão',
+      groupName: 'Supercopa de España · Grande Decisão · Istambul',
     },
   ];
 }
@@ -262,13 +548,160 @@ export function generateSpanishSupercupFixtures(clubs: Club[], seasonYear: numbe
 
 export function generateDfbPokalFixtures(clubs: Club[], seasonYear: number = 2026): Fixture[] {
   const nextYear = seasonYear + 1;
-  const bld = getClubsForEuropeanLeague(clubs, 'ger_bundesliga');
-  const shuffled = pseudoShuffle(bld, seasonYear * 37);
+  const bld1 = getClubsForEuropeanLeague(clubs, 'ger_bundesliga');
+  const bld2 = getClubsForEuropeanLeague(clubs, 'ger_bundesliga2');
+  const shuffled1 = pseudoShuffle(bld1, seasonYear * 37);
+  const shuffled2 = pseudoShuffle(bld2, seasonYear * 53);
   const fixtures: Fixture[] = [];
 
-  // 18 clubes: 4 disputam preliminar -> 2 avançam; 14 entram direto nas Oitavas (16 clubes).
-  const prelim = shuffled.slice(14, 18);
-  const directR16 = shuffled.slice(0, 14);
+  // Formato oficial com 36 clubes (18 Bundesliga + 18 2. Bundesliga):
+  // - 1ª Fase (Preliminar): 8 clubes da 2. Bundesliga (4 jogos únicos -> 4 avançam)
+  // - 2ª Fase (16-avos · 32 clubes): 18 da Bundesliga + 10 diretos da 2. Bundesliga + 4 vencedores da 1ª Fase (16 jogos únicos)
+  // - Oitavas (16) -> Quartas (8) -> Semifinal (4) -> Grande Final no Olympiastadion (Berlim)
+  if (shuffled2.length >= 18 && shuffled1.length >= 18) {
+    const prelimClubs = shuffled2.slice(10, 18); // 8 clubes da 2. Bundesliga
+    const directBld2 = shuffled2.slice(0, 10); // 10 clubes da 2. Bundesliga entram nos 16-avos
+
+    // 1ª Fase (Preliminar): 4 jogos únicos entre clubes da 2. Bundesliga
+    for (let i = 0; i < 4; i++) {
+      const home = prelimClubs[i * 2];
+      const away = prelimClubs[i * 2 + 1];
+      fixtures.push({
+        id: `ger_dfb_r0_m${i}`,
+        round: 1,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: home?.id || 'tbd',
+        awayTeamId: away?.id || 'tbd',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: `${seasonYear}-08-15`,
+        time: '15:30',
+        stadiumName: getClubStadiumName(home),
+        cupPhase: '1ª Fase (Preliminar)',
+        groupName: 'DFB-Pokal · 1ª Fase Preliminar em Jogo Único',
+      });
+    }
+
+    // 2ª Fase (16-avos · 32 clubes -> 16 confrontos):
+    // Regra tradicional da DFB-Pokal: clubes da 2. Bundesliga jogam em casa contra clubes da Bundesliga!
+    // Jogos 0..3: Vencedor Preliminar (2. Bundesliga) em casa vs Bundesliga[0..3]
+    // Jogos 4..13: directBld2[0..9] em casa vs Bundesliga[4..13]
+    // Jogos 14..15: Bundesliga[14] vs Bundesliga[15] e Bundesliga[16] vs Bundesliga[17]
+    for (let i = 0; i < 16; i++) {
+      let homeId = 'tbd';
+      let awayId = 'tbd';
+      let homeClub: Club | undefined;
+      if (i < 4) {
+        homeId = `TBD_DFB_R0_${i}`;
+        awayId = shuffled1[i]?.id || 'tbd';
+      } else if (i < 14) {
+        homeClub = directBld2[i - 4];
+        homeId = homeClub?.id || 'tbd';
+        awayId = shuffled1[i]?.id || 'tbd';
+      } else {
+        const bIdx = 14 + (i - 14) * 2;
+        homeClub = shuffled1[bIdx];
+        homeId = homeClub?.id || 'tbd';
+        awayId = shuffled1[bIdx + 1]?.id || 'tbd';
+      }
+      fixtures.push({
+        id: `ger_dfb_r1_m${i}`,
+        round: 2,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: homeId,
+        awayTeamId: awayId,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: `${seasonYear}-10-28`,
+        time: '19:45',
+        stadiumName: homeClub ? getClubStadiumName(homeClub) : 'Estádio a definir',
+        cupPhase: '2ª Fase (16-avos)',
+        groupName: 'DFB-Pokal · 16-avos de Final em Jogo Único',
+      });
+    }
+
+    // Oitavas de Final (8 jogos)
+    for (let i = 0; i < 8; i++) {
+      fixtures.push({
+        id: `ger_dfb_r16_m${i}`,
+        round: 3,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: 'TBD_DFB_R1',
+        awayTeamId: 'TBD_DFB_R1',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: `${seasonYear}-12-02`,
+        time: '20:45',
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Oitavas de Final',
+        groupName: 'DFB-Pokal · Oitavas de Final em Jogo Único',
+      });
+    }
+
+    // Quartas de Final (4 jogos)
+    for (let i = 0; i < 4; i++) {
+      fixtures.push({
+        id: `ger_dfb_qf_m${i}`,
+        round: 4,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: 'TBD_DFB_R16',
+        awayTeamId: 'TBD_DFB_R16',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: `${nextYear}-02-10`,
+        time: '20:45',
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Quartas de Final',
+        groupName: 'DFB-Pokal · Quartas de Final em Jogo Único',
+      });
+    }
+
+    // Semifinais (2 jogos)
+    for (let i = 0; i < 2; i++) {
+      fixtures.push({
+        id: `ger_dfb_sf_m${i}`,
+        round: 5,
+        competition: 'ger_dfb_pokal',
+        homeTeamId: 'TBD_DFB_QF',
+        awayTeamId: 'TBD_DFB_QF',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: `${nextYear}-04-07`,
+        time: '20:45',
+        stadiumName: 'Estádio a definir',
+        cupPhase: 'Semifinal',
+        groupName: 'DFB-Pokal · Semifinal em Jogo Único',
+      });
+    }
+
+    // Grande Final em Berlim
+    fixtures.push({
+      id: 'ger_dfb_final',
+      round: 6,
+      competition: 'ger_dfb_pokal',
+      homeTeamId: 'TBD_DFB_SF0',
+      awayTeamId: 'TBD_DFB_SF1',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: `${nextYear}-05-29`,
+      time: '20:00',
+      stadiumName: 'Olympiastadion (Berlin)',
+      cupPhase: 'Grande Final',
+      groupName: 'DFB-Pokal · Grande Decisão no Olympiastadion de Berlim',
+    });
+
+    return fixtures;
+  }
+
+  // Fallback legado (18 clubes): 4 disputam preliminar -> 2 avançam; 14 entram direto nas Oitavas (16 clubes).
+  const prelim = shuffled1.slice(14, 18);
+  const directR16 = shuffled1.slice(0, 14);
 
   for (let i = 0; i < 2; i++) {
     const home = prelim[i * 2];
@@ -398,11 +831,312 @@ export function generateGermanSupercupFixtures(clubs: Club[], seasonYear: number
 export function generateCoupeDeFranceFixtures(clubs: Club[], seasonYear: number = 2026): Fixture[] {
   const nextYear = seasonYear + 1;
   const ligue1 = getClubsForEuropeanLeague(clubs, 'fra_ligue1');
-  const shuffled = pseudoShuffle(ligue1, seasonYear * 41);
+  const ligue2 = getClubsForEuropeanLeague(clubs, 'fra_ligue2');
+  const fra3Clubs = clubs.filter((c) => c.id.startsWith('eu_fra3_'));
+  const shuffled1 = pseudoShuffle(ligue1, seasonYear * 41);
+  const shuffled2 = pseudoShuffle(ligue2, seasonYear * 67);
   const fixtures: Fixture[] = [];
 
-  const prelim = shuffled.slice(14, 18);
-  const directR16 = shuffled.slice(0, 14);
+  // Formato oficial completo (56 clubes · 109 jogos):
+  // - Primeira Fase (20 clubes National/N2): 10 confrontos Ida e Volta (20 jogos) -> 10 avançam
+  //   Datas: Ida 02/09, Volta 12/09
+  // - Segunda Fase (28 clubes = 10 classificados da 1ª Fase + 18 Ligue 2): 14 confrontos Ida e Volta (28 jogos) -> 14 avançam
+  //   Datas: Ida 26/09, Volta 10/10
+  // - Terceira Fase / 16-avos (32 clubes = 14 classificados da 2ª Fase + 18 Ligue 1): 16 confrontos Ida e Volta (32 jogos) -> 16 avançam
+  //   Datas: Ida 24/10, Volta 15/11
+  // - Oitavas de Final (16 clubes): 8 confrontos Ida e Volta (16 jogos) -> 8 avançam
+  //   Datas: Ida 28/11, Volta 19/12
+  // - Quartas de Final (8 clubes): 4 confrontos Ida e Volta (8 jogos) -> 4 avançam
+  //   Datas: Ida 10/01, Volta 03/02
+  // - Semifinal (4 clubes): 2 confrontos Ida e Volta (4 jogos) -> 2 avançam
+  //   Datas: Ida 03/03, Volta 21/04
+  // - Grande Final (Jogo Único): 15/05 no Stade de France (Saint-Denis)
+  if (shuffled1.length >= 18 && shuffled2.length >= 18 && fra3Clubs.length >= 20) {
+    const shuffledP1 = pseudoShuffle(fra3Clubs.slice(0, 20), seasonYear * 59);
+
+    // 1. PRIMEIRA FASE: 20 times -> 10 confrontos Ida e Volta (20 jogos)
+    for (let i = 0; i < 10; i++) {
+      const home = shuffledP1[i * 2];
+      const away = shuffledP1[i * 2 + 1];
+      fixtures.push(
+        {
+          id: `fra_cdf_p1_m${i}_ida`,
+          round: 1,
+          competition: 'fra_coupe_de_france',
+          homeTeamId: home?.id || 'tbd',
+          awayTeamId: away?.id || 'tbd',
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${seasonYear}-09-02`,
+          time: '20:00',
+          stadiumName: getClubStadiumName(home),
+          cupPhase: 'Primeira Fase (Ida)',
+          groupName: 'Coupe de France · Primeira Fase (20 clubes) · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `fra_cdf_p1_m${i}_volta`,
+          round: 2,
+          competition: 'fra_coupe_de_france',
+          homeTeamId: away?.id || 'tbd',
+          awayTeamId: home?.id || 'tbd',
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${seasonYear}-09-12`,
+          time: '19:00',
+          stadiumName: getClubStadiumName(away),
+          cupPhase: 'Primeira Fase (Volta)',
+          groupName: 'Coupe de France · Primeira Fase (20 clubes) · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 2. SEGUNDA FASE: 28 times (10 classificados da 1ª Fase + 18 Ligue 2) -> 14 confrontos Ida e Volta (28 jogos)
+    for (let i = 0; i < 14; i++) {
+      let idaHomeId = 'tbd';
+      let idaAwayId = 'tbd';
+      let idaHomeClub: Club | undefined;
+      let idaAwayClub: Club | undefined;
+      if (i < 10) {
+        idaHomeId = `TBD_CDF_P1_${i}`;
+        idaAwayClub = shuffled2[i];
+        idaAwayId = idaAwayClub?.id || 'tbd';
+      } else {
+        const l2Idx = 10 + (i - 10) * 2;
+        idaHomeClub = shuffled2[l2Idx];
+        idaAwayClub = shuffled2[l2Idx + 1];
+        idaHomeId = idaHomeClub?.id || 'tbd';
+        idaAwayId = idaAwayClub?.id || 'tbd';
+      }
+      fixtures.push(
+        {
+          id: `fra_cdf_p2_m${i}_ida`,
+          round: 3,
+          competition: 'fra_coupe_de_france',
+          homeTeamId: idaHomeId,
+          awayTeamId: idaAwayId,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${seasonYear}-09-26`,
+          time: '19:00',
+          stadiumName: idaHomeClub ? getClubStadiumName(idaHomeClub) : 'Estádio a definir',
+          cupPhase: 'Segunda Fase (Ida)',
+          groupName: 'Coupe de France · Segunda Fase (28 clubes) · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `fra_cdf_p2_m${i}_volta`,
+          round: 4,
+          competition: 'fra_coupe_de_france',
+          homeTeamId: idaAwayId,
+          awayTeamId: idaHomeId,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${seasonYear}-10-10`,
+          time: '19:00',
+          stadiumName: idaAwayClub ? getClubStadiumName(idaAwayClub) : 'Estádio a definir',
+          cupPhase: 'Segunda Fase (Volta)',
+          groupName: 'Coupe de France · Segunda Fase (28 clubes) · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 3. TERCEIRA FASE: 32 times (14 classificados da 2ª Fase + 18 Ligue 1) -> 16 confrontos Ida e Volta (32 jogos)
+    for (let i = 0; i < 16; i++) {
+      let idaHomeId = 'tbd';
+      let idaAwayId = 'tbd';
+      let idaHomeClub: Club | undefined;
+      let idaAwayClub: Club | undefined;
+      if (i < 14) {
+        idaHomeId = `TBD_CDF_P2_${i}`;
+        idaAwayClub = shuffled1[i];
+        idaAwayId = idaAwayClub?.id || 'tbd';
+      } else {
+        const l1Idx = 14 + (i - 14) * 2;
+        idaHomeClub = shuffled1[l1Idx];
+        idaAwayClub = shuffled1[l1Idx + 1];
+        idaHomeId = idaHomeClub?.id || 'tbd';
+        idaAwayId = idaAwayClub?.id || 'tbd';
+      }
+      fixtures.push(
+        {
+          id: `fra_cdf_r32_m${i}_ida`,
+          round: 5,
+          competition: 'fra_coupe_de_france',
+          homeTeamId: idaHomeId,
+          awayTeamId: idaAwayId,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${seasonYear}-10-24`,
+          time: '20:45',
+          stadiumName: idaHomeClub ? getClubStadiumName(idaHomeClub) : 'Estádio a definir',
+          cupPhase: 'Terceira Fase (Ida)',
+          groupName: 'Coupe de France · Terceira Fase (32 clubes) · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `fra_cdf_r32_m${i}_volta`,
+          round: 6,
+          competition: 'fra_coupe_de_france',
+          homeTeamId: idaAwayId,
+          awayTeamId: idaHomeId,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${seasonYear}-11-15`,
+          time: '20:45',
+          stadiumName: idaAwayClub ? getClubStadiumName(idaAwayClub) : 'Estádio a definir',
+          cupPhase: 'Terceira Fase (Volta)',
+          groupName: 'Coupe de France · Terceira Fase (32 clubes) · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 4. OITAVAS DE FINAL: 16 times -> 8 confrontos Ida e Volta (16 jogos)
+    for (let i = 0; i < 8; i++) {
+      fixtures.push(
+        {
+          id: `fra_cdf_r16_m${i}_ida`,
+          round: 7,
+          competition: 'fra_coupe_de_france',
+          homeTeamId: `TBD_CDF_R32_${i * 2}`,
+          awayTeamId: `TBD_CDF_R32_${i * 2 + 1}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${seasonYear}-11-28`,
+          time: '20:45',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Oitavas de Final (Ida)',
+          groupName: 'Coupe de France · Oitavas de Final · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `fra_cdf_r16_m${i}_volta`,
+          round: 8,
+          competition: 'fra_coupe_de_france',
+          homeTeamId: `TBD_CDF_R32_${i * 2 + 1}`,
+          awayTeamId: `TBD_CDF_R32_${i * 2}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${seasonYear}-12-19`,
+          time: '20:45',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Oitavas de Final (Volta)',
+          groupName: 'Coupe de France · Oitavas de Final · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 5. QUARTAS DE FINAL: 8 times -> 4 confrontos Ida e Volta (8 jogos)
+    for (let i = 0; i < 4; i++) {
+      fixtures.push(
+        {
+          id: `fra_cdf_qf_m${i}_ida`,
+          round: 9,
+          competition: 'fra_coupe_de_france',
+          homeTeamId: `TBD_CDF_R16_${i * 2}`,
+          awayTeamId: `TBD_CDF_R16_${i * 2 + 1}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${nextYear}-01-10`,
+          time: '21:00',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Quartas de Final (Ida)',
+          groupName: 'Coupe de France · Quartas de Final · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `fra_cdf_qf_m${i}_volta`,
+          round: 10,
+          competition: 'fra_coupe_de_france',
+          homeTeamId: `TBD_CDF_R16_${i * 2 + 1}`,
+          awayTeamId: `TBD_CDF_R16_${i * 2}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${nextYear}-02-03`,
+          time: '21:00',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Quartas de Final (Volta)',
+          groupName: 'Coupe de France · Quartas de Final · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 6. SEMIFINAL: 4 times -> 2 confrontos Ida e Volta (4 jogos)
+    for (let i = 0; i < 2; i++) {
+      fixtures.push(
+        {
+          id: `fra_cdf_sf_m${i}_ida`,
+          round: 11,
+          competition: 'fra_coupe_de_france',
+          homeTeamId: `TBD_CDF_QF_${i * 2}`,
+          awayTeamId: `TBD_CDF_QF_${i * 2 + 1}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${nextYear}-03-03`,
+          time: '21:00',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Semifinal (Ida)',
+          groupName: 'Coupe de France · Semifinal · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `fra_cdf_sf_m${i}_volta`,
+          round: 12,
+          competition: 'fra_coupe_de_france',
+          homeTeamId: `TBD_CDF_QF_${i * 2 + 1}`,
+          awayTeamId: `TBD_CDF_QF_${i * 2}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: `${nextYear}-04-21`,
+          time: '21:00',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Semifinal (Volta)',
+          groupName: 'Coupe de France · Semifinal · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 7. GRANDE FINAL (Jogo Único) - 15 de maio de 2027
+    fixtures.push({
+      id: 'fra_cdf_final',
+      round: 13,
+      competition: 'fra_coupe_de_france',
+      homeTeamId: 'TBD_CDF_SF0',
+      awayTeamId: 'TBD_CDF_SF1',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: `${nextYear}-05-15`,
+      time: '21:00',
+      stadiumName: 'Stade de France (Saint-Denis)',
+      cupPhase: 'Grande Final',
+      groupName: 'Coupe de France · Grande Final (Jogo Único) · Stade de France',
+    });
+
+    return fixtures;
+  }
+
+  // Fallback legado (18 clubes)
+  const prelim = shuffled1.slice(14, 18);
+  const directR16 = shuffled1.slice(0, 14);
 
   for (let i = 0; i < 2; i++) {
     const home = prelim[i * 2];
@@ -490,7 +1224,7 @@ export function generateCoupeDeFranceFixtures(clubs: Club[], seasonYear: number 
     homeScore: null,
     awayScore: null,
     played: false,
-    date: `${nextYear}-05-15`,
+    date: `${nextYear}-05-29`,
     time: '21:00',
     stadiumName: 'Stade de France (Saint-Denis)',
     cupPhase: 'Grande Final',
@@ -502,20 +1236,21 @@ export function generateCoupeDeFranceFixtures(clubs: Club[], seasonYear: number 
 
 export function generateFrenchSupercupFixtures(clubs: Club[], seasonYear: number = 2026): Fixture[] {
   const l1 = getClubsForEuropeanLeague(clubs, 'fra_ligue1');
+  const rcl = l1.find((c) => c.id === 'eu_rcl')?.id || 'eu_rcl';
   const psg = l1.find((c) => c.id === 'eu_psg')?.id || 'eu_psg';
-  const om = l1.find((c) => c.id === 'eu_om')?.id || 'eu_om';
 
+  // Supercopa da França · 16 de agosto de 2026 · LENS X PSG
   return [
     {
       id: 'fra_super_final',
       round: 1,
       competition: 'fra_trophee_champions',
-      homeTeamId: psg,
-      awayTeamId: om,
+      homeTeamId: rcl,
+      awayTeamId: psg,
       homeScore: null,
       awayScore: null,
       played: false,
-      date: `${seasonYear}-08-15`,
+      date: `${seasonYear}-08-16`,
       time: '20:45',
       stadiumName: 'Stade de France (Saint-Denis)',
       cupPhase: 'Trophée des Champions',
@@ -531,10 +1266,267 @@ export function generateFrenchSupercupFixtures(clubs: Club[], seasonYear: number
 export function generateCoppaItaliaFixtures(clubs: Club[], seasonYear: number = 2026): Fixture[] {
   const nextYear = seasonYear + 1;
   const serieA = getClubsForEuropeanLeague(clubs, 'ita_serie_a');
-  const shuffled = pseudoShuffle(serieA, seasonYear * 43);
+  const serieB = getClubsForEuropeanLeague(clubs, 'ita_serie_b');
+  const ita3Clubs = clubs.filter((c) => c.id.startsWith('eu_ita3_'));
   const fixtures: Fixture[] = [];
 
-  // 20 clubes: 8 disputam preliminar -> 4 avançam; 12 entram direto nas Oitavas.
+  // Formato oficial completo (44 clubes · 85 jogos):
+  // - Primeira Fase (24 clubes = 20 Serie B + 4 Serie C): 12 confrontos Ida e Volta (24 jogos) -> 12 avançam
+  //   Datas: Ida 19 e 20/08, Volta 26 e 27/08
+  // - Segunda Fase (32 clubes = 12 classificados da 1ª Fase + 20 Serie A): 16 confrontos Ida e Volta (32 jogos) -> 16 avançam
+  //   Datas: Ida 01 e 02/09, Volta 15 e 16/09
+  // - Oitavas de Final (16 clubes): 8 confrontos Ida e Volta (16 jogos) -> 8 avançam
+  //   Datas: Ida 02 e 03/12, Volta 16 e 17/12
+  // - Quartas de Final (8 clubes): 4 confrontos Ida e Volta (8 jogos) -> 4 avançam
+  //   Datas: Ida 03 e 04/02, Volta 10 e 11/02
+  // - Semifinal (4 clubes): 2 confrontos Ida e Volta (4 jogos) -> 2 avançam
+  //   Datas: Ida 02 e 03/03, Volta 20 e 21/04
+  // - Grande Final (Jogo Único): 19/05 no Stadio Olimpico (Roma)
+  const primeiraFasePool = [...serieB.slice(0, 20), ...ita3Clubs.slice(0, 4)];
+
+  if (serieA.length >= 20 && primeiraFasePool.length >= 24) {
+    const shuffledP1 = pseudoShuffle(primeiraFasePool, seasonYear * 43 + 11);
+    const shuffledA = pseudoShuffle(serieA, seasonYear * 43 + 29);
+
+    // 1. PRIMEIRA FASE: 24 times -> 12 confrontos Ida e Volta (24 jogos)
+    for (let i = 0; i < 12; i++) {
+      const home = shuffledP1[i * 2];
+      const away = shuffledP1[i * 2 + 1];
+      const idaDate = i < 6 ? `${seasonYear}-08-19` : `${seasonYear}-08-20`;
+      const voltaDate = i < 6 ? `${seasonYear}-08-26` : `${seasonYear}-08-27`;
+      fixtures.push(
+        {
+          id: `ita_ci_p1_m${i}_ida`,
+          round: 1,
+          competition: 'ita_coppa_italia',
+          homeTeamId: home?.id || 'tbd',
+          awayTeamId: away?.id || 'tbd',
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: idaDate,
+          time: '20:45',
+          stadiumName: getClubStadiumName(home),
+          cupPhase: 'Primeira Fase (Ida)',
+          groupName: 'Coppa Italia · Primeira Fase (24 clubes) · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `ita_ci_p1_m${i}_volta`,
+          round: 2,
+          competition: 'ita_coppa_italia',
+          homeTeamId: away?.id || 'tbd',
+          awayTeamId: home?.id || 'tbd',
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: voltaDate,
+          time: '20:45',
+          stadiumName: getClubStadiumName(away),
+          cupPhase: 'Primeira Fase (Volta)',
+          groupName: 'Coppa Italia · Primeira Fase (24 clubes) · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 2. SEGUNDA FASE (32 times = 12 classificados da 1ª Fase + 20 Serie A) -> 16 confrontos Ida e Volta (32 jogos)
+    for (let i = 0; i < 16; i++) {
+      const idaDate = i < 8 ? `${seasonYear}-09-01` : `${seasonYear}-09-02`;
+      const voltaDate = i < 8 ? `${seasonYear}-09-15` : `${seasonYear}-09-16`;
+      let idaHomeId = 'tbd';
+      let idaAwayId = 'tbd';
+      let idaHomeClub: Club | undefined;
+      let idaAwayClub: Club | undefined;
+      if (i < 12) {
+        idaHomeId = `TBD_CI_P1_${i}`;
+        idaAwayClub = shuffledA[i];
+        idaAwayId = idaAwayClub?.id || 'tbd';
+      } else {
+        const aIdx = 12 + (i - 12) * 2;
+        idaHomeClub = shuffledA[aIdx];
+        idaAwayClub = shuffledA[aIdx + 1];
+        idaHomeId = idaHomeClub?.id || 'tbd';
+        idaAwayId = idaAwayClub?.id || 'tbd';
+      }
+      fixtures.push(
+        {
+          id: `ita_ci_r32_m${i}_ida`,
+          round: 3,
+          competition: 'ita_coppa_italia',
+          homeTeamId: idaHomeId,
+          awayTeamId: idaAwayId,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: idaDate,
+          time: '20:45',
+          stadiumName: idaHomeClub ? getClubStadiumName(idaHomeClub) : 'Estádio a definir',
+          cupPhase: 'Segunda Fase (Ida)',
+          groupName: 'Coppa Italia · Segunda Fase (32 clubes) · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `ita_ci_r32_m${i}_volta`,
+          round: 4,
+          competition: 'ita_coppa_italia',
+          homeTeamId: idaAwayId,
+          awayTeamId: idaHomeId,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: voltaDate,
+          time: '20:45',
+          stadiumName: idaAwayClub ? getClubStadiumName(idaAwayClub) : 'Estádio a definir',
+          cupPhase: 'Segunda Fase (Volta)',
+          groupName: 'Coppa Italia · Segunda Fase (32 clubes) · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 3. OITAVAS DE FINAL: 16 times -> 8 confrontos Ida e Volta (16 jogos)
+    for (let i = 0; i < 8; i++) {
+      const idaDate = i < 4 ? `${seasonYear}-12-02` : `${seasonYear}-12-03`;
+      const voltaDate = i < 4 ? `${seasonYear}-12-16` : `${seasonYear}-12-17`;
+      fixtures.push(
+        {
+          id: `ita_ci_r16_m${i}_ida`,
+          round: 5,
+          competition: 'ita_coppa_italia',
+          homeTeamId: `TBD_CI_R32_${i * 2}`,
+          awayTeamId: `TBD_CI_R32_${i * 2 + 1}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: idaDate,
+          time: '20:45',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Oitavas de Final (Ida)',
+          groupName: 'Coppa Italia · Oitavas de Final · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `ita_ci_r16_m${i}_volta`,
+          round: 6,
+          competition: 'ita_coppa_italia',
+          homeTeamId: `TBD_CI_R32_${i * 2 + 1}`,
+          awayTeamId: `TBD_CI_R32_${i * 2}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: voltaDate,
+          time: '20:45',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Oitavas de Final (Volta)',
+          groupName: 'Coppa Italia · Oitavas de Final · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 4. QUARTAS DE FINAL: 8 times -> 4 confrontos Ida e Volta (8 jogos)
+    for (let i = 0; i < 4; i++) {
+      const idaDate = i < 2 ? `${nextYear}-02-03` : `${nextYear}-02-04`;
+      const voltaDate = i < 2 ? `${nextYear}-02-10` : `${nextYear}-02-11`;
+      fixtures.push(
+        {
+          id: `ita_ci_qf_m${i}_ida`,
+          round: 7,
+          competition: 'ita_coppa_italia',
+          homeTeamId: `TBD_CI_R16_${i * 2}`,
+          awayTeamId: `TBD_CI_R16_${i * 2 + 1}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: idaDate,
+          time: '20:45',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Quartas de Final (Ida)',
+          groupName: 'Coppa Italia · Quartas de Final · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `ita_ci_qf_m${i}_volta`,
+          round: 8,
+          competition: 'ita_coppa_italia',
+          homeTeamId: `TBD_CI_R16_${i * 2 + 1}`,
+          awayTeamId: `TBD_CI_R16_${i * 2}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: voltaDate,
+          time: '20:45',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Quartas de Final (Volta)',
+          groupName: 'Coppa Italia · Quartas de Final · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 5. SEMIFINAL: 4 times -> 2 confrontos Ida e Volta (4 jogos)
+    for (let i = 0; i < 2; i++) {
+      const idaDate = i === 0 ? `${nextYear}-03-02` : `${nextYear}-03-03`;
+      const voltaDate = i === 0 ? `${nextYear}-04-20` : `${nextYear}-04-21`;
+      fixtures.push(
+        {
+          id: `ita_ci_sf_m${i}_ida`,
+          round: 9,
+          competition: 'ita_coppa_italia',
+          homeTeamId: `TBD_CI_QF_${i * 2}`,
+          awayTeamId: `TBD_CI_QF_${i * 2 + 1}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: idaDate,
+          time: '20:45',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Semifinal (Ida)',
+          groupName: 'Coppa Italia · Semifinal · Jogo de Ida',
+          leg: 1,
+        },
+        {
+          id: `ita_ci_sf_m${i}_volta`,
+          round: 10,
+          competition: 'ita_coppa_italia',
+          homeTeamId: `TBD_CI_QF_${i * 2 + 1}`,
+          awayTeamId: `TBD_CI_QF_${i * 2}`,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+          date: voltaDate,
+          time: '20:45',
+          stadiumName: 'Estádio a definir',
+          cupPhase: 'Semifinal (Volta)',
+          groupName: 'Coppa Italia · Semifinal · Jogo de Volta',
+          leg: 2,
+        }
+      );
+    }
+
+    // 6. GRANDE FINAL (Jogo Único) - 19 de maio de 2027
+    fixtures.push({
+      id: 'ita_ci_final',
+      round: 11,
+      competition: 'ita_coppa_italia',
+      homeTeamId: 'TBD_CI_SF0',
+      awayTeamId: 'TBD_CI_SF1',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      date: `${nextYear}-05-19`,
+      time: '20:45',
+      stadiumName: 'Stadio Olimpico (Roma)',
+      cupPhase: 'Grande Final',
+      groupName: 'Coppa Italia · Grande Final (Jogo Único) · Stadio Olimpico de Roma',
+    });
+
+    return fixtures;
+  }
+
+  // Fallback legado (saves antigos sem Serie B): 20 clubes da Serie A
+  const shuffled = pseudoShuffle(serieA, seasonYear * 43);
   const prelim = shuffled.slice(12, 20);
   const directR16 = shuffled.slice(0, 12);
 
@@ -596,7 +1588,6 @@ export function generateCoppaItaliaFixtures(clubs: Club[], seasonYear: number = 
     });
   }
 
-  // Semifinais em IDA E VOLTA (tradição italiana)
   for (let i = 0; i < 2; i++) {
     fixtures.push(
       {
@@ -654,58 +1645,26 @@ export function generateCoppaItaliaFixtures(clubs: Club[], seasonYear: number = 
 }
 
 export function generateItalianSupercupFixtures(clubs: Club[], seasonYear: number = 2026): Fixture[] {
-  const nextYear = seasonYear + 1;
   const serieA = getClubsForEuropeanLeague(clubs, 'ita_serie_a');
   const int = serieA.find((c) => c.id === 'eu_int')?.id || 'eu_int';
-  const ata = serieA.find((c) => c.id === 'eu_ata')?.id || 'eu_ata';
-  const acm = serieA.find((c) => c.id === 'eu_acm')?.id || 'eu_acm';
-  const juv = serieA.find((c) => c.id === 'eu_juv')?.id || 'eu_juv';
+  const laz = serieA.find((c) => c.id === 'eu_laz')?.id || 'eu_laz';
 
+  // Supercopa Italiana · 22/12, 17:00 · INTER X LAZIO · Final
   return [
     {
-      id: 'ita_super_sf0',
+      id: 'ita_super_final',
       round: 1,
       competition: 'ita_supercoppa',
       homeTeamId: int,
-      awayTeamId: ata,
+      awayTeamId: laz,
       homeScore: null,
       awayScore: null,
       played: false,
-      date: `${nextYear}-01-14`,
-      time: '20:00',
-      stadiumName: 'Al-Awwal Park',
-      cupPhase: 'Semifinal 1',
-      groupName: 'Supercoppa Italiana · Semifinal 1',
-    },
-    {
-      id: 'ita_super_sf1',
-      round: 1,
-      competition: 'ita_supercoppa',
-      homeTeamId: acm,
-      awayTeamId: juv,
-      homeScore: null,
-      awayScore: null,
-      played: false,
-      date: `${nextYear}-01-15`,
-      time: '20:00',
-      stadiumName: 'Al-Awwal Park',
-      cupPhase: 'Semifinal 2',
-      groupName: 'Supercoppa Italiana · Semifinal 2',
-    },
-    {
-      id: 'ita_super_final',
-      round: 2,
-      competition: 'ita_supercoppa',
-      homeTeamId: 'TBD_IT_SUPER_SF0',
-      awayTeamId: 'TBD_IT_SUPER_SF1',
-      homeScore: null,
-      awayScore: null,
-      played: false,
-      date: `${nextYear}-01-18`,
-      time: '20:00',
-      stadiumName: 'Al-Awwal Park',
-      cupPhase: 'Grande Final',
-      groupName: 'Supercoppa Italiana · Decisão',
+      date: `${seasonYear}-12-22`,
+      time: '17:00',
+      stadiumName: 'Stadio Olimpico (Roma)',
+      cupPhase: 'Final',
+      groupName: 'Supercoppa Italiana · Grande Final em Jogo Único',
     },
   ];
 }
@@ -2106,6 +3065,22 @@ export function resolveEuropeanCupsMapConflicts(
   for (const [lid, cupIds] of cupsByLeague.entries()) {
     const blocked = getLeagueBlockedDates(lid, clubs, seasonYear, fixturesEurope);
     for (const cupId of cupIds) {
+      // Copas com calendário oficial fixo definido por regulamento (Espanha, Itália e França)
+      if (
+        cupId === 'esp_copa_del_rey' ||
+        cupId === 'esp_supercopa' ||
+        cupId === 'ita_coppa_italia' ||
+        cupId === 'ita_supercoppa' ||
+        cupId === 'fra_coupe_de_france' ||
+        cupId === 'fra_trophee_champions'
+      ) {
+        const fixedCup = resolved[cupId] || [];
+        resolved[cupId] = fixedCup;
+        for (const f of fixedCup) {
+          if (f.date) blocked.add(f.date);
+        }
+        continue;
+      }
       const resolvedCup = resolveCupScheduleConflicts(
         resolved[cupId] || [],
         blocked,
@@ -2194,48 +3169,176 @@ export function syncEuropeanCupsKnockoutBrackets(params: {
     result.esp_supercopa = superFix;
   }
 
-  // 2. ESPANHA - Copa del Rey
+  // 2. ESPANHA - Copa del Rey (suporta formato oficial 68 clubes ida e volta, legado 42 clubes e legado 20 clubes)
   if (result.esp_copa_del_rey) {
     let cdr = [...result.esp_copa_del_rey];
-    // R1 -> R16 (4 vagas visitantes de esp_cdr_r16_m0..m3)
-    for (let i = 0; i < 4; i++) {
-      const w = resolveTieWinner(undefined, getFix(cdr, `esp_cdr_r1_m${i}`));
-      if (w) cdr = assignSingleLegSlots(cdr, `esp_cdr_r16_m${i}`, undefined, w);
-    }
-    // R16 -> QF (4 jogos)
-    for (let i = 0; i < 4; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(cdr, `esp_cdr_r16_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(cdr, `esp_cdr_r16_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        cdr = assignSingleLegSlots(cdr, `esp_cdr_qf_m${i}`, w0, w1);
-        cdr = updateStadiumIfKnown(cdr, `esp_cdr_qf_m${i}`, w0);
+    const has68TwoLegFormat = cdr.some((f) => f.id === 'esp_cdr_p1_m0_ida');
+    const has42ClubFormat = cdr.some((f) => f.id === 'esp_cdr_r0_m0');
+
+    if (has68TwoLegFormat) {
+      // Primeira Fase (24 confrontos ida e volta) -> Segunda Fase (12 confrontos ida e volta)
+      for (let i = 0; i < 12; i++) {
+        const w0 = resolveTieWinner(
+          getFix(cdr, `esp_cdr_p1_m${i * 2}_ida`),
+          getFix(cdr, `esp_cdr_p1_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(cdr, `esp_cdr_p1_m${i * 2 + 1}_ida`),
+          getFix(cdr, `esp_cdr_p1_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          cdr = assignTwoLeggedSlots(cdr, `esp_cdr_p2_m${i}_ida`, `esp_cdr_p2_m${i}_volta`, w0, w1);
+          cdr = updateStadiumIfKnown(cdr, `esp_cdr_p2_m${i}_ida`, w0);
+          cdr = updateStadiumIfKnown(cdr, `esp_cdr_p2_m${i}_volta`, w1);
+        }
       }
-    }
-    // QF -> SF (ida e volta)
-    for (let i = 0; i < 2; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(cdr, `esp_cdr_qf_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(cdr, `esp_cdr_qf_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        cdr = assignTwoLeggedSlots(cdr, `esp_cdr_sf_m${i}_ida`, `esp_cdr_sf_m${i}_volta`, w0, w1);
-        cdr = updateStadiumIfKnown(cdr, `esp_cdr_sf_m${i}_ida`, w0);
-        cdr = updateStadiumIfKnown(cdr, `esp_cdr_sf_m${i}_volta`, w1);
+      // Segunda Fase (12 confrontos ida e volta) -> 1/16 de Final (12 vagas contra clubes da LaLiga)
+      for (let i = 0; i < 12; i++) {
+        const w = resolveTieWinner(
+          getFix(cdr, `esp_cdr_p2_m${i}_ida`),
+          getFix(cdr, `esp_cdr_p2_m${i}_volta`)
+        );
+        if (w) {
+          cdr = assignTwoLeggedSlots(cdr, `esp_cdr_r32_m${i}_ida`, `esp_cdr_r32_m${i}_volta`, w, undefined);
+          cdr = updateStadiumIfKnown(cdr, `esp_cdr_r32_m${i}_ida`, w);
+        }
       }
-    }
-    // SF -> Final
-    const sf0W = resolveTieWinner(getFix(cdr, 'esp_cdr_sf_m0_ida'), getFix(cdr, 'esp_cdr_sf_m0_volta'));
-    const sf1W = resolveTieWinner(getFix(cdr, 'esp_cdr_sf_m1_ida'), getFix(cdr, 'esp_cdr_sf_m1_volta'));
-    if (sf0W || sf1W) {
-      cdr = assignSingleLegSlots(cdr, 'esp_cdr_final', sf0W, sf1W);
+      // 1/16 de Final (16 confrontos ida e volta) -> Oitavas de Final (8 confrontos ida e volta)
+      for (let i = 0; i < 8; i++) {
+        const w0 = resolveTieWinner(
+          getFix(cdr, `esp_cdr_r32_m${i * 2}_ida`),
+          getFix(cdr, `esp_cdr_r32_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(cdr, `esp_cdr_r32_m${i * 2 + 1}_ida`),
+          getFix(cdr, `esp_cdr_r32_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          cdr = assignTwoLeggedSlots(cdr, `esp_cdr_r16_m${i}_ida`, `esp_cdr_r16_m${i}_volta`, w0, w1);
+          cdr = updateStadiumIfKnown(cdr, `esp_cdr_r16_m${i}_ida`, w0);
+          cdr = updateStadiumIfKnown(cdr, `esp_cdr_r16_m${i}_volta`, w1);
+        }
+      }
+      // Oitavas de Final (8 confrontos ida e volta) -> Quartas de Final (4 confrontos ida e volta)
+      for (let i = 0; i < 4; i++) {
+        const w0 = resolveTieWinner(
+          getFix(cdr, `esp_cdr_r16_m${i * 2}_ida`),
+          getFix(cdr, `esp_cdr_r16_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(cdr, `esp_cdr_r16_m${i * 2 + 1}_ida`),
+          getFix(cdr, `esp_cdr_r16_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          cdr = assignTwoLeggedSlots(cdr, `esp_cdr_qf_m${i}_ida`, `esp_cdr_qf_m${i}_volta`, w0, w1);
+          cdr = updateStadiumIfKnown(cdr, `esp_cdr_qf_m${i}_ida`, w0);
+          cdr = updateStadiumIfKnown(cdr, `esp_cdr_qf_m${i}_volta`, w1);
+        }
+      }
+      // Quartas de Final (4 confrontos ida e volta) -> Semifinal (2 confrontos ida e volta)
+      for (let i = 0; i < 2; i++) {
+        const w0 = resolveTieWinner(
+          getFix(cdr, `esp_cdr_qf_m${i * 2}_ida`),
+          getFix(cdr, `esp_cdr_qf_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(cdr, `esp_cdr_qf_m${i * 2 + 1}_ida`),
+          getFix(cdr, `esp_cdr_qf_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          cdr = assignTwoLeggedSlots(cdr, `esp_cdr_sf_m${i}_ida`, `esp_cdr_sf_m${i}_volta`, w0, w1);
+          cdr = updateStadiumIfKnown(cdr, `esp_cdr_sf_m${i}_ida`, w0);
+          cdr = updateStadiumIfKnown(cdr, `esp_cdr_sf_m${i}_volta`, w1);
+        }
+      }
+      // Semifinal (ida e volta) -> Grande Final (jogo único)
+      const sf0W = resolveTieWinner(getFix(cdr, 'esp_cdr_sf_m0_ida'), getFix(cdr, 'esp_cdr_sf_m0_volta'));
+      const sf1W = resolveTieWinner(getFix(cdr, 'esp_cdr_sf_m1_ida'), getFix(cdr, 'esp_cdr_sf_m1_volta'));
+      if (sf0W || sf1W) {
+        cdr = assignSingleLegSlots(cdr, 'esp_cdr_final', sf0W, sf1W);
+      }
+    } else {
+      if (has42ClubFormat) {
+        // Legado 42 clubes: 1ª Fase Preliminar (10 jogos LaLiga 2) -> 2ª Fase (16-avos)
+        for (let i = 0; i < 10; i++) {
+          const w = resolveTieWinner(undefined, getFix(cdr, `esp_cdr_r0_m${i}`));
+          if (w) {
+            cdr = assignSingleLegSlots(cdr, `esp_cdr_r1_m${i}`, w, undefined);
+            cdr = updateStadiumIfKnown(cdr, `esp_cdr_r1_m${i}`, w);
+          }
+        }
+        // 2ª Fase (16 jogos) -> Oitavas de Final (8 jogos)
+        for (let i = 0; i < 8; i++) {
+          const w0 = resolveTieWinner(undefined, getFix(cdr, `esp_cdr_r1_m${i * 2}`));
+          const w1 = resolveTieWinner(undefined, getFix(cdr, `esp_cdr_r1_m${i * 2 + 1}`));
+          if (w0 || w1) {
+            cdr = assignSingleLegSlots(cdr, `esp_cdr_r16_m${i}`, w0, w1);
+            cdr = updateStadiumIfKnown(cdr, `esp_cdr_r16_m${i}`, w0);
+          }
+        }
+      } else {
+        // Legado 20 clubes: R1 -> R16 (4 vagas visitantes de esp_cdr_r16_m0..m3)
+        for (let i = 0; i < 4; i++) {
+          const w = resolveTieWinner(undefined, getFix(cdr, `esp_cdr_r1_m${i}`));
+          if (w) cdr = assignSingleLegSlots(cdr, `esp_cdr_r16_m${i}`, undefined, w);
+        }
+      }
+      // R16 -> QF (4 jogos)
+      for (let i = 0; i < 4; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(cdr, `esp_cdr_r16_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(cdr, `esp_cdr_r16_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          cdr = assignSingleLegSlots(cdr, `esp_cdr_qf_m${i}`, w0, w1);
+          cdr = updateStadiumIfKnown(cdr, `esp_cdr_qf_m${i}`, w0);
+        }
+      }
+      // QF -> SF (ida e volta)
+      for (let i = 0; i < 2; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(cdr, `esp_cdr_qf_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(cdr, `esp_cdr_qf_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          cdr = assignTwoLeggedSlots(cdr, `esp_cdr_sf_m${i}_ida`, `esp_cdr_sf_m${i}_volta`, w0, w1);
+          cdr = updateStadiumIfKnown(cdr, `esp_cdr_sf_m${i}_ida`, w0);
+          cdr = updateStadiumIfKnown(cdr, `esp_cdr_sf_m${i}_volta`, w1);
+        }
+      }
+      // SF -> Final
+      const sf0W = resolveTieWinner(getFix(cdr, 'esp_cdr_sf_m0_ida'), getFix(cdr, 'esp_cdr_sf_m0_volta'));
+      const sf1W = resolveTieWinner(getFix(cdr, 'esp_cdr_sf_m1_ida'), getFix(cdr, 'esp_cdr_sf_m1_volta'));
+      if (sf0W || sf1W) {
+        cdr = assignSingleLegSlots(cdr, 'esp_cdr_final', sf0W, sf1W);
+      }
     }
     result.esp_copa_del_rey = cdr;
   }
 
-  // 3. ALEMANHA - DFB-Pokal
+  // 3. ALEMANHA - DFB-Pokal (suporta formato 36 clubes com 2. Bundesliga e legado 18 clubes)
   if (result.ger_dfb_pokal) {
     let dfb = [...result.ger_dfb_pokal];
-    for (let i = 0; i < 2; i++) {
-      const w = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r1_m${i}`));
-      if (w) dfb = assignSingleLegSlots(dfb, `ger_dfb_r16_m${i}`, undefined, w);
+    const has36ClubFormat = dfb.some((f) => f.id === 'ger_dfb_r0_m0');
+    if (has36ClubFormat) {
+      // 1ª Fase Preliminar (4 jogos) -> 2ª Fase (16-avos, mando do clube da 2. Bundesliga)
+      for (let i = 0; i < 4; i++) {
+        const w = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r0_m${i}`));
+        if (w) {
+          dfb = assignSingleLegSlots(dfb, `ger_dfb_r1_m${i}`, w, undefined);
+          dfb = updateStadiumIfKnown(dfb, `ger_dfb_r1_m${i}`, w);
+        }
+      }
+      // 2ª Fase (16 jogos) -> Oitavas (8 jogos)
+      for (let i = 0; i < 8; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r1_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r1_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          dfb = assignSingleLegSlots(dfb, `ger_dfb_r16_m${i}`, w0, w1);
+          dfb = updateStadiumIfKnown(dfb, `ger_dfb_r16_m${i}`, w0);
+        }
+      }
+    } else {
+      for (let i = 0; i < 2; i++) {
+        const w = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r1_m${i}`));
+        if (w) dfb = assignSingleLegSlots(dfb, `ger_dfb_r16_m${i}`, undefined, w);
+      }
     }
     for (let i = 0; i < 4; i++) {
       const w0 = resolveTieWinner(undefined, getFix(dfb, `ger_dfb_r16_m${i * 2}`));
@@ -2261,75 +3364,263 @@ export function syncEuropeanCupsKnockoutBrackets(params: {
     result.ger_dfb_pokal = dfb;
   }
 
-  // 4. FRANÇA - Coupe de France
+  // 4. FRANÇA - Coupe de France (suporta formato 56 clubes ida e volta, legado 36 clubes e legado 18 clubes)
   if (result.fra_coupe_de_france) {
     let cdf = [...result.fra_coupe_de_france];
-    for (let i = 0; i < 2; i++) {
-      const w = resolveTieWinner(undefined, getFix(cdf, `fra_cdf_r1_m${i}`));
-      if (w) cdf = assignSingleLegSlots(cdf, `fra_cdf_r16_m${i}`, undefined, w);
-    }
-    for (let i = 0; i < 4; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(cdf, `fra_cdf_r16_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(cdf, `fra_cdf_r16_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        cdf = assignSingleLegSlots(cdf, `fra_cdf_qf_m${i}`, w0, w1);
-        cdf = updateStadiumIfKnown(cdf, `fra_cdf_qf_m${i}`, w0);
+    const has56TwoLegFormat = cdf.some((f) => f.id === 'fra_cdf_p1_m0_ida');
+    const has36ClubFormat = cdf.some((f) => f.id === 'fra_cdf_r0_m0');
+
+    if (has56TwoLegFormat) {
+      // Primeira Fase (10 confrontos ida e volta) -> Segunda Fase (10 vagas contra clubes da Ligue 2)
+      for (let i = 0; i < 10; i++) {
+        const w = resolveTieWinner(
+          getFix(cdf, `fra_cdf_p1_m${i}_ida`),
+          getFix(cdf, `fra_cdf_p1_m${i}_volta`)
+        );
+        if (w) {
+          cdf = assignTwoLeggedSlots(cdf, `fra_cdf_p2_m${i}_ida`, `fra_cdf_p2_m${i}_volta`, w, undefined);
+          cdf = updateStadiumIfKnown(cdf, `fra_cdf_p2_m${i}_ida`, w);
+        }
       }
-    }
-    for (let i = 0; i < 2; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(cdf, `fra_cdf_qf_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(cdf, `fra_cdf_qf_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        cdf = assignSingleLegSlots(cdf, `fra_cdf_sf_m${i}`, w0, w1);
-        cdf = updateStadiumIfKnown(cdf, `fra_cdf_sf_m${i}`, w0);
+      // Segunda Fase (14 confrontos ida e volta) -> Terceira Fase (14 vagas contra clubes da Ligue 1)
+      for (let i = 0; i < 14; i++) {
+        const w = resolveTieWinner(
+          getFix(cdf, `fra_cdf_p2_m${i}_ida`),
+          getFix(cdf, `fra_cdf_p2_m${i}_volta`)
+        );
+        if (w) {
+          cdf = assignTwoLeggedSlots(cdf, `fra_cdf_r32_m${i}_ida`, `fra_cdf_r32_m${i}_volta`, w, undefined);
+          cdf = updateStadiumIfKnown(cdf, `fra_cdf_r32_m${i}_ida`, w);
+        }
       }
-    }
-    const sf0W = resolveTieWinner(undefined, getFix(cdf, 'fra_cdf_sf_m0'));
-    const sf1W = resolveTieWinner(undefined, getFix(cdf, 'fra_cdf_sf_m1'));
-    if (sf0W || sf1W) {
-      cdf = assignSingleLegSlots(cdf, 'fra_cdf_final', sf0W, sf1W);
+      // Terceira Fase (16 confrontos ida e volta) -> Oitavas de Final (8 confrontos ida e volta)
+      for (let i = 0; i < 8; i++) {
+        const w0 = resolveTieWinner(
+          getFix(cdf, `fra_cdf_r32_m${i * 2}_ida`),
+          getFix(cdf, `fra_cdf_r32_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(cdf, `fra_cdf_r32_m${i * 2 + 1}_ida`),
+          getFix(cdf, `fra_cdf_r32_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          cdf = assignTwoLeggedSlots(cdf, `fra_cdf_r16_m${i}_ida`, `fra_cdf_r16_m${i}_volta`, w0, w1);
+          cdf = updateStadiumIfKnown(cdf, `fra_cdf_r16_m${i}_ida`, w0);
+          cdf = updateStadiumIfKnown(cdf, `fra_cdf_r16_m${i}_volta`, w1);
+        }
+      }
+      // Oitavas de Final (8 confrontos ida e volta) -> Quartas de Final (4 confrontos ida e volta)
+      for (let i = 0; i < 4; i++) {
+        const w0 = resolveTieWinner(
+          getFix(cdf, `fra_cdf_r16_m${i * 2}_ida`),
+          getFix(cdf, `fra_cdf_r16_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(cdf, `fra_cdf_r16_m${i * 2 + 1}_ida`),
+          getFix(cdf, `fra_cdf_r16_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          cdf = assignTwoLeggedSlots(cdf, `fra_cdf_qf_m${i}_ida`, `fra_cdf_qf_m${i}_volta`, w0, w1);
+          cdf = updateStadiumIfKnown(cdf, `fra_cdf_qf_m${i}_ida`, w0);
+          cdf = updateStadiumIfKnown(cdf, `fra_cdf_qf_m${i}_volta`, w1);
+        }
+      }
+      // Quartas de Final (4 confrontos ida e volta) -> Semifinal (2 confrontos ida e volta)
+      for (let i = 0; i < 2; i++) {
+        const w0 = resolveTieWinner(
+          getFix(cdf, `fra_cdf_qf_m${i * 2}_ida`),
+          getFix(cdf, `fra_cdf_qf_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(cdf, `fra_cdf_qf_m${i * 2 + 1}_ida`),
+          getFix(cdf, `fra_cdf_qf_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          cdf = assignTwoLeggedSlots(cdf, `fra_cdf_sf_m${i}_ida`, `fra_cdf_sf_m${i}_volta`, w0, w1);
+          cdf = updateStadiumIfKnown(cdf, `fra_cdf_sf_m${i}_ida`, w0);
+          cdf = updateStadiumIfKnown(cdf, `fra_cdf_sf_m${i}_volta`, w1);
+        }
+      }
+      // Semifinal (ida e volta) -> Grande Final (jogo único)
+      const sf0W = resolveTieWinner(getFix(cdf, 'fra_cdf_sf_m0_ida'), getFix(cdf, 'fra_cdf_sf_m0_volta'));
+      const sf1W = resolveTieWinner(getFix(cdf, 'fra_cdf_sf_m1_ida'), getFix(cdf, 'fra_cdf_sf_m1_volta'));
+      if (sf0W || sf1W) {
+        cdf = assignSingleLegSlots(cdf, 'fra_cdf_final', sf0W, sf1W);
+      }
+    } else {
+      if (has36ClubFormat) {
+        for (let i = 0; i < 4; i++) {
+          const w = resolveTieWinner(undefined, getFix(cdf, `fra_cdf_r0_m${i}`));
+          if (w) {
+            cdf = assignSingleLegSlots(cdf, `fra_cdf_r1_m${i}`, w, undefined);
+            cdf = updateStadiumIfKnown(cdf, `fra_cdf_r1_m${i}`, w);
+          }
+        }
+        for (let i = 0; i < 8; i++) {
+          const w0 = resolveTieWinner(undefined, getFix(cdf, `fra_cdf_r1_m${i * 2}`));
+          const w1 = resolveTieWinner(undefined, getFix(cdf, `fra_cdf_r1_m${i * 2 + 1}`));
+          if (w0 || w1) {
+            cdf = assignSingleLegSlots(cdf, `fra_cdf_r16_m${i}`, w0, w1);
+            cdf = updateStadiumIfKnown(cdf, `fra_cdf_r16_m${i}`, w0);
+          }
+        }
+      } else {
+        for (let i = 0; i < 2; i++) {
+          const w = resolveTieWinner(undefined, getFix(cdf, `fra_cdf_r1_m${i}`));
+          if (w) cdf = assignSingleLegSlots(cdf, `fra_cdf_r16_m${i}`, undefined, w);
+        }
+      }
+      for (let i = 0; i < 4; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(cdf, `fra_cdf_r16_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(cdf, `fra_cdf_r16_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          cdf = assignSingleLegSlots(cdf, `fra_cdf_qf_m${i}`, w0, w1);
+          cdf = updateStadiumIfKnown(cdf, `fra_cdf_qf_m${i}`, w0);
+        }
+      }
+      for (let i = 0; i < 2; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(cdf, `fra_cdf_qf_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(cdf, `fra_cdf_qf_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          cdf = assignSingleLegSlots(cdf, `fra_cdf_sf_m${i}`, w0, w1);
+          cdf = updateStadiumIfKnown(cdf, `fra_cdf_sf_m${i}`, w0);
+        }
+      }
+      const sf0W = resolveTieWinner(undefined, getFix(cdf, 'fra_cdf_sf_m0'));
+      const sf1W = resolveTieWinner(undefined, getFix(cdf, 'fra_cdf_sf_m1'));
+      if (sf0W || sf1W) {
+        cdf = assignSingleLegSlots(cdf, 'fra_cdf_final', sf0W, sf1W);
+      }
     }
     result.fra_coupe_de_france = cdf;
   }
 
-  // 5. ITÁLIA - Supercoppa & Coppa Italia
+  // 5. ITÁLIA - Supercoppa & Coppa Italia (suporta formato 44 clubes ida e volta, legado 40 clubes e legado 20 clubes)
   if (result.ita_supercoppa) {
     let superFix = [...result.ita_supercoppa];
-    const sf0W = resolveTieWinner(undefined, getFix(superFix, 'ita_super_sf0'));
-    const sf1W = resolveTieWinner(undefined, getFix(superFix, 'ita_super_sf1'));
-    if (sf0W || sf1W) {
-      superFix = assignSingleLegSlots(superFix, 'ita_super_final', sf0W, sf1W);
+    if (superFix.some((f) => f.id === 'ita_super_sf0')) {
+      const sf0W = resolveTieWinner(undefined, getFix(superFix, 'ita_super_sf0'));
+      const sf1W = resolveTieWinner(undefined, getFix(superFix, 'ita_super_sf1'));
+      if (sf0W || sf1W) {
+        superFix = assignSingleLegSlots(superFix, 'ita_super_final', sf0W, sf1W);
+      }
     }
     result.ita_supercoppa = superFix;
   }
 
   if (result.ita_coppa_italia) {
     let ci = [...result.ita_coppa_italia];
-    for (let i = 0; i < 4; i++) {
-      const w = resolveTieWinner(undefined, getFix(ci, `ita_ci_r1_m${i}`));
-      if (w) ci = assignSingleLegSlots(ci, `ita_ci_r16_m${i}`, undefined, w);
-    }
-    for (let i = 0; i < 4; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(ci, `ita_ci_r16_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(ci, `ita_ci_r16_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        ci = assignSingleLegSlots(ci, `ita_ci_qf_m${i}`, w0, w1);
-        ci = updateStadiumIfKnown(ci, `ita_ci_qf_m${i}`, w0);
+    const has44TwoLegFormat = ci.some((f) => f.id === 'ita_ci_p1_m0_ida');
+    const is40ClubFormat = ci.some((f) => f.id === 'ita_ci_r0_m0');
+
+    if (has44TwoLegFormat) {
+      // Primeira Fase (12 confrontos ida e volta) -> Segunda Fase (12 vagas contra clubes da Serie A)
+      for (let i = 0; i < 12; i++) {
+        const w = resolveTieWinner(
+          getFix(ci, `ita_ci_p1_m${i}_ida`),
+          getFix(ci, `ita_ci_p1_m${i}_volta`)
+        );
+        if (w) {
+          ci = assignTwoLeggedSlots(ci, `ita_ci_r32_m${i}_ida`, `ita_ci_r32_m${i}_volta`, w, undefined);
+          ci = updateStadiumIfKnown(ci, `ita_ci_r32_m${i}_ida`, w);
+        }
       }
-    }
-    for (let i = 0; i < 2; i++) {
-      const w0 = resolveTieWinner(undefined, getFix(ci, `ita_ci_qf_m${i * 2}`));
-      const w1 = resolveTieWinner(undefined, getFix(ci, `ita_ci_qf_m${i * 2 + 1}`));
-      if (w0 || w1) {
-        ci = assignTwoLeggedSlots(ci, `ita_ci_sf_m${i}_ida`, `ita_ci_sf_m${i}_volta`, w0, w1);
-        ci = updateStadiumIfKnown(ci, `ita_ci_sf_m${i}_ida`, w0);
-        ci = updateStadiumIfKnown(ci, `ita_ci_sf_m${i}_volta`, w1);
+      // Segunda Fase (16 confrontos ida e volta) -> Oitavas de Final (8 confrontos ida e volta)
+      for (let i = 0; i < 8; i++) {
+        const w0 = resolveTieWinner(
+          getFix(ci, `ita_ci_r32_m${i * 2}_ida`),
+          getFix(ci, `ita_ci_r32_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(ci, `ita_ci_r32_m${i * 2 + 1}_ida`),
+          getFix(ci, `ita_ci_r32_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          ci = assignTwoLeggedSlots(ci, `ita_ci_r16_m${i}_ida`, `ita_ci_r16_m${i}_volta`, w0, w1);
+          ci = updateStadiumIfKnown(ci, `ita_ci_r16_m${i}_ida`, w0);
+          ci = updateStadiumIfKnown(ci, `ita_ci_r16_m${i}_volta`, w1);
+        }
       }
-    }
-    const sf0W = resolveTieWinner(getFix(ci, 'ita_ci_sf_m0_ida'), getFix(ci, 'ita_ci_sf_m0_volta'));
-    const sf1W = resolveTieWinner(getFix(ci, 'ita_ci_sf_m1_ida'), getFix(ci, 'ita_ci_sf_m1_volta'));
-    if (sf0W || sf1W) {
-      ci = assignSingleLegSlots(ci, 'ita_ci_final', sf0W, sf1W);
+      // Oitavas de Final (8 confrontos ida e volta) -> Quartas de Final (4 confrontos ida e volta)
+      for (let i = 0; i < 4; i++) {
+        const w0 = resolveTieWinner(
+          getFix(ci, `ita_ci_r16_m${i * 2}_ida`),
+          getFix(ci, `ita_ci_r16_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(ci, `ita_ci_r16_m${i * 2 + 1}_ida`),
+          getFix(ci, `ita_ci_r16_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          ci = assignTwoLeggedSlots(ci, `ita_ci_qf_m${i}_ida`, `ita_ci_qf_m${i}_volta`, w0, w1);
+          ci = updateStadiumIfKnown(ci, `ita_ci_qf_m${i}_ida`, w0);
+          ci = updateStadiumIfKnown(ci, `ita_ci_qf_m${i}_volta`, w1);
+        }
+      }
+      // Quartas de Final (4 confrontos ida e volta) -> Semifinal (2 confrontos ida e volta)
+      for (let i = 0; i < 2; i++) {
+        const w0 = resolveTieWinner(
+          getFix(ci, `ita_ci_qf_m${i * 2}_ida`),
+          getFix(ci, `ita_ci_qf_m${i * 2}_volta`)
+        );
+        const w1 = resolveTieWinner(
+          getFix(ci, `ita_ci_qf_m${i * 2 + 1}_ida`),
+          getFix(ci, `ita_ci_qf_m${i * 2 + 1}_volta`)
+        );
+        if (w0 || w1) {
+          ci = assignTwoLeggedSlots(ci, `ita_ci_sf_m${i}_ida`, `ita_ci_sf_m${i}_volta`, w0, w1);
+          ci = updateStadiumIfKnown(ci, `ita_ci_sf_m${i}_ida`, w0);
+          ci = updateStadiumIfKnown(ci, `ita_ci_sf_m${i}_volta`, w1);
+        }
+      }
+      // Semifinal (ida e volta) -> Grande Final (jogo único)
+      const sf0W = resolveTieWinner(getFix(ci, 'ita_ci_sf_m0_ida'), getFix(ci, 'ita_ci_sf_m0_volta'));
+      const sf1W = resolveTieWinner(getFix(ci, 'ita_ci_sf_m1_ida'), getFix(ci, 'ita_ci_sf_m1_volta'));
+      if (sf0W || sf1W) {
+        ci = assignSingleLegSlots(ci, 'ita_ci_final', sf0W, sf1W);
+      }
+    } else {
+      if (is40ClubFormat) {
+        for (let i = 0; i < 8; i++) {
+          const w = resolveTieWinner(undefined, getFix(ci, `ita_ci_r0_m${i}`));
+          if (w) ci = assignSingleLegSlots(ci, `ita_ci_r1_m${i}`, undefined, w);
+        }
+        for (let i = 0; i < 8; i++) {
+          const w0 = resolveTieWinner(undefined, getFix(ci, `ita_ci_r1_m${i * 2}`));
+          const w1 = resolveTieWinner(undefined, getFix(ci, `ita_ci_r1_m${i * 2 + 1}`));
+          if (w0 || w1) {
+            ci = assignSingleLegSlots(ci, `ita_ci_r16_m${i}`, w0, w1);
+            ci = updateStadiumIfKnown(ci, `ita_ci_r16_m${i}`, w0);
+          }
+        }
+      } else {
+        for (let i = 0; i < 4; i++) {
+          const w = resolveTieWinner(undefined, getFix(ci, `ita_ci_r1_m${i}`));
+          if (w) ci = assignSingleLegSlots(ci, `ita_ci_r16_m${i}`, undefined, w);
+        }
+      }
+      for (let i = 0; i < 4; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(ci, `ita_ci_r16_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(ci, `ita_ci_r16_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          ci = assignSingleLegSlots(ci, `ita_ci_qf_m${i}`, w0, w1);
+          ci = updateStadiumIfKnown(ci, `ita_ci_qf_m${i}`, w0);
+        }
+      }
+      for (let i = 0; i < 2; i++) {
+        const w0 = resolveTieWinner(undefined, getFix(ci, `ita_ci_qf_m${i * 2}`));
+        const w1 = resolveTieWinner(undefined, getFix(ci, `ita_ci_qf_m${i * 2 + 1}`));
+        if (w0 || w1) {
+          ci = assignTwoLeggedSlots(ci, `ita_ci_sf_m${i}_ida`, `ita_ci_sf_m${i}_volta`, w0, w1);
+          ci = updateStadiumIfKnown(ci, `ita_ci_sf_m${i}_ida`, w0);
+          ci = updateStadiumIfKnown(ci, `ita_ci_sf_m${i}_volta`, w1);
+        }
+      }
+      const sf0W = resolveTieWinner(getFix(ci, 'ita_ci_sf_m0_ida'), getFix(ci, 'ita_ci_sf_m0_volta'));
+      const sf1W = resolveTieWinner(getFix(ci, 'ita_ci_sf_m1_ida'), getFix(ci, 'ita_ci_sf_m1_volta'));
+      if (sf0W || sf1W) {
+        ci = assignSingleLegSlots(ci, 'ita_ci_final', sf0W, sf1W);
+      }
     }
     result.ita_coppa_italia = ci;
   }

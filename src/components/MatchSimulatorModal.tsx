@@ -186,7 +186,11 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
     (userFixture?.competition && isSouthAmericanCup(userFixture.competition)) ||
     (userFixture?.competition && isWorldCup(userFixture.competition)) ||
     (userFixture?.competition === 'usa_mls' && userFixture?.id.includes('_po_')) ||
+    Boolean(userFixture?.id.includes('_playoff_')) ||
     userFixture?.leg !== undefined ||
+    matchPhaseLower.includes('play-off') ||
+    matchPhaseLower.includes('playoff') ||
+    matchPhaseLower.includes('barrage') ||
     matchPhaseLower.includes('1ª fase') ||
     matchPhaseLower.includes('2ª fase') ||
     matchPhaseLower.includes('3ª fase') ||
@@ -706,6 +710,20 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
   );
 
   const motmEntry = useMemo(() => pickManOfTheMatch(liveRatingsMap), [liveRatingsMap]);
+
+  // Continuous stadium crowd ambience during active live play
+  useEffect(() => {
+    const shouldRunAmbience =
+      isPlaying && !isHalftime && !isFinished && !isPenaltyShootoutActive;
+    if (shouldRunAmbience) {
+      soundEngine.startStadiumAmbience();
+    } else {
+      soundEngine.stopStadiumAmbience();
+    }
+    return () => {
+      soundEngine.stopStadiumAmbience();
+    };
+  }, [isPlaying, isHalftime, isFinished, isPenaltyShootoutActive]);
 
   // Initialize other matches quick sim + derby kickoff atmosphere
   useEffect(() => {
@@ -1328,8 +1346,9 @@ export const MatchSimulatorModal: React.FC<MatchSimulatorModalProps> = ({
       const targetGoal = attackerAttacksRight ? 'right' : 'left';
       const targetGoalY = Math.round((43 + Math.random() * 14) * 10) / 10;
 
-      // Powerful Ball Strike Sound
+      // Powerful Ball Strike Sound + crowd swell on dangerous shot
       soundEngine.playBallKick();
+      soundEngine.pulseStadiumAmbience(1.55);
 
       // Outcome 1: GOAL!
       if (shotOutcomeRoll < goalThreshold) {

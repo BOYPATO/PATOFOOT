@@ -224,29 +224,29 @@ export const EUROPE_COUNTRY_FOLDERS: EuropeCountryFolder[] = [
     id: 'ESP',
     name: 'Espanha',
     flag: '🇪🇸',
-    competitions: ['esp_laliga', 'esp_copa_del_rey', 'esp_supercopa'],
-    description: 'LaLiga EA Sports, Copa del Rey & Supercopa de España (3 competições)',
+    competitions: ['esp_laliga', 'esp_laliga2', 'esp_copa_del_rey', 'esp_supercopa'],
+    description: 'LaLiga EA Sports, LALIGA HYPERMOTION (LaLiga 2), Copa del Rey & Supercopa de España (4 competições)',
   },
   {
     id: 'ITA',
     name: 'Itália',
     flag: '🇮🇹',
-    competitions: ['ita_serie_a', 'ita_coppa_italia', 'ita_supercoppa'],
-    description: 'Serie A Enilive, Coppa Italia Frecciarossa & Supercoppa Italiana (3 competições)',
+    competitions: ['ita_serie_a', 'ita_serie_b', 'ita_coppa_italia', 'ita_supercoppa'],
+    description: 'Serie A Enilive, Serie BKT, Coppa Italia Frecciarossa & Supercoppa Italiana (4 competições)',
   },
   {
     id: 'GER',
     name: 'Alemanha',
     flag: '🇩🇪',
-    competitions: ['ger_bundesliga', 'ger_dfb_pokal', 'ger_supercup'],
-    description: 'Bundesliga, DFB-Pokal & Franz Beckenbauer Supercup (3 competições)',
+    competitions: ['ger_bundesliga', 'ger_bundesliga2', 'ger_dfb_pokal', 'ger_supercup'],
+    description: 'Bundesliga, 2. Bundesliga, DFB-Pokal & Franz Beckenbauer Supercup (4 competições)',
   },
   {
     id: 'FRA',
     name: 'França',
     flag: '🇫🇷',
-    competitions: ['fra_ligue1', 'fra_coupe_de_france', 'fra_trophee_champions'],
-    description: "Ligue 1 McDonald's, Coupe de France & Trophée des Champions (3 competições)",
+    competitions: ['fra_ligue1', 'fra_ligue2', 'fra_coupe_de_france', 'fra_trophee_champions'],
+    description: "Ligue 1 McDonald's, Ligue 2 BKT, Coupe de France & Trophée des Champions (4 competições)",
   },
   {
     id: 'POR',
@@ -345,15 +345,19 @@ export const EUROPE_COUNTRY_FOLDERS: EuropeCountryFolder[] = [
       'eng_fa_cup',
       'eng_efl_cup',
       'esp_laliga',
+      'esp_laliga2',
       'esp_copa_del_rey',
       'esp_supercopa',
       'ita_serie_a',
+      'ita_serie_b',
       'ita_coppa_italia',
       'ita_supercoppa',
       'ger_bundesliga',
+      'ger_bundesliga2',
       'ger_dfb_pokal',
       'ger_supercup',
       'fra_ligue1',
+      'fra_ligue2',
       'fra_coupe_de_france',
       'fra_trophee_champions',
       'por_primeira',
@@ -2306,6 +2310,13 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                         cKey !== 'eng_championship' &&
                         cKey !== 'eng_league_two' &&
                         cKey !== 'eng_league_one' &&
+                        cKey !== 'ger_bundesliga' &&
+                        cKey !== 'ger_bundesliga2' &&
+                        cKey !== 'fra_ligue1' &&
+                        cKey !== 'fra_ligue2' &&
+                        cKey !== 'esp_laliga2' &&
+                        cKey !== 'ita_serie_b' &&
+                        cKey !== 'serie_b' &&
                         cKey !== 'serie_c' &&
                         cKey !== 'usa_mls'
                       ) {
@@ -2620,6 +2631,12 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                 selectedComp === 'eng_championship' ||
                 selectedComp === 'eng_league_two' ||
                 selectedComp === 'eng_league_one' ||
+                selectedComp === 'ger_bundesliga' ||
+                selectedComp === 'ger_bundesliga2' ||
+                selectedComp === 'fra_ligue1' ||
+                selectedComp === 'fra_ligue2' ||
+                selectedComp === 'esp_laliga2' ||
+                selectedComp === 'ita_serie_b' ||
                 selectedComp === 'serie_b' ||
                 selectedComp === 'serie_c' ||
                 selectedComp === 'usa_mls') && (
@@ -2638,10 +2655,18 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                   <span>
                     {selectedComp === 'eng_championship'
                       ? 'Playoffs (3º–8º)'
+                      : selectedComp === 'ita_serie_b'
+                      ? 'Playoffs & Playout'
                       : selectedComp === 'eng_league_two' || selectedComp === 'serie_c'
                       ? 'Playoffs (4º–7º)'
-                      : selectedComp === 'eng_league_one' || selectedComp === 'serie_b'
+                      : selectedComp === 'eng_league_one' ||
+                        selectedComp === 'esp_laliga2' ||
+                        selectedComp === 'serie_b'
                       ? 'Playoffs (3º–6º)'
+                      : selectedComp === 'ger_bundesliga' || selectedComp === 'ger_bundesliga2'
+                      ? 'Playoff (16º × 3º)'
+                      : selectedComp === 'fra_ligue1' || selectedComp === 'fra_ligue2'
+                      ? 'Play-offs & Barrage'
                       : selectedComp === 'usa_mls'
                       ? 'Playoffs (MLS Cup)'
                       : 'Mata-Mata'}
@@ -4180,12 +4205,88 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                             <span className="w-2.5 h-2.5 rounded bg-emerald-400" />
                             <span>Conference League ({selectedEuMeta.ueclBerths})</span>
                           </span>
+                          {selectedComp === 'ger_bundesliga' && (
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded bg-orange-400" />
+                              <span>Playoff de Rebaixamento (16º vs 3º 2. Bundesliga · Ida/Volta)</span>
+                            </span>
+                          )}
+                          {selectedComp === 'fra_ligue1' && (
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded bg-orange-400" />
+                              <span>Barrage de Rebaixamento (16º vs Vencedor Play-offs Ligue 2 · Ida/Volta)</span>
+                            </span>
+                          )}
                           {relegationCount > 0 && (
                             <span className="flex items-center gap-1.5">
                               <span className="w-2.5 h-2.5 rounded bg-rose-500" />
                               <span>Rebaixamento (Z-{relegationCount})</span>
                             </span>
                           )}
+                        </>
+                      ) : selectedComp === 'ger_bundesliga2' ? (
+                        <>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-emerald-400" />
+                            <span>Acesso Direto à Bundesliga (1º–2º)</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-sky-400" />
+                            <span>Playoff de Acesso (3º vs 16º Bundesliga · Ida e Volta)</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-rose-500" />
+                            <span>Rebaixamento (16º–18º · 3 times)</span>
+                          </span>
+                        </>
+                      ) : selectedComp === 'fra_ligue2' ? (
+                        <>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-emerald-400" />
+                            <span>Acesso Direto à Ligue 1 (1º–2º)</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-sky-400" />
+                            <span>Play-offs de Acesso (3º–5º · Jogo Único + Barrage vs 16º Ligue 1)</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-rose-500" />
+                            <span>Rebaixamento (16º–18º · 3 times)</span>
+                          </span>
+                        </>
+                      ) : selectedComp === 'esp_laliga2' ? (
+                        <>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-emerald-400" />
+                            <span>Acesso Direto à LaLiga (1º–2º)</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-sky-400" />
+                            <span>Play-offs de Acesso (3º–6º · Semis e Final em Ida e Volta)</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-rose-500" />
+                            <span>Rebaixamento à Primera Federación (19º–22º · 4 times)</span>
+                          </span>
+                        </>
+                      ) : selectedComp === 'ita_serie_b' ? (
+                        <>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-emerald-400" />
+                            <span>Acesso Direto à Serie A (1º–2º · 3º se abrir 15+ pts)</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-sky-400" />
+                            <span>Playoffs de Acesso (3º–8º · Quartas, Semis e Final em Ida e Volta)</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-orange-400" />
+                            <span>Playout de Rebaixamento (16º × 17º · Ida e Volta)</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-rose-500" />
+                            <span>Rebaixamento Direto à Serie C (18º–20º)</span>
+                          </span>
                         </>
                       ) : selectedComp === 'eng_championship' ? (
                         <>
@@ -4382,6 +4483,40 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                             } else if (ueclClubSet.has(club.id)) {
                               zoneBadge =
                                 'text-emerald-200 bg-emerald-950 font-bold border border-emerald-700/50';
+                            } else if (
+                              (selectedComp === 'ger_bundesliga' || selectedComp === 'fra_ligue1') &&
+                              pos === 16
+                            ) {
+                              zoneBadge = 'text-slate-950 bg-orange-400 font-black';
+                            } else if (isRelegated) {
+                              zoneBadge =
+                                'text-rose-200 bg-rose-950 font-bold border border-rose-700/50';
+                            }
+                          } else if (selectedComp === 'ger_bundesliga2') {
+                            if (pos <= 2) {
+                              zoneBadge = 'text-slate-950 bg-emerald-400 font-black';
+                            } else if (pos === 3) {
+                              zoneBadge = 'text-slate-950 bg-sky-400 font-black';
+                            } else if (isRelegated) {
+                              zoneBadge =
+                                'text-rose-200 bg-rose-950 font-bold border border-rose-700/50';
+                            }
+                          } else if (selectedComp === 'fra_ligue2') {
+                            if (pos <= 2) {
+                              zoneBadge = 'text-slate-950 bg-emerald-400 font-black';
+                            } else if (pos <= 5) {
+                              zoneBadge = 'text-slate-950 bg-sky-400 font-black';
+                            } else if (isRelegated) {
+                              zoneBadge =
+                                'text-rose-200 bg-rose-950 font-bold border border-rose-700/50';
+                            }
+                          } else if (selectedComp === 'ita_serie_b') {
+                            if (pos <= 2) {
+                              zoneBadge = 'text-slate-950 bg-emerald-400 font-black';
+                            } else if (pos <= 8) {
+                              zoneBadge = 'text-slate-950 bg-sky-400 font-black';
+                            } else if (pos === 16 || pos === 17) {
+                              zoneBadge = 'text-slate-950 bg-orange-400 font-black';
                             } else if (isRelegated) {
                               zoneBadge =
                                 'text-rose-200 bg-rose-950 font-bold border border-rose-700/50';
@@ -4395,7 +4530,11 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                               zoneBadge =
                                 'text-rose-200 bg-rose-950 font-bold border border-rose-700/50';
                             }
-                          } else if (selectedComp === 'eng_league_one' || selectedComp === 'serie_b') {
+                          } else if (
+                            selectedComp === 'eng_league_one' ||
+                            selectedComp === 'esp_laliga2' ||
+                            selectedComp === 'serie_b'
+                          ) {
                             if (pos <= 2) {
                               zoneBadge = 'text-slate-950 bg-emerald-400 font-black';
                             } else if (pos <= 6) {
@@ -4457,6 +4596,38 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                               : pos === 24
                               ? 'border-b-2 border-amber-500/50'
                               : ''
+                            : selectedComp === 'ger_bundesliga' || selectedComp === 'fra_ligue1'
+                            ? pos === 15
+                              ? 'border-b border-orange-500/50'
+                              : pos === 16
+                              ? 'border-b border-rose-500/50'
+                              : ''
+                            : selectedComp === 'ger_bundesliga2'
+                            ? pos === 2
+                              ? 'border-b-2 border-emerald-500/50'
+                              : pos === 3
+                              ? 'border-b-2 border-sky-500/50'
+                              : pos === orderedTableStandings.length - 3
+                              ? 'border-b border-rose-500/50'
+                              : ''
+                            : selectedComp === 'fra_ligue2'
+                            ? pos === 2
+                              ? 'border-b-2 border-emerald-500/50'
+                              : pos === 5
+                              ? 'border-b-2 border-sky-500/50'
+                              : pos === orderedTableStandings.length - 3
+                              ? 'border-b border-rose-500/50'
+                              : ''
+                            : selectedComp === 'ita_serie_b'
+                            ? pos === 2
+                              ? 'border-b-2 border-emerald-500/50'
+                              : pos === 8
+                              ? 'border-b-2 border-sky-500/50'
+                              : pos === 15
+                              ? 'border-b border-orange-500/50'
+                              : pos === 17
+                              ? 'border-b-2 border-rose-500/50'
+                              : ''
                             : selectedComp === 'eng_championship'
                             ? pos === 2
                               ? 'border-b-2 border-emerald-500/50'
@@ -4465,7 +4636,9 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                               : pos === orderedTableStandings.length - 3
                               ? 'border-b border-rose-500/50'
                               : ''
-                            : selectedComp === 'eng_league_one' || selectedComp === 'serie_b'
+                            : selectedComp === 'eng_league_one' ||
+                              selectedComp === 'esp_laliga2' ||
+                              selectedComp === 'serie_b'
                             ? pos === 2
                               ? 'border-b-2 border-emerald-500/50'
                               : pos === 6
@@ -6118,6 +6291,22 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                 ? bracketPool.filter((f) => f.id.startsWith('serie_b_playoff_'))
                 : selectedComp === 'serie_c'
                 ? bracketPool.filter((f) => f.id.startsWith('serie_c_playoff_'))
+                : selectedComp === 'ger_bundesliga2'
+                ? bracketPool.filter((f) => f.id.startsWith('ger_bundesliga2_playoff_'))
+                : selectedComp === 'ger_bundesliga'
+                ? (fixturesEurope?.ger_bundesliga2 || []).filter((f) =>
+                    f.id.startsWith('ger_bundesliga2_playoff_')
+                  )
+                : selectedComp === 'fra_ligue2'
+                ? bracketPool.filter((f) => f.id.startsWith('fra_ligue2_playoff_'))
+                : selectedComp === 'fra_ligue1'
+                ? (fixturesEurope?.fra_ligue2 || []).filter((f) =>
+                    f.id.startsWith('fra_ligue2_playoff_')
+                  )
+                : selectedComp === 'esp_laliga2'
+                ? bracketPool.filter((f) => f.id.startsWith('esp_laliga2_playoff_'))
+                : selectedComp === 'ita_serie_b'
+                ? bracketPool.filter((f) => f.id.startsWith('ita_serie_b_playoff_'))
                 : isPureKnockoutComp(selectedComp)
                 ? bracketPool
                 : bracketPool.filter((f) => !(f.cupPhase || '').includes('Rodada '));
@@ -6150,6 +6339,14 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                           ? `EFL League Two · Playoffs de Acesso (4º ao 7º) ${seasonYear}`
                           : selectedComp === 'eng_league_one'
                           ? `EFL League One · Playoffs de Acesso (3º ao 6º) ${seasonYear}`
+                          : selectedComp === 'ger_bundesliga' || selectedComp === 'ger_bundesliga2'
+                          ? `Alemanha · Playoff de Acesso/Rebaixamento (Bundesliga 16º × 2. Bundesliga 3º) ${formatEuropeanSeason(europeSeasonYear ?? seasonYear)}`
+                          : selectedComp === 'fra_ligue1' || selectedComp === 'fra_ligue2'
+                          ? `França · Play-offs de Acesso (3º–5º) & Barrage Ligue 1/Ligue 2 ${formatEuropeanSeason(europeSeasonYear ?? seasonYear)}`
+                          : selectedComp === 'esp_laliga2'
+                          ? `LALIGA HYPERMOTION · Play-offs de Acesso (3º ao 6º) ${formatEuropeanSeason(europeSeasonYear ?? seasonYear)}`
+                          : selectedComp === 'ita_serie_b'
+                          ? `Serie BKT · Playoffs de Acesso (3º–8º) & Playout (16º × 17º) ${formatEuropeanSeason(europeSeasonYear ?? seasonYear)}`
                           : selectedComp === 'serie_b'
                           ? `Brasileirão Série B · Playoff de Acesso (3º ao 6º) ${seasonYear}`
                           : selectedComp === 'serie_c'
@@ -6183,6 +6380,58 @@ export const StandingsView: React.FC<StandingsViewProps> = ({
                     <span>{bracketSource.length} partidas eliminatórias</span>
                   </div>
                 </div>
+
+                {(selectedComp === 'ger_bundesliga' || selectedComp === 'ger_bundesliga2') && (
+                  <div className="rounded-xl bg-red-500/10 border border-red-500/30 p-3.5 text-xs text-red-100/90 flex flex-wrap items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="font-black text-red-300">
+                        🇩🇪 Regulamento Oficial · 2. Bundesliga ({formatEuropeanSeason(europeSeasonYear ?? seasonYear)})
+                      </div>
+                      <p className="text-[11px] text-slate-300">
+                        18 clubes em 34 rodadas. Os 2 primeiros (1º e 2º) sobem direto para a Bundesliga; o 3º colocado enfrenta o 16º da Bundesliga em jogos de Ida e Volta pelo Playoff de Acesso/Rebaixamento (vencedor joga a 1ª Divisão). Os 3 últimos (16º, 17º e 18º) são rebaixados.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {(selectedComp === 'fra_ligue1' || selectedComp === 'fra_ligue2') && (
+                  <div className="rounded-xl bg-blue-500/10 border border-blue-500/30 p-3.5 text-xs text-blue-100/90 flex flex-wrap items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="font-black text-blue-300">
+                        🇫🇷 Regulamento Oficial · Ligue 2 BKT & Barrage ({formatEuropeanSeason(europeSeasonYear ?? seasonYear)})
+                      </div>
+                      <p className="text-[11px] text-slate-300">
+                        18 clubes em 34 rodadas. 1º e 2º sobem direto para a Ligue 1. Play-offs Internos (jogo único, empate vai direto para pênaltis): Play-off 1 (4º em casa × 5º) e Play-off 2 (3º em casa × vencedor PO1). O vencedor disputa o Barrage em Ida (casa da Ligue 2) e Volta (casa do 16º da Ligue 1) por uma vaga na elite. Os 3 últimos (16º–18º) são rebaixados.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedComp === 'esp_laliga2' && (
+                  <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3.5 text-xs text-amber-100/90 flex flex-wrap items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="font-black text-amber-300">
+                        🇪🇸 Regulamento Oficial · LALIGA HYPERMOTION ({formatEuropeanSeason(europeSeasonYear ?? seasonYear)})
+                      </div>
+                      <p className="text-[11px] text-slate-300">
+                        22 clubes em 42 rodadas (turno e returno). 1º e 2º sobem direto para a LaLiga EA Sports. Do 3º ao 6º disputam os Play-offs de Acesso em Ida e Volta: Semifinais (6º × 3º e 5º × 4º, com 3º e 4º decidindo a volta em casa) e Final em Ida e Volta (melhor campanha decide a volta em casa) pela 3ª e última vaga na elite. Os 4 últimos (19º ao 22º) são rebaixados à Primera Federación.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedComp === 'ita_serie_b' && (
+                  <div className="rounded-xl bg-sky-500/10 border border-sky-500/30 p-3.5 text-xs text-sky-100/90 flex flex-wrap items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="font-black text-sky-300">
+                        🇮🇹 Regulamento Oficial · Serie BKT ({formatEuropeanSeason(europeSeasonYear ?? seasonYear)})
+                      </div>
+                      <p className="text-[11px] text-slate-300">
+                        20 clubes em 38 rodadas. 1º e 2º sobem direto à Serie A (o 3º também sobe direto sem playoffs se abrir 15+ pontos sobre o 4º). Caso contrário, 3º ao 8º disputam Playoffs de Acesso em Ida e Volta: Quartas (5º × 8º e 6º × 7º), Semifinais (3º × Venc. 6º/7º e 4º × Venc. 5º/8º) e Final pela 3ª vaga. Na parte de baixo, 18º–20º caem direto à Serie C e 16º × 17º disputam o Playout em Ida e Volta definindo o 4º rebaixado.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {selectedComp === 'serie_b' && (
                   <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3.5 text-xs text-amber-100/90 flex flex-wrap items-center justify-between gap-2">

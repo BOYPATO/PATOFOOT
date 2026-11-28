@@ -52,7 +52,16 @@ const WL_COUNTRY_TO_LEAGUE: Record<string, WorldLeagueId> = {
 
 function resolveEuLeagueId(club?: ClubEconomyContext | null): EuropeanLeagueId | null {
   if (!club || club.division !== 'EU') return null;
-  if (club.id === 'eu_sp1_cel' || club.id === 'eu_ibe' || club.id === 'eu_ucr') return null;
+  if (
+    club.id === 'eu_sp1_cel' ||
+    club.id === 'eu_ibe' ||
+    club.id === 'eu_ucr' ||
+    club.id?.startsWith('eu_esp3_') ||
+    club.id?.startsWith('eu_ita3_') ||
+    club.id?.startsWith('eu_fra3_')
+  ) {
+    return null;
+  }
   if (club.europeanLeagueId) return club.europeanLeagueId;
   if (club.id === 'eu_shk' || club.id?.startsWith('eu_sp1_')) return 'eu_special_1';
   if (club.id?.startsWith('eu_sp2_')) return 'eu_special_2';
@@ -647,6 +656,10 @@ export function resolveClubEconomyTier(club?: ClubEconomyContext | null): Econom
     }
     if (
       euId === 'eng_championship' ||
+      euId === 'ger_bundesliga2' ||
+      euId === 'fra_ligue2' ||
+      euId === 'esp_laliga2' ||
+      euId === 'ita_serie_b' ||
       euId === 'por_primeira' ||
       euId === 'ned_eredivisie' ||
       euId === 'tur_super_lig' ||
@@ -689,7 +702,13 @@ export function resolveClubEconomyTier(club?: ClubEconomyContext | null): Econom
   if (club.division === 'D') return 'BR_D';
   if (club.division === 'C') return 'BR_C';
   if (club.division === 'B') return 'BR_B';
-  if (club.division === 'EU') return 'EU_2';
+  if (club.division === 'EU') {
+    return club.id?.startsWith('eu_esp3_') ||
+      club.id?.startsWith('eu_ita3_') ||
+      club.id?.startsWith('eu_fra3_')
+      ? 'EU_3'
+      : 'EU_2';
+  }
   if (club.division === 'SA') return 'SA_MID';
   if (club.division === 'WL') return 'WL_HIGH';
   return 'BR_A';
@@ -722,10 +741,67 @@ export function getClubEconomyProfile(club?: ClubEconomyContext | null): ClubEco
     };
   }
 
+  if (euId === 'ger_bundesliga2') {
+    return {
+      ...base,
+      tierLabel: '2. Bundesliga (2ª ALE)',
+      broadcastBaseBase: 2_100_000,
+      commercialMult: 1.05,
+    };
+  }
+
+  if (euId === 'fra_ligue2') {
+    return {
+      ...base,
+      tierLabel: 'Ligue 2 BKT (2ª FRA)',
+      broadcastBaseBase: 1_850_000,
+      commercialMult: 1.0,
+    };
+  }
+
+  if (euId === 'esp_laliga2') {
+    return {
+      ...base,
+      tierLabel: 'LALIGA HYPERMOTION (2ª ESP)',
+      broadcastBaseBase: 2_000_000,
+      commercialMult: 1.03,
+    };
+  }
+
+  if (euId === 'ita_serie_b') {
+    return {
+      ...base,
+      tierLabel: 'Serie BKT (2ª ITA)',
+      broadcastBaseBase: 1_900_000,
+      commercialMult: 1.01,
+    };
+  }
+
   if (euId === 'eng_league_one') {
     return {
       ...base,
       tierLabel: 'League One (3ª ING)',
+    };
+  }
+
+  if (club?.id?.startsWith('eu_esp3_')) {
+    return {
+      ...base,
+      tierLabel: 'Primera/Segunda Federación (ESP)',
+    };
+  }
+
+  if (club?.id?.startsWith('eu_ita3_')) {
+    return {
+      ...base,
+      tierLabel: 'Serie C (ITA)',
+    };
+  }
+
+  if (club?.id?.startsWith('eu_fra3_')) {
+    return {
+      ...base,
+      tierLabel: 'Championnat National (FRA)',
     };
   }
 

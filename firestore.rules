@@ -366,6 +366,234 @@ service cloud.firestore {
         && isValidId(logId);
     }
 
+    function isValidLeaderboardEntry(data) {
+      return data.keys().hasAll([
+          'uid',
+          'displayName',
+          'clubId',
+          'clubName',
+          'clubShortName',
+          'clubPrimaryColor',
+          'clubSecondaryColor',
+          'division',
+          'careerScore',
+          'trophiesCount',
+          'seasonsPlayed',
+          'winsCount',
+          'challengesCompleted',
+          'isPublic',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid',
+          'displayName',
+          'clubId',
+          'clubName',
+          'clubShortName',
+          'clubPrimaryColor',
+          'clubSecondaryColor',
+          'division',
+          'careerScore',
+          'trophiesCount',
+          'seasonsPlayed',
+          'winsCount',
+          'challengesCompleted',
+          'isPublic',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.uid is string
+        && data.uid.size() >= 1
+        && data.uid.size() <= 128
+        && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.uid == request.auth.uid
+        && data.displayName is string
+        && data.displayName.size() >= 2
+        && data.displayName.size() <= 60
+        && data.clubId is string
+        && data.clubId.size() >= 2
+        && data.clubId.size() <= 40
+        && data.clubId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.clubName is string
+        && data.clubName.size() >= 2
+        && data.clubName.size() <= 80
+        && data.clubShortName is string
+        && data.clubShortName.size() >= 1
+        && data.clubShortName.size() <= 32
+        && data.clubPrimaryColor is string
+        && data.clubPrimaryColor.size() >= 4
+        && data.clubPrimaryColor.size() <= 16
+        && data.clubSecondaryColor is string
+        && data.clubSecondaryColor.size() >= 4
+        && data.clubSecondaryColor.size() <= 16
+        && data.division is string
+        && data.division.size() >= 1
+        && data.division.size() <= 16
+        && (data.careerScore is int || data.careerScore is float)
+        && data.careerScore >= 0
+        && data.careerScore <= 1000000
+        && (data.trophiesCount is int || data.trophiesCount is float)
+        && data.trophiesCount >= 0
+        && data.trophiesCount <= 500
+        && (data.seasonsPlayed is int || data.seasonsPlayed is float)
+        && data.seasonsPlayed >= 1
+        && data.seasonsPlayed <= 200
+        && (data.winsCount is int || data.winsCount is float)
+        && data.winsCount >= 0
+        && data.winsCount <= 20000
+        && (data.challengesCompleted is int || data.challengesCompleted is float)
+        && data.challengesCompleted >= 0
+        && data.challengesCompleted <= 50
+        && data.isPublic is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPlayerFeedback(data) {
+      return data.keys().hasAll([
+          'feedbackId',
+          'uid',
+          'displayName',
+          'category',
+          'title',
+          'message',
+          'appVersion',
+          'context',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'feedbackId',
+          'uid',
+          'displayName',
+          'category',
+          'title',
+          'message',
+          'appVersion',
+          'context',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.feedbackId is string
+        && data.feedbackId.size() >= 4
+        && data.feedbackId.size() <= 64
+        && data.feedbackId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.uid is string
+        && data.uid.size() >= 1
+        && data.uid.size() <= 128
+        && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.displayName is string
+        && data.displayName.size() >= 2
+        && data.displayName.size() <= 60
+        && data.category is string
+        && data.category.size() >= 3
+        && data.category.size() <= 16
+        && data.category in ['bug', 'suggestion', 'balance', 'praise']
+        && data.title is string
+        && data.title.size() >= 3
+        && data.title.size() <= 120
+        && data.message is string
+        && data.message.size() >= 10
+        && data.message.size() <= 1500
+        && data.appVersion is string
+        && data.appVersion.size() >= 1
+        && data.appVersion.size() <= 24
+        && data.appVersion.matches('^[a-zA-Z0-9._\\-]+$')
+        && data.context is string
+        && data.context.size() >= 1
+        && data.context.size() <= 120
+        && data.status is string
+        && data.status.size() >= 4
+        && data.status.size() <= 16
+        && data.status in ['open', 'reviewed', 'resolved']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /managerLeaderboard/{userId} {
+      allow get: if isValidId(userId)
+        && (resource.data.isPublic == true || (isSignedIn() && request.auth.uid == userId));
+
+      allow list: if request.query.limit != null
+        && request.query.limit <= 50
+        && resource.data.isPublic == true;
+
+      allow create: if isSignedIn()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && isValidLeaderboardEntry(incoming())
+        && incoming().uid == userId
+        && incoming().isPublic == true
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSignedIn()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && isValidLeaderboardEntry(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName',
+          'clubId',
+          'clubName',
+          'clubShortName',
+          'clubPrimaryColor',
+          'clubSecondaryColor',
+          'division',
+          'careerScore',
+          'trophiesCount',
+          'seasonsPlayed',
+          'winsCount',
+          'challengesCompleted',
+          'isPublic',
+          'updatedAt'
+        ]);
+
+      allow delete: if isSignedIn()
+        && isValidId(userId)
+        && (request.auth.uid == userId || isBootstrappedAdmin());
+    }
+
+    match /playerFeedback/{feedbackId} {
+      allow get: if isSignedIn()
+        && isValidId(feedbackId)
+        && (resource.data.uid == request.auth.uid || isBootstrappedAdmin());
+
+      allow list: if isSignedIn()
+        && request.query.limit != null
+        && request.query.limit <= 50
+        && (resource.data.uid == request.auth.uid || isBootstrappedAdmin());
+
+      allow create: if isSignedIn()
+        && isValidId(feedbackId)
+        && isValidPlayerFeedback(incoming())
+        && incoming().feedbackId == feedbackId
+        && incoming().uid == request.auth.uid
+        && incoming().status == 'open'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isBootstrappedAdmin()
+        && isValidId(feedbackId)
+        && isValidPlayerFeedback(incoming())
+        && incoming().feedbackId == existing().feedbackId
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'status',
+          'updatedAt'
+        ]);
+
+      allow delete: if isBootstrappedAdmin()
+        && isValidId(feedbackId);
+    }
+
     match /users/{userId} {
       allow get: if isSignedIn()
         && isValidId(userId)

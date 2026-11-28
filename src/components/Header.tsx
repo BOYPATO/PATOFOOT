@@ -56,6 +56,7 @@ interface HeaderProps {
   onOpenSettingsModal: () => void;
   onOpenGuideModal?: () => void;
   onOpenOfficialSite?: () => void;
+  onOpenLeaderboard?: () => void;
   onOpenGlobalSearch: () => void;
   onSaveAndExitToTitle: () => void;
   onOpenMatchModal: () => void;
@@ -110,6 +111,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   onOpenSettingsModal,
   onOpenGuideModal,
   onOpenOfficialSite,
+  onOpenLeaderboard,
   onOpenGlobalSearch,
   onSaveAndExitToTitle,
   onOpenMatchModal,
@@ -377,6 +379,21 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               className="hidden sm:flex p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-emerald-300 hover:text-emerald-200 transition-colors border border-slate-800 cursor-pointer"
             >
               <HelpCircle className="w-4 h-4" />
+            </button>
+          )}
+
+          {onOpenLeaderboard && (
+            <button
+              type="button"
+              onClick={() => {
+                soundEngine.playClick();
+                onOpenLeaderboard();
+              }}
+              title="Ranking Global de Treinadores"
+              aria-label="Ranking Global de Treinadores"
+              className="hidden sm:flex p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-amber-300 hover:text-amber-200 transition-colors border border-slate-800 cursor-pointer"
+            >
+              <Trophy className="w-4 h-4" />
             </button>
           )}
 

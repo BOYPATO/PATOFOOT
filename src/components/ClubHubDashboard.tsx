@@ -29,6 +29,7 @@ import { getMatchRivalryInfo } from '../utils/rivalryEngine';
 import { countActiveSponsors } from '../utils/sponsorEngine';
 import { getTransferWindowStatus } from '../utils/transferWindowEngine';
 import { getClubSectorRatings } from '../utils/clubRatingsEngine';
+import { buildOpponentScoutReport } from '../utils/opponentScoutEngine';
 import {
   SOUTH_AMERICAN_LEAGUES_META,
   getClubSouthAmericanLeagueId,
@@ -74,6 +75,7 @@ import {
   ChevronDown,
   ChevronUp,
   SlidersHorizontal,
+  Eye,
 } from 'lucide-react';
 
 interface ClubHubDashboardProps {
@@ -237,6 +239,14 @@ export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
   const rivalry = useMemo(
     () => getMatchRivalryInfo(userClub, upcomingOpponent),
     [userClub, upcomingOpponent]
+  );
+
+  const opponentScout = useMemo(
+    () =>
+      upcomingOpponent
+        ? buildOpponentScoutReport(userClub, upcomingOpponent, allClubs, gameState)
+        : null,
+    [userClub, upcomingOpponent, allClubs, gameState]
   );
 
   // Squad & Club Alerts
@@ -1016,6 +1026,116 @@ export const ClubHubDashboard: React.FC<ClubHubDashboardProps> = ({
                           );
                         })}
                       </div>
+
+                      {/* Relatório Pré-Jogo do Adversário (Scout Compacto) */}
+                      {opponentScout && (
+                        <div className="mb-4 p-3 rounded-xl bg-slate-950/75 border border-slate-800/80 space-y-2.5 text-xs">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 font-bold text-slate-200">
+                              <Eye className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                              <span>Relatório do Adversário</span>
+                              {opponentScout.leaguePosition && (
+                                <span className="font-mono text-[11px] text-slate-400 font-semibold">
+                                  · {opponentScout.leaguePosition}º ({opponentScout.leaguePoints ?? 0} pts)
+                                </span>
+                              )}
+                            </div>
+                            <span
+                              className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+                                opponentScout.threatLevel === 'ALTO'
+                                  ? 'bg-rose-950/50 border-rose-500/40 text-rose-300'
+                                  : opponentScout.threatLevel === 'MODERADO'
+                                  ? 'bg-amber-950/50 border-amber-500/40 text-amber-300'
+                                  : 'bg-emerald-950/50 border-emerald-500/40 text-emerald-300'
+                              }`}
+                            >
+                              Perigo {opponentScout.threatLevel}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            {/* Últimos 5 jogos */}
+                            <div className="bg-slate-900/70 border border-slate-800/80 rounded-lg px-2.5 py-2">
+                              <div className="text-[10px] text-slate-500 font-semibold uppercase">
+                                Últimos 5 Jogos
+                              </div>
+                              <div className="flex items-center gap-1 mt-1">
+                                {opponentScout.recentMatches.length > 0 ? (
+                                  opponentScout.recentMatches.map((f, idx) => (
+                                    <span
+                                      key={idx}
+                                      title={`${f.isHome ? 'Casa' : 'Fora'} vs ${f.rivalShortName}: ${f.scoreText}`}
+                                      className={`w-5 h-5 rounded text-[10px] font-black flex items-center justify-center ${
+                                        f.result === 'V'
+                                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35'
+                                          : f.result === 'E'
+                                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/35'
+                                          : 'bg-rose-500/20 text-rose-300 border border-rose-500/35'
+                                      }`}
+                                    >
+                                      {f.result}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-[11px] text-slate-500">Início de temporada</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Destaque / Artilheiro Rival */}
+                            <div className="bg-slate-900/70 border border-slate-800/80 rounded-lg px-2.5 py-2 min-w-0">
+                              <div className="text-[10px] text-slate-500 font-semibold uppercase">
+                                {opponentScout.topScorer && opponentScout.topScorer.goals > 0
+                                  ? 'Artilheiro Rival'
+                                  : 'Craque Rival'}
+                              </div>
+                              {(() => {
+                                const star = opponentScout.topScorer || opponentScout.keyPlayer;
+                                if (!star) {
+                                  return <div className="text-[11px] text-slate-400 mt-0.5">—</div>;
+                                }
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      soundEngine.playClick();
+                                      if (onInspectClubPlayer && upcomingOpponent) {
+                                        onInspectClubPlayer(upcomingOpponent.id, star.id);
+                                      } else if (upcomingOpponent) {
+                                        onInspectClub(upcomingOpponent.id);
+                                      }
+                                    }}
+                                    className="text-left w-full truncate text-[11px] font-bold text-white hover:text-sky-300 transition-colors mt-0.5 cursor-pointer"
+                                    title={`Inspecionar ${star.name} (${star.detailedRole}, OVR ${star.overall})`}
+                                  >
+                                    {star.name}{' '}
+                                    <span className="font-mono text-sky-400">
+                                      ({star.overall}
+                                      {star.goals > 0 ? ` · ${star.goals}G` : ''})
+                                    </span>
+                                  </button>
+                                );
+                              })()}
+                            </div>
+
+                            {/* Esquema & Estilo */}
+                            <div className="bg-slate-900/70 border border-slate-800/80 rounded-lg px-2.5 py-2 min-w-0">
+                              <div className="text-[10px] text-slate-500 font-semibold uppercase">
+                                Esquema &amp; Estilo
+                              </div>
+                              <div className="text-[11px] font-bold text-slate-200 truncate mt-0.5">
+                                <span className="font-mono text-sky-300">{opponentScout.likelyFormation}</span>{' '}
+                                · {opponentScout.likelyStyle}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-[11px] text-slate-300 leading-snug pt-0.5">
+                            <strong className="text-sky-300">Dica do Auxiliar:</strong>{' '}
+                            {opponentScout.tacticalTip}
+                          </div>
+                        </div>
+                      )}
                     </>
                   );
                 })()}
